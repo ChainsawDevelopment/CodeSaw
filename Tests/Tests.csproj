@@ -4,6 +4,14 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\base1.txt" />
+    <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\base2.txt" />
+    <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\review1.txt" />
+    <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\review2.txt" />
+    <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\base1.txt" />
+    <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\base2.txt" />
+    <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\review1.txt" />
+    <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\review2.txt" />
     <None Remove="FourWayDiffData\Case1\base1.txt" />
     <None Remove="FourWayDiffData\Case1\base2.txt" />
     <None Remove="FourWayDiffData\Case1\review1.txt" />

@@ -74,21 +74,6 @@ namespace Tests
             Console.WriteLine("\n========\n");
         }
 
-        [Test]
-        public void AA()
-        {
-            var resourceNames = typeof(FourWayDiffTest).Assembly.GetManifestResourceNames()
-                .Where(x => x.StartsWith("Tests.FourWayDiffData"))
-                .Select(x => x.Substring("Tests.FourWayDiffData.".Length))
-                .Select(x => x.Substring(0, x.IndexOf(".")))
-                .Distinct();
-
-            foreach (var resourceName in resourceNames)
-            {
-                Console.WriteLine(resourceName);
-            }
-        }
-
         public static IEnumerable<TestCaseData> TestCases()
         {
             var cases = typeof(FourWayDiffTest).Assembly.GetManifestResourceNames()
