@@ -1,7 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="FourWayDiffData\Case1\base1.txt" />
+    <None Remove="FourWayDiffData\Case1\base2.txt" />
+    <None Remove="FourWayDiffData\Case1\review1.txt" />
+    <None Remove="FourWayDiffData\Case1\review2.txt" />
+    <None Remove="FourWayDiffData\CopiedBaseBlock\base1.txt" />
+    <None Remove="FourWayDiffData\CopiedBaseBlock\base2.txt" />
+    <None Remove="FourWayDiffData\CopiedBaseBlock\review1.txt" />
+    <None Remove="FourWayDiffData\CopiedBaseBlock\review2.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FourWayDiffData\**\*.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

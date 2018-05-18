@@ -2,6 +2,8 @@ source https://www.nuget.org/api/v2
 
 framework: netcoreapp20
 
+nuget Diff.Match.Patch
+nuget LibGit2Sharp
 nuget Microsoft.NET.Test.Sdk
 nuget NUnit
 nuget NUnit3TestAdapter

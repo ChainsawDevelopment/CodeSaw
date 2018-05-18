@@ -1,0 +1,10 @@
+block1
+
+
+middleBlock
+line.middle.1
+line.middle.2
+
+block2
+line2.1
+line2.2

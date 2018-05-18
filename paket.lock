@@ -1,6 +1,12 @@
 RESTRICTION: == netcoreapp2.0
 NUGET
   remote: https://www.nuget.org/api/v2
+    Diff.Match.Patch (2.1)
+      FSharp.Core (>= 4.1.18)
+    FSharp.Core (4.3.4)
+    LibGit2Sharp (0.25)
+      LibGit2Sharp.NativeBinaries (1.0.210)
+    LibGit2Sharp.NativeBinaries (1.0.210)
     Microsoft.CodeCoverage (1.0.3)
     Microsoft.DotNet.InternalAbstractions (1.0)
       System.AppContext (>= 4.1)
