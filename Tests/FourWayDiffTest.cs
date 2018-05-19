@@ -36,7 +36,7 @@ namespace Tests
                     continue;
                 }
 
-                var matchingBaseChunkIdx = chunksFromBaseDiff.IndexOf(reviewChunk);
+                var matchingBaseChunkIdx = chunksFromBaseDiff.IndexOf(reviewChunk, new DiffEqualityComparer());
 
                 if (matchingBaseChunkIdx >= 0)
                 {
@@ -204,6 +204,48 @@ namespace Tests
         public static string NormalizeLineEndings(this string s)
         {
             return s.Replace("\r\n", "\n").Replace("\r", "\n");
+        }
+
+        public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind, IEqualityComparer<T> comparer)
+        {
+            int index = -1;
+
+            foreach (var item in @this)
+            {
+                index++;
+
+                if (comparer.Equals(item, valueToFind))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    public class DiffEqualityComparer : IEqualityComparer<Diff>
+    {
+        private static readonly char[] TrimChars = {'\n', ' '};
+
+        public bool Equals(Diff x, Diff y)
+        {
+            if (x.Equals(y))
+            {
+                return true;
+            }
+
+            if (!x.Operation.Equals(y.Operation))
+            {
+                return false;
+            }
+
+            return x.Text.Trim(TrimChars) == y.Text.Trim(TrimChars);
+        }
+
+        public int GetHashCode(Diff obj)
+        {
+            return obj.Text.Trim(TrimChars).GetHashCode();
         }
     }
 }
