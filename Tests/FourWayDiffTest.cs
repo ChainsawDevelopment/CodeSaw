@@ -49,6 +49,61 @@ namespace Tests
             }
 
             PrintDiff("Classified", classified);
+            DumpHtml(set.CaseName, $"{set.CaseName}.classified.html", classified);
+        }
+
+        private void DumpHtml(string title, string fileName, List<ClassifiedDiff> classifiedDiffs)
+        {
+            using (var sw = File.CreateText(fileName))
+            {
+                sw.WriteLine("<html>");
+                sw.WriteLine($"<head>");
+                sw.WriteLine($"<title>{title}</title>");
+                sw.WriteLine(@"<style type='text/css'>
+    .diff { font-family: Consolas; }
+    .line { display: block; }
+    pre  { margin: 0; }
+    .oper-equal {}
+    .oper-delete { background-color: lightpink; }
+    .oper-insert { background-color: lightgreen; }
+    .class-base { opacity: 0.6; }
+</style>");
+                sw.WriteLine($"</head>");
+
+                sw.WriteLine("<body>");
+                sw.WriteLine("<div class=\"diff\">");
+
+                foreach (var diff in classifiedDiffs)
+                {
+                    var lines = diff.Diff.Text.Trim('\n').Split('\n');
+
+                    foreach (var line in lines)
+                    {
+                        string operClass = "";
+                        if (diff.Diff.Operation.IsEqual)
+                            operClass = "equal";
+                        if (diff.Diff.Operation.IsDelete)
+                            operClass = "delete";
+                        if (diff.Diff.Operation.IsInsert)
+                            operClass = "insert";
+
+                        string classificationClass = "";
+                        if (diff.Classification == DiffClassification.Unchanged)
+                            classificationClass = "unchanged";
+                        if (diff.Classification == DiffClassification.BaseChange)
+                            classificationClass = "base";
+                        if (diff.Classification == DiffClassification.ReviewChange)
+                            classificationClass = "review";
+
+                        sw.WriteLine($"<span class='line oper-{operClass} class-{classificationClass}'><pre>{(line == "" ? "&nbsp;" : line)}</pre></span>");
+                    }
+                }
+
+                sw.WriteLine("</div>");
+                sw.WriteLine("</body>");
+
+                sw.WriteLine("</html>");
+            }
         }
 
         private static List<Diff> MakeDiff(string file1, string file2)
@@ -60,8 +115,6 @@ namespace Tests
             var diffs = DMP.DiffMain(lineText1, lineText2, false);
             DMP.DiffCharsToLines(diffs, lineArray);
 
-            DMP.DiffCleanupSemantic(diffs);
-            
             return diffs;
         }
 
