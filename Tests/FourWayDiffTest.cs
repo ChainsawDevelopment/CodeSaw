@@ -12,7 +12,7 @@ namespace Tests
         private static readonly DiffMatchPatch.DiffMatchPatch DMP = new DiffMatchPatch.DiffMatchPatch(2f, (short) 32, 4, 0.5f, 1000, 32, 0.5f, (short) 4);
 
         [Test]
-        [TestCaseSource("TestCases")]
+        [TestCaseSource(nameof(TestCases))]
         public void CalculateDiffs(FileSet set)
         {
             var reviewDiff = MakeDiff(set.Review1, set.Review2);
@@ -26,6 +26,8 @@ namespace Tests
 
             var classified = new List<ClassifiedDiff>();
 
+            var chunksFromBaseDiff = new List<Diff>(baseDiff);
+
             foreach (var reviewChunk in reviewDiff)
             {
                 if (Equals(reviewChunk.Operation, Operation.Equal))
@@ -34,10 +36,11 @@ namespace Tests
                     continue;
                 }
 
-                var matchingBaseChunk = baseDiff.Contains(reviewChunk);
+                var matchingBaseChunkIdx = chunksFromBaseDiff.IndexOf(reviewChunk);
 
-                if (matchingBaseChunk)
+                if (matchingBaseChunkIdx >= 0)
                 {
+                    chunksFromBaseDiff.RemoveRange(0, matchingBaseChunkIdx + 1);
                     classified.Add(new ClassifiedDiff(reviewChunk, DiffClassification.BaseChange));
                     continue;
                 }
