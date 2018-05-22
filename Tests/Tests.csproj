@@ -4,24 +4,32 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="FourWayDiffData\Case1\expected.txt" />
+    <None Remove="FourWayDiffData\CodeSample1\expected.txt" />
+    <None Remove="FourWayDiffData\CodeSample2\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample3\base1.txt" />
     <None Remove="FourWayDiffData\CodeSample3\base2.txt" />
+    <None Remove="FourWayDiffData\CodeSample3\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample3\review1.txt" />
     <None Remove="FourWayDiffData\CodeSample3\review2.txt" />
     <None Remove="FourWayDiffData\CodeSample\base1.txt" />
     <None Remove="FourWayDiffData\CodeSample\base2.txt" />
     <None Remove="FourWayDiffData\CodeSample\review1.txt" />
     <None Remove="FourWayDiffData\CodeSample\review2.txt" />
+    <None Remove="FourWayDiffData\CopiedBaseBlock\expected.txt" />
     <None Remove="FourWayDiffData\Long\base1.txt" />
     <None Remove="FourWayDiffData\Long\base2.txt" />
+    <None Remove="FourWayDiffData\Long\expected.txt" />
     <None Remove="FourWayDiffData\Long\review1.txt" />
     <None Remove="FourWayDiffData\Long\review2.txt" />
     <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\base1.txt" />
     <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\base2.txt" />
+    <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\expected.txt" />
     <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\review1.txt" />
     <None Remove="FourWayDiffData\MovedBaseBlockAfterMerge\review2.txt" />
     <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\base1.txt" />
     <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\base2.txt" />
+    <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\expected.txt" />
     <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\review1.txt" />
     <None Remove="FourWayDiffData\RemovedBaseBlockAfterMerge\review2.txt" />
     <None Remove="FourWayDiffData\Case1\base1.txt" />

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using DiffMatchPatch;
 using NUnit.Framework;
+using NUnit.Framework.Internal.Execution;
 
 namespace Tests
 {
@@ -50,6 +52,15 @@ namespace Tests
 
             PrintDiff("Classified", classified);
             DumpHtml(set.CaseName, $"{set.CaseName}.classified.html", classified);
+
+            var actualLines = classified.SplitLines().ToList();
+
+            Assert.That(actualLines, Has.Count.EqualTo(set.Expected.Length), "Number of lines matches");
+
+            for (int i = 0; i < actualLines.Count; i++)
+            {
+                Assert.That(actualLines[i].classification.ToString()[0], Is.EqualTo(set.Expected[i].classification), $"Classification for line {i + 1} should match");
+            }
         }
 
         private void DumpHtml(string title, string fileName, List<ClassifiedDiff> classifiedDiffs)
@@ -73,29 +84,27 @@ namespace Tests
                 sw.WriteLine("<body>");
                 sw.WriteLine("<div class=\"diff\">");
 
-                foreach (var diff in classifiedDiffs)
+                foreach (var line in classifiedDiffs.SplitLines())
                 {
-                    var lines = diff.Diff.Text.Trim('\n').Split('\n');
 
-                    foreach (var line in lines)
                     {
                         string operClass = "";
-                        if (diff.Diff.Operation.IsEqual)
+                        if (line.operation.IsEqual)
                             operClass = "equal";
-                        if (diff.Diff.Operation.IsDelete)
+                        if (line.operation.IsDelete)
                             operClass = "delete";
-                        if (diff.Diff.Operation.IsInsert)
+                        if (line.operation.IsInsert)
                             operClass = "insert";
 
                         string classificationClass = "";
-                        if (diff.Classification == DiffClassification.Unchanged)
+                        if (line.classification == DiffClassification.Unchanged)
                             classificationClass = "unchanged";
-                        if (diff.Classification == DiffClassification.BaseChange)
+                        if (line.classification == DiffClassification.BaseChange)
                             classificationClass = "base";
-                        if (diff.Classification == DiffClassification.ReviewChange)
+                        if (line.classification == DiffClassification.ReviewChange)
                             classificationClass = "review";
 
-                        sw.WriteLine($"<span class='line oper-{operClass} class-{classificationClass}'><pre>{(line == "" ? "&nbsp;" : line)}</pre></span>");
+                        sw.WriteLine($"<span class='line oper-{operClass} class-{classificationClass}'><pre>{(line.line == "" ? "&nbsp;" : line.line)}</pre></span>");
                     }
                 }
 
@@ -151,6 +160,7 @@ namespace Tests
             public string Base2 { get; set; }
             public string Review2 { get; set; }
             public string Review1 { get; set; }
+            public (char classification, string line)[] Expected { get; set; }
 
             public FileSet(string caseName)
             {
@@ -161,6 +171,10 @@ namespace Tests
 
                 Review1 = ReadCaseFile("review1.txt");
                 Review2 = ReadCaseFile("review2.txt");
+                Expected = ReadCaseFile("expected.txt")
+                    .Split('\n')
+                    .Select(l => (classification: l[0], line: l.Substring(1)))
+                    .ToArray();
             }
 
             private string ReadCaseFile(string fileName)
@@ -221,6 +235,35 @@ namespace Tests
             }
 
             return -1;
+        }
+
+        public static IEnumerable<(DiffClassification classification, Operation operation, string line)> SplitLines(this List<ClassifiedDiff> diff)
+        {
+            int index = 0;
+            foreach (var item in diff)
+            {
+                if (item.Diff.Operation.IsDelete)
+                {
+                    index++;
+                    continue;
+                }
+
+                var diffText = item.Diff.Text;
+
+                if (diffText.EndsWith("\n") && index != diff.Count - 1)
+                {
+                    diffText = diffText.Substring(0, diffText.Length - 1);
+                }
+
+                var lines = diffText.Split('\n');
+
+                foreach (var line in lines)
+                {
+                    yield return (item.Classification, item.Diff.Operation, line);
+                }
+
+                index++;
+            }
         }
     }
 
