@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using DiffMatchPatch;
 using LibGit2Sharp;
 using NUnit.Framework;
 using Diff = DiffMatchPatch.Diff;
 using Patch = LibGit2Sharp.Patch;
 
-namespace Tests
+namespace Tests.Playground
 {
-    public class Diffs
+    [Explicit]
+    public class PlayingWithGitAndGettingDiffs
     {
         private const string File1 = "file1.txt";
         private readonly string RepoDir = @"D:\tmp\repo-test";
