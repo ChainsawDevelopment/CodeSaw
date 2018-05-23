@@ -6,7 +6,7 @@ namespace Web.Modules.Home
     {
         public HomeModule() : base("/")
         {
-            Get("/", _ => "test");
+            Get("/", _ => View["Index"]);
         }
     }
 }

@@ -8,4 +8,6 @@ nuget Microsoft.NET.Test.Sdk
 nuget NUnit
 nuget NUnit3TestAdapter
 nuget Nancy prerelease
-nuget Nancy.Owin prerelease
+nuget Microsoft.AspNetCore.StaticFiles
+
+clitool Microsoft.DotNet.Watcher.Tools

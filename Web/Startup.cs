@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Nancy;
+using Nancy.Configuration;
+using Nancy.Conventions;
 using Nancy.Owin;
 
 namespace Web
@@ -26,7 +32,30 @@ namespace Web
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseOwin(owin => { owin.UseNancy(); });
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                RequestPath = new PathString("/dist"),
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
+            });
+            app.UseOwin(owin => { owin.UseNancy(opt=>opt.Bootstrapper = new Bootstraper()); });
+        }
+    }
+
+    public class Bootstraper : DefaultNancyBootstrapper
+    {
+        public override void Configure(INancyEnvironment environment)
+        {
+            base.Configure(environment);
+
+            environment.Tracing(enabled: true, displayErrorTraces: true);
+        }
+
+        protected override void ConfigureConventions(NancyConventions nancyConventions)
+        {
+            base.ConfigureConventions(nancyConventions);
+
+            nancyConventions.ViewLocationConventions.Clear();
+            nancyConventions.ViewLocationConventions.Add((name, args, ctx) => $"Modules/{ctx.ModuleName}/Views/{name}");
         }
     }
 }

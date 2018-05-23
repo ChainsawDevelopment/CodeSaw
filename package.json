@@ -1,0 +1,13 @@
+{
+  "name": "git-reviewer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@git.kplabs.pl:mnowak3/kp-reviewer.git",
+  "author": "Maciej Nowak <maciejt.nowak@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.3"
+  }
+}

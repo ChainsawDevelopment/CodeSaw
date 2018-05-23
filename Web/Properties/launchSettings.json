@@ -15,7 +15,9 @@
       }
     },
     "Web": {
-      "commandName": "Project",
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "watch run",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
