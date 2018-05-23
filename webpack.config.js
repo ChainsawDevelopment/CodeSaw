@@ -6,7 +6,8 @@ module.exports = {
     ],
     output: {
         path: path.resolve(__dirname, 'Web/wwwroot'),
-        filename: 'dist.js'
+        filename: 'dist.js',
+        publicPath: 'http://localhost:8080/'
     },
     module: {
         rules: [
@@ -34,6 +35,14 @@ if (process.env.WEBPACK_SERVE === 'true') {
     module.exports.serve = {
         dev: {
             stats: 'minimal'
-        }
+        },
+        add: (app, middleware) => {
+            app.use((ctx, next) => {
+                ctx.set('Access-Control-Allow-Origin', '*');
+                next();
+            });
+            middleware.webpack();
+            middleware.content();
+        },
     };
 }

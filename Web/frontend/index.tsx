@@ -1,26 +1,60 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { createStore, Action } from 'redux';
+import { createStore, Action, combineReducers, applyMiddleware  } from 'redux';
 import { Provider, connect } from 'react-redux';
+import { ConnectedRouter, routerReducer, routerMiddleware, push, RouterState } from 'react-router-redux';
+import { Route, Switch } from 'react-router';
+import createHistory from 'history/createBrowserHistory'
+import { Link } from 'react-router-dom';
 
 interface State {
     c: number;
+    router: RouterState
 }
 
-const reducer = (s: State = { c: 2}, action: Action) => {
-    return s;
-};
+const history = createHistory();
 
-const store = createStore(reducer);
+const middleware = routerMiddleware(history)
+
+const store = createStore(
+    combineReducers({
+        router: routerReducer
+    }),
+    applyMiddleware(middleware));
 
 const Component = 
     connect((s: State) => ({n: s.c}))(
         (props: {n: number}) => (<h1>Test {props.n}</h1>)
     );
 
+const Label = (props: {text: string}) => (<p>{props.text}</p>);
+
+const Text = () => (<Label text="text"/>);
+
+const ConnectedSwitch = connect((state: State) => ({
+    location: state.router.location
+  }))(Switch)
+
+  const AppContainer = () => (
+      <div>
+          <strong>Pre route</strong>
+            <ConnectedSwitch>
+                <Route exact path="/" component={() => (<h1>Home <Link to="/about">About</Link></h1>)} />
+                <Route path="/about" component={() => (<h1>About <Link to="/">Home</Link></h1>)} />
+            </ConnectedSwitch>
+        <strong>Post route</strong>
+    </div>
+  )
+  
+  const App = connect((state: State) => ({
+    location: state.router.location,
+  }))(AppContainer)
+
 const Root = () => (
     <Provider store={store}>
-        <Component />
+        <ConnectedRouter history={history}>
+            <App />
+        </ConnectedRouter>
     </Provider>
 );
 

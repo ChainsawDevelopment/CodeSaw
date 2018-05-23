@@ -7,6 +7,7 @@ namespace Web.Modules.Home
         public HomeModule() : base("/")
         {
             Get("/", _ => View["Index"]);
+            Get("/{path*}", _ => View["Index"]);
         }
     }
 }
