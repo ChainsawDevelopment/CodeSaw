@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "es6",
+        "jsx": "react",
+        "sourceMap": true,
+        "typeRoots": ["node_modules/@types", "src/@types"],
+    }
+}

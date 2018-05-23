@@ -2,11 +2,22 @@ const path = require('path');
 
 module.exports = {
     entry: [
-        './Web/frontend/index.js'
+        './Web/frontend/index.tsx'
     ],
     output: {
         path: path.resolve(__dirname, 'Web/wwwroot'),
         filename: 'dist.js'
+    },
+    module: {
+        rules: [
+            { 
+                test: /\.tsx?$/, 
+                loader: "ts-loader",
+                options: {
+                    configFile: 'Web/frontend/tsconfig.json'
+                }
+            }
+        ]
     },
     mode: 'development',
     stats: {
