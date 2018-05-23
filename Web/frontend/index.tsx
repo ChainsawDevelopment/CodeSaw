@@ -6,6 +6,8 @@ import { ConnectedRouter, routerReducer, routerMiddleware, push, RouterState } f
 import { Route, Switch } from 'react-router';
 import createHistory from 'history/createBrowserHistory'
 import { Link } from 'react-router-dom';
+import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
+import LinkButton from './components/LinkButton';
 
 interface State {
     c: number;
@@ -39,7 +41,7 @@ const ConnectedSwitch = connect((state: State) => ({
       <div>
           <strong>Pre route</strong>
             <ConnectedSwitch>
-                <Route exact path="/" component={() => (<h1>Home <Link to="/about">About</Link></h1>)} />
+                <Route exact path="/" component={() => (<h1>Home <LinkButton to="/about">About</LinkButton></h1>)} />
                 <Route path="/about" component={() => (<h1>About <Link to="/">Home</Link></h1>)} />
             </ConnectedSwitch>
         <strong>Post route</strong>
