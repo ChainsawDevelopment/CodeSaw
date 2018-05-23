@@ -11,3 +11,11 @@ nuget Nancy prerelease
 nuget Microsoft.AspNetCore.StaticFiles
 
 clitool Microsoft.DotNet.Watcher.Tools
+clitool dotnet-fake
+
+group FakeBuild
+    source https://www.nuget.org/api/v2
+
+    nuget Fake.Core.Target prerelease
+    nuget Fake.DotNet.Cli prerelease
+    nuget Fake.JavaScript.Yarn prerelease

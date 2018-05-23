@@ -5,3 +5,6 @@ obj
 .paket/paket.exe
 paket-files
 node_modules
+fake
+Web/wwwroot/dist.js
+.fake

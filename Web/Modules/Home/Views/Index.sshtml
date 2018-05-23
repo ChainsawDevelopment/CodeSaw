@@ -7,6 +7,6 @@
 <body>
 Root: <strong>@Path['~/']</strong>
 
-<script src="~/dist/dist.js"></script>
+<script src="http://localhost:8080/dist.js"></script>
 </body>
 </html>
