@@ -10,9 +10,11 @@ module.exports = {
     },
     module: {
         rules: [
+            { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/ },
             { 
                 test: /\.tsx?$/, 
                 loader: "ts-loader",
+                exclude: /node_modules/,
                 options: {
                     configFile: 'Web/frontend/tsconfig.json'
                 }

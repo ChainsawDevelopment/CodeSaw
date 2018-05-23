@@ -4,6 +4,7 @@
         "module": "es6",
         "jsx": "react",
         "sourceMap": true,
-        "typeRoots": ["node_modules/@types", "src/@types"],
+        "typeRoots": ["../../node_modules/@types"],
+        "moduleResolution": "node" 
     }
 }
