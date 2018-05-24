@@ -8,6 +8,7 @@ import createHistory from 'history/createBrowserHistory'
 import { Link } from 'react-router-dom';
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
 import LinkButton from './components/LinkButton';
+import Layout from './layout';
 
 interface State {
     c: number;
@@ -33,29 +34,27 @@ const Label = (props: {text: string}) => (<p>{props.text}</p>);
 
 const Text = () => (<Label text="text"/>);
 
-const ConnectedSwitch = connect((state: State) => ({
-    location: state.router.location
-  }))(Switch)
 
-  const AppContainer = () => (
-      <div>
-          <strong>Pre route</strong>
-            <ConnectedSwitch>
-                <Route exact path="/" component={() => (<h1>Home <LinkButton to="/about">About</LinkButton></h1>)} />
-                <Route path="/about" component={() => (<h1>About <Link to="/">Home</Link></h1>)} />
-            </ConnectedSwitch>
-        <strong>Post route</strong>
-    </div>
-  )
+
+//   const AppContainer = () => (
+//       <div>
+//           <strong>Pre route</strong>
+//             <ConnectedSwitch>
+//                 <Route exact path="/" component={() => (<h1>Home <LinkButton to="/about">About</LinkButton></h1>)} />
+//                 <Route path="/about" component={() => (<h1>About <Link to="/">Home</Link></h1>)} />
+//             </ConnectedSwitch>
+//         <strong>Post route</strong>
+//     </div>
+//   )
   
-  const App = connect((state: State) => ({
-    location: state.router.location,
-  }))(AppContainer)
+//   const App = connect((state: State) => ({
+//     location: state.router.location,
+//   }))(AppContainer)
 
 const Root = () => (
     <Provider store={store}>
         <ConnectedRouter history={history}>
-            <App />
+            <Layout />
         </ConnectedRouter>
     </Provider>
 );
