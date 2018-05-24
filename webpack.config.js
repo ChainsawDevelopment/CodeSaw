@@ -22,7 +22,12 @@ module.exports = {
                 options: {
                     configFile: 'Web/frontend/tsconfig.json'
                 }
-            }
+            },
+            { test: /\.(css|less)$/, use: [
+                { loader: 'style-loader' },
+                { loader: 'css-loader' },
+                { loader: 'less-loader' }
+            ]}
         ]
     },
     mode: 'development',

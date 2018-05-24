@@ -5,6 +5,8 @@ import { Link, Route, withRouter, RouteComponentProps } from "react-router-dom";
 import ConnectedSwitch from './routing/ConnectedSwitch';
 import LinkButton from './components/LinkButton';
 
+import ReviewPage from './pages/review';
+
 const Home = () => (<h1>Home</h1>);
 const Reviews = () => (
     <div>
@@ -19,7 +21,7 @@ const Reviews = () => (
 );
 
 const Review = withRouter((props: RouteComponentProps<{id: number}>) => (
-    <h1>Review {props.match.params.id}</h1>
+    <ReviewPage reviewId={props.match.params.id} />  
 ));
 
 export default () => (
