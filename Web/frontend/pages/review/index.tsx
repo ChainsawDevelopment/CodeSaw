@@ -2,7 +2,7 @@ import * as React from "react";
 
 import VersionSelector from './versionSelector';
 import { Dispatch } from "redux";
-import { selectCurrentVersion, selectPreviousVersion, RevisionRange } from "./state";
+import { RevisionRange, selectCurrentRevisions } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 
@@ -11,8 +11,7 @@ interface OwnProps {
 }
 
 interface DispatchProps {
-    selectPreviousVersion(revision: number): void;
-    selectCurrentVersion(revision: number): void;
+    selectRevisionRange(range: RevisionRange): void;
 }
 
 interface StateProps {
@@ -30,8 +29,7 @@ const reviewPage = (props: Props): JSX.Element => {
             <VersionSelector
                 available={props.availableRevisions}
                 range={props.currentRange}
-                onSelectPrevious={props.selectPreviousVersion}
-                onSelectCurrent={props.selectCurrentVersion}
+                onSelectRange={props.selectRevisionRange}
             />
         </div>
     );
@@ -43,8 +41,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
-    selectPreviousVersion: r => dispatch(selectPreviousVersion({ revision: r })),
-    selectCurrentVersion: r => dispatch(selectCurrentVersion({ revision: r })),
+    selectRevisionRange: range => dispatch(selectCurrentRevisions({ range }))
 });
 
 export default connect(

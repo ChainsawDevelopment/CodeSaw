@@ -5,25 +5,35 @@ import Radio from 'semantic-ui-react/dist/commonjs/addons/Radio';
 import { RevisionRange } from "./state";
 
 type SelectVersionHandler = (revision: number) => void;
+type SelectRangeHandle = (range: RevisionRange) => void;
 
 interface Props {
     available: number[];
     range: RevisionRange;
-    onSelectPrevious: SelectVersionHandler;
-    onSelectCurrent: SelectVersionHandler;
+    onSelectRange: SelectRangeHandle
 }
 
 const versionSelector = (props: Props): JSX.Element => {
     const header = props.available.map(r => (<th key={r}>{r}</th>));  
     const previous = props.available.map(r => (
         <td key={r}>    
-            <Radio checked={r == props.range.previous} value={r} onChange={() => props.onSelectPrevious(r)} />
+            <Radio 
+                checked={r == props.range.previous} 
+                value={r} 
+                onChange={() => props.onSelectRange(
+                    { ...props.range, previous: r }
+                )} />
         </td>
     ));
 
     const current = props.available.map(r => (
         <td key={r}>    
-            <Radio checked={r == props.range.current} value={r} onChange={() => props.onSelectCurrent(r)} />
+            <Radio 
+                checked={r == props.range.current} 
+                value={r} 
+                onChange={() => props.onSelectRange(
+                    { ...props.range, current: r }
+                )} />
         </td>
     ));
 

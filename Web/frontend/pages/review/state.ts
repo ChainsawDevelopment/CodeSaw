@@ -12,8 +12,7 @@ export interface ReviewState {
 
 const createAction = actionCreatorFactory('REVIEW');
 
-export const selectPreviousVersion = createAction<{ revision: number }>('SELECT_PREVIOUS');
-export const selectCurrentVersion = createAction<{ revision: number }>('SELECT_CURRENT');
+export const selectCurrentRevisions = createAction<{ range: RevisionRange }>('SELECT_CURRENT_REVISIONS');
 
 const initial: ReviewState = {
     availableRevisions: [1,2,3,4,5,6,7],
@@ -23,24 +22,11 @@ const initial: ReviewState = {
     }
 };
 
-export const reviewReducer = (state: ReviewState = initial, action: AnyAction) => {
-    if(isType(action, selectPreviousVersion)) {
+export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {    
+    if(isType(action, selectCurrentRevisions)) {
         return {
             ...state,
-            range: {
-                ...state.range,
-                previous: action.payload.revision
-            }
-        };
-    }
-
-    if(isType(action, selectCurrentVersion)) {
-        return {
-            ...state,
-            range: {
-                ...state.range,
-                current: action.payload.revision
-            }
+            range: action.payload.range
         };
     }
 
