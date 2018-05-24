@@ -7,6 +7,8 @@ import LinkButton from './components/LinkButton';
 
 import ReviewPage from './pages/review';
 
+import "./layout.less";
+
 const Home = () => (<h1>Home</h1>);
 const Reviews = () => (
     <div>
@@ -24,9 +26,17 @@ const Review = withRouter((props: RouteComponentProps<{id: number}>) => (
     <ReviewPage reviewId={props.match.params.id} />  
 ));
 
+const Layout = () => {
+    return (
+        <div className="test-div">
+            test
+        </div>
+    );
+};
+
 export default () => (
-    <div style={{ paddingLeft: '1em', paddingRight: '1em' }}>
-        <Menu fixed='top' inverted>
+    <> {/*<div style={{ paddingLeft: '1em', paddingRight: '1em' }}>*/}
+        <Menu inverted>
             <Container fluid>
                 <Menu.Item as={(props) => (<Link to='/' {...props} />)}>
                     Git Reviewer
@@ -37,12 +47,13 @@ export default () => (
                 </Menu.Item>
             </Container>
         </Menu>
-        <Container fluid style={{ marginTop: '2em' }}>
+        <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
                 <Route path="/reviews" component={Reviews} />
                 <Route path="/review/:id" component={Review} />
+                <Route path="/layout" component={Layout} />
             </ConnectedSwitch>
         </Container>
-    </div>
+    </> //{/*</div>*/}
 );

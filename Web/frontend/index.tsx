@@ -4,8 +4,11 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { ConnectedRouter, RouterState, routerMiddleware, routerReducer } from 'react-router-redux';
 import { applyMiddleware, combineReducers, createStore, compose } from 'redux';
+import sagaMiddlewareFactory from 'redux-saga';
+
 import Layout from './layout';
 import { reviewReducer } from './pages/review/state';
+import reviewSagas from './pages/review/sagas';
 
 interface State {
     c: number;
@@ -14,7 +17,9 @@ interface State {
 
 const history = createHistory();
 
-const middleware = routerMiddleware(history)
+const historyMiddleware = routerMiddleware(history);
+
+const sagaMiddleware = sagaMiddlewareFactory();
 
 const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
@@ -24,9 +29,13 @@ const store = createStore(
         review: reviewReducer
     }),
     composeEnhancers(
-        applyMiddleware(middleware)
+        applyMiddleware(historyMiddleware, sagaMiddleware)
     )
 );
+
+for (const saga of reviewSagas) {
+    sagaMiddleware.run(saga);
+}
 
 const Root = () => (
     <Provider store={store}>
