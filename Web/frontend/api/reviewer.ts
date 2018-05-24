@@ -8,6 +8,16 @@ export interface RevisionRangeInfo {
     changes: ChangedFile[];
 }
 
+export interface DiffChunk {
+    classification: 'unchanged' | 'base' | 'review';
+    operation: 'equal' | 'insert' | 'delete';
+    text: string;
+}
+
+export interface FileDiff {
+    chunks: DiffChunk[];
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -23,4 +33,11 @@ export class ReviewerApi {
             .then(r => r.json())
             .then(r => r as RevisionRangeInfo);
     }
+
+    public getDiff = (reviewId: number, range: RevisionRange, path: string): Promise<FileDiff> => {
+        return fetch(
+            `/api/review/${reviewId}/diff/${range.previous}/${range.current}/${path}`,
+            acceptJson
+        ).then(r => r.json());
+    };
 }
