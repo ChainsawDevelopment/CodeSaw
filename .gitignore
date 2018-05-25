@@ -8,3 +8,4 @@ node_modules
 fake
 Web/wwwroot/dist.js
 .fake
+artifacts

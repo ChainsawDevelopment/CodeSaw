@@ -8,7 +8,11 @@ nuget Microsoft.NET.Test.Sdk
 nuget NUnit
 nuget NUnit3TestAdapter
 nuget Nancy prerelease
+nuget Microsoft.AspNetCore
 nuget Microsoft.AspNetCore.StaticFiles
+nuget Microsoft.AspNetCore.Hosting
+nuget Microsoft.AspNetCore.Diagnostics 
+nuget Microsoft.AspNetCore.Owin
 
 clitool Microsoft.DotNet.Watcher.Tools
 clitool dotnet-fake

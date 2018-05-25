@@ -1,3 +1,7 @@
 Nancy
 Microsoft.DotNet.Watcher.Tools
 Microsoft.AspNetCore.StaticFiles
+Microsoft.AspNetCore.Hosting
+Microsoft.AspNetCore.Diagnostics
+Microsoft.AspNetCore.Owin
+Microsoft.AspNetCore

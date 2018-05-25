@@ -1,4 +1,6 @@
 ﻿using Nancy;
+using Nancy.Extensions;
+using System.Linq;
 
 namespace Web.Modules.Home
 {
@@ -6,8 +8,15 @@ namespace Web.Modules.Home
     {
         public HomeModule() : base("/")
         {
-            Get("/", _ => View["Index"]);
-            Get("/{path*}", _ => View["Index"]);
+            Get("/", _ => View["Index"].WithModel(new {
+                AssetBase = Context.Environment["assetServer"] ?? "/dist"
+            }));
+            Get("/a", _ => new {
+                env = this.Context.Environment.Select(x=>$"{x.Key} = {x.Value}")
+            });
+            Get("/{path*}", _ => View["Index"].WithModel(new {
+                AssetBase = Context.Environment["assetServer"] ?? "/dist"
+            }));
         }
     }
 }
