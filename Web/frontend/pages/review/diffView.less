@@ -1,0 +1,35 @@
+.diff-view {
+    display: flex;
+    flex-direction: column;
+
+    .line {
+        display: flex;
+        flex: 1;
+        flex-direction: row;
+        font-family: monospace;
+
+        &:hover {
+            background-color: lightgray;
+            opacity: 0.9;
+        }
+
+        .left, .right {
+            flex:1;
+
+            &.base-change .text {
+                opacity: 0.5;
+            }
+
+            .line-counter {
+                padding-right: 1em;
+                background-color: lightgray;
+                display: inline-block;
+                width: 30px;
+            }
+        }
+
+        div.insert {
+            background-color: lightgreen;
+        }
+    }
+}

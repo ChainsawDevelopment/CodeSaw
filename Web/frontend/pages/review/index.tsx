@@ -4,19 +4,20 @@ import { Dispatch } from "redux";
 import { RevisionRange, selectCurrentRevisions, selectFileForView } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo } from "../../api/reviewer";
+import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk } from "../../api/reviewer";
 
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
 
 import VersionSelector from './versionSelector';
 import ChangedFileTree from './changedFileTree';
+import DiffView from './diffView';
 
 import "./review.less";
 
 type SelectFileForViewHandler = (path: string) => void;
 
-const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
+const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, chunks: DiffChunk[], onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
     return (
         <div style={{ flex: 1 }}>
             <Sidebar.Pushable as={Segment}>
@@ -29,7 +30,7 @@ const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, onSel
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic>
-                        file diff
+                        {props.chunks ? <DiffView chunks={props.chunks}/> : null}
                     </Segment>
                 </Sidebar.Pusher>
             </Sidebar.Pushable>
@@ -51,6 +52,7 @@ interface StateProps {
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
     selectedFile: string;
+    selectedFileDiff: FileDiff;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -69,6 +71,7 @@ const reviewPage = (props: Props): JSX.Element => {
                 info={props.rangeInfo} 
                 selectedFile={props.selectedFile}
                 onSelectFileForView={props.selectFileForView} 
+                chunks={props.selectedFileDiff ? props.selectedFileDiff.chunks : null}
             />) : null}
         </div>
     );
@@ -78,7 +81,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     availableRevisions: state.review.availableRevisions,
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
-    selectedFile: state.review.selectedFile
+    selectedFile: state.review.selectedFile,
+    selectedFileDiff: state.review.selectedFileDiff
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
