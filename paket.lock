@@ -388,7 +388,7 @@ NUGET
       System.Threading.Thread (>= 4.3)
       System.Xml.XmlDocument (>= 4.3)
       System.Xml.XPath.XmlDocument (>= 4.3)
-    Paket.Core (5.167.1)
+    Paket.Core (5.168)
       Chessie (>= 0.6)
       Mono.Cecil (>= 0.10.0-beta6)
       Newtonsoft.Json (>= 10.0.3)
