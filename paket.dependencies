@@ -5,6 +5,7 @@ framework: netcoreapp20
 nuget Diff.Match.Patch
 nuget LibGit2Sharp
 nuget Microsoft.NET.Test.Sdk
+nuget NHibernate
 nuget NUnit
 nuget NUnit3TestAdapter
 nuget Nancy prerelease
