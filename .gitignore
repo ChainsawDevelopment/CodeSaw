@@ -9,3 +9,5 @@ fake
 Web/wwwroot/dist.js
 .fake
 artifacts
+
+Web/appsettings.local.json

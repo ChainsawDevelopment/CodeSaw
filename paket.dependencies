@@ -9,11 +9,15 @@ nuget NHibernate
 nuget NUnit
 nuget NUnit3TestAdapter
 nuget Nancy prerelease
+nuget Nancy.Bootstrappers.Autofac prerelease
 nuget Microsoft.AspNetCore
 nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.Diagnostics 
 nuget Microsoft.AspNetCore.Owin
+nuget Autofac.Extensions.DependencyInjection
+
+nuget System.Data.SqlClient
 
 clitool Microsoft.DotNet.Watcher.Tools
 clitool dotnet-fake

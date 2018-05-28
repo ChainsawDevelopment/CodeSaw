@@ -6,3 +6,6 @@ Microsoft.AspNetCore.Diagnostics
 Microsoft.AspNetCore.Owin
 Microsoft.AspNetCore
 NHibernate
+Nancy.Bootstrappers.Autofac
+Autofac.Extensions.DependencyInjection
+System.Data.SqlClient

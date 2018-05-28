@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -11,11 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Nancy.Owin;
 using NHibernate;
+using NHibernate.Dialect;
 
 namespace Web
 {
     public class Startup
     {
+        private IContainer _container;
         public IHostingEnvironment HostingEnvironment { get; }
         public IConfiguration Configuration { get; }
 
@@ -27,16 +28,25 @@ namespace Web
         
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton(BuildSessionFactory());
+            var builder = new ContainerBuilder();
+
+            builder.Populate(services);
+
+            builder.RegisterInstance(BuildSessionFactory());
+
+            _container = builder.Build();
+
+            return new AutofacServiceProvider(_container);
         }
 
         private ISessionFactory BuildSessionFactory()
         {
             var configuration = new NHibernate.Cfg.Configuration();
 
-            configuration.SetProperty(NHibernate.Cfg.Environment.ConnectionStringName, "Store");
+            configuration.SetProperty(NHibernate.Cfg.Environment.ConnectionString, Configuration.GetConnectionString("Store"));
+            configuration.SetProperty(NHibernate.Cfg.Environment.Dialect, typeof(MsSql2012Dialect).AssemblyQualifiedName);
             
             return configuration.BuildSessionFactory();
         }
@@ -57,7 +67,7 @@ namespace Web
 
             var assetServer = Configuration.GetValue<string>("REVIEWER_ASSET_SERVER", null);
 
-            app.UseOwin(owin => { owin.UseNancy(opt=>opt.Bootstrapper = new Bootstraper(assetServer)); });
+            app.UseOwin(owin => { owin.UseNancy(opt=>opt.Bootstrapper = new Bootstraper(assetServer, _container)); });
         }
     }
 }
