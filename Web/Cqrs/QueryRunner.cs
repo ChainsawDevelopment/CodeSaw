@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
+using System.Threading.Tasks;
 using Autofac;
 using NHibernate;
 
@@ -8,12 +9,12 @@ namespace Web.Cqrs
 {
     public interface IQuery<TResult>
     {
-        TResult Execute(ISession session);
+        Task<TResult> Execute(ISession session);
     }
 
     public interface IQueryRunner
     {
-        TResult Query<TResult>(IQuery<TResult> query);
+        Task<TResult> Query<TResult>(IQuery<TResult> query);
     }
 
     public class QueryRunner : IQueryRunner
@@ -29,11 +30,11 @@ namespace Web.Cqrs
             _sessionFactory = sessionFactory;
         }
 
-        public TResult Query<TResult>(IQuery<TResult> query)
+        public async Task<TResult> Query<TResult>(IQuery<TResult> query)
         {
             try
             {
-                return (TResult) QueryCoreMethod.MakeGenericMethod(query.GetType(), typeof(TResult)).Invoke(this, new object[] {query});
+                return await (Task<TResult>)QueryCoreMethod.MakeGenericMethod(query.GetType(), typeof(TResult)).Invoke(this, new object[] {query});
             }
             catch (TargetInvocationException e)
             {
@@ -42,14 +43,14 @@ namespace Web.Cqrs
             }
         }
 
-        private TResult QueryCore<TQuery, TResult>(TQuery query)
+        private async Task<TResult> QueryCore<TQuery, TResult>(TQuery query)
             where TQuery : IQuery<TResult>
         {
             var currentSession = _lifetimeScope.ResolveOptional<ISession>();
 
             if (currentSession != null)
             {
-                return query.Execute(currentSession);
+                return await query.Execute(currentSession);
             }
 
             using (var session = _sessionFactory.OpenSession())
@@ -57,7 +58,7 @@ namespace Web.Cqrs
                 session.DefaultReadOnly = true;
                 session.FlushMode = FlushMode.Manual;
                 
-                return query.Execute(session);
+                return await query.Execute(session);
             }
         }
     }

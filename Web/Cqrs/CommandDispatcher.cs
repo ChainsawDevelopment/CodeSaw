@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Autofac;
 using NHibernate;
 
@@ -10,13 +11,13 @@ namespace Web.Cqrs
 
     public interface ICommandDispatcher
     {
-        void Execute(ICommand command);
+        Task Execute(ICommand command);
     }
 
     public abstract class CommandHandler<TCommand>
         where TCommand : ICommand
     {
-        public abstract void Handle(TCommand command);
+        public abstract Task Handle(TCommand command);
     }
 
     public class CommandDispatcher : ICommandDispatcher
@@ -30,12 +31,12 @@ namespace Web.Cqrs
             _sessionFactory = sessionFactory;
         }
 
-        public void Execute(ICommand command)
+        public async Task Execute(ICommand command)
         {
-            ((dynamic) this).ExecuteCommand((dynamic) command);
+            await ((dynamic) this).ExecuteCommand((dynamic) command);
         }
 
-        public void ExecuteCommand<T>(T command) where T : ICommand
+        public async Task ExecuteCommand<T>(T command) where T : ICommand
         {
             using (var session = _sessionFactory.OpenSession())
             {
@@ -45,8 +46,10 @@ namespace Web.Cqrs
                 using (var tx = session.BeginTransaction())
                 {
                     var commandHandler = scope.Resolve<CommandHandler<T>>();
-                    commandHandler.Handle(command);
-                    tx.Commit();
+                    
+                    await commandHandler.Handle(command);
+                    
+                    await tx.CommitAsync();
                 }
             }
         }

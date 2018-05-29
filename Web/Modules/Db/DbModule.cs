@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Nancy;
 using NHibernate;
 using NHibernate.Mapping.ByCode;
@@ -11,14 +12,14 @@ namespace Web.Modules.Db
     {
         public DbModule(ICommandDispatcher commands, IQueryRunner queries) : base("/test/db")
         {
-            Get("/insert/{text}", _ =>
+            Get("/insert/{text}", async _ =>
             {
-                commands.Execute(new InsertRecord(_.Text));
+                await commands.Execute(new InsertRecord(_.Text));
                 return new {ok = true};
             });
-            Get("/list", _ => new
+            Get("/list", async _ => new
             {
-                list = queries.Query(new ListEntities())
+                list = await queries.Query(new ListEntities())
             });
         }
     }
@@ -41,9 +42,9 @@ namespace Web.Modules.Db
                 _session = session;
             }
 
-            public override void Handle(InsertRecord command)
+            public override async Task Handle(InsertRecord command)
             {
-                _session.Save(new TestEntity()
+                await _session.SaveAsync(new TestEntity()
                 {
                     Text = command.Text
                 });
@@ -53,11 +54,11 @@ namespace Web.Modules.Db
 
     public class ListEntities : IQuery<IList<string>>
     {
-        public IList<string> Execute(ISession session)
+        public async Task<IList<string>> Execute(ISession session)
         {
-            return session.QueryOver<TestEntity>()
+            return await session.QueryOver<TestEntity>()
                 .Select(t => t.Text)
-                .List<string>();
+                .ListAsync<string>();
         }
     }
 
