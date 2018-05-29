@@ -3,6 +3,7 @@ source https://www.nuget.org/api/v2
 framework: netcoreapp20
 
 nuget Diff.Match.Patch
+nuget FluentMigrator
 nuget LibGit2Sharp
 nuget Microsoft.NET.Test.Sdk
 nuget NHibernate
@@ -16,6 +17,7 @@ nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.Diagnostics 
 nuget Microsoft.AspNetCore.Owin
 nuget Autofac.Extensions.DependencyInjection
+nuget FluentMigrator.Runner
 
 nuget System.Data.SqlClient
 

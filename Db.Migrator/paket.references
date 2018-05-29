@@ -1,0 +1,5 @@
+FluentMigrator
+FluentMigrator.Runner
+Microsoft.Extensions.Configuration
+Microsoft.Extensions.Configuration.Json
+System.Data.SqlClient

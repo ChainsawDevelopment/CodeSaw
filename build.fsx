@@ -5,6 +5,8 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO.FileSystemOperators
 open Fake.JavaScript
+open Fake.IO.Globbing.Tools
+open System
 
 let root = __SOURCE_DIRECTORY__
 
@@ -76,19 +78,56 @@ Target.create "Package" (fun _ ->
             Runtime = Some "win10-x64"
         } 
         |> DotNet.Options.withWorkingDirectory (root </> "Web")
-        // |> DotNet.Options.withCustomParams (Some "--no-restore")
 
     DotNet.publish publishOpts ("Web.csproj")
 )
 
-Target.create "_Test" (fun p -> 
-    p.Context.Arguments
-    |> Seq.iter (Trace.logfn "Arg: '%A'")
+Target.create "CreateDB" (fun _ -> 
+    let setOpts (opts: DotNet.Options) = 
+        { opts with
+            WorkingDirectory = root </> "Db.Migrator"
+            CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
+        } 
+        |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
+    
+
+    let args = 
+        [
+            "CreateDB"
+            root </> "Web" </> "appsettings.local.json"
+        ] |> Seq.map Process.quoteIfNeeded |> FSharp.Core.String.concat " "
+
+    let r = DotNet.exec setOpts "run" args
+
+    if not r.OK then
+        failwithf "DbMigrator failed with %A" r.Errors
+)
+
+Target.create "UpdateDB" (fun _ -> 
+    let setOpts (opts: DotNet.Options) = 
+        { opts with
+            WorkingDirectory = root </> "Db.Migrator"
+            CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
+        } 
+        |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
+    
+
+    let args = 
+        [
+            "UpdateDB"
+            root </> "Web" </> "appsettings.local.json"
+        ] |> Seq.map Process.quoteIfNeeded |> FSharp.Core.String.concat " "
+
+    let r = DotNet.exec setOpts "run" args
+
+    if not r.OK then
+        failwithf "DbMigrator failed with %A" r.Errors
 )
 
 open Fake.Core.TargetOperators
 
 "_DotNetRestore" ==> "_BackendBuild" ==> "Build"
 "_YarnInstall" ==> "_FrontendBuild" ==> "Build"
+
 
 Target.runOrDefaultWithArguments "Build"
