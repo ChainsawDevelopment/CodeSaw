@@ -7,11 +7,14 @@ import { applyMiddleware, combineReducers, createStore, compose } from 'redux';
 import sagaMiddlewareFactory from 'redux-saga';
 
 import Layout from './layout';
+
 import { reviewReducer } from './pages/review/state';
 import reviewSagas from './pages/review/sagas';
 
+import { reviewsReducer } from './pages/reviews/state';
+import reviewsSagas from './pages/reviews/sagas';
+
 interface State {
-    c: number;
     router: RouterState
 }
 
@@ -26,7 +29,8 @@ const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ||
 const store = createStore(
     combineReducers({
         router: routerReducer,
-        review: reviewReducer
+        review: reviewReducer,
+        reviews: reviewsReducer
     }),
     composeEnhancers(
         applyMiddleware(historyMiddleware, sagaMiddleware)
@@ -34,6 +38,10 @@ const store = createStore(
 );
 
 for (const saga of reviewSagas) {
+    sagaMiddleware.run(saga);
+}
+
+for (const saga of reviewsSagas) {
     sagaMiddleware.run(saga);
 }
 

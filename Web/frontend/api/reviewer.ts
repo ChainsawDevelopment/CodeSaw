@@ -18,6 +18,12 @@ export interface FileDiff {
     chunks: DiffChunk[];
 }
 
+export interface Review {
+    id: number;
+    title: string;
+    changedFiles: number;
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -39,5 +45,11 @@ export class ReviewerApi {
             `/api/review/${reviewId}/diff/${range.previous}/${range.current}/${path}`,
             acceptJson
         ).then(r => r.json());
+    };
+
+    public getReviews = (): Promise<Review[]> => {
+        return fetch('/api/reviews', acceptJson)
+            .then(r => r.json())
+            .then(r => r as Review[]);
     };
 }
