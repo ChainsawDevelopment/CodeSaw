@@ -6,21 +6,11 @@ import ConnectedSwitch from './routing/ConnectedSwitch';
 import LinkButton from './components/LinkButton';
 
 import ReviewPage from './pages/review';
+import Reviews from "./pages/reviews";
 
 import "./layout.less";
 
 const Home = () => (<h1>Home</h1>);
-const Reviews = () => (
-    <div>
-        <h1>Reviews</h1>
-        <LinkButton to="/review/3">
-        Go to review 3
-        </LinkButton>
-        <LinkButton to="/review/4">
-        Go to review 4
-        </LinkButton>
-    </div>
-);
 
 const Review = withRouter((props: RouteComponentProps<{id: number}>) => (
     <ReviewPage reviewId={props.match.params.id} />  

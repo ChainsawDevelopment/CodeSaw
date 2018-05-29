@@ -31,6 +31,7 @@ module.exports = {
         ]
     },
     mode: 'development',
+    devtool: 'inline-source-map',
     stats: {
         all: undefined,
         chunks: false,
