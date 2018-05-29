@@ -11,6 +11,7 @@ using Microsoft.Extensions.FileProviders;
 using Nancy.Owin;
 using NHibernate;
 using NHibernate.Dialect;
+using NHibernate.Mapping.ByCode;
 
 namespace Web
 {
@@ -36,6 +37,8 @@ namespace Web
 
             builder.RegisterInstance(BuildSessionFactory());
 
+            builder.RegisterModule<Cqrs.CqrsModule>();
+
             _container = builder.Build();
 
             return new AutofacServiceProvider(_container);
@@ -47,7 +50,12 @@ namespace Web
 
             configuration.SetProperty(NHibernate.Cfg.Environment.ConnectionString, Configuration.GetConnectionString("Store"));
             configuration.SetProperty(NHibernate.Cfg.Environment.Dialect, typeof(MsSql2012Dialect).AssemblyQualifiedName);
-            
+
+            var modelMapper = new ModelMapper();
+            modelMapper.AddMappings(typeof(Startup).Assembly.GetExportedTypes());
+
+            configuration.AddMapping(modelMapper.CompileMappingForAllExplicitlyAddedEntities());
+
             return configuration.BuildSessionFactory();
         }
 
