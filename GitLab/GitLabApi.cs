@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -56,6 +58,24 @@ namespace GitLab
                 .AddQueryParameter("to", currentSha)
                 .Execute<GitLabTreeDiff>(_client)
                 .ContinueWith(x => x.Result.Diffs);
+        }
+
+        public async Task<string> GetFileContent(int projectId, string commitHash, string file)
+        {
+            var request = new RestRequest($"/projects/{projectId}/repository/files/{HttpUtility.UrlEncode(file)}/raw", Method.GET)
+                .AddQueryParameter("ref", commitHash);
+
+            var response = await _client.ExecuteGetTaskAsync(request);
+
+            switch (response.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    return response.Content;
+                case HttpStatusCode.NotFound:
+                    return string.Empty;
+                default:
+                    throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
+            }
         }
     }
 

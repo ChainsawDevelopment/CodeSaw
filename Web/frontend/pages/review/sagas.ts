@@ -36,10 +36,11 @@ function* loadFileDiffSaga() {
         const action: Action<{ path: string }> = yield take(selectFileForView);
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
-            range: state.review.range
+            range: state.review.range,
+            headCommit: state.review.currentReview.headCommit
         }));
 
-        const diff = yield api.getDiff(currentRange.reviewId, currentRange.range, action.payload.path);
+        const diff = yield api.getDiff(currentRange.reviewId, resolveProvisional(currentRange.range, currentRange.headCommit), action.payload.path);
 
         yield put(loadedFileDiff(diff));
     }

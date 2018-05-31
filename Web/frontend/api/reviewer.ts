@@ -14,8 +14,8 @@ export interface RevisionRangeInfo {
 }
 
 export interface DiffChunk {
-    classification: 'unchanged' | 'base' | 'review';
-    operation: 'equal' | 'insert' | 'delete';
+    classification: 'Unchanged' | 'BaseChange' | 'ReviewChange';
+    operation: 'Equal' | 'Insert' | 'Delete';
     text: string;
 }
 
@@ -62,7 +62,7 @@ export class ReviewerApi {
 
     public getDiff = (reviewId: ReviewId, range: RevisionRange, path: string): Promise<FileDiff> => {
         return fetch(
-            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}/${path}`,
+            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?file=${path}`,
             acceptJson
         ).then(r => r.json());
     };

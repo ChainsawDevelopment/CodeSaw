@@ -6,6 +6,7 @@ using System.Text;
 using DiffMatchPatch;
 using NUnit.Framework;
 using NUnit.Framework.Internal.Execution;
+using Web.Diff;
 
 namespace Tests
 {
@@ -17,16 +18,15 @@ namespace Tests
         [TestCaseSource(nameof(TestCases))]
         public void CalculateDiffs(FileSet set)
         {
-            var reviewDiff = MakeDiff(set.Review1, set.Review2);
+            var reviewDiff = FourWayDiff.MakeDiff(set.Review1, set.Review2);
 
-            var baseDiff = MakeDiff(set.Base1, set.Base2);
-            DMP.DiffCleanupSemantic(baseDiff);
+            var baseDiff = FourWayDiff.MakeDiff(set.Base1, set.Base2);
 
             PrintDiff("Review", reviewDiff);
 
             PrintDiff("Base", baseDiff);
 
-            var classified = DiffClassifier.ClassifyDiffs(baseDiff, reviewDiff);
+            var classified = FourWayDiff.ClassifyDiffs(baseDiff, reviewDiff);
 
             PrintDiff("Classified", classified);
             DumpHtml(set.CaseName, $"{set.CaseName}.classified.html", classified);
@@ -91,18 +91,6 @@ namespace Tests
 
                 sw.WriteLine("</html>");
             }
-        }
-
-        private static List<Diff> MakeDiff(string file1, string file2)
-        {
-            var a = DMP.DiffLinesToChars(file1, file2);
-            var lineText1 = a.Item1;
-            var lineText2 = a.Item2;
-            var lineArray = a.Item3;
-            var diffs = DMP.DiffMain(lineText1, lineText2, false);
-            DMP.DiffCharsToLines(diffs, lineArray);
-
-            return diffs;
         }
 
         private void PrintDiff<T>(string label, IEnumerable<T> reviewDiff)
@@ -179,23 +167,6 @@ namespace Tests
             return s.Replace("\r\n", "\n").Replace("\r", "\n");
         }
 
-        public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind, IEqualityComparer<T> comparer)
-        {
-            int index = -1;
-
-            foreach (var item in @this)
-            {
-                index++;
-
-                if (comparer.Equals(item, valueToFind))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
         public static IEnumerable<(DiffClassification classification, Operation operation, string line)> SplitLines(this List<ClassifiedDiff> diff)
         {
             int index = 0;
@@ -223,31 +194,6 @@ namespace Tests
 
                 index++;
             }
-        }
-    }
-
-    public class DiffEqualityComparer : IEqualityComparer<Diff>
-    {
-        private static readonly char[] TrimChars = {'\n', ' '};
-
-        public bool Equals(Diff x, Diff y)
-        {
-            if (x.Equals(y))
-            {
-                return true;
-            }
-
-            if (!x.Operation.Equals(y.Operation))
-            {
-                return false;
-            }
-
-            return x.Text.Trim(TrimChars) == y.Text.Trim(TrimChars);
-        }
-
-        public int GetHashCode(Diff obj)
-        {
-            return obj.Text.Trim(TrimChars).GetHashCode();
         }
     }
 }

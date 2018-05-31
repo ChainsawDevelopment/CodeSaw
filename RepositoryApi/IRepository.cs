@@ -11,5 +11,6 @@ namespace RepositoryApi
         Task<ProjectInfo> Project(int projectId);
         Task<MergeRequest> MergeRequest(int projectId, int mergeRequestId);
         Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha);
+        Task<string> GetFileContent(int projectId, string commitHash, string file);
     }
 }

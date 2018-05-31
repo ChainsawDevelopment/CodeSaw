@@ -15,5 +15,16 @@ namespace GitLab
 
             return response.Data;
         }
+
+        public static async Task<string> ExecuteRaw(this IRestRequest request, IRestClient restClient)
+        {
+            var response =await restClient.ExecuteGetTaskAsync(request);
+            if (!response.IsSuccessful)
+            {
+                throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
+            }
+
+            return response.Content;
+        }
     }
 }

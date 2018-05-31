@@ -1,15 +1,29 @@
 ﻿using System.Collections.Generic;
 using DiffMatchPatch;
 
-namespace Tests
+namespace Web.Diff
 {
-    public class DiffClassifier
+    public class FourWayDiff
     {
-        public static List<ClassifiedDiff> ClassifyDiffs(IEnumerable<Diff> baseDiff, IEnumerable<Diff> reviewDiff)
+        private static readonly DiffMatchPatch.DiffMatchPatch DMP = new DiffMatchPatch.DiffMatchPatch(2f, (short) 32, 4, 0.5f, 1000, 32, 0.5f, (short) 4);
+
+        public static List<DiffMatchPatch.Diff> MakeDiff(string file1, string file2)
+        {
+            var a = DMP.DiffLinesToChars(file1, file2);
+            var lineText1 = a.Item1;
+            var lineText2 = a.Item2;
+            var lineArray = a.Item3;
+            var diffs = DMP.DiffMain(lineText1, lineText2, false);
+            DMP.DiffCharsToLines(diffs, lineArray);
+
+            return diffs;
+        }
+
+        public static List<ClassifiedDiff> ClassifyDiffs(IEnumerable<DiffMatchPatch.Diff> baseDiff, IEnumerable<DiffMatchPatch.Diff> reviewDiff)
         {
             var classified = new List<ClassifiedDiff>();
 
-            var chunksFromBaseDiff = new List<Diff>(baseDiff);
+            var chunksFromBaseDiff = new List<DiffMatchPatch.Diff>(baseDiff);
 
             foreach (var reviewChunk in reviewDiff)
             {
@@ -33,26 +47,5 @@ namespace Tests
 
             return classified;
         }
-    }
-
-    public enum DiffClassification
-    {
-        Unchanged,
-        BaseChange,
-        ReviewChange
-    }
-
-    public class ClassifiedDiff
-    {
-        public Diff Diff { get; }
-        public DiffClassification Classification { get; }
-
-        public ClassifiedDiff(Diff diff, DiffClassification classification)
-        {
-            Diff = diff;
-            Classification = classification;
-        }
-
-        public override string ToString() => $"{Classification}({Diff})";
     }
 }

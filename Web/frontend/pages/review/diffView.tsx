@@ -42,20 +42,20 @@ const Line = (props: {lineNo: number; lineChunk: DiffChunk}) => {
 
     const leftClasses = classNames({
         left: true,
-        equal: operation == 'equal',
-        delete: operation == 'delete',
-        'base-change': props.lineChunk.classification == 'base'
+        equal: operation == 'Equal',
+        delete: operation == 'Delete',
+        'base-change': props.lineChunk.classification == 'BaseChange'
     });
 
     const rightClasses = classNames({
         right: true,
-        equal: operation == 'equal',
-        insert: operation == 'insert',
-        'base-change': props.lineChunk.classification == 'base'
+        equal: operation == 'Equal',
+        insert: operation == 'Insert',
+        'base-change': props.lineChunk.classification == 'BaseChange'
     });    
 
-    const leftText = operation != 'insert' ? text : '';
-    const rightText = operation != 'delete' ? text : '';
+    const leftText = operation != 'Insert' ? text : '';
+    const rightText = operation != 'Delete' ? text : '';
 
     return (
         <div className="line">
