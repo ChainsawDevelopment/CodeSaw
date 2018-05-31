@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { RevisionRange, selectCurrentRevisions, selectFileForView, loadReviewInfo } from "./state";
+import { RevisionRange, selectCurrentRevisions, selectFileForView, loadReviewInfo, RevisionId } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk, ReviewInfo } from "../../api/reviewer";
@@ -68,7 +68,8 @@ const reviewPage = (props: Props): JSX.Element => {
             <h1>Review {props.currentReview.title}</h1>
 
             <VersionSelector
-                available={props.currentReview.pastRevisions}
+                available={['base', ...props.currentReview.pastRevisions, 'provisional']}
+                hasProvisonal={props.currentReview.hasProvisionalRevision}
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />

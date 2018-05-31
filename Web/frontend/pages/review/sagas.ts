@@ -48,8 +48,8 @@ function* loadReviewInfoSaga() {
         yield put(loadedReviewInfo(info));
         yield put(selectCurrentRevisions({
             range: {
-                previous: info.pastRevisions[info.pastRevisions.length - 1],
-                current: info.pastRevisions[info.pastRevisions.length - 1]
+                previous: 'base',
+                current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1]
             }
         }))
     }

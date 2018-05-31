@@ -1,4 +1,4 @@
-import { RevisionRange } from "../pages/review/state";
+import { RevisionRange, RevisionId } from "../pages/review/state";
 
 export interface ChangedFile {
     path: string;
@@ -31,7 +31,7 @@ export interface ReviewInfo {
     projectId: number;
     reviewId: number;
     title: string;
-    pastRevisions: number[];
+    pastRevisions: RevisionId[];
     hasProvisionalRevision: boolean;
 }
 

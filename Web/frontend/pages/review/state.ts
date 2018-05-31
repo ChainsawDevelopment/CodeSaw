@@ -1,9 +1,11 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
 import { RevisionRangeInfo, FileDiff, ReviewInfo } from '../../api/reviewer';
 
+export type RevisionId = 'base' | number | 'provisional';
+
 export interface RevisionRange {
-    previous: number;
-    current: number;
+    previous: RevisionId;
+    current: RevisionId;
 }
 
 export interface ReviewState {
