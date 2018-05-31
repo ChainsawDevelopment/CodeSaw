@@ -14,8 +14,7 @@ namespace Web.Modules.Api.Queries
 
         public class Result
         {
-            public int ProjectId { get; set; }
-            public int ReviewId { get; set; }
+            public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
             public int[] PastRevisions { get; set; }
             public bool HasProvisionalRevision { get; set; }
@@ -32,13 +31,14 @@ namespace Web.Modules.Api.Queries
         {
             var mr = await _api.MergeRequest(_projectId, _reviewId);
 
+            var hasUnreviewedChanges = true;
+
             return new Result
             {
-                ProjectId = mr.ProjectId,
-                ReviewId = mr.Id,
+                ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
                 Title = mr.Title,
-                PastRevisions = new[] {1, 2, 3, 4, 5},
-                HasProvisionalRevision = true
+                PastRevisions = new int[0],
+                HasProvisionalRevision = hasUnreviewedChanges
             };
         }
     }

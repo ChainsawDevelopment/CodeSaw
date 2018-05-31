@@ -24,12 +24,12 @@ namespace Web.Modules.Api
             });
 
             //TODO: to diff module
-            Get("/{reviewId}/diff/{previous}/{current}/{file*}", _ => {
+            Get("/diff/{previous}/{current}/{file*}", _ => {
                 return new {
                     info = new {
                         reviewId = (int)_.reviewId,
-                        previous = (int)_.previous,
-                        current = (int)_.current,
+                        previous = _.previous,
+                        current = _.current,
                         path = (string)_.file
                     },
                     chunks = new [] {

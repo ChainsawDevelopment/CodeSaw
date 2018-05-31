@@ -1,12 +1,5 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo } from '../../api/reviewer';
-
-export type RevisionId = 'base' | number | 'provisional';
-
-export interface RevisionRange {
-    previous: RevisionId;
-    current: RevisionId;
-}
+import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId } from '../../api/reviewer';
 
 export interface ReviewState {
     range: RevisionRange;
@@ -28,7 +21,7 @@ export const selectFileForView = createAction<{ path: string }>('SELECT_FILE_FOR
 
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
-export const loadReviewInfo = createAction<{ projectId: number; reviewId: number }>('LOAD_REVIEW_INFO');
+export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
 const initial: ReviewState = {
@@ -42,8 +35,7 @@ const initial: ReviewState = {
     currentReview: {
         hasProvisionalRevision: false,
         pastRevisions: [],
-        projectId: 0,
-        reviewId: 0,
+        reviewId: null,
         title: ''
     }
 };

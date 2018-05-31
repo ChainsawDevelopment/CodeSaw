@@ -17,7 +17,7 @@ const ReviewItem = (props: {review: Review}) => {
             <List.Content>
                 <List.Header>
                     <span className="project">{props.review.project}</span>
-                    <span className="review-title"><Link to={`/project/${props.review.projectId}/review/${props.review.reviewId}`}>{props.review.title}</Link></span>
+                    <span className="review-title"><Link to={`/project/${props.review.reviewId.projectId}/review/${props.review.reviewId.reviewId}`}>{props.review.title}</Link></span>
                 </List.Header>
                 <List.Description>{props.review.changesCount} changes by {props.review.author}</List.Description>
             </List.Content>
@@ -38,7 +38,7 @@ type Props = StateProps & DispatchProps;
 const ReviewsList = (props: Props) => {
     return (
         <List>
-            {props.list.map(r => (<ReviewItem key={r.reviewId} review={r} />))}
+            {props.list.map(r => (<ReviewItem key={`${r.reviewId.projectId}/${r.reviewId.reviewId}`} review={r} />))}
         </List>
     );
 };

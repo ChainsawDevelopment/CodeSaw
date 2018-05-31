@@ -14,11 +14,10 @@ namespace Web.Modules.Api.Queries
         public class Item
         {
             public string Author { get; set; }
-            public int ReviewId { get; set; }
+            public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
             public string Project { get; set; }
             public int ChangesCount { get; set; }
-            public int ProjectId { get; set; }
         }
 
         public GetReviewList(IRepository repository)
@@ -38,11 +37,10 @@ namespace Web.Modules.Api.Queries
                     join project in projects on mr.ProjectId equals project.Id
                     select new Item()
                     {
-                        ReviewId = mr.Id,
+                        ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
                         Author = mr.Author.Name,
                         Title = mr.Title,
                         Project = $"{project.Namespace}/{project.Name}",
-                        ProjectId = project.Id,
                         ChangesCount = 12
                     }
                 ).ToList();

@@ -9,15 +9,18 @@ import ReviewPage from './pages/review';
 import Reviews from "./pages/reviews";
 
 import "./layout.less";
+import { ReviewId } from "./api/reviewer";
 
 const Home = () => (<h1>Home</h1>);
 
-const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string}>) => (
-    <ReviewPage 
-        reviewId={parseInt(props.match.params.id)} 
-        projectId={parseInt(props.match.params.projectId)} 
-    />  
-));
+const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string}>) => {
+    const { projectId, id } = props.match.params;
+    const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
+    
+    return (<ReviewPage 
+        reviewId={reviewId} 
+    />)
+});
 
 const Layout = () => {
     return (
