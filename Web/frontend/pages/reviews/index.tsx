@@ -8,19 +8,18 @@ import { RootState } from "../../rootState";
 import { loadReviews } from "./state";
 import { OnMount } from "../../components/OnMount";
 import { Review } from "../../api/reviewer";
-;
+import "./reviews.less";
 
 const ReviewItem = (props: {review: Review}) => {
-    console.log(props);
-
-    const link = other => (<Link to={`/review/${props.review.id}`} {...other} />);
-
     return (
-        <List.Item>
+        <List.Item className="review-item">
             <Image avatar src='https://www.gravatar.com/avatar/00000000000000000000000000000000' />
             <List.Content>
-                <List.Header as={link}>{props.review.title}</List.Header>
-                <List.Description>{props.review.changedFiles} changes</List.Description>
+                <List.Header>
+                    <span className="project">{props.review.project}</span>
+                    <span className="review-title"><Link to={`/review/${props.review.reviewId}`}>{props.review.title}</Link></span>
+                </List.Header>
+                <List.Description>{props.review.changesCount} changes by {props.review.author}</List.Description>
             </List.Content>
         </List.Item>
     );
@@ -39,7 +38,7 @@ type Props = StateProps & DispatchProps;
 const ReviewsList = (props: Props) => {
     return (
         <List>
-            {props.list.map(r => (<ReviewItem key={r.id} review={r} />))}
+            {props.list.map(r => (<ReviewItem key={r.reviewId} review={r} />))}
         </List>
     );
 };

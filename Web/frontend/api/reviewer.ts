@@ -19,9 +19,11 @@ export interface FileDiff {
 }
 
 export interface Review {
-    id: number;
+    reviewId: number;
+    project: string;
     title: string;
-    changedFiles: number;
+    changesCount: number;
+    author: string;
 }
 
 const acceptJson = {

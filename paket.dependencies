@@ -18,6 +18,7 @@ nuget Microsoft.AspNetCore.Diagnostics
 nuget Microsoft.AspNetCore.Owin
 nuget Autofac.Extensions.DependencyInjection
 nuget FluentMigrator.Runner
+nuget RestSharp
 
 nuget System.Data.SqlClient
 

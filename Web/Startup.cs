@@ -2,6 +2,7 @@
 using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using GitLab;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,7 @@ using Nancy.Owin;
 using NHibernate;
 using NHibernate.Dialect;
 using NHibernate.Mapping.ByCode;
+using RepositoryApi;
 
 namespace Web
 {
@@ -39,9 +41,18 @@ namespace Web
 
             builder.RegisterModule<Cqrs.CqrsModule>();
 
+            builder.Register(BuildGitLabApi).As<IRepository>();
+
             _container = builder.Build();
 
             return new AutofacServiceProvider(_container);
+        }
+
+        private GitLabApi BuildGitLabApi(IComponentContext ctx)
+        {
+            var cfg = Configuration.GetSection("GitLab");
+
+            return new GitLab.GitLabApi(cfg["url"], cfg["token"]);
         }
 
         private ISessionFactory BuildSessionFactory()

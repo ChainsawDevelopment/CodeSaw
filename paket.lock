@@ -496,6 +496,7 @@ NUGET
       System.ObjectModel (>= 4.0.12)
       System.Reflection (>= 4.1)
       System.Runtime (>= 4.1)
+    RestSharp (106.2.2)
     runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl (4.3.2)
     runtime.fedora.23-x64.runtime.native.System.Security.Cryptography.OpenSsl (4.3.2)
     runtime.fedora.24-x64.runtime.native.System.Security.Cryptography.OpenSsl (4.3.2)

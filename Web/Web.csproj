@@ -25,5 +25,8 @@
   <ItemGroup>
     <Content Include="wwwroot/**" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GitLab\GitLab.csproj" />
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
