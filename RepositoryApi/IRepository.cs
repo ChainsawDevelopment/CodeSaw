@@ -10,12 +10,6 @@ namespace RepositoryApi
 
         Task<ProjectInfo> Project(int projectId);
         Task<MergeRequest> MergeRequest(int projectId, int mergeRequestId);
-    }
-
-    public class ProjectInfo
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Namespace { get; set; }
+        Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha);
     }
 }

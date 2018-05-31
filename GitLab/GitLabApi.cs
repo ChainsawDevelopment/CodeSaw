@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -47,6 +48,20 @@ namespace GitLab
             return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}", Method.GET)
                 .Execute<MergeRequest>(_client);
         }
+
+        public async Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha)
+        {
+            return await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
+                .AddQueryParameter("from", prevSha)
+                .AddQueryParameter("to", currentSha)
+                .Execute<GitLabTreeDiff>(_client)
+                .ContinueWith(x => x.Result.Diffs);
+        }
+    }
+
+    public class GitLabTreeDiff
+    {
+        public List<FileDiff> Diffs { get; set; }
     }
 
     public class GitLabContractResolver : DefaultContractResolver
@@ -60,13 +75,6 @@ namespace GitLab
                 return prop;
             }
 
-            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.ProjectId))
-            {
-                var prop = base.CreateProperty(member, memberSerialization);
-                prop.PropertyName = "project_id";
-                return prop;
-            }
-
             if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.Id))
             {
                 var prop = base.CreateProperty(member, memberSerialization);
@@ -74,7 +82,45 @@ namespace GitLab
                 return prop;
             }
 
+            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.BaseCommit))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "diff_refs";
+                prop.Converter = new InlineDeserialize(t => ((JObject) t).Property("base_sha").Value.Value<string>());
+                return prop;
+            }
+
+            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.HeadCommit))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "sha";
+                return prop;
+            }
+
             return base.CreateProperty(member, memberSerialization);
+        }
+
+        protected override string ResolvePropertyName(string propertyName)
+        {
+            var parts = new List<string>();
+            var currentWord = new StringBuilder();
+
+            foreach (var c in propertyName)
+            {
+                if (char.IsUpper(c) && currentWord.Length > 0)
+                {
+                    parts.Add(currentWord.ToString());
+                    currentWord.Clear();
+                }
+                currentWord.Append(char.ToLower(c));
+            }
+
+            if (currentWord.Length > 0)
+            {
+                parts.Add(currentWord.ToString());
+            }
+
+            return string.Join("_", parts.ToArray());
         }
     }
 

@@ -1,8 +1,15 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
 import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange } from '../../api/reviewer';
 import { RootState } from "../../rootState";
+
+const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
+    return {
+        current: range.current == 'provisional' ? hash : range.current,
+        previous: range.previous == 'provisional' ? hash : range.previous
+    }
+}
 
 function* loadRevisionRangeDetailsSaga() {
     const api = new ReviewerApi();
@@ -12,10 +19,11 @@ function* loadRevisionRangeDetailsSaga() {
 
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
-            range: state.review.range
+            range: state.review.range,
+            headCommit: state.review.currentReview.headCommit
         }));
 
-        const info = yield api.getRevisionRangeInfo(currentRange.reviewId, action.payload.range);
+        const info = yield api.getRevisionRangeInfo(currentRange.reviewId, resolveProvisional(action.payload.range, currentRange.headCommit));
 
         yield put(loadedRevisionsRangeInfo(info));
     }

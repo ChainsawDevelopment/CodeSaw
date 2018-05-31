@@ -1,4 +1,4 @@
-export type RevisionId = 'base' | number | 'provisional';
+export type RevisionId = 'base' | number | string | 'provisional';
 
 export interface RevisionRange {
     previous: RevisionId;
@@ -6,7 +6,7 @@ export interface RevisionRange {
 }
 
 export interface ChangedFile {
-    path: string;
+    newPath: string;
 }
 
 export interface RevisionRangeInfo {
@@ -41,6 +41,7 @@ export interface ReviewInfo {
     title: string;
     pastRevisions: RevisionId[];
     hasProvisionalRevision: boolean;
+    headCommit: string;
 }
 
 const acceptJson = {

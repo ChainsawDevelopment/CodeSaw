@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using NHibernate;
 using RepositoryApi;
 using Web.Cqrs;
@@ -18,6 +17,7 @@ namespace Web.Modules.Api.Queries
             public string Title { get; set; }
             public int[] PastRevisions { get; set; }
             public bool HasProvisionalRevision { get; set; }
+            public string HeadCommit { get; set; }
         }
 
         public GetReviewInfo(int projectId, int reviewId, IRepository api)
@@ -38,7 +38,8 @@ namespace Web.Modules.Api.Queries
                 ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
                 Title = mr.Title,
                 PastRevisions = new int[0],
-                HasProvisionalRevision = hasUnreviewedChanges
+                HasProvisionalRevision = hasUnreviewedChanges,
+                HeadCommit = mr.HeadCommit
             };
         }
     }

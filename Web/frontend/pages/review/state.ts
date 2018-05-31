@@ -36,7 +36,8 @@ const initial: ReviewState = {
         hasProvisionalRevision: false,
         pastRevisions: [],
         reviewId: null,
-        title: ''
+        title: '',
+        headCommit: ''
     }
 };
 

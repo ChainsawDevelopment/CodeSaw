@@ -24,7 +24,7 @@ const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, chunk
             <Sidebar.Pushable as={Segment}>
                 <Sidebar visible={true} width='thin'>
                     <ChangedFileTree
-                        paths={props.info.changes.map(i => i.path)}
+                        paths={props.info.changes.map(i => i.newPath)}
                         selected={props.selectedFile}
                         onSelect={props.onSelectFileForView}
                     />

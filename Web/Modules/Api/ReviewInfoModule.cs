@@ -1,3 +1,4 @@
+using System.Linq;
 using Nancy;
 using RepositoryApi;
 using Web.Cqrs;
@@ -11,17 +12,7 @@ namespace Web.Modules.Api
         {
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api)));
 
-            Get("/revisions/{previous}/{current}", _ => {
-                return new {
-                    changes = new [] {
-                        new { path = "file1.txt" },
-                        new { path = "folder1/file2.txt" },
-                        new { path = "folder1/file3.txt" },
-                        new { path = "folder2/file4.txt" },
-                        new { path = "folder2/file5.txt" },
-                    }
-                };
-            });
+            Get("/revisions/{previous:revId}/{current:revId}",  async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api)));
 
             //TODO: to diff module
             Get("/diff/{previous}/{current}/{file*}", _ => {
