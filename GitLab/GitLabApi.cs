@@ -41,6 +41,12 @@ namespace GitLab
             return await new RestRequest($"/projects/{projectId}", Method.GET)
                 .Execute<ProjectInfo>(_client);
         }
+
+        public async Task<MergeRequest> MergeRequest(int projectId, int mergeRequestId)
+        {
+            return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}", Method.GET)
+                .Execute<MergeRequest>(_client);
+        }
     }
 
     public class GitLabContractResolver : DefaultContractResolver
@@ -58,6 +64,13 @@ namespace GitLab
             {
                 var prop = base.CreateProperty(member, memberSerialization);
                 prop.PropertyName = "project_id";
+                return prop;
+            }
+
+            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.Id))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "iid";
                 return prop;
             }
 

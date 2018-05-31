@@ -21,9 +21,18 @@ export interface FileDiff {
 export interface Review {
     reviewId: number;
     project: string;
+    projectId: number;
     title: string;
     changesCount: number;
     author: string;
+}
+
+export interface ReviewInfo {
+    projectId: number;
+    reviewId: number;
+    title: string;
+    pastRevisions: number[];
+    hasProvisionalRevision: boolean;
 }
 
 const acceptJson = {
@@ -33,18 +42,18 @@ const acceptJson = {
 };
 
 export class ReviewerApi {
-    public getRevisionRangeInfo = (reviewId: number, range: RevisionRange): Promise<RevisionRangeInfo> => {
+    public getRevisionRangeInfo = (projectId: number, reviewId: number, range: RevisionRange): Promise<RevisionRangeInfo> => {
         return fetch(
-            `/api/review/${reviewId}/revisions/${range.previous}/${range.current}`,
+            `/api/project/${projectId}/review/${reviewId}/revisions/${range.previous}/${range.current}`,
             acceptJson
         )
             .then(r => r.json())
             .then(r => r as RevisionRangeInfo);
     }
 
-    public getDiff = (reviewId: number, range: RevisionRange, path: string): Promise<FileDiff> => {
+    public getDiff = (projectId: number, reviewId: number, range: RevisionRange, path: string): Promise<FileDiff> => {
         return fetch(
-            `/api/review/${reviewId}/diff/${range.previous}/${range.current}/${path}`,
+            `/api/project/${projectId}/review/${reviewId}/diff/${range.previous}/${range.current}/${path}`,
             acceptJson
         ).then(r => r.json());
     };
@@ -54,4 +63,10 @@ export class ReviewerApi {
             .then(r => r.json())
             .then(r => r as Review[]);
     };
+
+    public getReviewInfo = (projectId: number, reviewId: number): Promise<ReviewInfo> => {
+        return fetch(`/api/project/${projectId}/review/${reviewId}/info`, acceptJson)
+            .then(r => r.json())
+            .then(r => r as ReviewInfo);
+    }
 }

@@ -12,8 +12,11 @@ import "./layout.less";
 
 const Home = () => (<h1>Home</h1>);
 
-const Review = withRouter((props: RouteComponentProps<{id: number}>) => (
-    <ReviewPage reviewId={props.match.params.id} />  
+const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string}>) => (
+    <ReviewPage 
+        reviewId={parseInt(props.match.params.id)} 
+        projectId={parseInt(props.match.params.projectId)} 
+    />  
 ));
 
 const Layout = () => {
@@ -41,7 +44,7 @@ export default () => (
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
                 <Route path="/reviews" component={Reviews} />
-                <Route path="/review/:id" component={Review} />
+                <Route path="/project/:projectId/review/:id" component={Review} />
                 <Route path="/layout" component={Layout} />
             </ConnectedSwitch>
         </Container>

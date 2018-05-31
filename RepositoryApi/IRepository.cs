@@ -9,6 +9,7 @@ namespace RepositoryApi
         Task<List<MergeRequest>> MergeRequests(string state = null, string scope = null);
 
         Task<ProjectInfo> Project(int projectId);
+        Task<MergeRequest> MergeRequest(int projectId, int mergeRequestId);
     }
 
     public class ProjectInfo

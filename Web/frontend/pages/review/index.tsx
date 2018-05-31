@@ -1,10 +1,10 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { RevisionRange, selectCurrentRevisions, selectFileForView } from "./state";
+import { RevisionRange, selectCurrentRevisions, selectFileForView, loadReviewInfo } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk } from "../../api/reviewer";
+import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk, ReviewInfo } from "../../api/reviewer";
 
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
@@ -14,6 +14,7 @@ import ChangedFileTree from './changedFileTree';
 import DiffView from './diffView';
 
 import "./review.less";
+import { OnMount } from "../../components/OnMount";
 
 type SelectFileForViewHandler = (path: string) => void;
 
@@ -39,16 +40,18 @@ const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, chunk
 }
 
 interface OwnProps {
+    projectId: number;
     reviewId: number;
 }
 
 interface DispatchProps {
+    loadReviewInfo(projectId: number, reviewId: number): void;
     selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;
 }
 
 interface StateProps {
-    availableRevisions: number[];
+    currentReview: ReviewInfo;
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
     selectedFile: string;
@@ -60,10 +63,12 @@ type Props = OwnProps & StateProps & DispatchProps;
 const reviewPage = (props: Props): JSX.Element => {
     return (
         <div id="review-page">
-            <h1>Review {props.reviewId}</h1>
+            <OnMount onMount={() => props.loadReviewInfo(props.projectId, props.reviewId)}/>
+
+            <h1>Review {props.currentReview.title}</h1>
 
             <VersionSelector
-                available={props.availableRevisions}
+                available={props.currentReview.pastRevisions}
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />
@@ -78,7 +83,7 @@ const reviewPage = (props: Props): JSX.Element => {
 };
 
 const mapStateToProps = (state: RootState): StateProps => ({
-    availableRevisions: state.review.availableRevisions,
+    currentReview: state.review.currentReview,
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
@@ -86,6 +91,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
+    loadReviewInfo: (projectId: number, reviewId: number) => dispatch(loadReviewInfo({projectId, reviewId})),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: path => dispatch(selectFileForView({ path }))
 });

@@ -18,6 +18,7 @@ namespace Web.Modules.Api.Queries
             public string Title { get; set; }
             public string Project { get; set; }
             public int ChangesCount { get; set; }
+            public int ProjectId { get; set; }
         }
 
         public GetReviewList(IRepository repository)
@@ -41,6 +42,7 @@ namespace Web.Modules.Api.Queries
                         Author = mr.Author.Name,
                         Title = mr.Title,
                         Project = $"{project.Namespace}/{project.Name}",
+                        ProjectId = project.Id,
                         ChangesCount = 12
                     }
                 ).ToList();

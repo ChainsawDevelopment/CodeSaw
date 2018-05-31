@@ -1,12 +1,17 @@
 using Nancy;
+using RepositoryApi;
+using Web.Cqrs;
+using Web.Modules.Api.Queries;
 
 namespace Web.Modules.Api
 {
     public class ReviewInfoModule : NancyModule
     {
-        public ReviewInfoModule() : base("/api/review/")
+        public ReviewInfoModule(IQueryRunner query, IRepository api) : base("/api/project/{projectId}/review/{reviewId}")
         {
-            Get("/{reviewId}/revisions/{previous}/{current}", _ => {
+            Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api)));
+
+            Get("/revisions/{previous}/{current}", _ => {
                 return new {
                     changes = new [] {
                         new { path = "file1.txt" },

@@ -17,7 +17,7 @@ const ReviewItem = (props: {review: Review}) => {
             <List.Content>
                 <List.Header>
                     <span className="project">{props.review.project}</span>
-                    <span className="review-title"><Link to={`/review/${props.review.reviewId}`}>{props.review.title}</Link></span>
+                    <span className="review-title"><Link to={`/project/${props.review.projectId}/review/${props.review.reviewId}`}>{props.review.title}</Link></span>
                 </List.Header>
                 <List.Description>{props.review.changesCount} changes by {props.review.author}</List.Description>
             </List.Content>
