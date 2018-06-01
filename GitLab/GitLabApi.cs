@@ -19,10 +19,10 @@ namespace GitLab
     {
         private readonly RestClient _client;
 
-        public GitLabApi(string serverUrl, string accessToken)
+        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource)
         {
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
-            _client.AddDefaultHeader("Private-Token", accessToken);
+            _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");
 
             //_client.ConfigureWebRequest(wr =>
             //{
@@ -118,7 +118,7 @@ namespace GitLab
             if (member.DeclaringType == typeof(ProjectInfo) && member.Name == nameof(ProjectInfo.Namespace))
             {
                 var prop = base.CreateProperty(member, memberSerialization);
-                prop.Converter = new InlineDeserialize(t => ((JObject) t).Property("name").Value.Value<string>());
+                prop.Converter = new InlineDeserialize(t => ((JObject)t).Property("name").Value.Value<string>());
                 return prop;
             }
 
@@ -133,7 +133,7 @@ namespace GitLab
             {
                 var prop = base.CreateProperty(member, memberSerialization);
                 prop.PropertyName = "diff_refs";
-                prop.Converter = new InlineDeserialize(t => ((JObject) t).Property("base_sha").Value.Value<string>());
+                prop.Converter = new InlineDeserialize(t => ((JObject)t).Property("base_sha").Value.Value<string>());
                 return prop;
             }
 
