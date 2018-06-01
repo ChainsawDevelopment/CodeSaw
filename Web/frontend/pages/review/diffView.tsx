@@ -139,12 +139,21 @@ const diffView = (props: {chunks: DiffChunk[]}) => {
 
     hunks.push(hunk);
 
+    const events = {
+        gutter: {
+            onClick: (change) => {
+                console.log('Clicked gutter', change)
+            }
+        }
+    };
+
     return ( 
         <div>
             <Diff 
             viewType="split"
             diffType="modify"
             hunks={hunks}
+            customEvents={events}
             />
         </div>
     );
