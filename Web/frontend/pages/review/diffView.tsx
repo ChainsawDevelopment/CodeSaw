@@ -1,25 +1,27 @@
 import * as React from "react";
-import { DiffChunk } from "../../api/reviewer";
+import { Hunk } from "../../api/reviewer";
 
 import {Diff} from 'react-diff-view';
 import 'react-diff-view/index.css';
 import './diffView.less';
 import * as classNames from "classnames";
 
-const splitCunks = (chunks: DiffChunk[]) => {
-    let oldLineCounter = 1;
-    let newLineCounter = 1;
-    const result = [];
+const mapHunkToView = (hunk: Hunk) => {
+    let viewHunk = {
+        oldStart: hunk.oldPosition.start + 1,
+        oldLines: hunk.oldPosition.length + 1,
+        newStart: hunk.newPosition.start + 1,
+        newLines: hunk.newPosition.length + 1,
+        content: `Hunk ${hunk.newPosition.start + 1} - ${hunk.newPosition.end + 1} (${hunk.newPosition.length} lines)`,
+        changes: []
+    };
 
-    for(const chunk of chunks) {
-        let text = chunk.text;
+    let oldLineCounter = hunk.oldPosition.start + 1;
+    let newLineCounter = hunk.newPosition.start + 1;
 
-        if(text.charAt(text.length - 1) == '\n') {
-            text = text.substring(0, text.length - 1);
-        }
-
+    for (const line of hunk.lines) {
         let type = '';
-        switch(chunk.operation) {
+        switch(line.operation) {
             case 'Delete': 
                 type = 'delete';
                 break;
@@ -30,45 +32,32 @@ const splitCunks = (chunks: DiffChunk[]) => {
                 type = 'insert';
         }
 
-        const lines = text.split('\n');
-
-        const splittedChunk = {
-            ...chunk,
+        viewHunk.changes.push({
             type: type,
-            lines: []
+            content: line.text,
+            isNormal: type == 'normal',
+            isDelete: type == 'delete',
+            isInsert: type == 'insert',
+            oldLineNumber: oldLineCounter,
+            newLineNumber: newLineCounter,
+            lineNumber: newLineCounter,
+            classNames: classNames({
+                'base-change': line.classification == 'BaseChange' && line.operation != 'Equal',
+                'review-change': line.classification == 'ReviewChange' && line.operation != 'Equal'
+            })
+        });
+
+        if(type != 'insert') {
+            oldLineCounter ++;
+        } 
+
+        if (type != 'delete') {
+            newLineCounter ++;
         }
-
-        for(const line of lines) {
-            splittedChunk.lines.push({
-                type: type,
-                content: line,
-                classification: chunk.classification,
-                isNormal: type == 'normal',
-                isDelete: type == 'delete',
-                isInsert: type == 'insert',
-                oldLineNumber: oldLineCounter,
-                newLineNumber: newLineCounter,
-                lineNumber: newLineCounter,
-                classNames: classNames({
-                    'base-change': chunk.classification == 'BaseChange',
-                    'review-change': chunk.classification == 'ReviewChange'
-                })
-            });
-
-            if(type != 'insert') {
-                oldLineCounter ++;
-            } 
-
-            if (type != 'delete') {
-                newLineCounter ++;
-            }
-        }
-
-        result.push(splittedChunk);
     }
 
-    return result;
-}
+    return viewHunk;
+};
 
 const oppositeType = (type: string) => {
     switch(type) {
@@ -99,49 +88,8 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
-const diffView = (props: {chunks: DiffChunk[]}) => {
-    const hunks = [];
-
-    let hunk = {
-        oldStart: 1,
-        oldLines: 1,
-        newStart: 1,
-        newLines: 1,
-        content: 'Hunk header',
-        changes: []
-    };
-
-    const splitted = splitCunks(props.chunks);
-
-    for(let i = 0; i < splitted.length; i++) {
-        const chunk = splitted[i];
-
-        if(chunk.type == 'normal') {
-            hunk.changes = [...hunk.changes, ...chunk.lines];
-            continue;
-        }
-
-        if(i == splitted.length - 1) {
-            hunk.changes = [...hunk.changes, ...chunk.lines];
-            continue;
-        }
-
-        const nextChunk = splitted[i + 1];
-
-        if(oppositeType(chunk.type) == nextChunk.type) {
-            const lines1 = chunk.lines;
-            const lines2 = nextChunk.lines;
-            const zipped = zipLines(lines1, lines2);
-
-            hunk.changes = [...hunk.changes, ...zipped];
-            
-            i++;
-        } else {
-            hunk.changes = [...hunk.changes, ...chunk.lines];
-        }
-    }
-
-    hunks.push(hunk);
+const diffView = (props: {hunks: Hunk[]}) => {
+    const viewHunks = props.hunks.map(mapHunkToView);
 
     const events = {
         gutter: {
@@ -162,7 +110,7 @@ const diffView = (props: {chunks: DiffChunk[]}) => {
             <Diff 
             viewType="split"
             diffType="modify"
-            hunks={hunks}
+            hunks={viewHunks}
             customEvents={events}
             />
         </div>

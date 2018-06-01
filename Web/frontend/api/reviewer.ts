@@ -13,14 +13,27 @@ export interface RevisionRangeInfo {
     changes: ChangedFile[];
 }
 
-export interface DiffChunk {
-    classification: 'Unchanged' | 'BaseChange' | 'ReviewChange';
+export interface HunkLine {
     operation: 'Equal' | 'Insert' | 'Delete';
+    classification: 'Unchanged' | 'BaseChange' | 'ReviewChange';
+    line: number;
     text: string;
 }
 
+export interface HunkPosition {
+    start: number;
+    end: number;
+    length: number;
+}
+
+export interface Hunk {
+    lines: HunkLine[];
+    newPosition: HunkPosition;
+    oldPosition: HunkPosition;
+}
+
 export interface FileDiff {
-    chunks: DiffChunk[];
+    hunks: Hunk[];
 }
 
 export interface ReviewId {

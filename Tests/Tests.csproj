@@ -12,6 +12,11 @@
     <None Remove="FourWayDiffData\CodeSample3\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample3\review1.txt" />
     <None Remove="FourWayDiffData\CodeSample3\review2.txt" />
+    <None Remove="FourWayDiffData\CodeSample4\base1.txt" />
+    <None Remove="FourWayDiffData\CodeSample4\base2.txt" />
+    <None Remove="FourWayDiffData\CodeSample4\expected.txt" />
+    <None Remove="FourWayDiffData\CodeSample4\review1.txt" />
+    <None Remove="FourWayDiffData\CodeSample4\review2.txt" />
     <None Remove="FourWayDiffData\CodeSample\base1.txt" />
     <None Remove="FourWayDiffData\CodeSample\base2.txt" />
     <None Remove="FourWayDiffData\CodeSample\review1.txt" />

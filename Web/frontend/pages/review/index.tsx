@@ -4,7 +4,7 @@ import { Dispatch } from "redux";
 import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review } from "../../api/reviewer";
+import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk } from "../../api/reviewer";
 
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
@@ -19,7 +19,7 @@ import { OnMount } from "../../components/OnMount";
 
 type SelectFileForViewHandler = (path: string) => void;
 
-const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, chunks: DiffChunk[], onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
+const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, hunks: Hunk[], onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
     return (
         <div style={{ flex: 1 }}>
             <Sidebar.Pushable as={Segment}>
@@ -32,7 +32,8 @@ const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, chunk
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic>
-                        {props.chunks ? <DiffView chunks={props.chunks} /> : null}
+                        <Button onClick={() => props.onSelectFileForView(props.selectedFile)}>Refresh diff</Button>
+                        {props.hunks ? <DiffView hunks={props.hunks} /> : null}
                     </Segment>
                 </Sidebar.Pusher>
             </Sidebar.Pushable>
@@ -87,7 +88,7 @@ const reviewPage = (props: Props): JSX.Element => {
                 info={props.rangeInfo}
                 selectedFile={props.selectedFile}
                 onSelectFileForView={props.selectFileForView}
-                chunks={props.selectedFileDiff ? props.selectedFileDiff.chunks : null}
+                hunks={props.selectedFileDiff ? props.selectedFileDiff.hunks : null}
             />) : null}
         </div>
     );
