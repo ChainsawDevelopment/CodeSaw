@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NHibernate;
 using RepositoryApi;
 using Web.Cqrs;
+using Web.Modules.Api.Model;
 
 namespace Web.Modules.Api.Queries
 {
@@ -31,8 +33,11 @@ namespace Web.Modules.Api.Queries
         {
             var mergeRequest = await _api.MergeRequest(_reviewId.ProjectId, _reviewId.ReviewId);
 
-            var previousCommit = ResolveCommitHash(mergeRequest, _previous);
-            var currentCommit = ResolveCommitHash(mergeRequest, _current);
+            var commits = session.Query<ReviewRevision>().Where(x => x.ReviewId.ReviewId == _reviewId.ReviewId && x.ReviewId.ProjectId == _reviewId.ProjectId)
+                .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});
+
+            var previousCommit = ResolveCommitHash(mergeRequest, _previous, r => commits[r].Head);
+            var currentCommit = ResolveCommitHash(mergeRequest, _current, r => commits[r].Head);
 
             var diffs = await _api.GetDiff(_reviewId.ProjectId, previousCommit, currentCommit);
 
@@ -42,11 +47,11 @@ namespace Web.Modules.Api.Queries
             };
         }
 
-        private string ResolveCommitHash(MergeRequest mergeRequest, RevisionId revisionId)
+        private string ResolveCommitHash(MergeRequest mergeRequest, RevisionId revisionId, Func<int, string> selectCommit)
         {
             return revisionId.Resolve(
                 () => mergeRequest.BaseCommit,
-                s => throw new NotImplementedException(),
+                s => selectCommit(s.Revision),
                 h => h.CommitHash
             );
         }

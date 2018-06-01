@@ -124,6 +124,27 @@ Target.create "UpdateDB" (fun _ ->
         failwithf "DbMigrator failed with %A" r.Errors
 )
 
+Target.create "RedoLast" (fun _ -> 
+    let setOpts (opts: DotNet.Options) = 
+        { opts with
+            WorkingDirectory = root </> "Db.Migrator"
+            CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
+        } 
+        |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
+    
+
+    let args = 
+        [
+            "RedoLast"
+            root </> "Web" </> "appsettings.local.json"
+        ] |> Seq.map Process.quoteIfNeeded |> FSharp.Core.String.concat " "
+
+    let r = DotNet.exec setOpts "run" args
+
+    if not r.OK then
+        failwithf "DbMigrator failed with %A" r.Errors
+)
+
 open Fake.Core.TargetOperators
 
 "_DotNetRestore" ==> "_BackendBuild" ==> "Build"

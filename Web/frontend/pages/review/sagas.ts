@@ -1,5 +1,5 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
-import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo } from './state';
+import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange } from '../../api/reviewer';
 import { RootState } from "../../rootState";
@@ -62,8 +62,21 @@ function* loadReviewInfoSaga() {
     }
 }
 
+function* rememberRevisionSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<RememberRevisionArgs> = yield take(rememberRevision);
+
+        yield api.rememberRevision(action.payload.reviewId, action.payload.head, action.payload.base);
+
+        yield put(loadReviewInfo({ reviewId: action.payload.reviewId }));
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
-    loadReviewInfoSaga
+    loadReviewInfoSaga,
+    rememberRevisionSaga
 ];

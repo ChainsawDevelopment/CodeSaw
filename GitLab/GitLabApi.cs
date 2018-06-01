@@ -24,6 +24,14 @@ namespace GitLab
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
             _client.AddDefaultHeader("Private-Token", accessToken);
 
+            _client.ConfigureWebRequest(wr =>
+            {
+                wr.Proxy = new WebProxy("127.0.0.1", 8888)
+                {
+                    BypassProxyOnLocal = false
+                };
+            });
+
             var serializer = new JsonSerializer();
             serializer.ContractResolver = new GitLabContractResolver();
 
@@ -76,6 +84,25 @@ namespace GitLab
                 default:
                     throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
             }
+        }
+
+        public async Task CreateRef(int projectId, string name, string commit)
+        {
+            var createTagRequest = new RestRequest($"/projects/{projectId}/repository/tags", Method.POST)
+                .AddJsonBody(new
+                {
+                    tag_name = name,
+                    @ref = commit
+                });
+
+            var createTagResponse = await _client.ExecuteTaskAsync(createTagRequest);
+
+            if (createTagResponse.StatusCode == HttpStatusCode.Created)
+            {
+                return;
+            }
+
+            throw new GitLabApiFailedException($"Request {createTagRequest.Method} {createTagRequest.Resource} failed with {(int)createTagResponse.StatusCode} {createTagResponse.StatusDescription}\nError: {createTagResponse.ErrorMessage}");
         }
     }
 

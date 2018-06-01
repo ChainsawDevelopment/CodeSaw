@@ -42,6 +42,7 @@ export interface ReviewInfo {
     pastRevisions: RevisionId[];
     hasProvisionalRevision: boolean;
     headCommit: string;
+    baseCommit: string;
 }
 
 const acceptJson = {
@@ -77,5 +78,21 @@ export class ReviewerApi {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(r => r.json())
             .then(r => r as ReviewInfo);
+    }
+
+    public rememberRevision = (reviewId: ReviewId, head: string, base: string): Promise<any> => {
+        const request = new Request(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, acceptJson)
+
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, {
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                headCommit: head,
+                baseCommit: base
+            })
+        });
     }
 }

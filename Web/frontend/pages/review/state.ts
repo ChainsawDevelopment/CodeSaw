@@ -24,6 +24,14 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
+export interface RememberRevisionArgs {
+    reviewId: ReviewId;
+    head: string;
+    base: string;
+}
+
+export const rememberRevision = createAction<RememberRevisionArgs>('REMEMBER_REVISION');
+
 const initial: ReviewState = {
     range: {
         previous: 2,
@@ -37,7 +45,8 @@ const initial: ReviewState = {
         pastRevisions: [],
         reviewId: null,
         title: '',
-        headCommit: ''
+        headCommit: '',
+        baseCommit: ''
     }
 };
 
@@ -52,7 +61,9 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (loadedRevisionsRangeInfo.match(action)) {
         return {
             ...state,
-            rangeInfo: action.payload
+            rangeInfo: action.payload,
+            selectedFile: null,
+            selectedFileDiff: null
         }
     }
 

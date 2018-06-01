@@ -30,7 +30,20 @@ namespace Db.Migrator
                 {
                     UpdateDatabase(serviceProvider);
                 }
+                else if (args[0] == "RedoLast")
+                {
+                    RedoLastMigration(serviceProvider);
+                }
             }
+        }
+
+        private static void RedoLastMigration(IServiceProvider serviceProvider)
+        {
+            var runner = serviceProvider.GetRequiredService<IMigrationRunner>();
+
+            // Execute the migrations
+            runner.Rollback(1);
+            runner.MigrateUp();
         }
 
         private static void UpdateDatabase(IServiceProvider serviceProvider)

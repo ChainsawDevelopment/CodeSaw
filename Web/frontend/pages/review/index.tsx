@@ -1,13 +1,14 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo } from "./state";
+import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk, ReviewInfo, RevisionRange, ReviewId } from "../../api/reviewer";
+import { ChangedFile, RevisionRangeInfo, FileDiff, DiffChunk, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review } from "../../api/reviewer";
 
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
+import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
 
 import VersionSelector from './versionSelector';
 import ChangedFileTree from './changedFileTree';
@@ -47,6 +48,7 @@ interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId): void;
     selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;
+    rememberRevision(reviewId: ReviewId, head: string, base: string);
 }
 
 interface StateProps {
@@ -60,6 +62,14 @@ interface StateProps {
 type Props = OwnProps & StateProps & DispatchProps;
 
 const reviewPage = (props: Props): JSX.Element => {
+    const provisional: RevisionId[] = props.currentReview.hasProvisionalRevision ? ['provisional'] : [];
+
+    const rememberVersion = !props.currentReview.hasProvisionalRevision ? null : (
+        <div>
+            <Button onClick={() => props.rememberRevision(props.reviewId, props.currentReview.headCommit, props.currentReview.baseCommit)}>Remember revision</Button>
+        </div>
+    );
+
     return (
         <div id="review-page">
             <OnMount onMount={() => props.loadReviewInfo(props.reviewId)} />
@@ -67,11 +77,12 @@ const reviewPage = (props: Props): JSX.Element => {
             <h1>Review {props.currentReview.title}</h1>
 
             <VersionSelector
-                available={['base', ...props.currentReview.pastRevisions, 'provisional']}
+                available={['base', ...props.currentReview.pastRevisions, ...provisional]}
                 hasProvisonal={props.currentReview.hasProvisionalRevision}
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />
+            {rememberVersion}
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
                 selectedFile={props.selectedFile}
@@ -93,7 +104,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId) => dispatch(loadReviewInfo({ reviewId })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
-    selectFileForView: path => dispatch(selectFileForView({ path }))
+    selectFileForView: path => dispatch(selectFileForView({ path })),
+    rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base }))
 });
 
 export default connect(
