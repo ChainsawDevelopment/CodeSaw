@@ -1,6 +1,7 @@
 ﻿using Nancy;
 using Nancy.Extensions;
 using System.Linq;
+using Nancy.Security;
 
 namespace Web.Modules.Home
 {
@@ -8,6 +9,8 @@ namespace Web.Modules.Home
     {
         public HomeModule() : base("/")
         {
+            this.RequiresAuthentication();
+
             Get("/", _ => View["Index"].WithModel(new {
                 AssetBase = Context.Environment["assetServer"] ?? "/dist"
             }));
