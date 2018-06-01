@@ -4,6 +4,7 @@ import { DiffChunk } from "../../api/reviewer";
 import {Diff} from 'react-diff-view';
 import 'react-diff-view/index.css';
 import './diffView.less';
+import * as classNames from "classnames";
 
 const splitCunks = (chunks: DiffChunk[]) => {
     let oldLineCounter = 1;
@@ -48,7 +49,10 @@ const splitCunks = (chunks: DiffChunk[]) => {
                 oldLineNumber: oldLineCounter,
                 newLineNumber: newLineCounter,
                 lineNumber: newLineCounter,
-                classNames: 'my-class'
+                classNames: classNames({
+                    'base-change': chunk.classification == 'BaseChange',
+                    'review-change': chunk.classification == 'ReviewChange'
+                })
             });
 
             if(type != 'insert') {
@@ -146,6 +150,12 @@ const diffView = (props: {chunks: DiffChunk[]}) => {
             }
         }
     };
+
+    // const widgets = {
+    //     'I19': (
+    //         <span className="error">Line too long</span>
+    //     )
+    // };
 
     return ( 
         <div>
