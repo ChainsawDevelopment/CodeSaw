@@ -19,6 +19,7 @@
     "less": "^3.0.4",
     "less-loader": "^4.1.0",
     "react": "^16.3.2",
+    "react-diff-view": "ssh://git@git.kplabs.pl:mnowak3/react-diff-view.git#git-reviewer",
     "react-dom": "^16.3.2",
     "react-redux": "^5.0.7",
     "react-router": "^4.2.0",
