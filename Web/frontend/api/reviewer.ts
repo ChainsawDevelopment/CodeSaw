@@ -47,7 +47,8 @@ export interface ReviewInfo {
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
-    }
+    },
+    credentials: 'include' as RequestCredentials
 };
 
 export class ReviewerApi {

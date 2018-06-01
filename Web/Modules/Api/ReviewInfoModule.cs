@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Nancy;
+using Nancy.Security;
 using NHibernate;
 using RepositoryApi;
 using Web.Cqrs;
@@ -14,6 +15,8 @@ namespace Web.Modules.Api
     {
         public ReviewInfoModule(IQueryRunner query, IRepository api) : base("/api/project/{projectId}/review/{reviewId}")
         {
+            this.RequiresAuthentication();
+
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api)));
 
             Get("/revisions/{previous:revId}/{current:revId}",  async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api)));
