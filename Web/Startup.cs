@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using GitLab;
@@ -24,6 +24,8 @@ using NHibernate;
 using NHibernate.Dialect;
 using NHibernate.Mapping.ByCode;
 using RepositoryApi;
+using Web.Auth;
+using Web.Cqrs;
 using Web.Modules.Db;
 
 namespace Web
@@ -51,57 +53,20 @@ namespace Web
                 {
                     options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = "GitHub";
+                    options.DefaultChallengeScheme = "GitLab";
                 })
                 .AddCookie()
-                .AddOAuth("GitHub", options =>
+                .AddOAuth("GitLab", options =>
                 {
-                    options.ClientId = "115b5081de93b0a610af4c4dcc5812ad72de81c6fa15cfa7a2191c8e836bf21a";
-                    options.ClientSecret = "12b1724fb7a57b640f93f2e8dac7a9e41964e0bf0bdf68f9d7c42bdf888e35f7";
-                    options.CallbackPath = new PathString("/signin-github");
-
-                    options.AuthorizationEndpoint = "https://git.kplabs.pl/oauth/authorize";
-                    options.TokenEndpoint = "https://git.kplabs.pl/oauth/token";
-                    options.UserInformationEndpoint = "https://git.kplabs.pl/api/v4/user";
+                    ConfigureGitLabOAuth(options);
 
                     options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
                     options.ClaimActions.MapJsonKey(ClaimTypes.Name, "username");
                     options.ClaimActions.MapJsonKey(ClaimTypes.GivenName, "name");
-
+                    
                     options.Events = new OAuthEvents
                     {
-                        OnCreatingTicket = async context =>
-                        {
-                            var request =
-                                new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-                            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            request.Headers.Authorization =
-                                new AuthenticationHeaderValue("Bearer", context.AccessToken);
-
-                            var response = await context.Backchannel.SendAsync(request,
-                                HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
-                            response.EnsureSuccessStatusCode();
-
-                            var user = JObject.Parse(await response.Content.ReadAsStringAsync());
-
-                            context.RunClaimActions(user);
-
-                            var userManager = context.HttpContext.RequestServices.GetService(typeof(UserManager<ReviewUser>)) as UserManager<ReviewUser>;
-                            
-                            var userName = user["username"].Value<string>();
-                            var existingUser = await userManager.FindByNameAsync(userName);
-                            if (existingUser == null)
-                            {   
-                                var identityResult = await userManager.CreateAsync(new ReviewUser() {UserName = userName, Token = context.AccessToken});
-                                Console.WriteLine($"Create user result: {identityResult.ToString()}");
-                            }
-                            else
-                            {   
-                                existingUser.Token = context.AccessToken;
-                                await userManager.UpdateAsync(existingUser);
-                                Console.WriteLine($"Found existing user with ID {existingUser.Id}, token updated.");
-                            }
-                        }
+                        OnCreatingTicket = async context => { await HandleCreatingTicket(context); }
                     };
                 });
 
@@ -114,20 +79,52 @@ namespace Web
 
             builder.RegisterModule<Cqrs.CqrsModule>();
 
-            builder.Register(BuildGitLabApi).As<IRepository>();
+            builder.Register(BuildGitLabApi).As<IRepository>().InstancePerRequest(); ;
 
             builder.RegisterType<SignInManager<ReviewUser>>().AsSelf();
-
+            builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().InstancePerRequest();
+            
             _container = builder.Build();
 
             return new AutofacServiceProvider(_container);
+        }
+
+        private void ConfigureGitLabOAuth(OAuthOptions options)
+        {
+            var cfg = Configuration.GetSection("GitLab");
+
+            options.ClientId = cfg["clientId"]; 
+            options.ClientSecret = cfg["clientSecret"]; 
+            options.CallbackPath = new PathString(cfg["callbackPath"]);
+
+            options.AuthorizationEndpoint = $"{cfg["url"]}/oauth/authorize";
+            options.TokenEndpoint = $"{cfg["url"]}/oauth/token";
+            options.UserInformationEndpoint = $"{cfg["url"]}/api/v4/user";
+        }
+
+        private static async Task HandleCreatingTicket(OAuthCreatingTicketContext context)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+            var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+            response.EnsureSuccessStatusCode();
+
+            var user = JObject.Parse(await response.Content.ReadAsStringAsync());
+            var userName = user["username"].Value<string>();
+
+            context.RunClaimActions(user);
+                        
+            var commandDispatcher = context.HttpContext.RequestServices.GetService(typeof(ICommandDispatcher)) as ICommandDispatcher;
+            await commandDispatcher.Execute(new UserTicketCreated(userName, context.AccessToken));
         }
 
         private GitLabApi BuildGitLabApi(IComponentContext ctx)
         {
             var cfg = Configuration.GetSection("GitLab");
 
-            return new GitLab.GitLabApi(cfg["url"], cfg["token"]);
+            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>());
         }
 
         private ISessionFactory BuildSessionFactory()
@@ -163,27 +160,9 @@ namespace Web
 
             app.UseAuthentication();
 
-            app.Use(async (context, func) =>
-            {
-                // This is what [Authorize] calls
-                var userResult = await context.AuthenticateAsync();
-                var user = userResult.Principal;
-             
-                // Not authenticated
-                if (user == null || !user.Identities.Any(identity => identity.IsAuthenticated))
-                {
-                    // This is what [Authorize] calls
-                    await context.ChallengeAsync();
-
-                    return;
-                }
-                
-                
-                await func();
-            });
+            app.ChallengeAllUnauthenticatedCalls();
 
             app.UseOwin(owin => { owin.UseNancy(opt => opt.Bootstrapper = new Bootstraper(assetServer, _container)); });
-
         }
     }
 }

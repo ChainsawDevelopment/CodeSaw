@@ -9,8 +9,6 @@ namespace Web.Modules.Home
     {
         public HomeModule() : base("/")
         {
-            this.RequiresAuthentication();
-
             Get("/", _ => View["Index"].WithModel(new {
                 AssetBase = Context.Environment["assetServer"] ?? "/dist"
             }));
