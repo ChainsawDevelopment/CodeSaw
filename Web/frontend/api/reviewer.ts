@@ -98,6 +98,7 @@ export class ReviewerApi {
         const request = new Request(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, acceptJson)
 
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, {
+            ...acceptJson,
             headers: {
                 ...acceptJson.headers,
                 'Content-Type': 'application/json'
