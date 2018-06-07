@@ -5,6 +5,9 @@ Microsoft.AspNetCore.Hosting
 Microsoft.AspNetCore.Diagnostics
 Microsoft.AspNetCore.Owin
 Microsoft.AspNetCore
+Microsoft.AspNetCore.Authentication.Cookies
+Microsoft.AspNetCore.Authentication.OAuth
+Microsoft.AspNetCore.Identity
 NHibernate
 Nancy.Bootstrappers.Autofac
 Autofac.Extensions.DependencyInjection

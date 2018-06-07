@@ -16,6 +16,9 @@ nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.Diagnostics 
 nuget Microsoft.AspNetCore.Owin
+nuget Microsoft.AspNetCore.Authentication.Cookies 2.0.4
+nuget Microsoft.AspNetCore.Authentication.OAuth 2.0.4
+nuget Microsoft.AspNetCore.Identity 2.0.3
 nuget Autofac.Extensions.DependencyInjection
 nuget FluentMigrator.Runner
 nuget RestSharp
