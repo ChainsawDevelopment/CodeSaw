@@ -1,7 +1,7 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
 import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
@@ -33,7 +33,7 @@ function* loadFileDiffSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ path: string }> = yield take(selectFileForView);
+        const action: Action<{ path: PathPair }> = yield take(selectFileForView);
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: state.review.range,

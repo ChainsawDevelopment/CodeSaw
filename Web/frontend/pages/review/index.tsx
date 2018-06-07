@@ -4,7 +4,7 @@ import { Dispatch } from "redux";
 import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, FileInfo } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk } from "../../api/reviewer";
+import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk, PathPair, emptyPathPair } from "../../api/reviewer";
 
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
@@ -18,16 +18,16 @@ import DiffView from './diffView';
 import "./review.less";
 import { OnMount } from "../../components/OnMount";
 
-type SelectFileForViewHandler = (path: string) => void;
+type SelectFileForViewHandler = (path: PathPair) => void;
 
 const FileSummary = (props: {file: FileInfo}): JSX.Element => {
     const items: JSX.Element[] = [];
 
     if (props.file.treeEntry.renamedFile) {
-        const { oldPath, newPath } = props.file.treeEntry;
+        const { path } = props.file.treeEntry;
 
         items.push(
-            <div key="renamed" className="renamed">File renamed <pre>{oldPath}</pre> &rarr; <pre>{newPath}</pre></div>
+            <div key="renamed" className="renamed">File renamed <pre>{path.oldPath}</pre> &rarr; <pre>{path.newPath}</pre></div>
         );
     }
 
@@ -50,8 +50,8 @@ const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onS
             <Sidebar.Pushable as={Segment}>
                 <Sidebar visible={true} width='thin'>
                     <ChangedFileTree
-                        paths={props.info.changes.map(i => i.newPath)}
-                        selected={props.selectedFile ? props.selectedFile.path : null}
+                        paths={props.info.changes.map(i => i.path)}
+                        selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
                         onSelect={props.onSelectFileForView}
                     />
                 </Sidebar>
@@ -128,7 +128,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId) => dispatch(loadReviewInfo({ reviewId })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
-    selectFileForView: path => dispatch(selectFileForView({ path })),
+    selectFileForView: (path) => dispatch(selectFileForView({ path })),
     rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base }))
 });
 

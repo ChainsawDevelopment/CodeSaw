@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -168,6 +169,31 @@ namespace GitLab
             }
 
             return string.Join("_", parts.ToArray());
+        }
+
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+        {
+            var properties = base.CreateProperties(type, memberSerialization);
+            if (type == typeof(FileDiff))
+            {
+                properties.Add(new JsonProperty
+                {
+                    ShouldSerialize = _ => true,
+                    PropertyName = "old_path",
+                    PropertyType = typeof(string),
+                    ValueProvider = new ComplexExpressionValueProvider<FileDiff, string>((o, v) => o.Path.OldPath = v),
+                    Writable = true
+                });
+                properties.Add(new JsonProperty
+                {
+                    ShouldSerialize = _ => true,
+                    PropertyName = "new_path",
+                    PropertyType = typeof(string),
+                    ValueProvider = new ComplexExpressionValueProvider<FileDiff, string>((o, v) => o.Path.NewPath = v),
+                    Writable = true
+                });
+            }
+            return properties;
         }
     }
 
