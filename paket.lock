@@ -12,7 +12,6 @@ NUGET
       NETStandard.Library (>= 1.6.1)
     Diff.Match.Patch (2.1)
       FSharp.Core (>= 4.1.18)
-    dotnet-fake (5.0) - clitool: true
     FluentMigrator (3.1)
       FluentMigrator.Abstractions (>= 3.1)
       Microsoft.Extensions.DependencyInjection (>= 2.0)

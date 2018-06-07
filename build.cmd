@@ -7,6 +7,7 @@ REM     --tool-path %BUILD_PACKAGES% ^
 REM     --version 5.0.0-rc*
 REM )
 
-dotnet restore %BASE%\dotnet-fake.csproj
+rem dotnet restore %BASE%\dotnet-fake.csproj
 
-dotnet fake run %BASE%\build.fsx -- %*
+dotnet tool install "--tool-path=%BASE%.fake-tools" fake-cli
+"%BASE%\.fake-tools\fake.exe" run %BASE%\build.fsx -- %*

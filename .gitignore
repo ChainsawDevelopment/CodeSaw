@@ -8,6 +8,7 @@ node_modules
 fake
 Web/wwwroot/dist.js
 .fake
+.fake-tools
 artifacts
 
 Web/appsettings.local.json
