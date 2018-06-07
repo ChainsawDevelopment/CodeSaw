@@ -15,6 +15,7 @@ import Popup from 'semantic-ui-react/dist/commonjs/modules/Popup';
 import VersionSelector from './versionSelector';
 import ChangedFileTree from './changedFileTree';
 import DiffView from './diffView';
+import ChangedFileTreePopup from './fileTreePopup'
 
 import "./review.less";
 import { OnMount } from "../../components/OnMount";
@@ -45,23 +46,14 @@ const FileSummary = (props: { file: FileInfo }): JSX.Element => {
     );
 };
 
-const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
-    const filesSelector = (
-        <ChangedFileTree
-            paths={props.info.changes.map(i => i.path)}
-            selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
-            onSelect={props.onSelectFileForView}
-        />
-    );
-
+const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {   
     return (
         <div style={{ flex: 1 }}>
             <div>
-                <Popup
-                    trigger={<Button color='green' content='Files' />}
-                    content={filesSelector}
-                    on='click'
-                    position='top right'
+                <ChangedFileTreePopup
+                    paths={props.info.changes.map(i => i.path)}
+                    selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
+                    onSelect={props.onSelectFileForView}
                 />
             </div>
             <Segment basic>
@@ -71,23 +63,6 @@ const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onS
             </Segment>
         </div>
     )
-
-    // return (
-    //     <div style={{ flex: 1 }}>
-    //         <Sidebar.Pushable as={Segment}>
-    //             <Sidebar visible={true} width='thin'>
-    //                 <ChangedFileTree
-    //                     paths={props.info.changes.map(i => i.path)}
-    //                     selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
-    //                     onSelect={props.onSelectFileForView}
-    //                 />
-    //             </Sidebar>
-    //             <Sidebar.Pusher>
-                    
-    //             </Sidebar.Pusher>
-    //         </Sidebar.Pushable>
-    //     </div>
-    // );
 }
 
 interface OwnProps {
