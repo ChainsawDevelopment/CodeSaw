@@ -1,5 +1,14 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile, PathPair } from '../../api/reviewer';
+import {
+    RevisionRangeInfo,
+    FileDiff,
+    ReviewInfo,
+    RevisionRange,
+    ReviewId,
+    ChangedFile,
+    PathPair,
+    Comment
+} from '../../api/reviewer';
 
 export interface FileInfo {
     path: PathPair;
@@ -12,6 +21,7 @@ export interface ReviewState {
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
+    comments: Comment[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -29,6 +39,9 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
+export const loadComments = createAction<{ reviewId: ReviewId }>('LOAD_COMMENTS');
+export const loadedComments = createAction<Comment[]>('LOADED_COMMENTS');
+
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
     head: string;
@@ -42,6 +55,14 @@ export interface CreateGitLabLinkArgs {
 }
 
 export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
+
+export interface AddCommentArgs {
+    reviewId: ReviewId;
+    parentId?: string;
+    content: string;
+}
+
+export const addComment = createAction<AddCommentArgs>('ADD_COMMENT');
 
 const initial: ReviewState = {
     range: {
@@ -57,7 +78,8 @@ const initial: ReviewState = {
         title: '',
         headCommit: '',
         baseCommit: ''
-    }
+    },
+    comments: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -105,5 +127,12 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         };
     }
 
+    if (loadedComments.match(action)) {
+        return {
+            ...state,
+            comments: action.payload
+        };
+    }
+
     return state;
-} 
+}

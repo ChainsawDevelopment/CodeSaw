@@ -1,10 +1,23 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, createGitLabLink, FileInfo } from "./state";
+import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, createGitLabLink, FileInfo, loadComments, addComment } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk, PathPair, emptyPathPair } from "../../api/reviewer";
+import {
+    ChangedFile,
+    RevisionRangeInfo,
+    FileDiff,
+    ReviewInfo,
+    RevisionRange,
+    ReviewId,
+    RevisionId,
+    Review,
+    Hunk,
+    PathPair,
+    emptyPathPair,
+    Comment
+} from "../../api/reviewer";
 
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
@@ -14,6 +27,7 @@ import Message from 'semantic-ui-react/dist/commonjs/collections/Message';
 import VersionSelector from './versionSelector';
 import ChangedFileTree from './changedFileTree';
 import DiffView from './diffView';
+import CommentsView from './commentsView';
 
 import "./review.less";
 import { OnMount } from "../../components/OnMount";
@@ -77,6 +91,8 @@ interface DispatchProps {
     selectFileForView: SelectFileForViewHandler;
     rememberRevision(reviewId: ReviewId, head: string, base: string);
     createGitLabLink(reviewId: ReviewId);
+    loadComments(reviewId: ReviewId): void;
+    addComment(reviewId: ReviewId, content: string, parentId?: string);
 }
 
 interface StateProps {
@@ -84,6 +100,7 @@ interface StateProps {
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
+    comments: Comment[];
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -97,11 +114,18 @@ const reviewPage = (props: Props): JSX.Element => {
         </div>
     );
 
+    const load = () => {
+        props.loadReviewInfo(props.reviewId);
+        props.loadComments(props.reviewId);
+    };
+
     return (
         <div id="review-page">
-            <OnMount onMount={() => props.loadReviewInfo(props.reviewId)} />
+            <OnMount onMount={load} />
 
             <h1>Review {props.currentReview.title}</h1>
+
+            <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} />
 
             <VersionSelector
                 available={['base', ...props.currentReview.pastRevisions, ...provisional]}
@@ -127,6 +151,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
+    comments: state.review.comments
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -134,7 +159,9 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base })),
-    createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId }))
+    createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId })),
+    loadComments: (reviewId: ReviewId) => dispatch(loadComments({ reviewId })),
+    addComment: (reviewId, content, parentId) => dispatch(addComment({ reviewId, content, parentId }))
 });
 
 export default connect(

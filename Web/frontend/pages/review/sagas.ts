@@ -1,7 +1,23 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
-import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs, createGitLabLink, CreateGitLabLinkArgs } from './state';
+import {
+    selectCurrentRevisions,
+    SelectCurrentRevisions,
+    loadedRevisionsRangeInfo,
+    selectFileForView,
+    loadedFileDiff,
+    loadReviewInfo,
+    loadedReviewInfo,
+    rememberRevision,
+    RememberRevisionArgs,
+    createGitLabLink,
+    CreateGitLabLinkArgs,
+    loadComments,
+    loadedComments,
+    addComment,
+    AddCommentArgs
+} from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair, Comment } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
@@ -84,10 +100,34 @@ function* createGitLabLinkSaga() {
     }
 }
 
+function* loadCommentsSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<{ reviewId: ReviewId }> = yield take(loadComments);
+        const comments: Comment[] = yield api.getComments(action.payload.reviewId);
+        yield put(loadedComments(comments));
+    }
+}
+
+function* addCommentSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<AddCommentArgs> = yield take(addComment);
+
+        yield api.addComment(action.payload.reviewId, action.payload.content, action.payload.parentId);
+
+        yield put(loadComments({ reviewId: action.payload.reviewId }));
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
     rememberRevisionSaga,
-    createGitLabLinkSaga
+    createGitLabLinkSaga,
+    loadCommentsSaga,
+    addCommentSaga
 ];

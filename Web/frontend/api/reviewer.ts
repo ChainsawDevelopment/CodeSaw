@@ -66,6 +66,14 @@ export interface ReviewInfo {
     baseCommit: string;
 }
 
+export interface Comment {
+    id: string;
+    author: string;
+    content: string;
+    createdAt: string;
+    children: Comment[];
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -125,6 +133,27 @@ export class ReviewerApi {
                 'Content-Type': 'application/json'
             },
             method: 'POST'
+        });
+    }
+
+    public getComments = (reviewId: ReviewId): Promise<Comment[]> => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comments`, acceptJson)
+            .then(r => r.json())
+            .then(r => r as Comment[]);
+    }
+
+    public addComment = (reviewId: ReviewId, content: string, parentId?: string): Promise<any> => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comment/add`, {
+            ...acceptJson,
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                parentId,
+                content
+            })
         });
     }
 }
