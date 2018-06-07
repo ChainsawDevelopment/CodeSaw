@@ -1,7 +1,24 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
-import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, publishReview, ReviewState, createGitLabLink, CreateGitLabLinkArgs } from './state';
+import {
+    selectCurrentRevisions,
+    SelectCurrentRevisions,
+    loadedRevisionsRangeInfo,
+    selectFileForView,
+    loadedFileDiff,
+    loadReviewInfo,
+    loadedReviewInfo,
+    publishReview,
+    createGitLabLink,
+    CreateGitLabLinkArgs,
+    loadComments,
+    loadedComments,
+    addComment,
+    AddCommentArgs,
+    resolveComment,
+    ResolveCommentArgs
+} from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
@@ -114,10 +131,55 @@ function* publishReviewSaga() {
     }
 }
 
+function* loadCommentsSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<{ reviewId: ReviewId }> = yield take(loadComments);
+        const comments: Comment[] = yield api.getComments(action.payload.reviewId);
+        yield put(loadedComments(comments));
+    }
+}
+
+function* addCommentSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<AddCommentArgs> = yield take(addComment);
+
+        yield api.addComment(
+            action.payload.reviewId,
+            action.payload.content,
+            action.payload.needsResolution,
+            action.payload.parentId
+        );
+
+        yield put(loadComments({ reviewId: action.payload.reviewId }));
+    }
+}
+
+function* resolveCommentSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<ResolveCommentArgs> = yield take(resolveComment);
+
+        yield api.resolveComment(
+            action.payload.reviewId,
+            action.payload.commentId
+        );
+
+        yield put(loadComments({ reviewId: action.payload.reviewId }));
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
     createGitLabLinkSaga,
     publishReviewSaga,
+    loadCommentsSaga,
+    addCommentSaga,
+    resolveCommentSaga
 ];
