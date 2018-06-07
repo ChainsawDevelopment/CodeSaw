@@ -6,15 +6,8 @@ import 'react-diff-view/index.css';
 import './diffView.less';
 import * as classNames from "classnames";
 
-const mapHunkToView = (hunk: Hunk) => {
-    let viewHunk = {
-        oldStart: hunk.oldPosition.start + 1,
-        oldLines: hunk.oldPosition.length + 1,
-        newStart: hunk.newPosition.start + 1,
-        newLines: hunk.newPosition.length + 1,
-        content: `Hunk ${hunk.newPosition.start + 1} - ${hunk.newPosition.end + 1} (${hunk.newPosition.length} lines)`,
-        changes: []
-    };
+const mapHunkToView = (hunk: Hunk) => {    
+    var changes = [];
 
     let oldLineCounter = hunk.oldPosition.start + 1;
     let newLineCounter = hunk.newPosition.start + 1;
@@ -30,9 +23,12 @@ const mapHunkToView = (hunk: Hunk) => {
                 break;
             case 'Insert':
                 type = 'insert';
+                break;
+            default:
+                console.log('Unknown', line.operation);
         }
 
-        viewHunk.changes.push({
+        changes.push({
             type: type,
             content: line.text,
             isNormal: type == 'normal',
@@ -40,7 +36,7 @@ const mapHunkToView = (hunk: Hunk) => {
             isInsert: type == 'insert',
             oldLineNumber: oldLineCounter,
             newLineNumber: newLineCounter,
-            lineNumber: newLineCounter,
+            lineNumber: type == 'delete' ? oldLineCounter : newLineCounter,
             classNames: classNames({
                 'base-change': line.classification == 'BaseChange' && line.operation != 'Equal',
                 'review-change': line.classification == 'ReviewChange' && line.operation != 'Equal'
@@ -56,6 +52,15 @@ const mapHunkToView = (hunk: Hunk) => {
         }
     }
 
+    let viewHunk = {
+        oldStart: hunk.oldPosition.start + 1,
+        oldLines: hunk.oldPosition.length + 1,
+        newStart: hunk.newPosition.start + 1,
+        newLines: hunk.newPosition.length + 1,
+        content: `Hunk ${hunk.newPosition.start + 1} - ${hunk.newPosition.end + 1} (${hunk.newPosition.length} lines)`,
+        changes: zipChanges(changes)
+    };
+
     return viewHunk;
 };
 
@@ -65,6 +70,37 @@ const oppositeType = (type: string) => {
         case 'delete': return 'insert';
         default: return type;
     }
+}
+
+const zipChanges = (changes: any[]) => {
+    let result = [];
+
+    let inserts = [];
+    let deletes = [];
+
+    for (const change of changes) {
+        if(change.isInsert) {
+            inserts.push(change);
+            continue;
+        }
+
+        if(change.isDelete) {
+            deletes.push(change);
+            continue;
+        }
+
+        if(change.isNormal) {
+            const zipped = zipLines(deletes, inserts);
+
+            result = result.concat(zipped);            
+            inserts = [];
+            deletes = [];
+
+            result.push(change);
+        }
+    }
+
+    return result;
 }
 
 const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
