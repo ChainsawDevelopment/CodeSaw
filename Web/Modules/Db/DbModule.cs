@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Nancy;
 using NHibernate;
+using NHibernate.Linq;
 using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using Web.Cqrs;
@@ -77,4 +81,5 @@ namespace Web.Modules.Db
             Property(x => x.Text);
         }
     }
+
 }

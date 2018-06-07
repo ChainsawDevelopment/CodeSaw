@@ -1,6 +1,7 @@
 ﻿using Nancy;
 using Nancy.Extensions;
 using System.Linq;
+using Nancy.Security;
 
 namespace Web.Modules.Home
 {

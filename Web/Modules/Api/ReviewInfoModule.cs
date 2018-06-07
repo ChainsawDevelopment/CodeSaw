@@ -1,5 +1,7 @@
+using System;
 using Nancy;
 using Nancy.ModelBinding;
+using Nancy.Security;
 using Nancy.Owin;
 using RepositoryApi;
 using Web.Cqrs;
@@ -10,13 +12,13 @@ namespace Web.Modules.Api
 {
     public class ReviewInfoModule : NancyModule
     {
-        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, IRepository api) : base("/api/project/{projectId}/review/{reviewId}")
+        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
         {
-            Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api)));
+            Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api())));
 
-            Get("/revisions/{previous:revId}/{current:revId}",  async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api)));
+            Get("/revisions/{previous:revId}/{current:revId}",  async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api())));
 
-            Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.file, api)));
+            Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.file, api())));
 
             Post("/revision/remember", async _ =>
             {
