@@ -1,11 +1,16 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId } from '../../api/reviewer';
+import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile } from '../../api/reviewer';
+
+export interface FileInfo {
+    path: string;
+    diff: FileDiff;
+    treeEntry: ChangedFile;
+}
 
 export interface ReviewState {
     range: RevisionRange;
     rangeInfo: RevisionRangeInfo;
-    selectedFile: string;
-    selectedFileDiff: FileDiff;
+    selectedFile: FileInfo;
     currentReview: ReviewInfo;
 }
 
@@ -39,7 +44,6 @@ const initial: ReviewState = {
     },
     rangeInfo: null,
     selectedFile: null,
-    selectedFileDiff: null,
     currentReview: {
         hasProvisionalRevision: false,
         pastRevisions: [],
@@ -63,21 +67,28 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             rangeInfo: action.payload,
             selectedFile: null,
-            selectedFileDiff: null
         }
     }
 
     if (selectFileForView.match(action)) {
+        const treeEntry = state.rangeInfo.changes.find(x => x.newPath == action.payload.path);
         return {
             ...state,
-            selectedFile: action.payload.path
+            selectedFile: {
+                path: action.payload.path,
+                diff: null,
+                treeEntry: treeEntry
+            }
         };
     }
 
     if (loadedFileDiff.match(action)) {
         return {
             ...state,
-            selectedFileDiff: action.payload
+            selectedFile: {
+                ...state.selectedFile,
+                diff: action.payload
+            }
         };
     }
 

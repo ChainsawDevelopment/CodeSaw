@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision } from "./state";
+import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, FileInfo } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk } from "../../api/reviewer";
@@ -9,6 +9,7 @@ import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, Re
 import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
+import Message from 'semantic-ui-react/dist/commonjs/collections/Message';
 
 import VersionSelector from './versionSelector';
 import ChangedFileTree from './changedFileTree';
@@ -19,21 +20,46 @@ import { OnMount } from "../../components/OnMount";
 
 type SelectFileForViewHandler = (path: string) => void;
 
-const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: string, hunks: Hunk[], onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
+const FileSummary = (props: {file: FileInfo}): JSX.Element => {
+    const items: JSX.Element[] = [];
+
+    if (props.file.treeEntry.renamedFile) {
+        const { oldPath, newPath } = props.file.treeEntry;
+
+        items.push(
+            <div key="renamed" className="renamed">File renamed <pre>{oldPath}</pre> &rarr; <pre>{newPath}</pre></div>
+        );
+    }
+
+    if(items.length == 0) {
+        return null;
+    }
+
+    return (
+        <Message className="file-summary">
+            <Message.Content>
+                {items}
+            </Message.Content>
+        </Message>
+    );
+};
+
+const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
     return (
         <div style={{ flex: 1 }}>
             <Sidebar.Pushable as={Segment}>
                 <Sidebar visible={true} width='thin'>
                     <ChangedFileTree
                         paths={props.info.changes.map(i => i.newPath)}
-                        selected={props.selectedFile}
+                        selected={props.selectedFile ? props.selectedFile.path : null}
                         onSelect={props.onSelectFileForView}
                     />
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic>
-                        <Button onClick={() => props.onSelectFileForView(props.selectedFile)}>Refresh diff</Button>
-                        {props.hunks ? <DiffView hunks={props.hunks} /> : null}
+                        <Button onClick={() => props.onSelectFileForView(props.selectedFile.path)}>Refresh diff</Button>
+                        {props.selectedFile ? <FileSummary file={props.selectedFile} /> : null}
+                        {props.selectedFile && props.selectedFile.diff ? <DiffView hunks={props.selectedFile.diff.hunks} /> : null}
                     </Segment>
                 </Sidebar.Pusher>
             </Sidebar.Pushable>
@@ -56,8 +82,7 @@ interface StateProps {
     currentReview: ReviewInfo;
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
-    selectedFile: string;
-    selectedFileDiff: FileDiff;
+    selectedFile: FileInfo;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -88,7 +113,6 @@ const reviewPage = (props: Props): JSX.Element => {
                 info={props.rangeInfo}
                 selectedFile={props.selectedFile}
                 onSelectFileForView={props.selectFileForView}
-                hunks={props.selectedFileDiff ? props.selectedFileDiff.hunks : null}
             />) : null}
         </div>
     );
@@ -99,7 +123,6 @@ const mapStateToProps = (state: RootState): StateProps => ({
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
-    selectedFileDiff: state.review.selectedFileDiff
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
