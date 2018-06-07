@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Hunk } from "../../api/reviewer";
 
-import {Diff} from 'react-diff-view';
+import {Diff, markWordEdits} from 'react-diff-view';
 import 'react-diff-view/index.css';
 import './diffView.less';
 import * as classNames from "classnames";
@@ -147,6 +147,8 @@ const diffView = (props: {hunks: Hunk[]}) => {
     //     )
     // };
 
+    const markEdits = markWordEdits();
+
     return ( 
         <div>
             <Diff 
@@ -154,6 +156,7 @@ const diffView = (props: {hunks: Hunk[]}) => {
             diffType="modify"
             hunks={viewHunks}
             customEvents={events}
+            markEdits={markEdits}
             />
         </div>
     );

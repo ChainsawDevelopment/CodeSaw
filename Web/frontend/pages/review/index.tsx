@@ -10,6 +10,7 @@ import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
 import Message from 'semantic-ui-react/dist/commonjs/collections/Message';
+import Popup from 'semantic-ui-react/dist/commonjs/modules/Popup';
 
 import VersionSelector from './versionSelector';
 import ChangedFileTree from './changedFileTree';
@@ -45,26 +46,48 @@ const FileSummary = (props: { file: FileInfo }): JSX.Element => {
 };
 
 const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
+    const filesSelector = (
+        <ChangedFileTree
+            paths={props.info.changes.map(i => i.path)}
+            selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
+            onSelect={props.onSelectFileForView}
+        />
+    );
+
     return (
         <div style={{ flex: 1 }}>
-            <Sidebar.Pushable as={Segment}>
-                <Sidebar visible={true} width='thin'>
-                    <ChangedFileTree
-                        paths={props.info.changes.map(i => i.path)}
-                        selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
-                        onSelect={props.onSelectFileForView}
-                    />
-                </Sidebar>
-                <Sidebar.Pusher>
-                    <Segment basic>
-                        <Button onClick={() => props.onSelectFileForView(props.selectedFile.path)}>Refresh diff</Button>
-                        {props.selectedFile ? <FileSummary file={props.selectedFile} /> : null}
-                        {props.selectedFile && props.selectedFile.diff ? <DiffView hunks={props.selectedFile.diff.hunks} /> : null}
-                    </Segment>
-                </Sidebar.Pusher>
-            </Sidebar.Pushable>
+            <div>
+                <Popup
+                    trigger={<Button color='green' content='Files' />}
+                    content={filesSelector}
+                    on='click'
+                    position='top right'
+                />
+            </div>
+            <Segment basic>
+                <Button onClick={() => props.onSelectFileForView(props.selectedFile.path)}>Refresh diff</Button>
+                {props.selectedFile ? <FileSummary file={props.selectedFile} /> : null}
+                {props.selectedFile && props.selectedFile.diff ? <DiffView hunks={props.selectedFile.diff.hunks} /> : null}
+            </Segment>
         </div>
-    );
+    )
+
+    // return (
+    //     <div style={{ flex: 1 }}>
+    //         <Sidebar.Pushable as={Segment}>
+    //             <Sidebar visible={true} width='thin'>
+    //                 <ChangedFileTree
+    //                     paths={props.info.changes.map(i => i.path)}
+    //                     selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
+    //                     onSelect={props.onSelectFileForView}
+    //                 />
+    //             </Sidebar>
+    //             <Sidebar.Pusher>
+                    
+    //             </Sidebar.Pusher>
+    //         </Sidebar.Pushable>
+    //     </div>
+    // );
 }
 
 interface OwnProps {
