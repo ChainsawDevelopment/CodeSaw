@@ -13,7 +13,3 @@ Nancy.Bootstrappers.Autofac
 Autofac.Extensions.DependencyInjection
 System.Data.SqlClient
 Diff.Match.Patch
-
-Microsoft.AspNetCore.Authentication.Cookies
-Microsoft.AspNetCore.Authentication.OAuth
-Microsoft.AspNetCore.Identity

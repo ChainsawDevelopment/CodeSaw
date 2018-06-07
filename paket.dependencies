@@ -16,9 +16,6 @@ nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.Diagnostics
 nuget Microsoft.AspNetCore.Owin
-nuget Microsoft.AspNetCore.Authentication.Cookies 2.0.4
-nuget Microsoft.AspNetCore.Authentication.OAuth 2.0.4
-nuget Microsoft.AspNetCore.Identity 2.0.3
 nuget Autofac.Extensions.DependencyInjection
 nuget FluentMigrator.Runner
 nuget RestSharp
@@ -31,7 +28,6 @@ nuget Microsoft.AspNetCore.Identity
 nuget System.Data.SqlClient
 
 clitool Microsoft.DotNet.Watcher.Tools
-clitool dotnet-fake
 
 group FakeBuild
     source https://www.nuget.org/api/v2
