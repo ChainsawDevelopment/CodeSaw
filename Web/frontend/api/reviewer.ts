@@ -7,6 +7,8 @@ export interface RevisionRange {
 
 export interface ChangedFile {
     newPath: string;
+    oldPath: string;
+    renamedFile: boolean;
 }
 
 export interface RevisionRangeInfo {
