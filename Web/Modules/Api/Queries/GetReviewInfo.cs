@@ -36,6 +36,7 @@ namespace Web.Modules.Api.Queries
 
             var pastRevisions = (
                 from r in session.Query<ReviewRevision>()
+                where r.ReviewId.ProjectId == _projectId && r.ReviewId.ReviewId == _reviewId
                 orderby r.RevisionNumber
                 select new {Revision = r.RevisionNumber, r.HeadCommit}
             ).ToArray();
