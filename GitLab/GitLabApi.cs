@@ -85,7 +85,7 @@ namespace GitLab
                     throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
             }
         }
-
+        
         public async Task CreateRef(int projectId, string name, string commit)
         {
             var createTagRequest = new RestRequest($"/projects/{projectId}/repository/tags", Method.POST)
@@ -97,12 +97,22 @@ namespace GitLab
 
             var createTagResponse = await _client.ExecuteTaskAsync(createTagRequest);
 
-            if (createTagResponse.StatusCode == HttpStatusCode.Created)
-            {
-                return;
-            }
 
-            throw new GitLabApiFailedException($"Request {createTagRequest.Method} {createTagRequest.Resource} failed with {(int)createTagResponse.StatusCode} {createTagResponse.StatusDescription}\nError: {createTagResponse.ErrorMessage}");
+            if (RrefAlreadyExists(createTagResponse))
+            {
+                // This may happen if there are concurrent requests to remeber the same revision
+                throw new GitLabRefAlreadyExistsException(projectId, name, commit);
+            }
+            if (createTagResponse.StatusCode != HttpStatusCode.Created)
+            {
+                throw new GitLabApiFailedException($"Request {createTagRequest.Method} {createTagRequest.Resource} failed with {(int)createTagResponse.StatusCode} {createTagResponse.StatusDescription}\nError: {createTagResponse.ErrorMessage}");
+            }
+        }
+
+        private static bool RrefAlreadyExists(IRestResponse createTagResponse)
+        {
+            // If ref already exists GitLab returns BadRequest code together with message
+            return createTagResponse.StatusCode == HttpStatusCode.BadRequest;
         }
     }
 
