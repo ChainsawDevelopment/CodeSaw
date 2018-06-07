@@ -1,6 +1,6 @@
 source https://www.nuget.org/api/v2
 
-framework: netcoreapp20
+framework: netcoreapp21
 
 nuget Diff.Match.Patch
 nuget FluentMigrator
@@ -14,7 +14,7 @@ nuget Nancy.Bootstrappers.Autofac prerelease
 nuget Microsoft.AspNetCore
 nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Hosting
-nuget Microsoft.AspNetCore.Diagnostics 
+nuget Microsoft.AspNetCore.Diagnostics
 nuget Microsoft.AspNetCore.Owin
 nuget Microsoft.AspNetCore.Authentication.Cookies 2.0.4
 nuget Microsoft.AspNetCore.Authentication.OAuth 2.0.4
@@ -22,6 +22,11 @@ nuget Microsoft.AspNetCore.Identity 2.0.3
 nuget Autofac.Extensions.DependencyInjection
 nuget FluentMigrator.Runner
 nuget RestSharp
+
+nuget Microsoft.AspNetCore.Authentication
+nuget Microsoft.AspNetCore.Authentication.Cookies
+nuget Microsoft.AspNetCore.Authentication.OAuth
+nuget Microsoft.AspNetCore.Identity
 
 nuget System.Data.SqlClient
 

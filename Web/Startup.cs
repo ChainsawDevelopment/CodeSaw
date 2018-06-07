@@ -83,6 +83,7 @@ namespace Web
 
             builder.RegisterType<SignInManager<ReviewUser>>().AsSelf();
             builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().InstancePerRequest();
+            builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
             
             _container = builder.Build();
 
