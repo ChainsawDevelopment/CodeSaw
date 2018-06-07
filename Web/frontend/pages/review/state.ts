@@ -1,8 +1,8 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile } from '../../api/reviewer';
+import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile, PathPair } from '../../api/reviewer';
 
 export interface FileInfo {
-    path: string;
+    path: PathPair;
     diff: FileDiff;
     treeEntry: ChangedFile;
 }
@@ -22,7 +22,7 @@ export interface SelectCurrentRevisions {
 export const selectCurrentRevisions = createAction<SelectCurrentRevisions>('SELECT_CURRENT_REVISIONS');
 export const loadedRevisionsRangeInfo = createAction<RevisionRangeInfo>('LOADED_REVISION_RANGE_INFO');
 
-export const selectFileForView = createAction<{ path: string }>('SELECT_FILE_FOR_VIEW');
+export const selectFileForView = createAction<{ path: PathPair }>('SELECT_FILE_FOR_VIEW');
 
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
@@ -71,7 +71,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (selectFileForView.match(action)) {
-        const treeEntry = state.rangeInfo.changes.find(x => x.newPath == action.payload.path);
+        const treeEntry = state.rangeInfo.changes.find(x => x.path.newPath == action.payload.path.newPath);
         return {
             ...state,
             selectedFile: {

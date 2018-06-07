@@ -1,13 +1,14 @@
 import * as React from "react";
 import List from 'semantic-ui-react/dist/commonjs/elements/List';
+import { PathPair } from "../../api/reviewer";
 
-const FileItem = (props: { path: string, isSelected: boolean, onclick?: () => void }) => {
+const FileItem = (props: { path: PathPair, isSelected: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
-        header = (<List.Header className='selected-file'>{props.path}</List.Header>)
+        header = (<List.Header className='selected-file'>{props.path.newPath}</List.Header>)
     } else {
-        header = (<List.Header as='a' onClick={props.onclick}>{props.path}</List.Header>);
+        header = (<List.Header as='a' onClick={props.onclick}>{props.path.newPath}</List.Header>);
     }
 
     return (
@@ -20,12 +21,12 @@ const FileItem = (props: { path: string, isSelected: boolean, onclick?: () => vo
     );
 }
 
-const changedFileTree = (props: { paths: string[], selected:string, onSelect: (path:string) => void }) => {
+const changedFileTree = (props: { paths: PathPair[], selected:PathPair, onSelect: (path: PathPair) => void }) => {
     const items = props.paths.map(p => (
         <FileItem 
-            key={p} 
+            key={p.newPath} 
             path={p} 
-            isSelected={p == props.selected} 
+            isSelected={p.newPath == props.selected.newPath} 
             onclick={() => props.onSelect(p)}
         />
     ));

@@ -15,15 +15,17 @@ namespace Web.Modules.Api.Queries
     {
         private readonly RevisionId _previous;
         private readonly RevisionId _current;
-        private readonly string _file;
+        private readonly string _oldPath;
+        private readonly string _newPath;
         private readonly IRepository _api;
         private readonly ReviewIdentifier _reviewId;
 
-        public GetFileDiff(int projectId, int reviewId, RevisionId previous, RevisionId current, string file, IRepository api)
+        public GetFileDiff(int projectId, int reviewId, RevisionId previous, RevisionId current, string oldPath, string newPath, IRepository api)
         {
             _previous = previous;
             _current = current;
-            _file = file;
+            _oldPath = oldPath;
+            _newPath = newPath;
             _api = api;
             _reviewId = new ReviewIdentifier(projectId, reviewId);
         }
@@ -41,11 +43,17 @@ namespace Web.Modules.Api.Queries
             var previousBaseCommit = ResolveBaseCommitHash(_previous, mergeRequest, r => commits[r].Base);
             var currentBaseCommit = ResolveBaseCommitHash(_current, mergeRequest, r => commits[r].Base);
 
-            var contents = (await new[] {previousCommit, currentCommit, previousBaseCommit, currentBaseCommit}
-                    .Distinct()
-                    .Select(async c => new {hash = c, content = await _api.GetFileContent(_reviewId.ProjectId, c, _file)})
+            var contents = (await new[]
+                    {
+                        new {Commit = previousCommit, Path = _oldPath},
+                        new {Commit = currentCommit, Path = _newPath},
+                        new {Commit = previousBaseCommit, Path = _oldPath},
+                        new {Commit = currentBaseCommit, Path = _newPath}
+                    }
+                    .DistinctBy(x => x.Commit)
+                    .Select(async c => new {File = c, content = await _api.GetFileContent(_reviewId.ProjectId, c.Commit, c.Path)})
                     .WhenAll())
-                .ToDictionary(x => x.hash, x => x.content);
+                .ToDictionary(x => x.File.Commit, x => x.content);
 
             var basePatch = FourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
             var reviewPatch = FourWayDiff.MakePatch(contents[previousCommit], contents[currentCommit]);
