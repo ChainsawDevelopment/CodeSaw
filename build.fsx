@@ -5,7 +5,6 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO.FileSystemOperators
 open Fake.JavaScript
-open Fake.IO.Globbing.Tools
 open System
 
 let root = __SOURCE_DIRECTORY__
