@@ -1,21 +1,34 @@
 import * as React from "react";
 import List from 'semantic-ui-react/dist/commonjs/elements/List';
+import Icon from 'semantic-ui-react/dist/commonjs/elements/Icon';
 import { PathPair } from "../../api/reviewer";
+import { SemanticCOLORS, SemanticICONS } from "semantic-ui-react/dist/commonjs";
 
 const FileItem = (props: { path: PathPair, isSelected: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
-        header = (<List.Header className='selected-file'>{props.path.newPath}</List.Header>)
+        header = (<span className='selected-file'>{props.path.newPath}</span>)
     } else {
-        header = (<List.Header as='a' onClick={props.onclick}>{props.path.newPath}</List.Header>);
+        header = (<a onClick={props.onclick}>{props.path.newPath}</a>);
+    }
+
+    let markColor:SemanticCOLORS;
+    let markIcon:SemanticICONS;
+
+    if (props.isSelected) {
+        markColor = 'green';
+        markIcon = 'eye slash' as SemanticICONS;
+    } else {
+        markColor = 'red';
+        markIcon = 'eye';
     }
 
     return (
-        <List.Item>
-            <List.Icon name='file' />
+        <List.Item className="file-tree-item">
             <List.Content>
-                {header}
+                <Icon name={markIcon} color={markColor}/>
+                <span>{header}</span>
             </List.Content>
         </List.Item>
     );

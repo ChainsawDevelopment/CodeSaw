@@ -58,6 +58,7 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
                 onClose={this._onClose}
                 on='click'
                 position='top right'
+                wide='very'
             />
         );
     }
