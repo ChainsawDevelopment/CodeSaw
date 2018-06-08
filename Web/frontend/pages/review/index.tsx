@@ -2,6 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
+import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
 import { ReviewId, ReviewInfo, RevisionId, RevisionRange, RevisionRangeInfo } from "../../api/reviewer";
 import { OnMount } from "../../components/OnMount";
 import { RootState } from "../../rootState";
