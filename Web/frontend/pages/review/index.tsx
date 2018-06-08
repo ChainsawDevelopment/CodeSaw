@@ -6,10 +6,11 @@ import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
 import { ReviewId, ReviewInfo, RevisionId, RevisionRange, RevisionRangeInfo } from "../../api/reviewer";
 import { OnMount } from "../../components/OnMount";
 import { RootState } from "../../rootState";
-import RangeInfo, { SelectFileForViewHandler } from './rangeInfo';
+import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
 import "./review.less";
-import { FileInfo, loadReviewInfo, selectCurrentRevisions, createGitLabLink, selectFileForView, publishReview } from "./state";
+import { FileInfo, loadReviewInfo, createGitLabLink, selectCurrentRevisions, selectFileForView, reviewFile, unreviewFile, publishReview } from "./state";
 import VersionSelector from './versionSelector';
+import * as PathPairs from "../../pathPair";
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -21,6 +22,7 @@ interface DispatchProps {
     selectFileForView: SelectFileForViewHandler;
     createGitLabLink(reviewId: ReviewId);
     publishReview(): void;
+    reviewFile: ReviewFileActions;
 }
 
 interface StateProps {
@@ -28,6 +30,7 @@ interface StateProps {
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
+    reviewedFiles: PathPairs.List;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -42,6 +45,10 @@ const reviewPage = (props: Props): JSX.Element => {
     );
 
     const pastRevisions = props.currentReview.pastRevisions.map(i => i.number);
+    
+    const selectedFile = props.selectedFile ?
+        {...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path)}
+        : null;
 
     return (
         <div id="review-page">
@@ -61,8 +68,10 @@ const reviewPage = (props: Props): JSX.Element => {
             {publishReview}
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
-                selectedFile={props.selectedFile}
+                selectedFile={selectedFile}
                 onSelectFileForView={props.selectFileForView}
+                reviewFile={props.reviewFile}
+                reviewedFiles={props.reviewedFiles}
             />) : null}
         </div>
     );
@@ -73,6 +82,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
+    reviewedFiles: state.review.reviewedFiles
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -80,7 +90,11 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId })),
-    publishReview: () => dispatch(publishReview({}))
+    publishReview: () => dispatch(publishReview({})),
+    reviewFile: {
+        review: (path) => dispatch(reviewFile({ path })),
+        unreview: (path) => dispatch(unreviewFile({ path })),
+    }
 });
 
 export default connect(

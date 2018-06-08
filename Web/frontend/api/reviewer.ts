@@ -1,3 +1,5 @@
+import  * as PathPairs from "../pathPair";
+
 export type RevisionId = 'base' | number | string | 'provisional';
 
 export interface RevisionRange {
@@ -5,15 +7,8 @@ export interface RevisionRange {
     current: RevisionId;
 }
 
-export interface PathPair {
-    newPath: string;
-    oldPath: string;
-}
-
-export const emptyPathPair: PathPair = { newPath: null, oldPath: null };
-
 export interface ChangedFile {
-    path: PathPair;
+    path: PathPairs.PathPair;
     renamedFile: boolean;
 }
 
@@ -107,7 +102,7 @@ export class ReviewerApi {
             .then(r => r as RevisionRangeInfo);
     }
 
-    public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPair): Promise<FileDiff> => {
+    public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
             acceptJson

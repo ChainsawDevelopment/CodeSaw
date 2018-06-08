@@ -2,9 +2,10 @@ import Popup from 'semantic-ui-react/dist/commonjs/modules/Popup';
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
 
 import * as React from "react";
-import { RevisionRangeInfo, PathPair, emptyPathPair } from "../../api/reviewer";
+import { RevisionRangeInfo } from "../../api/reviewer";
 import { FileInfo } from "./state";
 import ChangedFileTree from './changedFileTree';
+import { PathPair } from '../../pathPair';
 
 interface State {
     opened: boolean;
@@ -15,6 +16,7 @@ type SelectFileForViewHandler = (path: PathPair) => void;
 export interface Props {
     paths: PathPair[];
     selected:PathPair;
+    reviewedFiles: PathPair[];
     onSelect(path: PathPair): void;
 }
 
@@ -45,6 +47,7 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
             <ChangedFileTree
                 paths={this.props.paths}
                 selected={this.props.selected}
+                reviewedFiles={this.props.reviewedFiles}
                 onSelect={this._onSelect}
             />
         );

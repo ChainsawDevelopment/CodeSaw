@@ -1,10 +1,11 @@
 import * as React from "react";
 import List from 'semantic-ui-react/dist/commonjs/elements/List';
 import Icon from 'semantic-ui-react/dist/commonjs/elements/Icon';
-import { PathPair } from "../../api/reviewer";
 import { SemanticCOLORS, SemanticICONS } from "semantic-ui-react/dist/commonjs";
+import ReviewMark from './reviewMark';
+import * as PathPairs from "../../pathPair";
 
-const FileItem = (props: { path: PathPair, isSelected: boolean, onclick?: () => void }) => {
+const FileItem = (props: { path: PathPairs.PathPair, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
@@ -13,33 +14,23 @@ const FileItem = (props: { path: PathPair, isSelected: boolean, onclick?: () => 
         header = (<a onClick={props.onclick}>{props.path.newPath}</a>);
     }
 
-    let markColor:SemanticCOLORS;
-    let markIcon:SemanticICONS;
-
-    if (props.isSelected) {
-        markColor = 'green';
-        markIcon = 'eye slash' as SemanticICONS;
-    } else {
-        markColor = 'red';
-        markIcon = 'eye';
-    }
-
     return (
         <List.Item className="file-tree-item">
             <List.Content>
-                <Icon name={markIcon} color={markColor}/>
+                <ReviewMark reviewed={props.isReviewed} size='small'/>
                 <span>{header}</span>
             </List.Content>
         </List.Item>
     );
 }
 
-const changedFileTree = (props: { paths: PathPair[], selected:PathPair, onSelect: (path: PathPair) => void }) => {
+const changedFileTree = (props: { paths: PathPairs.List, reviewedFiles: PathPairs.List; selected:PathPairs.PathPair, onSelect: (path: PathPairs.PathPair) => void }) => {
     const items = props.paths.map(p => (
         <FileItem 
             key={p.newPath} 
             path={p} 
-            isSelected={p.newPath == props.selected.newPath} 
+            isSelected={p.newPath == props.selected.newPath}
+            isReviewed={PathPairs.contains(props.reviewedFiles, p)}
             onclick={() => props.onSelect(p)}
         />
     ));

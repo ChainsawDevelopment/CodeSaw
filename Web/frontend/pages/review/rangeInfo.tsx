@@ -4,17 +4,18 @@ import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
 import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
 import Rail from 'semantic-ui-react/dist/commonjs/elements/Rail';
 import Sticky from 'semantic-ui-react/dist/commonjs/modules/Sticky';
-import { PathPair, RevisionRangeInfo, emptyPathPair } from "../../api/reviewer";
+import { RevisionRangeInfo } from "../../api/reviewer";
 import DiffView from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
 import { FileInfo } from "./state";
+import ReviewMark from "./reviewMark";
+import { PathPair, emptyPathPair } from "../../pathPair";
 
-export type SelectFileForViewHandler = (path: PathPair) => void;
 
-const FileView = (props: {file:FileInfo}) => {
+const FileView = (props: { file: FileInfo }) => {
     const { file } = props;
-
+    
     return (
         <>
             <FileSummary file={file} />
@@ -29,21 +30,37 @@ const NoFileView = () => {
     )
 };
 
-export interface Props {
-    info: RevisionRangeInfo;
-    selectedFile: FileInfo;
-    onSelectFileForView: SelectFileForViewHandler
+export type SelectFileForViewHandler = (path: PathPair) => void;
+
+export interface ReviewFileActions {
+    review(file: PathPair): void;
+    unreview(file: PathPair): void;
 }
 
+export interface Props {
+    info: RevisionRangeInfo;
+    selectedFile: FileInfo & { isReviewed: boolean };
+    onSelectFileForView: SelectFileForViewHandler;
+    reviewFile: ReviewFileActions;
+    reviewedFiles: PathPair[];
+}
 
-export default class RangeInfo extends React.Component<Props, {stickyContainer: HTMLDivElement}> {
+export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
     constructor(props: Props) {
         super(props);
-        this.state = {stickyContainer: null};
+        this.state = { stickyContainer: null };
     }
 
     private _handleRef = el => {
-        this.setState({stickyContainer: el});
+        this.setState({ stickyContainer: el });
+    }
+
+    private _changeFileReviewState = (newState: boolean) => {
+        if (newState) {
+            this.props.reviewFile.review(this.props.selectedFile.path);
+        } else {
+            this.props.reviewFile.unreview(this.props.selectedFile.path);
+        }
     }
 
     render() {
@@ -51,11 +68,15 @@ export default class RangeInfo extends React.Component<Props, {stickyContainer: 
 
         const menuItems = [];
 
-        if(selectedFile) {
-            menuItems.push(<Menu.Item 
+        if (selectedFile) {
+            menuItems.push(<Menu.Item key="review-mark">
+                <ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>
+            </Menu.Item>);
+
+            menuItems.push(<Menu.Item
                 key="file-path"
                 className="file-path"
-                content={selectedFile.path.newPath}/>
+                content={selectedFile.path.newPath} />
             );
             menuItems.push(<Menu.Item key="refresh-diff">
                 <Button onClick={() => onSelectFileForView(selectedFile.path)}>Refresh diff</Button>
@@ -71,15 +92,16 @@ export default class RangeInfo extends React.Component<Props, {stickyContainer: 
                                 <ChangedFileTreePopup
                                     paths={info.changes.map(i => i.path)}
                                     selected={selectedFile ? selectedFile.path : emptyPathPair}
+                                    reviewedFiles={this.props.reviewedFiles}
                                     onSelect={onSelectFileForView}
                                 />
                             </Menu.Item>
                             {menuItems}
                         </Menu>
                     </Sticky>
-                    <div>  
-                        {selectedFile ?                   
-                            <FileView file={selectedFile}/>
+                    <div>
+                        {selectedFile ?
+                            <FileView file={selectedFile} />
                             : <NoFileView />
                         }
                     </div>
