@@ -1,11 +1,16 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId } from '../../api/reviewer';
+import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile, PathPair } from '../../api/reviewer';
+
+export interface FileInfo {
+    path: PathPair;
+    diff: FileDiff;
+    treeEntry: ChangedFile;
+}
 
 export interface ReviewState {
     range: RevisionRange;
     rangeInfo: RevisionRangeInfo;
-    selectedFile: string;
-    selectedFileDiff: FileDiff;
+    selectedFile: FileInfo;
     currentReview: ReviewInfo;
 }
 
@@ -17,7 +22,7 @@ export interface SelectCurrentRevisions {
 export const selectCurrentRevisions = createAction<SelectCurrentRevisions>('SELECT_CURRENT_REVISIONS');
 export const loadedRevisionsRangeInfo = createAction<RevisionRangeInfo>('LOADED_REVISION_RANGE_INFO');
 
-export const selectFileForView = createAction<{ path: string }>('SELECT_FILE_FOR_VIEW');
+export const selectFileForView = createAction<{ path: PathPair }>('SELECT_FILE_FOR_VIEW');
 
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
@@ -39,7 +44,6 @@ const initial: ReviewState = {
     },
     rangeInfo: null,
     selectedFile: null,
-    selectedFileDiff: null,
     currentReview: {
         hasProvisionalRevision: false,
         pastRevisions: [],
@@ -63,21 +67,28 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             rangeInfo: action.payload,
             selectedFile: null,
-            selectedFileDiff: null
         }
     }
 
     if (selectFileForView.match(action)) {
+        const treeEntry = state.rangeInfo.changes.find(x => x.path.newPath == action.payload.path.newPath);
         return {
             ...state,
-            selectedFile: action.payload.path
+            selectedFile: {
+                path: action.payload.path,
+                diff: null,
+                treeEntry: treeEntry
+            }
         };
     }
 
     if (loadedFileDiff.match(action)) {
         return {
             ...state,
-            selectedFileDiff: action.payload
+            selectedFile: {
+                ...state.selectedFile,
+                diff: action.payload
+            }
         };
     }
 
