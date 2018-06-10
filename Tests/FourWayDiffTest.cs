@@ -14,33 +14,6 @@ namespace Tests
     {
         [Test]
         [TestCaseSource(nameof(TestCases))]
-        public void CalculateDiffs(FileSet set)
-        {
-            var reviewDiff = FourWayDiff.MakeDiff(set.Review1, set.Review2);
-
-            var baseDiff = FourWayDiff.MakeDiff(set.Base1, set.Base2);
-
-            PrintDiff("Review", reviewDiff);
-
-            PrintDiff("Base", baseDiff);
-
-            var classified = FourWayDiff.ClassifyDiffs(baseDiff, reviewDiff);
-
-            PrintDiff("Classified", classified);
-            DumpHtml(set.CaseName, $"{set.CaseName}.classified.html", classified);
-
-            var actualLines = classified.SplitLines().ToList();
-
-            Assert.That(actualLines, Has.Count.EqualTo(set.Expected.Length), "Number of lines matches");
-
-            for (int i = 0; i < actualLines.Count; i++)
-            {
-                Assert.That(actualLines[i].classification.ToString()[0], Is.EqualTo(set.Expected[i].classification), $"Classification for line {i + 1} should match");
-            }
-        }
-
-        [Test]
-        [TestCaseSource(nameof(TestCases))]
         public void BaseChangesTooFarAway(FileSet set)
         {
             var reviewPatch = FourWayDiff.MakePatch(set.Review1, set.Review2);

@@ -5,10 +5,10 @@ U }
 U 
 U void function2() 
 U {
-B 	printf("Some text\n");
+R 	printf("Some text\n");
 U }
 U 
 U void function3()
 U {
-R 	printf("Some text\n");
+B 	printf("Some text\n");
 U }
