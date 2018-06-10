@@ -184,17 +184,30 @@ namespace Web.Modules.Api.Queries
 
                 if (lastHunk.NewPosition.End < hunk.NewPosition.Start)
                 {
+                    // disjoint
                     result.Add(hunk);
                     continue;
                 }
 
-                if (lastHunk.NewPosition.End == hunk.NewPosition.Start)
+                if (lastHunk.NewPosition.End == hunk.NewPosition.Start - 1)
                 {
+                    // hunk starts right after lastHunk
                     lastHunk.Lines.AddRange(hunk.Lines);
                     lastHunk.NewPosition.End = hunk.NewPosition.End;
                     lastHunk.NewPosition.Length += hunk.NewPosition.Length;
                     lastHunk.OldPosition.End = hunk.OldPosition.End;
                     lastHunk.OldPosition.Length += hunk.OldPosition.Length;
+                    continue;
+                }
+
+                if (lastHunk.NewPosition.End == hunk.NewPosition.Start)
+                {
+                    // hunk's first line lastHunk's last line
+                    lastHunk.Lines.AddRange(hunk.Lines.Skip(1));
+                    lastHunk.NewPosition.End = hunk.NewPosition.End;
+                    lastHunk.NewPosition.Length += hunk.NewPosition.Length - 1;
+                    lastHunk.OldPosition.End = hunk.OldPosition.End;
+                    lastHunk.OldPosition.Length += hunk.OldPosition.Length - 1;
                     continue;
                 }
 
