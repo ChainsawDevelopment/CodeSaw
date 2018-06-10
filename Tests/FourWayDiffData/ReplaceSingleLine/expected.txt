@@ -1,0 +1,17 @@
+U namespace reviewer
+U {
+U     void func1()
+U     {
+B       printf("base line - after");
+U     }
+U 
+U     void func2()
+U     {
+R        printf("line - after");
+U     }
+U 
+U     void func3()
+U     {
+U
+U     }
+U }

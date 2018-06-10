@@ -1,0 +1,17 @@
+namespace reviewer
+{
+    void func1()
+    {
+
+    }
+
+    void func2()
+    {
+        printf("line - before");
+    }
+
+    void func3()
+    {
+
+    }
+}
