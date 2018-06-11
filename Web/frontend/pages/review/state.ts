@@ -35,8 +35,6 @@ export interface RememberRevisionArgs {
     base: string;
 }
 
-export const rememberRevision = createAction<RememberRevisionArgs>('REMEMBER_REVISION');
-
 export const publishReview = createAction<{}>('PUBLISH_REVIEW');
 
 const initial: ReviewState = {
