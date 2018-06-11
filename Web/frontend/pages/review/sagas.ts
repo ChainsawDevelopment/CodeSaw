@@ -52,12 +52,25 @@ function* loadReviewInfoSaga() {
     for (; ;) {
         const action: Action<{ reviewId: ReviewId }> = yield take(loadReviewInfo);
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
+
+        const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
+        const currentRange: RevisionRange = yield select((s: RootState) => s.review.range);
+
         yield put(loadedReviewInfo(info));
-        yield put(selectCurrentRevisions({
-            range: {
-                previous: 'base',
-                current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1].number
+
+        let newRange: RevisionRange = {
+            previous: 'base',
+            current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1].number
+        }
+
+        if (currentReview && action.payload.reviewId.projectId == currentReview.projectId && action.payload.reviewId.reviewId == currentReview.reviewId) {
+            if (currentRange != null) {
+                newRange = currentRange;
             }
+        }
+
+        yield put(selectCurrentRevisions({
+            range: newRange
         }))
     }
 }
