@@ -44,18 +44,28 @@ namespace Web.Modules.Api.Commands
                 var revisionId = await FindRevision(reviewId, command.Revision);
 
                 var userName = _httpContextAccessor.HttpContext.User.Identity.Name;
-                var userId = await _session.QueryOver<ReviewUser>()
+                var userId = await _session.Query<ReviewUser>()
                     .Where(x => x.UserName == userName)
-                    .Select(Projections.Property((ReviewUser u) => u.Id))
-                    .SingleOrDefaultAsync<int>();
+                    .Select(u => u.Id)
+                    .SingleOrDefaultAsync();
 
-                await _session.SaveAsync(new Review
+                var review = await _session.Query<Review>()
+                    .Where(x=>x.RevisionId == revisionId && x.UserId == userId)
+                    .SingleOrDefaultAsync();
+
+                if (review == null)
                 {
-                    Id = GuidComb.Generate(),
-                    RevisionId = revisionId,
-                    ReviewedAt = DateTimeOffset.Now,
-                    UserId = userId
-                });
+                    review = new Review
+                    {
+                        Id = GuidComb.Generate(),
+                        RevisionId = revisionId,
+                        UserId = userId
+                    };
+                }
+
+                review.ReviewedAt = DateTimeOffset.Now;
+
+                await _session.SaveAsync(review);
             }
 
             private async Task<Guid> FindRevision(ReviewIdentifier reviewId, RevisionCommits commits)
