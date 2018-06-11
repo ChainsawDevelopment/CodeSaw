@@ -25,6 +25,8 @@ namespace Web.Modules.Api.Queries
             public string HeadCommit { get; set; }
             public string BaseCommit { get; set; }
             public object ReviewSummary { get; set; }
+            public MergeStatus MergeStatus { get; set; }
+            public MergeRequestState State { get; set; }
         }
 
         public class Revision
@@ -95,6 +97,8 @@ namespace Web.Modules.Api.Queries
                     HasProvisionalRevision = hasUnreviewedChanges,
                     HeadCommit = mr.HeadCommit,
                     BaseCommit = mr.BaseCommit,
+                State =  mr.State,
+                MergeStatus = mr.MergeStatus
                     ReviewSummary = reviewSummary
                 };
             }

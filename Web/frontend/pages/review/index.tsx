@@ -12,7 +12,8 @@ import {
     unreviewFile,
     loadComments,
     addComment,
-    resolveComment
+    resolveComment,
+    mergePullRequest
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -42,6 +43,7 @@ interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId): void;
     selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;    
+    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
     loadComments(reviewId: ReviewId): void;
     addComment(reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string);
@@ -86,7 +88,8 @@ const reviewPage = (props: Props): JSX.Element => {
                 onSelectRange={props.selectRevisionRange}
             />
             <MergeApprover 
-      
+                reviewId = {props.reviewId}
+                mergePullRequest={props.mergePullRequest}
             />
 
             <ReviewSummary />
@@ -117,6 +120,8 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId) => dispatch(loadReviewInfo({ reviewId })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
+    rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base })),
+    mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),

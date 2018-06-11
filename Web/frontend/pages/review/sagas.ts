@@ -15,7 +15,9 @@ import {
     addComment,
     AddCommentArgs,
     resolveComment,
-    ResolveCommentArgs
+    ResolveCommentArgs,
+    mergePullRequest,
+    MergePullRequestArgs
 } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment } from '../../api/reviewer';
@@ -173,12 +175,26 @@ function* resolveCommentSaga() {
     }
 }
 
+function* mergePullRequestSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<MergePullRequestArgs> = yield take(mergePullRequest);
+
+        yield api.mergePullRequest(action.payload.reviewId, action.payload.shouldRemoveBranch, action.payload.commitMessage);
+
+        yield put(loadReviewInfo({ reviewId: action.payload.reviewId }));
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
     createGitLabLinkSaga,
     publishReviewSaga,
+    rememberRevisionSaga,
+    mergePullRequestSaga,
     loadCommentsSaga,
     addCommentSaga,
     resolveCommentSaga

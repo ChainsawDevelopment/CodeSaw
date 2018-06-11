@@ -51,6 +51,11 @@ namespace Web.Modules.Api
                 await command.Execute(this.Bind<ResolveComment>());
                 return new { };
             });
+
+            Post("/merge_request/merge", async _ =>
+            {
+                await command.Execute(this.Bind<MergePullRequest>());
+            });
         }
     }
 }
