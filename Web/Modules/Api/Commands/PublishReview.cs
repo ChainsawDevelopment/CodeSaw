@@ -41,7 +41,15 @@ namespace Web.Modules.Api.Commands
             {
                 var reviewId = new ReviewIdentifier(command.ProjectId, command.ReviewId);
 
-                var revisionId = await FindRevision(reviewId, command.Revision);
+                Guid revisionId;
+                try
+                {
+                    revisionId = await FindRevision(reviewId, command.Revision);
+                }
+                catch (Exception e)
+                {
+                    throw new ReviewConcurrencyException();
+                }
 
                 var userName = _httpContextAccessor.HttpContext.User.Identity.Name;
                 var userId = await _session.Query<ReviewUser>()
@@ -125,5 +133,9 @@ namespace Web.Modules.Api.Commands
                     commit: commitRef);
             }
         }
+    }
+
+    public class ReviewConcurrencyException : Exception
+    {
     }
 }
