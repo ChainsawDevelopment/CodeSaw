@@ -56,7 +56,7 @@ function* loadReviewInfoSaga() {
         yield put(selectCurrentRevisions({
             range: {
                 previous: 'base',
-                current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1]
+                current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1].number
             }
         }))
     }
@@ -90,10 +90,7 @@ function* publishReviewSaga() {
         const action: Action<{}> = yield take(publishReview);
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
-            revision: {
-                head: s.review.currentReview.headCommit,
-                base: s.review.currentReview.baseCommit
-            }
+            revision: s.review.rangeInfo.commits.current
         }));
 
         yield api.publishReview(reviewSnapshot);

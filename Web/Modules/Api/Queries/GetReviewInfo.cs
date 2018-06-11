@@ -17,10 +17,17 @@ namespace Web.Modules.Api.Queries
         {
             public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
-            public int[] PastRevisions { get; set; }
+            public Revision[] PastRevisions { get; set; }
             public bool HasProvisionalRevision { get; set; }
             public string HeadCommit { get; set; }
             public string BaseCommit { get; set; }
+        }
+
+        public class Revision
+        {
+            public int Number { get; set; }
+            public string Base { get; set; }
+            public string Head { get; set; }
         }
 
         public GetReviewInfo(int projectId, int reviewId, IRepository api)
@@ -38,10 +45,10 @@ namespace Web.Modules.Api.Queries
                 from r in session.Query<ReviewRevision>()
                 where r.ReviewId.ProjectId == _projectId && r.ReviewId.ReviewId == _reviewId
                 orderby r.RevisionNumber
-                select new {Revision = r.RevisionNumber, r.HeadCommit}
+                select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
             ).ToArray();
 
-            var lastRevisionHead = pastRevisions.LastOrDefault()?.HeadCommit;
+            var lastRevisionHead = pastRevisions.LastOrDefault()?.Head;
 
             var hasUnreviewedChanges = lastRevisionHead != mr.HeadCommit;
 
@@ -49,7 +56,7 @@ namespace Web.Modules.Api.Queries
             {
                 ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
                 Title = mr.Title,
-                PastRevisions = pastRevisions.Select(x=>x.Revision).ToArray(),
+                PastRevisions = pastRevisions,
                 HasProvisionalRevision = hasUnreviewedChanges,
                 HeadCommit = mr.HeadCommit,
                 BaseCommit = mr.BaseCommit
