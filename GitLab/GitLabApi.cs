@@ -110,6 +110,18 @@ namespace GitLab
             }
         }
 
+        public async Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody)
+        {
+            var restResponse = await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/notes", Method.POST)
+                .AddJsonBody(new {body = noteBody})
+                .Execute(_client);
+
+            if (!restResponse.IsSuccessful)
+            {
+                throw new GitLabApiFailedException(restResponse.ErrorMessage);
+            }
+        }
+
         private static bool RrefAlreadyExists(IRestResponse createTagResponse)
         {
             // If ref already exists GitLab returns BadRequest code together with message
