@@ -26,5 +26,10 @@ namespace GitLab
 
             return response.Content;
         }
+
+        public static async Task<IRestResponse> Execute(this IRestRequest request, IRestClient client)
+        {
+            return await client.ExecuteTaskAsync(request);
+        }
     }
 }

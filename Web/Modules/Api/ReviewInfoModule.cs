@@ -1,8 +1,6 @@
 using System;
 using Nancy;
 using Nancy.ModelBinding;
-using Nancy.Security;
-using Nancy.Owin;
 using RepositoryApi;
 using Web.Cqrs;
 using Web.Modules.Api.Commands;
@@ -16,7 +14,7 @@ namespace Web.Modules.Api
         {
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api())));
 
-            Get("/revisions/{previous:revId}/{current:revId}",  async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api())));
+            Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api())));
 
             Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath, api())));
 
@@ -27,6 +25,12 @@ namespace Web.Modules.Api
                 {
                     revisionId = 9,
                 };
+            });
+
+            Post("/registerlink", async _ =>
+            {   
+                await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId, Context.Request.Url.SiteBase));
+                return new { success = true };
             });
         }
     }

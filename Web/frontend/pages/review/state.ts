@@ -37,6 +37,12 @@ export interface RememberRevisionArgs {
 
 export const rememberRevision = createAction<RememberRevisionArgs>('REMEMBER_REVISION');
 
+export interface CreateGitLabLinkArgs {
+    reviewId: ReviewId;
+}
+
+export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
+
 const initial: ReviewState = {
     range: {
         previous: 2,

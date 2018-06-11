@@ -1,4 +1,5 @@
 ﻿using System;
+using RestSharp;
 
 namespace GitLab
 {
@@ -7,6 +8,11 @@ namespace GitLab
         public GitLabApiFailedException(string message) : base(message)
         {
 
+        }
+
+
+        public GitLabApiFailedException(IRestRequest request, IRestResponse response) : base($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}")
+        {
         }
     }
 }

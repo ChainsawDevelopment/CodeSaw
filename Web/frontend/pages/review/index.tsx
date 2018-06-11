@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, FileInfo } from "./state";
+import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, createGitLabLink, FileInfo } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk, PathPair, emptyPathPair } from "../../api/reviewer";
@@ -20,7 +20,7 @@ import { OnMount } from "../../components/OnMount";
 
 type SelectFileForViewHandler = (path: PathPair) => void;
 
-const FileSummary = (props: {file: FileInfo}): JSX.Element => {
+const FileSummary = (props: { file: FileInfo }): JSX.Element => {
     const items: JSX.Element[] = [];
 
     if (props.file.treeEntry.renamedFile) {
@@ -31,7 +31,7 @@ const FileSummary = (props: {file: FileInfo}): JSX.Element => {
         );
     }
 
-    if(items.length == 0) {
+    if (items.length == 0) {
         return null;
     }
 
@@ -76,6 +76,7 @@ interface DispatchProps {
     selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;
     rememberRevision(reviewId: ReviewId, head: string, base: string);
+    createGitLabLink(reviewId: ReviewId);
 }
 
 interface StateProps {
@@ -109,6 +110,9 @@ const reviewPage = (props: Props): JSX.Element => {
                 onSelectRange={props.selectRevisionRange}
             />
             {rememberVersion}
+            <div>
+                <Button onClick={() => props.createGitLabLink(props.reviewId)}>Create link in GitLab</Button>
+            </div>
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
                 selectedFile={props.selectedFile}
@@ -129,7 +133,8 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId) => dispatch(loadReviewInfo({ reviewId })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
-    rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base }))
+    rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base })),
+    createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId }))
 });
 
 export default connect(

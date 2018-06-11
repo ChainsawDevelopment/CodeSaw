@@ -8,5 +8,6 @@
         public UserInfo Author { get; set; }
         public string BaseCommit { get; set; }
         public string HeadCommit { get; set; }
+        public string Description { get; set; }
     }
 }
