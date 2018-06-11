@@ -29,14 +29,6 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
-export interface RememberRevisionArgs {
-    reviewId: ReviewId;
-    head: string;
-    base: string;
-}
-
-export const rememberRevision = createAction<RememberRevisionArgs>('REMEMBER_REVISION');
-
 export interface CreateGitLabLinkArgs {
     reviewId: ReviewId;
 }

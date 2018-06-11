@@ -18,15 +18,6 @@ namespace Web.Modules.Api
 
             Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath, api())));
 
-            Post("/revision/remember", async _ =>
-            {
-                await command.Execute(this.Bind<RememberRevision>());
-                return new
-                {
-                    revisionId = 9,
-                };
-            });
-
             Post("/registerlink", async _ =>
             {   
                 await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId, Context.Request.Url.SiteBase));

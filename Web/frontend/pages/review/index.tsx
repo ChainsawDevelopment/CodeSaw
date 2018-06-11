@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, FileInfo, publishReview, createGitLabLink } from "./state";
+import { selectCurrentRevisions, selectFileForView, loadReviewInfo, FileInfo, publishReview, createGitLabLink } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk, PathPair, emptyPathPair } from "../../api/reviewer";
@@ -75,7 +75,6 @@ interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId): void;
     selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;
-    rememberRevision(reviewId: ReviewId, head: string, base: string);
     createGitLabLink(reviewId: ReviewId);
     publishReview(): void;
 }
@@ -136,7 +135,6 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId) => dispatch(loadReviewInfo({ reviewId })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
-    rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base })),
     createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId })),
     publishReview: () => dispatch(publishReview({}))
 });
