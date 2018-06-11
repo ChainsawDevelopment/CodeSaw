@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, createGitLabLink, FileInfo } from "./state";
+import { selectCurrentRevisions, selectFileForView, loadReviewInfo, rememberRevision, FileInfo, publishReview, createGitLabLink } from "./state";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk, PathPair, emptyPathPair } from "../../api/reviewer";
@@ -77,6 +77,7 @@ interface DispatchProps {
     selectFileForView: SelectFileForViewHandler;
     rememberRevision(reviewId: ReviewId, head: string, base: string);
     createGitLabLink(reviewId: ReviewId);
+    publishReview(): void;
 }
 
 interface StateProps {
@@ -91,9 +92,9 @@ type Props = OwnProps & StateProps & DispatchProps;
 const reviewPage = (props: Props): JSX.Element => {
     const provisional: RevisionId[] = props.currentReview.hasProvisionalRevision ? ['provisional'] : [];
 
-    const rememberVersion = !props.currentReview.hasProvisionalRevision ? null : (
+    const publishReview = (
         <div>
-            <Button onClick={() => props.rememberRevision(props.reviewId, props.currentReview.headCommit, props.currentReview.baseCommit)}>Remember revision</Button>
+            <Button onClick={props.publishReview} color='green'>Publish</Button>
         </div>
     );
 
@@ -109,10 +110,10 @@ const reviewPage = (props: Props): JSX.Element => {
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />
-            {rememberVersion}
             <div>
                 <Button onClick={() => props.createGitLabLink(props.reviewId)}>Create link in GitLab</Button>
             </div>
+            {publishReview}
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
                 selectedFile={props.selectedFile}
@@ -134,7 +135,8 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     rememberRevision: (reviewId, head, base) => dispatch(rememberRevision({ reviewId, head, base })),
-    createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId }))
+    createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId })),
+    publishReview: () => dispatch(publishReview({}))
 });
 
 export default connect(

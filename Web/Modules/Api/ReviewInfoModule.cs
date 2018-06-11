@@ -32,6 +32,15 @@ namespace Web.Modules.Api
                 await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId, Context.Request.Url.SiteBase));
                 return new { success = true };
             });
+            
+            Post("/publish", async _ =>
+            {
+                await command.Execute(this.Bind<PublishReview>());
+                return new
+                {
+                    ok = true
+                };
+            });
         }
     }
 }
