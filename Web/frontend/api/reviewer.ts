@@ -103,8 +103,6 @@ export class ReviewerApi {
     }
 
     public rememberRevision = (reviewId: ReviewId, head: string, base: string): Promise<any> => {
-        const request = new Request(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, acceptJson)
-
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, {
             ...acceptJson,
             headers: {
@@ -116,6 +114,17 @@ export class ReviewerApi {
                 headCommit: head,
                 baseCommit: base
             })
+        });
+    }
+
+    public createGitLabLink = (reviewId: ReviewId) => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/registerlink`, {
+            ...acceptJson,
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
         });
     }
 }

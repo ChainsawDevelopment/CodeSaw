@@ -14,5 +14,6 @@ namespace RepositoryApi
         Task<string> GetFileContent(int projectId, string commitHash, string file);
         Task CreateRef(int projectId, string name, string commit);
         Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody);
+        Task UpdateDescription(MergeRequest mergeRequest);
     }
 }

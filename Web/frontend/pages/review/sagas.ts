@@ -1,5 +1,5 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
-import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs } from './state';
+import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs, createGitLabLink, CreateGitLabLinkArgs } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair } from '../../api/reviewer';
 import { RootState } from "../../rootState";
@@ -74,9 +74,20 @@ function* rememberRevisionSaga() {
     }
 }
 
+function* createGitLabLinkSaga() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<CreateGitLabLinkArgs> = yield take(createGitLabLink);
+
+        yield api.createGitLabLink(action.payload.reviewId);
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
-    rememberRevisionSaga
+    rememberRevisionSaga,
+    createGitLabLinkSaga
 ];

@@ -83,7 +83,7 @@ namespace GitLab
                 case HttpStatusCode.NotFound:
                     return string.Empty;
                 default:
-                    throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
+                    throw new GitLabApiFailedException(request, response);
             }
         }
         
@@ -106,19 +106,32 @@ namespace GitLab
             }
             if (createTagResponse.StatusCode != HttpStatusCode.Created)
             {
-                throw new GitLabApiFailedException($"Request {createTagRequest.Method} {createTagRequest.Resource} failed with {(int)createTagResponse.StatusCode} {createTagResponse.StatusDescription}\nError: {createTagResponse.ErrorMessage}");
+                throw new GitLabApiFailedException(createTagRequest, createTagResponse);
             }
         }
 
         public async Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody)
         {
-            var restResponse = await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/notes", Method.POST)
-                .AddJsonBody(new {body = noteBody})
-                .Execute(_client);
+            var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/notes", Method.POST)
+                .AddJsonBody(new {body = noteBody});
+
+            var restResponse = await createNoteRequest.Execute(_client);
 
             if (!restResponse.IsSuccessful)
             {
-                throw new GitLabApiFailedException(restResponse.ErrorMessage);
+                throw new GitLabApiFailedException(createNoteRequest, restResponse);
+            }
+        }
+
+        public async Task UpdateDescription(MergeRequest mergeRequest)
+        {
+            var updateDescriptionRequest = new RestRequest($"/projects/{mergeRequest.ProjectId}/merge_requests/{mergeRequest.Id}", Method.PUT)
+                .AddJsonBody(new { description = mergeRequest.Description });
+            var restResponse = await updateDescriptionRequest.Execute(_client);
+
+            if (!restResponse.IsSuccessful)
+            {
+                throw new GitLabApiFailedException(updateDescriptionRequest, restResponse);
             }
         }
 

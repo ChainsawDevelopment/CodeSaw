@@ -28,11 +28,8 @@ namespace Web.Modules.Api
             });
 
             Post("/registerlink", async _ =>
-            {
-                var registerReviewLink = this.Bind<RegisterReviewLink>();
-                registerReviewLink.BaseUrl = Context.Request.Url.SiteBase;
-
-                await command.Execute(registerReviewLink);
+            {   
+                await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId, Context.Request.Url.SiteBase));
                 return new { success = true };
             });
         }
