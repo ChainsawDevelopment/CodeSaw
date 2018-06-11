@@ -27,6 +27,7 @@ import { OnMount } from "../../components/OnMount";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
+import MergeApprover from './mergeApprover';
 import "./review.less";
 import VersionSelector from './versionSelector';
 import * as PathPairs from "../../pathPair";
@@ -83,6 +84,9 @@ const reviewPage = (props: Props): JSX.Element => {
                 hasProvisonal={props.currentReview.hasProvisionalRevision}
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
+            />
+            <MergeApprover 
+      
             />
 
             <ReviewSummary />

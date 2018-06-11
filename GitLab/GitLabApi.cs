@@ -180,6 +180,13 @@ namespace GitLab
                 return prop;
             }
 
+            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.MergeStatus))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "merge_status";
+                return prop;
+            }
+
             return base.CreateProperty(member, memberSerialization);
         }
 
