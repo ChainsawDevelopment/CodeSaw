@@ -2,7 +2,7 @@
 
 namespace GitLab
 {
-    internal class GitLabApiFailedException : Exception
+    public class GitLabApiFailedException : Exception
     {
         public GitLabApiFailedException(string message) : base(message)
         {
