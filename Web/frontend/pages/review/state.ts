@@ -47,8 +47,8 @@ export const publishReview = createAction<{}>('PUBLISH_REVIEW');
 
 const initial: ReviewState = {
     range: {
-        previous: 2,
-        current: 4
+        previous: 'base',
+        current: 'base'
     },
     rangeInfo: null,
     selectedFile: null,
