@@ -43,6 +43,8 @@ export interface CreateGitLabLinkArgs {
 
 export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
 
+export const publishReview = createAction<{}>('PUBLISH_REVIEW');
+
 const initial: ReviewState = {
     range: {
         previous: 2,
