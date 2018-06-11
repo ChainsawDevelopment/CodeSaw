@@ -28,6 +28,15 @@ namespace Web.Modules.Api
                     revisionId = 9,
                 };
             });
+
+            Post("/publish", async _ =>
+            {
+                await command.Execute(this.Bind<PublishReview>());
+                return new
+                {
+                    ok = true
+                };
+            });
         }
     }
 }

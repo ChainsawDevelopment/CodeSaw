@@ -1,7 +1,7 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
-import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs } from './state';
+import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs, publishReview, ReviewState } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair, ReviewSnapshot } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
@@ -74,9 +74,28 @@ function* rememberRevisionSaga() {
     }
 }
 
+function* publishReviewSaga() {
+    const api = new ReviewerApi();
+    for (; ;) {
+        const action: Action<{}> = yield take(publishReview);
+        const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
+            reviewId: s.review.currentReview.reviewId,
+            revision: {
+                head: s.review.currentReview.headCommit,
+                base: s.review.currentReview.baseCommit
+            }
+        }));
+
+        yield api.publishReview(reviewSnapshot);
+
+        yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId }));
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
-    rememberRevisionSaga
+    rememberRevisionSaga,
+    publishReviewSaga
 ];

@@ -66,6 +66,14 @@ export interface ReviewInfo {
     baseCommit: string;
 }
 
+export interface ReviewSnapshot {
+    reviewId: ReviewId;
+    revision: {
+        head: string,
+        base: string
+    }
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -117,5 +125,22 @@ export class ReviewerApi {
                 baseCommit: base
             })
         });
+    }
+
+    public publishReview = (review: ReviewSnapshot): Promise<{}> => {
+        const { reviewId, ...snapshot } = review;
+
+        return fetch(
+            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/publish`,
+            {
+                ...acceptJson,
+                headers: {
+                    ...acceptJson.headers,
+                    'Content-Type': 'application/json'
+                },
+                method: 'POST',
+                body: JSON.stringify(snapshot)
+            }
+        );
     }
 }
