@@ -97,6 +97,8 @@ const reviewPage = (props: Props): JSX.Element => {
         </div>
     );
 
+    const pastRevisions = props.currentReview.pastRevisions.map(i => i.number);
+
     return (
         <div id="review-page">
             <OnMount onMount={() => props.loadReviewInfo(props.reviewId)} />
@@ -104,7 +106,7 @@ const reviewPage = (props: Props): JSX.Element => {
             <h1>Review {props.currentReview.title}</h1>
 
             <VersionSelector
-                available={['base', ...props.currentReview.pastRevisions, ...provisional]}
+                available={['base', ...pastRevisions, ...provisional]}
                 hasProvisonal={props.currentReview.hasProvisionalRevision}
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}

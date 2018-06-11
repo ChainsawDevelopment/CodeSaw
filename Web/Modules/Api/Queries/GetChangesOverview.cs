@@ -14,6 +14,7 @@ namespace Web.Modules.Api.Queries
         public class Result
         {
             public List<FileDiff> Changes { get; set; }
+            public object Commits { get; set; }
         }
 
         private readonly IRepository _api;
@@ -43,7 +44,14 @@ namespace Web.Modules.Api.Queries
 
             return new Result
             {
-                Changes = diffs
+                Changes = diffs,
+                Commits = new {
+                    Current = new
+                    {
+                        Head = currentCommit,
+                        Base = ResolveBaseCommitHash(_current, mergeRequest, r => commits[r].Base)
+                    }
+                }
             };
         }
 
@@ -53,6 +61,15 @@ namespace Web.Modules.Api.Queries
                 () => mergeRequest.BaseCommit,
                 s => selectCommit(s.Revision),
                 h => h.CommitHash
+            );
+        }
+
+        private string ResolveBaseCommitHash(RevisionId revisionId, MergeRequest mergeRequest, Func<int, string> selectCommit)
+        {
+            return revisionId.Resolve(
+                () => mergeRequest.BaseCommit,
+                s =>  selectCommit(s.Revision),
+                h => h.CommitHash == mergeRequest.HeadCommit ? mergeRequest.BaseCommit : h.CommitHash
             );
         }
     }

@@ -19,6 +19,12 @@ export interface ChangedFile {
 
 export interface RevisionRangeInfo {
     changes: ChangedFile[];
+    commits: {
+        current: {
+            head: string;
+            base: string
+        }
+    }
 }
 
 export interface HunkLine {
@@ -60,7 +66,11 @@ export interface Review {
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
-    pastRevisions: RevisionId[];
+    pastRevisions: {
+        number: number;
+        head: string;
+        base: string;
+    }[];
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
