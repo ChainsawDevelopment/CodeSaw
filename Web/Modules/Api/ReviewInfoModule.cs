@@ -26,11 +26,18 @@ namespace Web.Modules.Api
             
             Post("/publish", async _ =>
             {
-                await command.Execute(this.Bind<PublishReview>());
-                return new
+                try
                 {
-                    ok = true
-                };
+                    await command.Execute(this.Bind<PublishReview>());
+                    return new
+                    {
+                        ok = true
+                    };
+                }
+                catch (ReviewConcurrencyException )
+                {
+                    return Response.AsJson(new {error = "review_concurrency"}, HttpStatusCode.Conflict);
+                }
             });
         }
     }

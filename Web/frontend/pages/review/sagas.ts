@@ -1,8 +1,9 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
 import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, publishReview, ReviewState, createGitLabLink, CreateGitLabLinkArgs } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair, ReviewSnapshot } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair, ReviewSnapshot, ReviewConcurrencyError } from '../../api/reviewer';
 import { RootState } from "../../rootState";
+import { delay } from "redux-saga";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
     return {
@@ -94,7 +95,18 @@ function* publishReviewSaga() {
             revision: s.review.rangeInfo.commits.current
         }));
 
-        yield api.publishReview(reviewSnapshot);
+        for (let i = 0; i < 100; i++) {
+            try {
+                yield api.publishReview(reviewSnapshot);
+                break;
+            } catch(e) {
+                if(!(e instanceof ReviewConcurrencyError)) {
+                    throw e;
+                }
+            }
+            console.log('Review publish failed due to concurrency issue. Retrying attempt ', i);
+            yield delay(5000);
+        }
 
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId }));
     }
