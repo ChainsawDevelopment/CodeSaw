@@ -1,6 +1,6 @@
 U block1
-B line1.1
-B line1.2
+R line1.1
+R line1.2
 U 
 U 
 U middleBlock

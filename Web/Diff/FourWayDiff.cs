@@ -93,6 +93,7 @@ namespace Web.Diff
 
             if (baseInReview >= 0)
             {
+                Console.WriteLine("!!!!Base in review expand");
                 // TODO
                 return true;
             }

@@ -1,0 +1,103 @@
+U import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
+U import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile, PathPair } from '../../api/reviewer';
+U 
+U export interface FileInfo {
+U     path: PathPair;
+U     diff: FileDiff;
+U     treeEntry: ChangedFile;
+U }
+U 
+U export interface ReviewState {
+U     range: RevisionRange;
+U     rangeInfo: RevisionRangeInfo;
+U     selectedFile: FileInfo;
+U     currentReview: ReviewInfo;
+U }
+U 
+U const createAction = actionCreatorFactory('REVIEW');
+U 
+U export interface SelectCurrentRevisions {
+U     range: RevisionRange;
+U }
+U export const selectCurrentRevisions = createAction<SelectCurrentRevisions>('SELECT_CURRENT_REVISIONS');
+U export const loadedRevisionsRangeInfo = createAction<RevisionRangeInfo>('LOADED_REVISION_RANGE_INFO');
+U 
+U export const selectFileForView = createAction<{ path: PathPair }>('SELECT_FILE_FOR_VIEW');
+U 
+U export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
+U 
+U export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
+U export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
+U 
+R export interface CreateGitLabLinkArgs {
+U     reviewId: ReviewId;
+U }
+R 
+R export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
+U 
+U export const publishReview = createAction<{}>('PUBLISH_REVIEW');
+U 
+U const initial: ReviewState = {
+U     range: {
+U         previous: 'base',
+U         current: 'base'
+U     },
+U     rangeInfo: null,
+U     selectedFile: null,
+U     currentReview: {
+U         hasProvisionalRevision: false,
+U         pastRevisions: [],
+U         reviewId: null,
+U         title: '',
+U         headCommit: '',
+U         baseCommit: ''
+U     }
+U };
+U 
+U export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
+U     if (isType(action, selectCurrentRevisions)) {
+U         return {
+U             ...state,
+U             range: action.payload.range
+U         };
+U     }
+U 
+U     if (loadedRevisionsRangeInfo.match(action)) {
+U         return {
+U             ...state,
+U             rangeInfo: action.payload,
+U             selectedFile: null,
+U         }
+U     }
+U 
+U     if (selectFileForView.match(action)) {
+U         const treeEntry = state.rangeInfo.changes.find(x => x.path.newPath == action.payload.path.newPath);
+U         return {
+U             ...state,
+U             selectedFile: {
+U                 path: action.payload.path,
+U                 diff: null,
+U                 treeEntry: treeEntry
+U             }
+U         };
+U     }
+U 
+U     if (loadedFileDiff.match(action)) {
+U         return {
+U             ...state,
+U             selectedFile: {
+U                 ...state.selectedFile,
+U                 diff: action.payload
+U             }
+U         };
+U     }
+U 
+U     if (loadedReviewInfo.match(action)) {
+U         return {
+U             ...state,
+U             currentReview: action.payload
+U         };
+U     }
+U 
+U     return state;
+U } 
