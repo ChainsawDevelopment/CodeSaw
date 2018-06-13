@@ -86,7 +86,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         return (
             <div ref={this._handleRef}>
                 <Segment>
-                    <Sticky context={this.state.stickyContainer}>
+                    <Sticky context={this.state.stickyContainer} id="file-sticky">
                         <Menu secondary id="file-menu">
                             <Menu.Item key="file-selector">
                                 <ChangedFileTreePopup

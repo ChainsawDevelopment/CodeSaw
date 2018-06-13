@@ -44,12 +44,14 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
 
     render() {
         const filesSelector = (
-            <ChangedFileTree
-                paths={this.props.paths}
-                selected={this.props.selected}
-                reviewedFiles={this.props.reviewedFiles}
-                onSelect={this._onSelect}
-            />
+            <div className='file-tree-popup'>
+                <ChangedFileTree
+                    paths={this.props.paths}
+                    selected={this.props.selected}
+                    reviewedFiles={this.props.reviewedFiles}
+                    onSelect={this._onSelect}
+                />
+            </div>
         );
 
         return (
@@ -59,8 +61,9 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
                 content={filesSelector}
                 onOpen={this._onOpen}
                 onClose={this._onClose}
+                hideOnScroll={true}
                 on='click'
-                position='top right'
+                position='bottom left'
                 wide='very'
             />
         );
