@@ -55,7 +55,8 @@ const initial: ReviewState = {
         reviewId: null,
         title: '',
         headCommit: '',
-        baseCommit: ''
+        baseCommit: '',
+        reviewSummary: []
     },
     reviewedFiles: []
 };

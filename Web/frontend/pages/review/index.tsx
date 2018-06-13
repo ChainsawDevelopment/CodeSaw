@@ -11,6 +11,7 @@ import "./review.less";
 import { FileInfo, loadReviewInfo, createGitLabLink, selectCurrentRevisions, selectFileForView, reviewFile, unreviewFile, publishReview } from "./state";
 import VersionSelector from './versionSelector';
 import * as PathPairs from "../../pathPair";
+import ReviewSummary from './reviewSummary';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -62,6 +63,9 @@ const reviewPage = (props: Props): JSX.Element => {
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />
+
+            <ReviewSummary />
+
             <div>
                 <Button onClick={() => props.createGitLabLink(props.reviewId)}>Create link in GitLab</Button>
             </div>

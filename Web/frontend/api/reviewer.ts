@@ -70,6 +70,12 @@ export interface ReviewInfo {
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
+    reviewSummary: {
+        file: string;
+        revisions: {
+            [revision: number]: string[];
+        }
+    }[];
 }
 
 export interface ReviewSnapshot {
@@ -120,7 +126,20 @@ export class ReviewerApi {
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(r => r.json())
-            .then(r => r as ReviewInfo);
+            .then(r => r as ReviewInfo)
+            .then(ri => {
+                for(let item of ri.reviewSummary) {
+                    const converted = {};
+
+                    for (let rev of Object.keys(item.revisions)) {
+                        converted[parseInt(rev)] = item.revisions[rev];
+                    }
+                    
+                    item.revisions = converted;
+                }
+
+                return ri;
+            });
     }
     
     public createGitLabLink = (reviewId: ReviewId) => {
