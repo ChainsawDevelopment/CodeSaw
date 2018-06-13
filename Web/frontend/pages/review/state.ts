@@ -73,6 +73,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             rangeInfo: action.payload,
             selectedFile: null,
+            reviewedFiles: action.payload.filesReviewedByUser
         }
     }
 

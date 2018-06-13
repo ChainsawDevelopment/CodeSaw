@@ -14,7 +14,7 @@ namespace Web.Modules.Api
         {
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api())));
 
-            Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api())));
+            Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetRevisionRangeOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api(), Context.CurrentUser.Identity.Name)));
 
             Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath, api())));
 

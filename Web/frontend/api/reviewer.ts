@@ -19,7 +19,8 @@ export interface RevisionRangeInfo {
             head: string;
             base: string
         }
-    }
+    };
+    filesReviewedByUser: PathPairs.List
 }
 
 export interface HunkLine {
