@@ -44,11 +44,11 @@ namespace Web.Modules.Api.Commands
                 Guid revisionId;
                 try
                 {
-                    revisionId = await FindRevision(reviewId, command.Revision);
+                    revisionId = await FindOrCreateRevision(reviewId, command.Revision);
                 }
                 catch (Exception e)
                 {
-                    throw new ReviewConcurrencyException();
+                    throw new ReviewConcurrencyException(e);
                 }
 
                 var userName = _httpContextAccessor.HttpContext.User.Identity.Name;
@@ -58,7 +58,7 @@ namespace Web.Modules.Api.Commands
                     .SingleOrDefaultAsync();
 
                 var review = await _session.Query<Review>()
-                    .Where(x=>x.RevisionId == revisionId && x.UserId == userId)
+                    .Where(x => x.RevisionId == revisionId && x.UserId == userId)
                     .SingleOrDefaultAsync();
 
                 if (review == null)
@@ -76,7 +76,7 @@ namespace Web.Modules.Api.Commands
                 await _session.SaveAsync(review);
             }
 
-            private async Task<Guid> FindRevision(ReviewIdentifier reviewId, RevisionCommits commits)
+            private async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, RevisionCommits commits)
             {
                 var existingRevision = await _session.Query<ReviewRevision>()
                     .Where(x => x.ReviewId.ProjectId == reviewId.ProjectId && x.ReviewId.ReviewId == reviewId.ReviewId)
@@ -92,7 +92,7 @@ namespace Web.Modules.Api.Commands
                 var nextNumber = GetNextRevisionNumber(reviewId);
 
                 await CreateRef(reviewId, nextNumber, commits.Base, "base");
-                
+
                 try
                 {
                     await CreateRef(reviewId, nextNumber, commits.Head, "head");
@@ -129,7 +129,7 @@ namespace Web.Modules.Api.Commands
             {
                 await _api.CreateRef(
                     projectId: reviewId.ProjectId,
-                    name: $"reviewer/{reviewId.ReviewId}/r{revision}/{refType}", 
+                    name: $"reviewer/{reviewId.ReviewId}/r{revision}/{refType}",
                     commit: commitRef);
             }
         }
@@ -137,5 +137,10 @@ namespace Web.Modules.Api.Commands
 
     public class ReviewConcurrencyException : Exception
     {
+        public ReviewConcurrencyException(Exception innerException)
+            : base("Review creation failed due to concurrency issue", innerException)
+        {
+
+        }
     }
 }
