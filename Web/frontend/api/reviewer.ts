@@ -76,7 +76,8 @@ export interface ReviewSnapshot {
     revision: {
         head: string,
         base: string
-    }
+    };
+    reviewedFiles: PathPairs.PathPair[];
 }
 
 const acceptJson = {

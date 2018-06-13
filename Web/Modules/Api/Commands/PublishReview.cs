@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +18,7 @@ namespace Web.Modules.Api.Commands
         public int ProjectId { get; set; }
         public int ReviewId { get; set; }
         public RevisionCommits Revision { get; set; } = new RevisionCommits();
+        public List<PathPair> ReviewedFiles { get; set; } = new List<PathPair>();
 
         public class RevisionCommits
         {
@@ -72,6 +74,8 @@ namespace Web.Modules.Api.Commands
                 }
 
                 review.ReviewedAt = DateTimeOffset.Now;
+                
+                review.ReviewFiles(command.ReviewedFiles);
 
                 await _session.SaveAsync(review);
             }

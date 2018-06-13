@@ -93,7 +93,8 @@ function* publishReviewSaga() {
         const action: Action<{}> = yield take(publishReview);
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
-            revision: s.review.rangeInfo.commits.current
+            revision: s.review.rangeInfo.commits.current,
+            reviewedFiles: s.review.reviewedFiles
         }));
 
         for (let i = 0; i < 100; i++) {

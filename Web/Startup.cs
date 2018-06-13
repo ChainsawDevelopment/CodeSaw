@@ -138,7 +138,9 @@ namespace Web
             var modelMapper = new ModelMapper();
             modelMapper.AddMappings(typeof(Startup).Assembly.GetExportedTypes());
 
-            configuration.AddMapping(modelMapper.CompileMappingForAllExplicitlyAddedEntities());
+            var hbm = modelMapper.CompileMappingForAllExplicitlyAddedEntities();
+
+            configuration.AddMapping(hbm);
 
             return configuration.BuildSessionFactory();
         }
