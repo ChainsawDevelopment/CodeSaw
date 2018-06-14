@@ -127,6 +127,11 @@ namespace Web.Diff
         {
             var middle = DMP.DiffText2(patch.Diffs);
 
+            if (middle == "")
+            {
+                return;
+            }
+
             if (middle[0] != '\n' && patch.Start2 > 0)
             {
                 var prevNewLine = text.LastIndexOf('\n', patch.Start2);

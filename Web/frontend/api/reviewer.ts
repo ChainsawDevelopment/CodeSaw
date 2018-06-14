@@ -19,6 +19,12 @@ export interface ChangedFile {
 
 export interface RevisionRangeInfo {
     changes: ChangedFile[];
+    commits: {
+        current: {
+            head: string;
+            base: string
+        }
+    }
 }
 
 export interface HunkLine {
@@ -60,10 +66,22 @@ export interface Review {
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
-    pastRevisions: RevisionId[];
+    pastRevisions: {
+        number: number;
+        head: string;
+        base: string;
+    }[];
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
+}
+
+export interface ReviewSnapshot {
+    reviewId: ReviewId;
+    revision: {
+        head: string,
+        base: string
+    }
 }
 
 const acceptJson = {
@@ -72,6 +90,12 @@ const acceptJson = {
     },
     credentials: 'include' as RequestCredentials
 };
+
+export class ReviewConcurrencyError extends Error {
+    constructor() {
+        super('Publish review concurrency issue');
+    }
+}
 
 export class ReviewerApi {
     public getRevisionRangeInfo = (reviewId: ReviewId, range: RevisionRange): Promise<RevisionRangeInfo> => {
@@ -101,22 +125,7 @@ export class ReviewerApi {
             .then(r => r.json())
             .then(r => r as ReviewInfo);
     }
-
-    public rememberRevision = (reviewId: ReviewId, head: string, base: string): Promise<any> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revision/remember`, {
-            ...acceptJson,
-            headers: {
-                ...acceptJson.headers,
-                'Content-Type': 'application/json'
-            },
-            method: 'POST',
-            body: JSON.stringify({
-                headCommit: head,
-                baseCommit: base
-            })
-        });
-    }
-
+    
     public createGitLabLink = (reviewId: ReviewId) => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/registerlink`, {
             ...acceptJson,
@@ -125,6 +134,27 @@ export class ReviewerApi {
                 'Content-Type': 'application/json'
             },
             method: 'POST'
+        });
+    }
+
+    public publishReview = (review: ReviewSnapshot): Promise<void> => {
+        const { reviewId, ...snapshot } = review;
+
+        return fetch(
+            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/publish`,
+            {
+                ...acceptJson,
+                headers: {
+                    ...acceptJson.headers,
+                    'Content-Type': 'application/json'
+                },
+                method: 'POST',
+                body: JSON.stringify(snapshot)
+            }
+        ).then(r => { 
+            if (r.status == 409) {
+                throw new ReviewConcurrencyError() 
+            }
         });
     }
 }

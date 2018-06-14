@@ -1,8 +1,9 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
-import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, rememberRevision, RememberRevisionArgs, createGitLabLink, CreateGitLabLinkArgs } from './state';
+import { selectCurrentRevisions, SelectCurrentRevisions, loadedRevisionsRangeInfo, selectFileForView, loadedFileDiff, loadReviewInfo, loadedReviewInfo, publishReview, ReviewState, createGitLabLink, CreateGitLabLinkArgs } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, PathPair, ReviewSnapshot, ReviewConcurrencyError } from '../../api/reviewer';
 import { RootState } from "../../rootState";
+import { delay } from "redux-saga";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
     return {
@@ -52,25 +53,26 @@ function* loadReviewInfoSaga() {
     for (; ;) {
         const action: Action<{ reviewId: ReviewId }> = yield take(loadReviewInfo);
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
+
+        const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
+        const currentRange: RevisionRange = yield select((s: RootState) => s.review.range);
+
         yield put(loadedReviewInfo(info));
-        yield put(selectCurrentRevisions({
-            range: {
-                previous: 'base',
-                current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1]
+
+        let newRange: RevisionRange = {
+            previous: 'base',
+            current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1].number
+        }
+
+        if (currentReview && action.payload.reviewId.projectId == currentReview.projectId && action.payload.reviewId.reviewId == currentReview.reviewId) {
+            if (currentRange != null) {
+                newRange = currentRange;
             }
+        }
+
+        yield put(selectCurrentRevisions({
+            range: newRange
         }))
-    }
-}
-
-function* rememberRevisionSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        const action: Action<RememberRevisionArgs> = yield take(rememberRevision);
-
-        yield api.rememberRevision(action.payload.reviewId, action.payload.head, action.payload.base);
-
-        yield put(loadReviewInfo({ reviewId: action.payload.reviewId }));
     }
 }
 
@@ -84,10 +86,36 @@ function* createGitLabLinkSaga() {
     }
 }
 
+function* publishReviewSaga() {
+    const api = new ReviewerApi();
+    for (; ;) {
+        const action: Action<{}> = yield take(publishReview);
+        const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
+            reviewId: s.review.currentReview.reviewId,
+            revision: s.review.rangeInfo.commits.current
+        }));
+
+        for (let i = 0; i < 100; i++) {
+            try {
+                yield api.publishReview(reviewSnapshot);
+                break;
+            } catch(e) {
+                if(!(e instanceof ReviewConcurrencyError)) {
+                    throw e;
+                }
+            }
+            console.log('Review publish failed due to concurrency issue. Retrying attempt ', i);
+            yield delay(5000);
+        }
+
+        yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId }));
+    }
+}
+
 export default [
     loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
-    rememberRevisionSaga,
-    createGitLabLinkSaga
+    createGitLabLinkSaga,
+    publishReviewSaga,
 ];
