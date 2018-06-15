@@ -1,32 +1,36 @@
 import * as React from "react";
 import List from 'semantic-ui-react/dist/commonjs/elements/List';
-import { PathPair } from "../../api/reviewer";
+import Icon from 'semantic-ui-react/dist/commonjs/elements/Icon';
+import { SemanticCOLORS, SemanticICONS } from "semantic-ui-react/dist/commonjs";
+import ReviewMark from './reviewMark';
+import * as PathPairs from "../../pathPair";
 
-const FileItem = (props: { path: PathPair, isSelected: boolean, onclick?: () => void }) => {
+const FileItem = (props: { path: PathPairs.PathPair, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
-        header = (<List.Header className='selected-file'>{props.path.newPath}</List.Header>)
+        header = (<span className='selected-file'>{props.path.newPath}</span>)
     } else {
-        header = (<List.Header as='a' onClick={props.onclick}>{props.path.newPath}</List.Header>);
+        header = (<a onClick={props.onclick}>{props.path.newPath}</a>);
     }
 
     return (
-        <List.Item>
-            <List.Icon name='file' />
+        <List.Item className="file-tree-item">
             <List.Content>
-                {header}
+                <ReviewMark reviewed={props.isReviewed} size='small'/>
+                <span>{header}</span>
             </List.Content>
         </List.Item>
     );
 }
 
-const changedFileTree = (props: { paths: PathPair[], selected:PathPair, onSelect: (path: PathPair) => void }) => {
+const changedFileTree = (props: { paths: PathPairs.List, reviewedFiles: PathPairs.List; selected:PathPairs.PathPair, onSelect: (path: PathPairs.PathPair) => void }) => {
     const items = props.paths.map(p => (
         <FileItem 
             key={p.newPath} 
             path={p} 
-            isSelected={p.newPath == props.selected.newPath} 
+            isSelected={p.newPath == props.selected.newPath}
+            isReviewed={PathPairs.contains(props.reviewedFiles, p)}
             onclick={() => props.onSelect(p)}
         />
     ));

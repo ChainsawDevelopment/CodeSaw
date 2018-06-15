@@ -1,71 +1,17 @@
 import * as React from "react";
-
-import { Dispatch } from "redux";
-import { selectCurrentRevisions, selectFileForView, loadReviewInfo, FileInfo, publishReview, createGitLabLink } from "./state";
 import { connect } from "react-redux";
-import { RootState } from "../../rootState";
-import { ChangedFile, RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, RevisionId, Review, Hunk, PathPair, emptyPathPair } from "../../api/reviewer";
-
-import Sidebar from 'semantic-ui-react/dist/commonjs/modules/Sidebar';
-import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
+import { Dispatch } from "redux";
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
-import Message from 'semantic-ui-react/dist/commonjs/collections/Message';
-
-import VersionSelector from './versionSelector';
-import ChangedFileTree from './changedFileTree';
-import DiffView from './diffView';
-
-import "./review.less";
+import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
+import { ReviewId, ReviewInfo, RevisionId, RevisionRange, RevisionRangeInfo } from "../../api/reviewer";
 import { OnMount } from "../../components/OnMount";
-
-type SelectFileForViewHandler = (path: PathPair) => void;
-
-const FileSummary = (props: { file: FileInfo }): JSX.Element => {
-    const items: JSX.Element[] = [];
-
-    if (props.file.treeEntry.renamedFile) {
-        const { path } = props.file.treeEntry;
-
-        items.push(
-            <div key="renamed" className="renamed">File renamed <pre>{path.oldPath}</pre> &rarr; <pre>{path.newPath}</pre></div>
-        );
-    }
-
-    if (items.length == 0) {
-        return null;
-    }
-
-    return (
-        <Message className="file-summary">
-            <Message.Content>
-                {items}
-            </Message.Content>
-        </Message>
-    );
-};
-
-const RangeInfo = (props: { info: RevisionRangeInfo, selectedFile: FileInfo, onSelectFileForView: SelectFileForViewHandler }): JSX.Element => {
-    return (
-        <div style={{ flex: 1 }}>
-            <Sidebar.Pushable as={Segment}>
-                <Sidebar visible={true} width='thin'>
-                    <ChangedFileTree
-                        paths={props.info.changes.map(i => i.path)}
-                        selected={props.selectedFile ? props.selectedFile.path : emptyPathPair}
-                        onSelect={props.onSelectFileForView}
-                    />
-                </Sidebar>
-                <Sidebar.Pusher>
-                    <Segment basic>
-                        <Button onClick={() => props.onSelectFileForView(props.selectedFile.path)}>Refresh diff</Button>
-                        {props.selectedFile ? <FileSummary file={props.selectedFile} /> : null}
-                        {props.selectedFile && props.selectedFile.diff ? <DiffView hunks={props.selectedFile.diff.hunks} /> : null}
-                    </Segment>
-                </Sidebar.Pusher>
-            </Sidebar.Pushable>
-        </div>
-    );
-}
+import { RootState } from "../../rootState";
+import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
+import "./review.less";
+import { FileInfo, loadReviewInfo, createGitLabLink, selectCurrentRevisions, selectFileForView, reviewFile, unreviewFile, publishReview } from "./state";
+import VersionSelector from './versionSelector';
+import * as PathPairs from "../../pathPair";
+import ReviewSummary from './reviewSummary';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -77,6 +23,7 @@ interface DispatchProps {
     selectFileForView: SelectFileForViewHandler;
     createGitLabLink(reviewId: ReviewId);
     publishReview(): void;
+    reviewFile: ReviewFileActions;
 }
 
 interface StateProps {
@@ -84,6 +31,7 @@ interface StateProps {
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
+    reviewedFiles: PathPairs.List;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -98,6 +46,10 @@ const reviewPage = (props: Props): JSX.Element => {
     );
 
     const pastRevisions = props.currentReview.pastRevisions.map(i => i.number);
+    
+    const selectedFile = props.selectedFile ?
+        {...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path)}
+        : null;
 
     return (
         <div id="review-page">
@@ -111,14 +63,19 @@ const reviewPage = (props: Props): JSX.Element => {
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />
+
+            <ReviewSummary />
+
             <div>
                 <Button onClick={() => props.createGitLabLink(props.reviewId)}>Create link in GitLab</Button>
             </div>
             {publishReview}
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
-                selectedFile={props.selectedFile}
+                selectedFile={selectedFile}
                 onSelectFileForView={props.selectFileForView}
+                reviewFile={props.reviewFile}
+                reviewedFiles={props.reviewedFiles}
             />) : null}
         </div>
     );
@@ -129,6 +86,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
+    reviewedFiles: state.review.reviewedFiles
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -136,7 +94,11 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId })),
-    publishReview: () => dispatch(publishReview({}))
+    publishReview: () => dispatch(publishReview({})),
+    reviewFile: {
+        review: (path) => dispatch(reviewFile({ path })),
+        unreview: (path) => dispatch(unreviewFile({ path })),
+    }
 });
 
 export default connect(

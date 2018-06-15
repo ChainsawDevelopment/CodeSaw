@@ -1,8 +1,9 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile, PathPair } from '../../api/reviewer';
+import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile } from '../../api/reviewer';
+import  * as PathPairs from '../../pathPair';
 
 export interface FileInfo {
-    path: PathPair;
+    path: PathPairs.PathPair;
     diff: FileDiff;
     treeEntry: ChangedFile;
 }
@@ -12,6 +13,7 @@ export interface ReviewState {
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
+    reviewedFiles: PathPairs.List;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -22,7 +24,7 @@ export interface SelectCurrentRevisions {
 export const selectCurrentRevisions = createAction<SelectCurrentRevisions>('SELECT_CURRENT_REVISIONS');
 export const loadedRevisionsRangeInfo = createAction<RevisionRangeInfo>('LOADED_REVISION_RANGE_INFO');
 
-export const selectFileForView = createAction<{ path: PathPair }>('SELECT_FILE_FOR_VIEW');
+export const selectFileForView = createAction<{ path: PathPairs.PathPair }>('SELECT_FILE_FOR_VIEW');
 
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
@@ -37,6 +39,9 @@ export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLA
 
 export const publishReview = createAction<{}>('PUBLISH_REVIEW');
 
+export const reviewFile = createAction<{ path: PathPairs.PathPair }>('REVIEW_FILE');
+export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW_FILE');
+
 const initial: ReviewState = {
     range: {
         previous: 'base',
@@ -50,8 +55,10 @@ const initial: ReviewState = {
         reviewId: null,
         title: '',
         headCommit: '',
-        baseCommit: ''
-    }
+        baseCommit: '',
+        reviewSummary: []
+    },
+    reviewedFiles: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -67,6 +74,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             rangeInfo: action.payload,
             selectedFile: null,
+            reviewedFiles: action.payload.filesReviewedByUser
         }
     }
 
@@ -96,6 +104,31 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         return {
             ...state,
             currentReview: action.payload
+        };
+    }
+
+    if (reviewFile.match(action)) {
+        if (PathPairs.contains(state.reviewedFiles, action.payload.path)) {
+            return state;
+        }
+
+        return {
+            ...state,
+            reviewedFiles: [
+                ...state.reviewedFiles,
+                action.payload.path
+            ]
+        };
+    }
+
+    if (unreviewFile.match(action)) {
+        if (!PathPairs.contains(state.reviewedFiles, action.payload.path)) {
+            return state;
+        }
+
+        return {
+            ...state,
+            reviewedFiles: state.reviewedFiles.filter(v => v.newPath != action.payload.path.newPath)
         };
     }
 

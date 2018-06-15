@@ -1,3 +1,5 @@
+import  * as PathPairs from "../pathPair";
+
 export type RevisionId = 'base' | number | string | 'provisional';
 
 export interface RevisionRange {
@@ -5,15 +7,8 @@ export interface RevisionRange {
     current: RevisionId;
 }
 
-export interface PathPair {
-    newPath: string;
-    oldPath: string;
-}
-
-export const emptyPathPair: PathPair = { newPath: null, oldPath: null };
-
 export interface ChangedFile {
-    path: PathPair;
+    path: PathPairs.PathPair;
     renamedFile: boolean;
 }
 
@@ -24,7 +19,8 @@ export interface RevisionRangeInfo {
             head: string;
             base: string
         }
-    }
+    };
+    filesReviewedByUser: PathPairs.List
 }
 
 export interface HunkLine {
@@ -74,6 +70,12 @@ export interface ReviewInfo {
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
+    reviewSummary: {
+        file: string;
+        revisions: {
+            [revision: number]: string[];
+        }
+    }[];
 }
 
 export interface ReviewSnapshot {
@@ -81,7 +83,8 @@ export interface ReviewSnapshot {
     revision: {
         head: string,
         base: string
-    }
+    };
+    reviewedFiles: PathPairs.PathPair[];
 }
 
 const acceptJson = {
@@ -107,7 +110,7 @@ export class ReviewerApi {
             .then(r => r as RevisionRangeInfo);
     }
 
-    public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPair): Promise<FileDiff> => {
+    public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
             acceptJson
@@ -123,7 +126,20 @@ export class ReviewerApi {
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(r => r.json())
-            .then(r => r as ReviewInfo);
+            .then(r => r as ReviewInfo)
+            .then(ri => {
+                for(let item of ri.reviewSummary) {
+                    const converted = {};
+
+                    for (let rev of Object.keys(item.revisions)) {
+                        converted[parseInt(rev)] = item.revisions[rev];
+                    }
+                    
+                    item.revisions = converted;
+                }
+
+                return ri;
+            });
     }
     
     public createGitLabLink = (reviewId: ReviewId) => {
