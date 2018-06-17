@@ -1,9 +1,8 @@
 import * as React from "react";
-import Menu from 'semantic-ui-react/dist/commonjs/collections/Menu';
-import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
-import Segment from 'semantic-ui-react/dist/commonjs/elements/Segment';
-import Rail from 'semantic-ui-react/dist/commonjs/elements/Rail';
-import Sticky from 'semantic-ui-react/dist/commonjs/modules/Sticky';
+import Menu from '@ui/collections/Menu';
+import Button from '@ui/elements/Button';
+import Segment from '@ui/elements/Segment';
+import Sticky from '@ui/modules/Sticky';
 import { RevisionRangeInfo } from "../../api/reviewer";
 import DiffView from './diffView';
 import FileSummary from './fileSummary';

@@ -1,10 +1,10 @@
 import { connect } from 'react-redux';
 import * as React from "react";
 import { RootState } from '../../rootState';
-import Table from 'semantic-ui-react/dist/commonjs/collections/Table';
-import Label from 'semantic-ui-react/dist/commonjs/elements/Label';
-import List from 'semantic-ui-react/dist/commonjs/elements/List';
-import Popup from 'semantic-ui-react/dist/commonjs/modules/Popup';
+import Table from '@ui/collections/Table';
+import Label from '@ui/elements/Label';
+import List from '@ui/elements/List';
+import Popup from '@ui/modules/Popup';
 import * as PathPairs from '../../pathPair';
 import { ReviewInfo } from '../../api/reviewer';
 

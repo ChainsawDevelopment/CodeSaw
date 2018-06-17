@@ -22,7 +22,7 @@ import {
     RevisionId,
     Comment
 } from '../../api/reviewer';
-import { Button } from 'semantic-ui-react';
+import Button from '@ui/elements/Button';
 import { OnMount } from "../../components/OnMount";
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";

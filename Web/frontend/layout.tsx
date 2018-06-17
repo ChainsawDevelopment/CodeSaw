@@ -1,9 +1,8 @@
 import * as React from "react";
-import Menu from 'semantic-ui-react/dist/commonjs/collections/Menu';
-import Container from 'semantic-ui-react/dist/commonjs/elements/Container';
+import Menu from '@ui/collections/Menu';
+import Container from '@ui/elements/Container';
 import { Link, Route, withRouter, RouteComponentProps } from "react-router-dom";
 import ConnectedSwitch from './routing/ConnectedSwitch';
-import LinkButton from './components/LinkButton';
 
 import ReviewPage from './pages/review';
 import Reviews from "./pages/reviews";

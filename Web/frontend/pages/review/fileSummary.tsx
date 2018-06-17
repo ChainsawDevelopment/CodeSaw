@@ -1,6 +1,6 @@
 import { FileInfo } from "./state";
 import * as React from "react";
-import Message from 'semantic-ui-react/dist/commonjs/collections/Message';
+import Message from '@ui/collections/Message';
 
 export default (props: {file: FileInfo}): JSX.Element => {
     const items: JSX.Element[] = [];
