@@ -40,9 +40,7 @@ interface OwnProps {
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId): void;
     selectRevisionRange(range: RevisionRange): void;
-    selectFileForView: SelectFileForViewHandler;
-    createGitLabLink(reviewId: ReviewId);
-    publishReview(): void;
+    selectFileForView: SelectFileForViewHandler;    
     reviewFile: ReviewFileActions;
     loadComments(reviewId: ReviewId): void;
     addComment(reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string);
@@ -62,12 +60,6 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const reviewPage = (props: Props): JSX.Element => {
     const provisional: RevisionId[] = props.currentReview.hasProvisionalRevision ? ['provisional'] : [];
-
-    const publishReview = (
-        <div>
-            <Button onClick={props.publishReview} color='green'>Publish</Button>
-        </div>
-    );
 
     const pastRevisions = props.currentReview.pastRevisions.map(i => i.number);
 
@@ -97,10 +89,6 @@ const reviewPage = (props: Props): JSX.Element => {
 
             <ReviewSummary />
 
-            <div>
-                <Button onClick={() => props.createGitLabLink(props.reviewId)}>Create link in GitLab</Button>
-            </div>
-            {publishReview}
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
                 selectedFile={selectedFile}
@@ -125,8 +113,6 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId) => dispatch(loadReviewInfo({ reviewId })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
-    createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId })),
-    publishReview: () => dispatch(publishReview({})),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
