@@ -14,9 +14,8 @@ namespace Web.Modules.Api.Queries
 {
     public class GetReviewInfo : IQuery<GetReviewInfo.Result>
     {
-        private readonly int _projectId;
-        private readonly int _reviewId;
         private readonly IRepository _api;
+        private readonly ReviewIdentifier _reviewId;
 
         public class Result
         {
@@ -38,18 +37,17 @@ namespace Web.Modules.Api.Queries
 
         public GetReviewInfo(int projectId, int reviewId, IRepository api)
         {
-            _projectId = projectId;
-            _reviewId = reviewId;
             _api = api;
+            _reviewId = new ReviewIdentifier(projectId, reviewId);
         }
 
         public async Task<Result> Execute(ISession session)
         {
-            var mr = await _api.MergeRequest(_projectId, _reviewId);
+            var mr = await _api.MergeRequest(_reviewId.ProjectId, _reviewId.ReviewId);
 
             var pastRevisions = (
                 from r in session.Query<ReviewRevision>()
-                where r.ReviewId.ProjectId == _projectId && r.ReviewId.ReviewId == _reviewId
+                where r.ReviewId == _reviewId
                 orderby r.RevisionNumber
                 select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
             ).ToArray();
@@ -66,7 +64,7 @@ namespace Web.Modules.Api.Queries
             var reviewSummary = session.QueryOver(() => review)
                 .JoinEntityAlias(() => user, () => user.Id == review.UserId)
                 .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
-                .Where(() => revision.ReviewId.ProjectId == _projectId && revision.ReviewId.ReviewId == _reviewId)
+                .Where(() => revision.ReviewId == _reviewId)
                 .JoinAlias(() => review.ReviewedFiles, () => file)
                 .OrderBy(() => file.NewPath).Asc
                 .ThenBy(() => revision.RevisionNumber).Asc
@@ -82,7 +80,7 @@ namespace Web.Modules.Api.Queries
 
             return new Result
             {
-                ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
+                ReviewId = _reviewId,
                 Title = mr.Title,
                 PastRevisions = pastRevisions,
                 HasProvisionalRevision = hasUnreviewedChanges,

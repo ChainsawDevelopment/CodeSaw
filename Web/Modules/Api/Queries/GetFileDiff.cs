@@ -34,7 +34,7 @@ namespace Web.Modules.Api.Queries
         {
             var mergeRequest = await _api.MergeRequest(_reviewId.ProjectId, _reviewId.ReviewId);
 
-            var commits = session.Query<ReviewRevision>().Where(x => x.ReviewId.ReviewId == _reviewId.ReviewId && x.ReviewId.ProjectId == _reviewId.ProjectId)
+            var commits = session.Query<ReviewRevision>().Where(x => x.ReviewId == _reviewId)
                 .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});
 
             var previousCommit = ResolveCommitHash(_previous, mergeRequest, r => commits[r].Head);

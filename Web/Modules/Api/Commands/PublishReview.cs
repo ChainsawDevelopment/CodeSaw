@@ -83,7 +83,7 @@ namespace Web.Modules.Api.Commands
             private async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, RevisionCommits commits)
             {
                 var existingRevision = await _session.Query<ReviewRevision>()
-                    .Where(x => x.ReviewId.ProjectId == reviewId.ProjectId && x.ReviewId.ReviewId == reviewId.ReviewId)
+                    .Where(x => x.ReviewId == reviewId)
                     .Where(x => x.BaseCommit == commits.Base && x.HeadCommit == commits.Head)
                     .SingleOrDefaultAsync();
 
@@ -124,7 +124,7 @@ namespace Web.Modules.Api.Commands
             private int GetNextRevisionNumber(ReviewIdentifier reviewId)
             {
                 return 1 + (_session.QueryOver<ReviewRevision>()
-                                .Where(x => x.ReviewId.ProjectId == reviewId.ProjectId && x.ReviewId.ReviewId == reviewId.ReviewId)
+                                .Where(x => x.ReviewId == reviewId)
                                 .Select(Projections.Max<ReviewRevision>(x => x.RevisionNumber))
                                 .SingleOrDefault<int?>() ?? 0);
             }

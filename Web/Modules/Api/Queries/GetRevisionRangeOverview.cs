@@ -40,7 +40,7 @@ namespace Web.Modules.Api.Queries
         {
             var mergeRequest = await _api.MergeRequest(_reviewId.ProjectId, _reviewId.ReviewId);
 
-            var commits = session.Query<ReviewRevision>().Where(x => x.ReviewId.ReviewId == _reviewId.ReviewId && x.ReviewId.ProjectId == _reviewId.ProjectId)
+            var commits = session.Query<ReviewRevision>().Where(x => x.ReviewId == _reviewId)
                 .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});
 
             var previousCommit = ResolveCommitHash(mergeRequest, _previous, r => commits[r].Head);
@@ -90,7 +90,7 @@ namespace Web.Modules.Api.Queries
             PathPair dto = null;
 
             var revisionId = QueryOver.Of<ReviewRevision>()
-                .Where(x => x.ReviewId.ProjectId == _reviewId.ProjectId && x.ReviewId.ReviewId == _reviewId.ReviewId)
+                .Where(x => x.ReviewId == _reviewId)
                 .And(x => x.HeadCommit == head)
                 .Select(Projections.Property((ReviewRevision x) => x.Id));
 
