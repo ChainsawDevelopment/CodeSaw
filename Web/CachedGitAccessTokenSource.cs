@@ -13,18 +13,15 @@ namespace Web
 
         public string AccessToken => _accessTokenLazy.Value;
 
-        public CachedGitAccessTokenSource(UserManager<ReviewUser> userManager, IHttpContextAccessor httpContextAccessor)
+        public CachedGitAccessTokenSource(UserManager<ReviewUser> userManager, ICurrentUser currentUser)
         {
             Console.WriteLine("New CachedGitAccessTokenSource instance");
 
             _accessTokenLazy = new Lazy<string>(() =>
             {
-                var name = httpContextAccessor.HttpContext.User.Identity.Name;
-                Console.WriteLine($"Retrieving Access Token for user {name}");
+                Console.WriteLine($"Retrieving Access Token for user {currentUser.CurrentUser.UserName}");
 
-                var currentUser = userManager.FindByNameAsync(name).Result;
-
-                return currentUser?.Token;
+                return currentUser.CurrentUser?.Token;
             });
         }
     }
