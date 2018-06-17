@@ -13,9 +13,19 @@ namespace Web.Auth
             UserId = userId;
         }
 
-        public Task<ReviewUser> Execute(ISession session)
+        public class Handler : IQueryHandler<FindUserByIdQuery, ReviewUser>
         {
-            return session.GetAsync<ReviewUser>(UserId);
+            private readonly ISession _session;
+
+            public Handler(ISession session)
+            {
+                _session = session;
+            }
+
+            public Task<ReviewUser> Execute(FindUserByIdQuery query)
+            {
+                return _session.GetAsync<ReviewUser>(query.UserId);
+            }
         }
     }
 }

@@ -11,6 +11,9 @@ namespace Web.Cqrs
             builder.RegisterAssemblyTypes(ThisAssembly)
                 .AsClosedTypesOf(typeof(CommandHandler<>));
 
+            builder.RegisterAssemblyTypes(ThisAssembly)
+                .AsClosedTypesOf(typeof(IQueryHandler<,>));
+
             builder.RegisterType<QueryRunner>().As<IQueryRunner>();
         }
     }

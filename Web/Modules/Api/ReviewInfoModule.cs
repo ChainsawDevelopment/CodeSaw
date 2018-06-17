@@ -1,7 +1,5 @@
-using System;
 using Nancy;
 using Nancy.ModelBinding;
-using RepositoryApi;
 using Web.Cqrs;
 using Web.Modules.Api.Commands;
 using Web.Modules.Api.Queries;
@@ -10,15 +8,15 @@ namespace Web.Modules.Api
 {
     public class ReviewInfoModule : NancyModule
     {
-        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
+        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
         {
             Get("/comments", async _ => await query.Query(new GetCommentList(_.projectId, _.reviewId)));
 
-            Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api())));
+            Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId)));
 
-            Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetRevisionRangeOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api(), Context.CurrentUser.Identity.Name)));
+            Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetRevisionRangeOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Context.CurrentUser.Identity.Name)));
 
-            Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath, api())));
+            Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath)));
 
             Post("/registerlink", async _ =>
             {   

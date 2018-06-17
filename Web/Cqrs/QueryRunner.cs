@@ -9,7 +9,12 @@ namespace Web.Cqrs
 {
     public interface IQuery<TResult>
     {
-        Task<TResult> Execute(ISession session);
+    }
+
+    public interface IQueryHandler<TQuery, TResult>
+        where TQuery: IQuery<TResult>
+    {
+        Task<TResult> Execute(TQuery query);
     }
 
     public interface IQueryRunner
@@ -46,19 +51,26 @@ namespace Web.Cqrs
         private async Task<TResult> QueryCore<TQuery, TResult>(TQuery query)
             where TQuery : IQuery<TResult>
         {
-            var currentSession = _lifetimeScope.ResolveOptional<ISession>();
-
-            if (currentSession != null)
+            Action<ContainerBuilder> enhance = builder =>
             {
-                return await query.Execute(currentSession);
-            }
+                if (!_lifetimeScope.IsRegistered<ISession>())
+                {
+                    builder.Register(ctz =>
+                    {
+                        var session = _sessionFactory.OpenSession();
+                        session.DefaultReadOnly = true;
+                        session.FlushMode = FlushMode.Manual;
 
-            using (var session = _sessionFactory.OpenSession())
+                        return session;
+                    });
+                }
+            };
+
+            using (var queryScope = _lifetimeScope.BeginLifetimeScope(enhance))
             {
-                session.DefaultReadOnly = true;
-                session.FlushMode = FlushMode.Manual;
-                
-                return await query.Execute(session);
+                var handler = queryScope.Resolve<IQueryHandler<TQuery, TResult>>();
+
+                return await handler.Execute(query);
             }
         }
     }

@@ -14,10 +14,20 @@ namespace Web.Auth
             UserName = userName;
         }
 
-        public Task<ReviewUser> Execute(ISession session)
+        public class Handler : IQueryHandler<FindUserByName, ReviewUser>
         {
-            return session.Query<ReviewUser>()
-                .FirstOrDefaultAsync(user => user.UserName == UserName);
+            private readonly ISession _session;
+
+            public Handler(ISession session)
+            {
+                _session = session;
+            }
+
+            public Task<ReviewUser> Execute(FindUserByName query)
+            {
+                return _session.Query<ReviewUser>()
+                    .FirstOrDefaultAsync(user => user.UserName == query.UserName);
+            }
         }
     }
 }
