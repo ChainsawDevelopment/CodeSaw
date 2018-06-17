@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { withRouter, RouteComponentProps } from 'react-router';
-import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
+import Button from '@ui/elements/Button';
 
 interface Props extends RouteComponentProps<{}>{
     to: string;

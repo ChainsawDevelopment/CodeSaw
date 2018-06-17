@@ -1,8 +1,8 @@
 import * as React from "react";
 import LinkButton from "../../components/LinkButton";
 import { Link } from 'react-router-dom';
-import List from 'semantic-ui-react/dist/commonjs/elements/List';
-import Image from 'semantic-ui-react/dist/commonjs/elements/Image';
+import List from '@ui/elements/List';
+import Image from '@ui/elements/Image';
 import { connect, Dispatch } from "react-redux";
 import { RootState } from "../../rootState";
 import { loadReviews } from "./state";

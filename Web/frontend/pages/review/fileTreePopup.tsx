@@ -1,5 +1,5 @@
-import Popup from 'semantic-ui-react/dist/commonjs/modules/Popup';
-import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
+import Popup from '@ui/modules/Popup';
+import Button from '@ui/elements/Button';
 
 import * as React from "react";
 import { RevisionRangeInfo } from "../../api/reviewer";

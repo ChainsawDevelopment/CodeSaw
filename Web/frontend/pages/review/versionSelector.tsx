@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import "./versionSelector.less";
-import Radio from 'semantic-ui-react/dist/commonjs/addons/Radio';
+import Radio from '@ui/addons/Radio';
 import * as classNames from "classnames";
 import { RevisionRange, RevisionId } from "../../api/reviewer";
 

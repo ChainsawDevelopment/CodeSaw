@@ -88,7 +88,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                 case 'NoActionNeeded':
                     return;
                 case 'NeedsResolution':
-                    return <UIComment.Action><a onClick={resolveComment}>Resolve</a></UIComment.Action>
+                    return <UIComment.Action onClick={resolveComment}>Resolve</UIComment.Action>
                 case 'Resolved':
                     return <span>Resolved</span>;
             }
@@ -104,7 +104,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     </UIComment.Metadata>
                     <UIComment.Text>{this.props.content}</UIComment.Text>
                     <UIComment.Actions>
-                        <UIComment.Action active={this.state.replyVisible}><a onClick={switchReply}>Reply</a></UIComment.Action>
+                        <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
                         {renderStatus()}
                     </UIComment.Actions>
                     {this.state.replyVisible ? form : null}
