@@ -87,6 +87,17 @@ export interface ReviewSnapshot {
     reviewedFiles: PathPairs.PathPair[];
 }
 
+export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved';
+
+export interface Comment {
+    id: string;
+    author: string;
+    content: string;
+    state: CommentState,
+    createdAt: string;
+    children: Comment[];
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -141,7 +152,7 @@ export class ReviewerApi {
                 return ri;
             });
     }
-    
+
     public createGitLabLink = (reviewId: ReviewId) => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/registerlink`, {
             ...acceptJson,
@@ -167,10 +178,46 @@ export class ReviewerApi {
                 method: 'POST',
                 body: JSON.stringify(snapshot)
             }
-        ).then(r => { 
+        ).then(r => {
             if (r.status == 409) {
-                throw new ReviewConcurrencyError() 
+                throw new ReviewConcurrencyError()
             }
+        });
+    }
+
+    public getComments = (reviewId: ReviewId): Promise<Comment[]> => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comments`, acceptJson)
+            .then(r => r.json())
+            .then(r => r as Comment[]);
+    }
+
+    public addComment = (reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string): Promise<any> => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comment/add`, {
+            ...acceptJson,
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                parentId,
+                content,
+                needsResolution
+            })
+        });
+    }
+
+    public resolveComment = (reviewId: ReviewId, commentId: string): Promise<any> => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comment/resolve`, {
+            ...acceptJson,
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                commentId
+            })
         });
     }
 }

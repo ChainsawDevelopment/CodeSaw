@@ -12,6 +12,8 @@ namespace Web.Modules.Api
     {
         public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
         {
+            Get("/comments", async _ => await query.Query(new GetCommentList(_.projectId, _.reviewId)));
+
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api())));
 
             Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetRevisionRangeOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api(), Context.CurrentUser.Identity.Name)));
@@ -38,6 +40,18 @@ namespace Web.Modules.Api
                 {
                     return Response.AsJson(new {error = "review_concurrency"}, HttpStatusCode.Conflict);
                 }
+            });
+
+            Post("/comment/add", async _ =>
+            {
+                await command.Execute(this.Bind<AddComment>());
+                return new { };
+            });
+
+            Post("/comment/resolve", async _ =>
+            {
+                await command.Execute(this.Bind<ResolveComment>());
+                return new { };
             });
         }
     }

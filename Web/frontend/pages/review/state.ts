@@ -1,6 +1,14 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { RevisionRangeInfo, FileDiff, ReviewInfo, RevisionRange, ReviewId, ChangedFile } from '../../api/reviewer';
-import  * as PathPairs from '../../pathPair';
+import {
+    RevisionRangeInfo,
+    FileDiff,
+    ReviewInfo,
+    RevisionRange,
+    ReviewId,
+    ChangedFile,
+    Comment
+} from '../../api/reviewer';
+import * as PathPairs from '../../pathPair';
 
 export interface FileInfo {
     path: PathPairs.PathPair;
@@ -14,6 +22,7 @@ export interface ReviewState {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
+    comments: Comment[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -31,6 +40,15 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
+export const loadComments = createAction<{ reviewId: ReviewId }>('LOAD_COMMENTS');
+export const loadedComments = createAction<Comment[]>('LOADED_COMMENTS');
+
+export interface RememberRevisionArgs {
+    reviewId: ReviewId;
+    head: string;
+    base: string;
+}
+
 export interface CreateGitLabLinkArgs {
     reviewId: ReviewId;
 }
@@ -41,6 +59,22 @@ export const publishReview = createAction<{}>('PUBLISH_REVIEW');
 
 export const reviewFile = createAction<{ path: PathPairs.PathPair }>('REVIEW_FILE');
 export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW_FILE');
+
+export interface AddCommentArgs {
+    reviewId: ReviewId;
+    parentId?: string;
+    content: string;
+    needsResolution: boolean;
+}
+
+export const addComment = createAction<AddCommentArgs>('ADD_COMMENT');
+
+export interface ResolveCommentArgs {
+    reviewId: ReviewId;
+    commentId: string;
+}
+
+export const resolveComment = createAction<ResolveCommentArgs>('RESOLVE_COMMENT');
 
 const initial: ReviewState = {
     range: {
@@ -58,7 +92,8 @@ const initial: ReviewState = {
         baseCommit: '',
         reviewSummary: []
     },
-    reviewedFiles: []
+    reviewedFiles: [],
+    comments: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -132,5 +167,12 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         };
     }
 
+    if (loadedComments.match(action)) {
+        return {
+            ...state,
+            comments: action.payload
+        };
+    }
+
     return state;
-} 
+}
