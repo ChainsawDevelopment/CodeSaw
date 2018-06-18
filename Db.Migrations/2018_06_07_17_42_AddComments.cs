@@ -34,9 +34,9 @@ namespace Db.Migrations
 
         public override void Down()
         {
-            Delete.ForeignKey("FK_Comments_UserId_Users_Id");
-            Delete.ForeignKey("FK_Comments_ParentId_Comments_Id");
-            Delete.Table("ReviewComments");
+            Delete.ForeignKey("FK_Comments_UserId_Users_Id").OnTable("Comments").InSchema("dbo");
+            Delete.ForeignKey("FK_Comments_ParentId_Comments_Id").OnTable("Comments").InSchema("dbo");
+            Delete.Table("ReviewComments").InSchema("dbo");
         }
     }
 }

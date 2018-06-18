@@ -12,10 +12,6 @@ import {
     CreateGitLabLinkArgs,
     loadComments,
     loadedComments,
-    addComment,
-    AddCommentArgs,
-    resolveComment,
-    ResolveCommentArgs,
     mergePullRequest,
     MergePullRequestArgs
 } from './state';
@@ -78,6 +74,7 @@ function* loadReviewInfoSaga() {
         const currentRange: RevisionRange = yield select((s: RootState) => s.review.range);
 
         yield put(loadedReviewInfo(info));
+        yield put(loadComments({}));
 
         let newRange: RevisionRange = {
             previous: 'base',
@@ -118,7 +115,8 @@ function* publishReviewSaga() {
             reviewId: s.review.currentReview.reviewId,
             revision: s.review.rangeInfo.commits.current,
             previous: s.review.rangeInfo.commits.previous,
-            reviewedFiles: s.review.reviewedFiles
+            reviewedFiles: s.review.reviewedFiles,
+            comments: s.review.comments
         }));
 
         for (let i = 0; i < 100; i++) {
@@ -142,41 +140,12 @@ function* loadCommentsSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ reviewId: ReviewId }> = yield take(loadComments);
-        const comments: Comment[] = yield api.getComments(action.payload.reviewId);
+        yield take(loadComments);
+
+        const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
+        const comments: Comment[] = yield api.getComments(currentReview);
+
         yield put(loadedComments(comments));
-    }
-}
-
-function* addCommentSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        const action: Action<AddCommentArgs> = yield take(addComment);
-
-        yield api.addComment(
-            action.payload.reviewId,
-            action.payload.content,
-            action.payload.needsResolution,
-            action.payload.parentId
-        );
-
-        yield put(loadComments({ reviewId: action.payload.reviewId }));
-    }
-}
-
-function* resolveCommentSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        const action: Action<ResolveCommentArgs> = yield take(resolveComment);
-
-        yield api.resolveComment(
-            action.payload.reviewId,
-            action.payload.commentId
-        );
-
-        yield put(loadComments({ reviewId: action.payload.reviewId }));
     }
 }
 
@@ -199,7 +168,5 @@ export default [
     createGitLabLinkSaga,
     publishReviewSaga,
     mergePullRequestSaga,
-    loadCommentsSaga,
-    addCommentSaga,
-    resolveCommentSaga
+    loadCommentsSaga
 ];

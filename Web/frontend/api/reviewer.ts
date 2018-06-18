@@ -1,4 +1,4 @@
-import  * as PathPairs from "../pathPair";
+import * as PathPairs from "../pathPair";
 
 export type RevisionId = 'base' | number | string | 'provisional';
 
@@ -105,6 +105,7 @@ export interface ReviewSnapshot {
         base: string;
     }
     reviewedFiles: PathPairs.PathPair[];
+    comments: Comment[];
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved';
@@ -113,6 +114,8 @@ export interface Comment {
     id: string;
     author: string;
     content: string;
+    filePath: string;
+    changeKey: string;
     state: CommentState,
     createdAt: string;
     children: Comment[];
@@ -165,7 +168,7 @@ export class ReviewerApi {
                     for (let rev of Object.keys(item.revisions)) {
                         converted[parseInt(rev)] = item.revisions[rev];
                     }
-                    
+
                     item.revisions = converted;
                 }
 
@@ -209,36 +212,6 @@ export class ReviewerApi {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comments`, acceptJson)
             .then(r => r.json())
             .then(r => r as Comment[]);
-    }
-
-    public addComment = (reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string): Promise<any> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comment/add`, {
-            ...acceptJson,
-            headers: {
-                ...acceptJson.headers,
-                'Content-Type': 'application/json'
-            },
-            method: 'POST',
-            body: JSON.stringify({
-                parentId,
-                content,
-                needsResolution
-            })
-        });
-    }
-
-    public resolveComment = (reviewId: ReviewId, commentId: string): Promise<any> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comment/resolve`, {
-            ...acceptJson,
-            headers: {
-                ...acceptJson.headers,
-                'Content-Type': 'application/json'
-            },
-            method: 'POST',
-            body: JSON.stringify({
-                commentId
-            })
-        });
     }
 
     public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {

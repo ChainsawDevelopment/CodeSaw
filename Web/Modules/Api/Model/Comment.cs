@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using NHibernate.Type;
-using RepositoryApi;
-using Web.Auth;
 
 namespace Web.Modules.Api.Model
 {
@@ -18,11 +15,11 @@ namespace Web.Modules.Api.Model
     public class Comment
     {
         public virtual Guid Id { get; set; }
-        public virtual Comment Parent { get; set; }
-        public virtual ICollection<Comment> Children { get; set; }
-        public virtual ReviewIdentifier ReviewId { get; set; }
-        public virtual ReviewUser User { get; set; }
+        public virtual Guid? ParentId { get; set; }
+        public virtual Guid ReviewId { get; set; }
         public virtual string Content { get; set; }
+        public virtual string FilePath { get; set; }
+        public virtual string ChangeKey { get; set; }
         public virtual CommentState State { get; set; }
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
         public virtual DateTimeOffset CreatedAt { get; set; }
@@ -40,31 +37,17 @@ namespace Web.Modules.Api.Model
                 mapper.Type(new DateTimeOffsetType());
             });
 
-            Component(x => x.ReviewId);
             Property(x => x.Content, mapper => mapper.NotNullable(true));
             Property(x => x.CreatedAt, mapper => mapper.NotNullable(true));
-            Property(x => x.State, mapper => mapper.NotNullable(true));
+            Property(x => x.FilePath, mapper => mapper.NotNullable(false));
+            Property(x => x.ChangeKey, mapper => mapper.NotNullable(false));
             Property(x => x.State, mapper =>
             {
                 mapper.Type<EnumStringType<CommentState>>();
                 mapper.NotNullable(true);
             });
-
-            ManyToOne(x => x.User, mapper =>
-            {
-                mapper.Column("UserId");
-                mapper.NotNullable(true);
-            });
-            ManyToOne(x => x.Parent, mapper => mapper.Column("ParentId"));
-
-            Bag(x => x.Children, mapper =>
-            {
-                mapper.Inverse(true);
-                mapper.Key(k => k.Column("ParentId"));
-                mapper.Lazy(CollectionLazy.NoLazy);
-                mapper.Cascade(Cascade.All);
-            },
-            action => action.OneToMany());
+            Property(x => x.ParentId);
+            Property(x => x.ReviewId);
         }
     }
 }

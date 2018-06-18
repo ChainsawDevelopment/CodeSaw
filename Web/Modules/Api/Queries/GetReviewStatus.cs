@@ -63,10 +63,13 @@ namespace Web.Modules.Api.Queries
 
                 Dictionary<CommentState, int> commentStates;
                 {
-                    commentStates = _session.Query<Comment>()
-                        .Where(x => x.ReviewId == query.ReviewId)
-                        .GroupBy(x => x.State)
-                        .Select(x => new {State = x.Key, Count = x.Count()})
+                    commentStates = (
+                            from comment in _session.Query<Comment>()
+                            join review in _session.Query<Review>() on comment.ReviewId equals review.Id
+                            join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                            group comment by comment.State into g
+                            select new { State = g.Key, Count = g.Count() }
+                        )
                         .ToDictionary(x => x.State, x => x.Count);
 
                     var allStates = Enum.GetValues(typeof(CommentState)).Cast<CommentState>();

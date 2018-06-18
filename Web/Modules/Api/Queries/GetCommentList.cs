@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NHibernate;
 using NHibernate.Linq;
 using RepositoryApi;
+using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Model;
 
@@ -24,6 +25,8 @@ namespace Web.Modules.Api.Queries
             public Guid Id { get; set; }
             public string Author { get; set; }
             public string Content { get; set; }
+            public string FilePath { get; set; }
+            public string ChangeKey { get; set; }
             public string State { get; set; }
             public DateTimeOffset CreatedAt { get; set; }
             public IEnumerable<Item> Children { get; set; }
@@ -33,6 +36,11 @@ namespace Web.Modules.Api.Queries
         {
             private readonly ISession _session;
 
+            private class ItemWithParent : Item
+            {
+                public Guid? ParentId { get; set; }
+            }
+
             public Handler(ISession session)
             {
                 _session = session;
@@ -41,29 +49,37 @@ namespace Web.Modules.Api.Queries
             public async Task<IEnumerable<Item>> Execute(GetCommentList query)
             {
                 var comments = await (
-                        from c in _session.Query<Comment>()
-                        orderby c.CreatedAt
-                        where c.ReviewId == query._reviewId
-                        select c
+                        from comment in _session.Query<Comment>()
+                        join review in _session.Query<Review>() on comment.ReviewId equals review.Id
+                        join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                        join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
+                        orderby comment.CreatedAt
+                        where revision.ReviewId == query._reviewId
+                        select new ItemWithParent
+                        {
+                            Id = comment.Id,
+                            Content = comment.Content,
+                            FilePath = comment.FilePath,
+                            ChangeKey = comment.ChangeKey,
+                            CreatedAt = comment.CreatedAt,
+                            Author = user.UserName,
+                            State = comment.State.ToString(),
+                            ParentId = comment.ParentId
+                        }
                     )
-                    .Fetch(x => x.User)
-                    .FetchMany(x => x.Children)
                     .ToListAsync();
 
-                return comments.Where(x => x.Parent == null).Select(MapComment).ToArray();
+                foreach (var comment in comments)
+                {
+                    JoinComments(comment, comments);
+                }
+
+                return comments.Where(comment => comment.ParentId == null).ToList();
             }
 
-            private static Item MapComment(Comment comment)
+            private static void JoinComments(Item comment, IEnumerable<ItemWithParent> comments)
             {
-                return new Item
-                {
-                    Id = comment.Id,
-                    Author = comment.User.UserName,
-                    Content = comment.Content,
-                    State = comment.State.ToString(),
-                    CreatedAt = comment.CreatedAt,
-                    Children = comment.Children.Select(MapComment)
-                };
+                comment.Children = comments.Where(x => x.ParentId == comment.Id).ToList();
             }
         }
     }

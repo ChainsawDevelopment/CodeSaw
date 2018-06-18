@@ -25,9 +25,9 @@ const Home = () => (
 const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string}>) => {
     const { projectId, id } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
-    
-    return (<ReviewPage 
-        reviewId={reviewId} 
+
+    return (<ReviewPage
+        reviewId={reviewId}
     />)
 });
 
@@ -60,5 +60,5 @@ export default () => (
         </Container>
 
         <div className="footer">This is the bottom <i aria-hidden="true" className="pointing down icon"></i></div>
-    </> //{/*</div>*/}
+    </>
 );

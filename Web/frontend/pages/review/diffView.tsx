@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, markWordEdits } from 'react-diff-view';
+import { Diff, getChangeKey, markWordEdits } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 import 'react-diff-view/index.css';
 import './diffView.less';
@@ -53,7 +53,7 @@ const mapHunkToView = (hunk: Hunk) => {
         }
     }
 
-    let viewHunk = {
+    const viewHunk = {
         oldStart: hunk.oldPosition.start + 1,
         oldLines: hunk.oldPosition.length + 1,
         newStart: hunk.newPosition.start + 1,
@@ -137,33 +137,39 @@ const diffView = (props: { diffInfo: FileDiff }) => {
     }
 
     const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
+    const toggleChangeComment = (change) => {
+        console.log(`old: ${change.oldLineNumber} new: ${change.newLineNumber}, con: ${change.content}`);
+        console.log(`key: ${getChangeKey(change)}`);
+//        [getChangeKey(viewHunks[1].changes[0])]: (
+//            <span className="error">Line too long</span>
+//        )
+    };
 
     const events = {
         gutter: {
             onClick: (change) => {
-                console.log('Clicked gutter', change)
+                toggleChangeComment(change);
             }
         }
     };
 
-    // const widgets = {
-    //     'I19': (
-    //         <span className="error">Line too long</span>
-    //     )
-    // };
+    const widgets = {
+        [getChangeKey(viewHunks[1].changes[0])]: (
+            <span className="error">Line too long</span>
+        )
+    };
 
     const markEdits = markWordEdits();
 
     return (
-        <div>
-            <Diff
-                viewType="split"
-                diffType="modify"
-                hunks={viewHunks}
-                customEvents={events}
-                markEdits={markEdits}
-            />
-        </div>
+        <Diff
+            viewType="split"
+            diffType="modify"
+            hunks={viewHunks}
+            customEvents={events}
+            markEdits={markEdits}
+            widgets={widgets}
+        />
     );
 };
 

@@ -1,4 +1,6 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
+import { Guid } from 'guid-typescript';
+import * as joda from 'js-joda';
 import {
     RevisionRangeInfo,
     FileDiff,
@@ -40,7 +42,7 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 export const loadReviewInfo = createAction<{ reviewId: ReviewId }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
-export const loadComments = createAction<{ reviewId: ReviewId }>('LOAD_COMMENTS');
+export const loadComments = createAction<{}>('LOAD_COMMENTS');
 export const loadedComments = createAction<Comment[]>('LOADED_COMMENTS');
 
 export interface RememberRevisionArgs {
@@ -61,20 +63,16 @@ export const reviewFile = createAction<{ path: PathPairs.PathPair }>('REVIEW_FIL
 export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW_FILE');
 
 export interface AddCommentArgs {
-    reviewId: ReviewId;
     parentId?: string;
     content: string;
+    filePath: string;
+    changeKey: string;
     needsResolution: boolean;
 }
 
 export const addComment = createAction<AddCommentArgs>('ADD_COMMENT');
 
-export interface ResolveCommentArgs {
-    reviewId: ReviewId;
-    commentId: string;
-}
-
-export const resolveComment = createAction<ResolveCommentArgs>('RESOLVE_COMMENT');
+export const resolveComment = createAction<{ commentId: string }>('RESOLVE_COMMENT');
 
 export interface MergePullRequestArgs {
     reviewId: ReviewId;
@@ -182,6 +180,58 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             comments: action.payload
         };
+    }
+
+    const findCommentById = (id: string, comments: Comment[]): Comment => {
+        for (const comment of comments) {
+            if (comment.id === id) {
+                return comment;
+            }
+
+            const childrenResult = findCommentById(id, comment.children);
+            if (childrenResult !== null) {
+                return childrenResult;
+            }
+        }
+
+        return null;
+    }
+
+    if (addComment.match(action)) {
+        const newComment: Comment = {
+            author: 'NOT SUBMITTED',
+            changeKey: action.payload.changeKey,
+            content: action.payload.content,
+            filePath: action.payload.filePath,
+            state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+            createdAt: joda.LocalDateTime.now(joda.ZoneOffset.UTC).toString(),
+            id: Guid.create().toString(),
+            children: []
+        }
+
+        const commentsState = JSON.parse(JSON.stringify(state.comments)) as Comment[];
+        if (action.payload.parentId) {
+            const parentComment = findCommentById(action.payload.parentId, commentsState);
+            parentComment.children.push(newComment);
+        } else {
+            commentsState.push(newComment);
+        }
+
+        return {
+            ...state,
+            comments: commentsState
+        }
+    }
+
+    if (resolveComment.match(action)) {
+        const commentsState = JSON.parse(JSON.stringify(state.comments)) as Comment[];
+        const comment = findCommentById(action.payload.commentId, commentsState);
+        comment.state = 'Resolved';
+
+        return {
+            ...state,
+            comments: commentsState
+        }
     }
 
     return state;
