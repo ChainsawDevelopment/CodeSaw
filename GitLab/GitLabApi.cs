@@ -97,7 +97,9 @@ namespace GitLab
 
             var response = await _client.ExecuteTaskAsync(request);
 
-            if (response.StatusCode == HttpStatusCode.OK)
+            if (response.StatusCode == HttpStatusCode.OK 
+                || response.StatusCode == HttpStatusCode.MethodNotAllowed 
+                || response.StatusCode == HttpStatusCode.NotAcceptable)
             {
                 return;
             }

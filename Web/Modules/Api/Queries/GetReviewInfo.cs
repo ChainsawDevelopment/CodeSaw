@@ -98,7 +98,7 @@ namespace Web.Modules.Api.Queries
                     HeadCommit = mr.HeadCommit,
                     BaseCommit = mr.BaseCommit,
                 State =  mr.State,
-                MergeStatus = mr.MergeStatus
+                MergeStatus = mr.MergeStatus,
                     ReviewSummary = reviewSummary
                 };
             }

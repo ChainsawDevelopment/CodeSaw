@@ -55,6 +55,7 @@ namespace Web.Modules.Api
             Post("/merge_request/merge", async _ =>
             {
                 await command.Execute(this.Bind<MergePullRequest>());
+                return new { };
             });
         }
     }

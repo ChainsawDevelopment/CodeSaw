@@ -193,7 +193,6 @@ export default [
     loadReviewInfoSaga,
     createGitLabLinkSaga,
     publishReviewSaga,
-    rememberRevisionSaga,
     mergePullRequestSaga,
     loadCommentsSaga,
     addCommentSaga,

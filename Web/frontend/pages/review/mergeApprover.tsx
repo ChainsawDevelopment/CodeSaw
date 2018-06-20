@@ -23,8 +23,10 @@ const mergeApprover = (props: Props): JSX.Element => {
             <Checkbox 
                 label= { "Remove source branch" } 
             />
-            <Button id= { "merge-button" } 
-                onClick = { (e, v ) => onButtonClick() }            >Merge</Button>
+            <Button
+                id={"merge-button"} 
+                onClick={(e, v) => onButtonClick()}
+                color='green'>Merge</Button>
         </div>
     );
 };
