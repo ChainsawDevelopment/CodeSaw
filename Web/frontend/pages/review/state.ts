@@ -76,6 +76,14 @@ export interface ResolveCommentArgs {
 
 export const resolveComment = createAction<ResolveCommentArgs>('RESOLVE_COMMENT');
 
+export interface MergePullRequestArgs {
+    reviewId: ReviewId;
+    shouldRemoveBranch: boolean;
+    commitMessage?: string;
+}
+
+export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
+
 const initial: ReviewState = {
     range: {
         previous: 'base',
@@ -90,6 +98,8 @@ const initial: ReviewState = {
         title: '',
         headCommit: '',
         baseCommit: '',
+        state: 'Opened',
+        mergeStatus: 'unchecked',
         reviewSummary: []
     },
     reviewedFiles: [],

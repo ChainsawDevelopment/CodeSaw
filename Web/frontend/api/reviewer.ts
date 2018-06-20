@@ -70,6 +70,8 @@ export interface ReviewInfo {
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
+    state: 'Opened' | "Reopened" | "Merged" | "Closed";
+    mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
     reviewSummary: {
         file: string;
         revisions: {
@@ -217,6 +219,23 @@ export class ReviewerApi {
             method: 'POST',
             body: JSON.stringify({
                 commentId
+            })
+        });
+    }
+
+    public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {
+        const request = new Request(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/merge_request/merge`, acceptJson)
+
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/merge_request/merge`, {
+            ...acceptJson,
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                shouldRemoveBranch,
+                commitMessage
             })
         });
     }

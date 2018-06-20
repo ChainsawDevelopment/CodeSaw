@@ -87,6 +87,26 @@ namespace GitLab
             }
         }
         
+        public async Task MergePullRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)
+        {
+            var request = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}/merge", Method.PUT)
+                .AddQueryParameter("should_remove_source_branch", shouldRemoveBranch ? "true" : "false");
+
+            if (!string.IsNullOrEmpty(commitMessage))
+                request.AddQueryParameter("merge_commit_message", commitMessage);
+
+            var response = await _client.ExecuteTaskAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.OK 
+                || response.StatusCode == HttpStatusCode.MethodNotAllowed 
+                || response.StatusCode == HttpStatusCode.NotAcceptable)
+            {
+                return;
+            }
+
+            throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
+        }
+
         public async Task CreateRef(int projectId, string name, string commit)
         {
             var createTagRequest = new RestRequest($"/projects/{projectId}/repository/tags", Method.POST)
@@ -177,6 +197,20 @@ namespace GitLab
             {
                 var prop = base.CreateProperty(member, memberSerialization);
                 prop.PropertyName = "sha";
+                return prop;
+            }
+
+            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.MergeStatus))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "merge_status";
+                return prop;
+            }
+
+            if (member.DeclaringType == typeof(MergeRequest) && member.Name == nameof(MergeRequest.State))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "state";
                 return prop;
             }
 
