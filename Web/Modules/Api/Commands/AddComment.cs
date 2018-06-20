@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NHibernate.Linq;
 using RepositoryApi;
+using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Model;
 using ISession = NHibernate.ISession;
@@ -20,9 +21,9 @@ namespace Web.Modules.Api.Commands
         public class Handler : CommandHandler<AddComment>
         {
             private readonly ISession _session;
-            private readonly ICurrentUser _currentUser;
+            private readonly ReviewUser _currentUser;
 
-            public Handler(ISession session, ICurrentUser currentUser)
+            public Handler(ISession session, [CurrentUser]ReviewUser currentUser)
             {
                 _session = session;
                 _currentUser = currentUser;
@@ -39,7 +40,7 @@ namespace Web.Modules.Api.Commands
                     Id = GuidComb.Generate(),
                     ReviewId = new ReviewIdentifier(command.ProjectId, command.ReviewId),
                     CreatedAt = DateTimeOffset.UtcNow,
-                    User = _currentUser.CurrentUser,
+                    User = _currentUser,
                     Parent = parent,
                     Content = command.Content,
                     State = command.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,

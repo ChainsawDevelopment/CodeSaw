@@ -29,13 +29,13 @@ namespace Web.Modules.Api.Commands
         {
             private readonly ISession _session;
             private readonly IRepository _api;
-            private readonly ICurrentUser _currentUser;
+            private readonly ReviewUser _user;
 
-            public Handler(ISession session, IRepository api, ICurrentUser currentUser)
+            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user)
             {
                 _session = session;
                 _api = api;
-                _currentUser = currentUser;
+                _user = user;
             }
 
             public override async Task Handle(PublishReview command)
@@ -53,7 +53,7 @@ namespace Web.Modules.Api.Commands
                 }
 
                 var review = await _session.Query<Review>()
-                    .Where(x => x.RevisionId == revisionId && x.UserId == _currentUser.CurrentUser.Id)
+                    .Where(x => x.RevisionId == revisionId && x.UserId == _user.Id)
                     .SingleOrDefaultAsync();
 
                 if (review == null)
@@ -62,7 +62,7 @@ namespace Web.Modules.Api.Commands
                     {
                         Id = GuidComb.Generate(),
                         RevisionId = revisionId,
-                        UserId =  _currentUser.CurrentUser.Id
+                        UserId =  _user.Id
                     };
                 }
 

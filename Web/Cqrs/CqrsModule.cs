@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Features.AttributeFilters;
 
 namespace Web.Cqrs
 {
@@ -6,15 +7,19 @@ namespace Web.Cqrs
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<CommandDispatcher>().As<ICommandDispatcher>();
+            builder.RegisterType<CommandDispatcher>().As<ICommandDispatcher>()
+                .WithAttributeFiltering();
 
             builder.RegisterAssemblyTypes(ThisAssembly)
-                .AsClosedTypesOf(typeof(CommandHandler<>));
+                .AsClosedTypesOf(typeof(CommandHandler<>))
+                .WithAttributeFiltering();
 
             builder.RegisterAssemblyTypes(ThisAssembly)
-                .AsClosedTypesOf(typeof(IQueryHandler<,>));
+                .AsClosedTypesOf(typeof(IQueryHandler<,>))
+                .WithAttributeFiltering();
 
-            builder.RegisterType<QueryRunner>().As<IQueryRunner>();
+            builder.RegisterType<QueryRunner>().As<IQueryRunner>()
+                .WithAttributeFiltering();
         }
     }
 }
