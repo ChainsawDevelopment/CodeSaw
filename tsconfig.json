@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "es6",
+        "jsx": "react",
+        "sourceMap": true,
+        "typeRoots": ["./node_modules/@types"],
+        "moduleResolution": "node",
+        "baseUrl": ".",
+        "paths": {
+            "@ui/*": [ "./node_modules/semantic-ui-react/dist/commonjs/*" ]
+        }
+    }
+}

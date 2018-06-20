@@ -1,4 +1,5 @@
 const path = require('path');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = {
     entry: [
@@ -10,7 +11,12 @@ module.exports = {
         publicPath: 'http://localhost:8080/'
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js', '.jsx']
+        extensions: ['.tsx', '.ts', '.js', '.jsx'],
+        plugins: [new TsconfigPathsPlugin({
+            extensions: ['.tsx', '.ts', '.js', '.jsx'],
+            logLevel: 'info',
+            configFile: 'tsconfig.json'
+        })]
     },
     module: {
         rules: [
@@ -20,7 +26,7 @@ module.exports = {
                 loader: "ts-loader",
                 exclude: /node_modules/,
                 options: {
-                    configFile: 'Web/frontend/tsconfig.json'
+                    configFile: 'tsconfig.json'
                 }
             },
             { test: /\.(css|less)$/, use: [

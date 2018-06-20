@@ -1,11 +1,12 @@
 import * as React from "react";
-import Menu from 'semantic-ui-react/dist/commonjs/collections/Menu';
-import Container from 'semantic-ui-react/dist/commonjs/elements/Container';
+import Menu from '@ui/collections/Menu';
+import Container from '@ui/elements/Container';
 import { Link, Route, withRouter, RouteComponentProps } from "react-router-dom";
 import ConnectedSwitch from './routing/ConnectedSwitch';
-import LinkButton from './components/LinkButton';
 
 import ReviewPage from './pages/review';
+import ReviewPageTopMenu from './pages/review/topMenu';
+
 import Reviews from "./pages/reviews";
 
 import "./layout.less";
@@ -31,7 +32,7 @@ const Layout = () => {
 };
 
 export default () => (
-    <> {/*<div style={{ paddingLeft: '1em', paddingRight: '1em' }}>*/}
+    <>
         <Menu inverted>
             <Container fluid>
                 <Menu.Item as={(props) => (<Link to='/' {...props} />)}>
@@ -41,6 +42,9 @@ export default () => (
                 <Menu.Item as={(props) => (<Link to='/reviews' {...props} />)}>
                     Reviews
                 </Menu.Item>
+                <ConnectedSwitch>
+                    <Route path="/project/:projectId/review/:id" component={ReviewPageTopMenu} />
+                </ConnectedSwitch>
             </Container>
         </Menu>
         <Container fluid id="main-content">

@@ -14,6 +14,11 @@ namespace Web.Modules.Api.Queries
     {
         private readonly ReviewIdentifier _reviewId;
 
+        public GetCommentList(int projectId, int reviewId)
+        {
+            _reviewId = new ReviewIdentifier(projectId, reviewId);
+        }
+
         public class Item
         {
             public Guid Id { get; set; }
@@ -24,34 +29,39 @@ namespace Web.Modules.Api.Queries
             public IEnumerable<Item> Children { get; set; }
         }
 
-        public GetCommentList(int projectId, int reviewId)
+        public class Handler : IQueryHandler<GetCommentList, IEnumerable<Item>>
         {
-            _reviewId = new ReviewIdentifier(projectId, reviewId);
-        }
+            private readonly ISession _session;
 
-        public async Task<IEnumerable<Item>> Execute(ISession session)
-        {
-            var comments = await (
-                from c in session.Query<Comment>()
-                orderby c.CreatedAt
-                where c.ReviewId == _reviewId
-                select c
-            ).ToListAsync();
-
-            return comments.Where(x => x.Parent == null).Select(MapComment).ToArray();
-        }
-
-        private static Item MapComment(Comment comment)
-        {
-            return new Item
+            public Handler(ISession session)
             {
-                Id = comment.Id,
-                Author = comment.User.UserName,
-                Content = comment.Content,
-                State = comment.State.ToString(),
-                CreatedAt = comment.CreatedAt,
-                Children = comment.Children.Select(MapComment)
-            };
+                _session = session;
+            }
+
+            public async Task<IEnumerable<Item>> Execute(GetCommentList query)
+            {
+                var comments = await (
+                    from c in _session.Query<Comment>()
+                    orderby c.CreatedAt
+                    where c.ReviewId == query._reviewId
+                    select c
+                ).ToListAsync();
+
+                return comments.Where(x => x.Parent == null).Select(MapComment).ToArray();
+            }
+
+            private static Item MapComment(Comment comment)
+            {
+                return new Item
+                {
+                    Id = comment.Id,
+                    Author = comment.User.UserName,
+                    Content = comment.Content,
+                    State = comment.State.ToString(),
+                    CreatedAt = comment.CreatedAt,
+                    Children = comment.Children.Select(MapComment)
+                };
+            }
         }
     }
 }

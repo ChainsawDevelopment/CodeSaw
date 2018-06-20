@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using NHibernate.Criterion;
 using NHibernate.Linq;
 using RepositoryApi;
@@ -30,13 +29,13 @@ namespace Web.Modules.Api.Commands
         {
             private readonly ISession _session;
             private readonly IRepository _api;
-            private readonly IHttpContextAccessor _httpContextAccessor;
+            private readonly ICurrentUser _currentUser;
 
-            public Handler(ISession session, IRepository api, IHttpContextAccessor httpContextAccessor)
+            public Handler(ISession session, IRepository api, ICurrentUser currentUser)
             {
                 _session = session;
                 _api = api;
-                _httpContextAccessor = httpContextAccessor;
+                _currentUser = currentUser;
             }
 
             public override async Task Handle(PublishReview command)
@@ -53,14 +52,8 @@ namespace Web.Modules.Api.Commands
                     throw new ReviewConcurrencyException(e);
                 }
 
-                var userName = _httpContextAccessor.HttpContext.User.Identity.Name;
-                var userId = await _session.Query<ReviewUser>()
-                    .Where(x => x.UserName == userName)
-                    .Select(u => u.Id)
-                    .SingleOrDefaultAsync();
-
                 var review = await _session.Query<Review>()
-                    .Where(x => x.RevisionId == revisionId && x.UserId == userId)
+                    .Where(x => x.RevisionId == revisionId && x.UserId == _currentUser.CurrentUser.Id)
                     .SingleOrDefaultAsync();
 
                 if (review == null)
@@ -69,7 +62,7 @@ namespace Web.Modules.Api.Commands
                     {
                         Id = GuidComb.Generate(),
                         RevisionId = revisionId,
-                        UserId = userId
+                        UserId =  _currentUser.CurrentUser.Id
                     };
                 }
 
@@ -83,7 +76,7 @@ namespace Web.Modules.Api.Commands
             private async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, RevisionCommits commits)
             {
                 var existingRevision = await _session.Query<ReviewRevision>()
-                    .Where(x => x.ReviewId.ProjectId == reviewId.ProjectId && x.ReviewId.ReviewId == reviewId.ReviewId)
+                    .Where(x => x.ReviewId == reviewId)
                     .Where(x => x.BaseCommit == commits.Base && x.HeadCommit == commits.Head)
                     .SingleOrDefaultAsync();
 
@@ -124,7 +117,7 @@ namespace Web.Modules.Api.Commands
             private int GetNextRevisionNumber(ReviewIdentifier reviewId)
             {
                 return 1 + (_session.QueryOver<ReviewRevision>()
-                                .Where(x => x.ReviewId.ProjectId == reviewId.ProjectId && x.ReviewId.ReviewId == reviewId.ReviewId)
+                                .Where(x => x.ReviewId == reviewId)
                                 .Select(Projections.Max<ReviewRevision>(x => x.RevisionNumber))
                                 .SingleOrDefault<int?>() ?? 0);
             }

@@ -1,7 +1,7 @@
-import Icon from 'semantic-ui-react/dist/commonjs/elements/Icon';
-import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
+import Icon from '@ui/elements/Icon';
+import Button from '@ui/elements/Button';
 import * as React from 'react';
-import { IconSizeProp, IconProps } from 'semantic-ui-react/dist/commonjs/elements/Icon/Icon';
+import { IconSizeProp, IconProps } from '@ui/elements/Icon/Icon';
 
 interface Props {
     [key: string]: any;

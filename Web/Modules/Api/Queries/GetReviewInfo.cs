@@ -14,9 +14,7 @@ namespace Web.Modules.Api.Queries
 {
     public class GetReviewInfo : IQuery<GetReviewInfo.Result>
     {
-        private readonly int _projectId;
-        private readonly int _reviewId;
-        private readonly IRepository _api;
+        private readonly ReviewIdentifier _reviewId;
 
         public class Result
         {
@@ -36,60 +34,70 @@ namespace Web.Modules.Api.Queries
             public string Head { get; set; }
         }
 
-        public GetReviewInfo(int projectId, int reviewId, IRepository api)
+        public GetReviewInfo(int projectId, int reviewId)
         {
-            _projectId = projectId;
-            _reviewId = reviewId;
-            _api = api;
+            _reviewId = new ReviewIdentifier(projectId, reviewId);
         }
 
-        public async Task<Result> Execute(ISession session)
+        public class Handler : IQueryHandler<GetReviewInfo, Result>
         {
-            var mr = await _api.MergeRequest(_projectId, _reviewId);
+            private readonly IRepository _api;
+            private readonly ISession _session;
 
-            var pastRevisions = (
-                from r in session.Query<ReviewRevision>()
-                where r.ReviewId.ProjectId == _projectId && r.ReviewId.ReviewId == _reviewId
-                orderby r.RevisionNumber
-                select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
-            ).ToArray();
-
-            var lastRevisionHead = pastRevisions.LastOrDefault()?.Head;
-
-            var hasUnreviewedChanges = lastRevisionHead != mr.HeadCommit;
-
-            Review review = null;
-            ReviewRevision revision = null;
-            ReviewUser user = null;
-            PathPair file = null;
-
-            var reviewSummary = session.QueryOver(() => review)
-                .JoinEntityAlias(() => user, () => user.Id == review.UserId)
-                .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
-                .Where(() => revision.ReviewId.ProjectId == _projectId && revision.ReviewId.ReviewId == _reviewId)
-                .JoinAlias(() => review.ReviewedFiles, () => file)
-                .OrderBy(() => file.NewPath).Asc
-                .ThenBy(() => revision.RevisionNumber).Asc
-                .SelectList(l => l
-                    .Select(() => revision.RevisionNumber)
-                    .Select(() => file.NewPath)
-                    .Select(() => user.UserName)
-                    .Select(() => review.UserId)
-                )
-                .TransformUsing(new ReviewSummaryTransformer())
-                .List<object>();
-
-
-            return new Result
+            public Handler(IRepository api, ISession session)
             {
-                ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
-                Title = mr.Title,
-                PastRevisions = pastRevisions,
-                HasProvisionalRevision = hasUnreviewedChanges,
-                HeadCommit = mr.HeadCommit,
-                BaseCommit = mr.BaseCommit,
-                ReviewSummary = reviewSummary
-            };
+                _api = api;
+                _session = session;
+            }
+
+            public async Task<Result> Execute(GetReviewInfo query)
+            {
+                var mr = await _api.MergeRequest(query._reviewId.ProjectId, query._reviewId.ReviewId);
+
+                var pastRevisions = (
+                    from r in _session.Query<ReviewRevision>()
+                    where r.ReviewId == query._reviewId
+                    orderby r.RevisionNumber
+                    select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
+                ).ToArray();
+
+                var lastRevisionHead = pastRevisions.LastOrDefault()?.Head;
+
+                var hasUnreviewedChanges = lastRevisionHead != mr.HeadCommit;
+
+                Review review = null;
+                ReviewRevision revision = null;
+                ReviewUser user = null;
+                PathPair file = null;
+
+                var reviewSummary = _session.QueryOver(() => review)
+                    .JoinEntityAlias(() => user, () => user.Id == review.UserId)
+                    .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
+                    .Where(() => revision.ReviewId == query._reviewId)
+                    .JoinAlias(() => review.ReviewedFiles, () => file)
+                    .OrderBy(() => file.NewPath).Asc
+                    .ThenBy(() => revision.RevisionNumber).Asc
+                    .SelectList(l => l
+                        .Select(() => revision.RevisionNumber)
+                        .Select(() => file.NewPath)
+                        .Select(() => user.UserName)
+                        .Select(() => review.UserId)
+                    )
+                    .TransformUsing(new ReviewSummaryTransformer())
+                    .List<object>();
+
+
+                return new Result
+                {
+                    ReviewId = query._reviewId,
+                    Title = mr.Title,
+                    PastRevisions = pastRevisions,
+                    HasProvisionalRevision = hasUnreviewedChanges,
+                    HeadCommit = mr.HeadCommit,
+                    BaseCommit = mr.BaseCommit,
+                    ReviewSummary = reviewSummary
+                };
+            }
         }
 
         private class ReviewSummaryTransformer : IResultTransformer

@@ -11,47 +11,97 @@ using Web.Modules.Api.Model;
 
 namespace Web.Modules.Api.Queries
 {
-    public class GetFileDiff : IQuery<object>
+    public class GetFileDiff : IQuery<GetFileDiff.Result>
     {
-        private readonly RevisionId _previous;
-        private readonly RevisionId _current;
-        private readonly string _oldPath;
-        private readonly string _newPath;
-        private readonly IRepository _api;
-        private readonly ReviewIdentifier _reviewId;
+        public RevisionId Previous { get; }
+        public RevisionId Current { get; }
+        public string OldPath { get; }
+        public string NewPath { get; }
+        public ReviewIdentifier ReviewId { get; }
 
-        public GetFileDiff(int projectId, int reviewId, RevisionId previous, RevisionId current, string oldPath, string newPath, IRepository api)
+        public GetFileDiff(int projectId, int reviewId, RevisionId previous, RevisionId current, string oldPath, string newPath)
         {
-            _previous = previous;
-            _current = current;
-            _oldPath = oldPath;
-            _newPath = newPath;
-            _api = api;
-            _reviewId = new ReviewIdentifier(projectId, reviewId);
+            Previous = previous;
+            Current = current;
+            OldPath = oldPath;
+            NewPath = newPath;
+            ReviewId = new ReviewIdentifier(projectId, reviewId);
         }
 
-        public async Task<object> Execute(ISession session)
+        public class Result
         {
-            var mergeRequest = await _api.MergeRequest(_reviewId.ProjectId, _reviewId.ReviewId);
+            public ReviewDebugInfo Contents { get; set; }
+            public ReviewDebugInfo Commits { get; set; }
+            public IEnumerable<HunkInfo> Hunks { get; set; }
+        }
 
-            var commits = session.Query<ReviewRevision>().Where(x => x.ReviewId.ReviewId == _reviewId.ReviewId && x.ReviewId.ProjectId == _reviewId.ProjectId)
+        public class PatchPosition
+        {
+            public int Start { get; set; }
+            public int End { get; set; }
+            public int Length { get; set; }
+        }
+
+        public class HunkInfo
+        {
+            public PatchPosition NewPosition { get; set; }
+            public PatchPosition OldPosition { get; set; }
+            public List<LineInfo> Lines { get; set; }
+        }
+
+        public class LineInfo
+        {
+            public string Operation { get; set; }
+            public string Text { get; set; }
+            public string Classification { get; set; }
+        }
+
+        public class ReviewDebugInfo
+        {
+            public RevisionDebugInfo Review { get; set; }
+            public RevisionDebugInfo Base { get; set; }
+        }
+
+        public class RevisionDebugInfo
+        {
+            public string Previous { get; set; }
+            public string Current { get; set; }
+        }
+    }
+
+    public class GetFileDiffHandler : IQueryHandler<GetFileDiff, GetFileDiff.Result>
+    {
+        private readonly ISession _session;
+        private readonly IRepository _api;
+
+        public GetFileDiffHandler(ISession session, IRepository api)
+        {
+            _session = session;
+            _api = api;
+        }
+
+        public async Task<GetFileDiff.Result> Execute(GetFileDiff query)
+        {
+            var mergeRequest = await _api.MergeRequest(query.ReviewId.ProjectId, query.ReviewId.ReviewId);
+
+            var commits = _session.Query<ReviewRevision>().Where(x => x.ReviewId == query.ReviewId)
                 .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});
 
-            var previousCommit = ResolveCommitHash(_previous, mergeRequest, r => commits[r].Head);
-            var currentCommit = ResolveCommitHash(_current, mergeRequest, r => commits[r].Head);
+            var previousCommit = ResolveCommitHash(query.Previous, mergeRequest, r => commits[r].Head);
+            var currentCommit = ResolveCommitHash(query.Current, mergeRequest, r => commits[r].Head);
 
-            var previousBaseCommit = ResolveBaseCommitHash(_previous, mergeRequest, r => commits[r].Base);
-            var currentBaseCommit = ResolveBaseCommitHash(_current, mergeRequest, r => commits[r].Base);
+            var previousBaseCommit = ResolveBaseCommitHash(query.Previous, mergeRequest, r => commits[r].Base);
+            var currentBaseCommit = ResolveBaseCommitHash(query.Current, mergeRequest, r => commits[r].Base);
 
             var contents = (await new[]
                     {
-                        new {Commit = previousCommit, Path = _oldPath},
-                        new {Commit = currentCommit, Path = _newPath},
-                        new {Commit = previousBaseCommit, Path = _oldPath},
-                        new {Commit = currentBaseCommit, Path = _newPath}
+                        new {Commit = previousCommit, Path = query.OldPath},
+                        new {Commit = currentCommit, Path = query.NewPath},
+                        new {Commit = previousBaseCommit, Path = query.OldPath},
+                        new {Commit = currentBaseCommit, Path = query.NewPath}
                     }
                     .DistinctBy(x => x.Commit)
-                    .Select(async c => new {File = c, content = await _api.GetFileContent(_reviewId.ProjectId, c.Commit, c.Path)})
+                    .Select(async c => new {File = c, content = await _api.GetFileContent(query.ReviewId.ProjectId, c.Commit, c.Path)})
                     .WhenAll())
                 .ToDictionary(x => x.File.Commit, x => x.content);
 
@@ -68,11 +118,11 @@ namespace Web.Modules.Api.Queries
             var currentPositionToLine = new PositionToLine(contents[currentCommit]);
             var previousPositionToLine = new PositionToLine(contents[previousCommit]);
 
-            PatchPosition PatchPositionToLines(PositionToLine map, int start, int length)
+            GetFileDiff.PatchPosition PatchPositionToLines(PositionToLine map, int start, int length)
             {
                 var startLine = map.GetLineinPosition(start);
-                var endLine = map.GetLineinPosition(start +length);
-                return new PatchPosition
+                var endLine = map.GetLineinPosition(start + length);
+                return new GetFileDiff.PatchPosition
                 {
                     Start = startLine,
                     End = endLine,
@@ -80,7 +130,7 @@ namespace Web.Modules.Api.Queries
                 };
             }
 
-            IEnumerable<LineInfo> DiffToHunkLines(DiffClassification classification, Patch patch)
+            IEnumerable<GetFileDiff.LineInfo> DiffToHunkLines(DiffClassification classification, Patch patch)
             {
                 int index = 0;
                 foreach (var item in patch.Diffs)
@@ -96,7 +146,7 @@ namespace Web.Modules.Api.Queries
 
                     foreach (var line in lines)
                     {
-                        yield return new LineInfo
+                        yield return new GetFileDiff.LineInfo
                         {
                             Classification = classification.ToString(),
                             Operation = item.Operation.ToString(),
@@ -113,7 +163,7 @@ namespace Web.Modules.Api.Queries
                 FourWayDiff.ExpandPatchToFullLines(contents[currentCommit], patch.Patch);
             }
 
-            var hunks = classifiedPatches.Select(patch => new HunkInfo
+            var hunks = classifiedPatches.Select(patch => new GetFileDiff.HunkInfo
             {
                 NewPosition = PatchPositionToLines(currentPositionToLine, patch.Patch.Start2, patch.Patch.Length2),
                 OldPosition = PatchPositionToLines(previousPositionToLine, patch.Patch.Start1, patch.Patch.Length1),
@@ -122,38 +172,37 @@ namespace Web.Modules.Api.Queries
 
             hunks = MergeAdjacentHunks(hunks);
 
-            return new
+            return new GetFileDiff.Result
             {
-                commits = new
+                Commits = new GetFileDiff.ReviewDebugInfo
                 {
-                    review = new
+                    Review = new  GetFileDiff.RevisionDebugInfo
                     {
-                        prevous = previousCommit,
-                        current = currentCommit
+                        Previous = previousCommit,
+                        Current = currentCommit
                     },
-                    @base = new
+                    Base = new GetFileDiff.RevisionDebugInfo
                     {
-                        prevous = previousBaseCommit,
-                        current = currentBaseCommit
+                        Previous =  previousBaseCommit,
+                        Current = currentBaseCommit
                     }
                 },
 
-                contents = new
+                Contents = new GetFileDiff.ReviewDebugInfo
                 {
-                    review = new
+                    Review = new GetFileDiff.RevisionDebugInfo
                     {
-                        prevous = contents[previousCommit],
-                        current = contents[currentCommit]
+                        Previous= contents[previousCommit],
+                        Current = contents[currentCommit]
                     },
-                    @base = new
+                    Base = new GetFileDiff.RevisionDebugInfo
                     {
-                        prevous = contents[previousBaseCommit],
-                        current = contents[currentBaseCommit]
+                        Previous= contents[previousBaseCommit],
+                        Current = contents[currentBaseCommit]
                     }
                 },
-                pos = currentPositionToLine,
 
-                hunks = hunks
+                Hunks = hunks
             };
         }
 
@@ -168,9 +217,9 @@ namespace Web.Modules.Api.Queries
             }
         }
 
-        private IEnumerable<HunkInfo> MergeAdjacentHunks(IEnumerable<HunkInfo> hunks)
+        private IEnumerable<GetFileDiff.HunkInfo> MergeAdjacentHunks(IEnumerable<GetFileDiff.HunkInfo> hunks)
         {
-            var result = new List<HunkInfo>();
+            var result = new List<GetFileDiff.HunkInfo>();
 
             foreach (var hunk in hunks)
             {
@@ -217,20 +266,6 @@ namespace Web.Modules.Api.Queries
             return result;
         }
 
-        public class PatchPosition
-        {
-            public int Start { get; set; }
-            public int End { get; set; }
-            public int Length { get; set; }
-        }
-
-        public class HunkInfo
-        {
-            public PatchPosition NewPosition { get; set; }
-            public PatchPosition OldPosition { get; set; }
-            public List<LineInfo> Lines { get; set; }
-        }
-
         private string ResolveCommitHash(RevisionId revisionId, MergeRequest mergeRequest, Func<int, string> selectCommit)
         {
             return revisionId.Resolve(
@@ -247,13 +282,6 @@ namespace Web.Modules.Api.Queries
                 s =>  selectCommit(s.Revision),
                 h => h.CommitHash == mergeRequest.HeadCommit ? mergeRequest.BaseCommit : h.CommitHash
             );
-        }
-
-        public class LineInfo
-        {
-            public string Operation { get; set; }
-            public string Text { get; set; }
-            public string Classification { get; set; }
         }
     }
 }

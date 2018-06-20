@@ -1,7 +1,5 @@
 import * as React from "react";
-import List from 'semantic-ui-react/dist/commonjs/elements/List';
-import Icon from 'semantic-ui-react/dist/commonjs/elements/Icon';
-import { SemanticCOLORS, SemanticICONS } from "semantic-ui-react/dist/commonjs";
+import List from '@ui/elements/List';
 import ReviewMark from './reviewMark';
 import * as PathPairs from "../../pathPair";
 
