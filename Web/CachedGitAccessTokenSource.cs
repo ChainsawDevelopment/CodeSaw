@@ -3,6 +3,7 @@ using GitLab;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Web.Auth;
+using Web.Modules.Api.Commands;
 using Web.Modules.Db;
 
 namespace Web
@@ -13,15 +14,15 @@ namespace Web
 
         public string AccessToken => _accessTokenLazy.Value;
 
-        public CachedGitAccessTokenSource(UserManager<ReviewUser> userManager, ICurrentUser currentUser)
+        public CachedGitAccessTokenSource(UserManager<ReviewUser> userManager, [CurrentUser]ReviewUser currentUser)
         {
             Console.WriteLine("New CachedGitAccessTokenSource instance");
 
             _accessTokenLazy = new Lazy<string>(() =>
             {
-                Console.WriteLine($"Retrieving Access Token for user {currentUser.CurrentUser.UserName}");
+                Console.WriteLine($"Retrieving Access Token for user {currentUser.UserName}");
 
-                return currentUser.CurrentUser?.Token;
+                return currentUser?.Token;
             });
         }
     }

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Autofac.Features.AttributeFilters;
 using GitLab;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -82,7 +83,7 @@ namespace Web
             builder.Register(BuildGitLabApi).As<IRepository>().InstancePerRequest(); ;
 
             builder.RegisterType<SignInManager<ReviewUser>>().AsSelf();
-            builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().InstancePerRequest();
+            builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().InstancePerRequest().WithAttributeFiltering();
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
             
             _container = builder.Build();
