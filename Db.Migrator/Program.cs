@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Initialization;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 
 namespace Db.Migrator
 {
@@ -13,7 +14,8 @@ namespace Db.Migrator
         static void Main(string[] args)
         {
             var config = new ConfigurationBuilder()
-                .AddJsonFile(args[1])
+                .AddJsonFile(args[1], optional: true)
+                .AddCommandLine(args.Skip(2).ToArray())
                 .Build();
 
             var serviceProvider = CreateServices(config);

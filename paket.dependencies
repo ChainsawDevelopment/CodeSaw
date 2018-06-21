@@ -35,3 +35,4 @@ group FakeBuild
     nuget Fake.Core.Target prerelease
     nuget Fake.DotNet.Cli prerelease
     nuget Fake.JavaScript.Yarn prerelease
+    nuget Fake.Runtime prerelease
