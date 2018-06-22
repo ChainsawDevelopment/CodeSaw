@@ -67,8 +67,11 @@ namespace Web.Modules.Api.Commands
                 }
 
                 review.ReviewedAt = DateTimeOffset.Now;
-                
-                review.ReviewFiles(command.ReviewedFiles);
+
+                var allFiles = await _api.GetDiff(command.ProjectId, command.Revision.Base, command.Revision.Head)
+                    .ContinueWith(t => t.Result.Select(x => x.Path).ToList());
+
+                review.ReviewFiles(allFiles, command.ReviewedFiles);
 
                 await _session.SaveAsync(review);
             }
