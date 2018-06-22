@@ -70,18 +70,18 @@ namespace Web.Modules.Api.Queries
                 Review review = null;
                 ReviewRevision revision = null;
                 ReviewUser user = null;
-                PathPair file = null;
+                FileReview file = null;//default(KeyValuePair<PathPair, FileReview>);
 
                 var reviewSummary = _session.QueryOver(() => review)
                     .JoinEntityAlias(() => user, () => user.Id == review.UserId)
                     .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
                     .Where(() => revision.ReviewId == query._reviewId)
-                    .JoinAlias(() => review.ReviewedFiles, () => file)
-                    .OrderBy(() => file.NewPath).Asc
+                    .Left.JoinQueryOver(() => review.Files, () => file, () => file.Status == FileReviewStatus.Reviewed)
+                    .OrderBy(() => file.File.NewPath).Asc
                     .ThenBy(() => revision.RevisionNumber).Asc
                     .SelectList(l => l
                         .Select(() => revision.RevisionNumber)
-                        .Select(() => file.NewPath)
+                        .Select(() => file.File.NewPath)
                         .Select(() => user.UserName)
                         .Select(() => review.UserId)
                     )

@@ -96,7 +96,7 @@ namespace Web.Modules.Api.Queries
             private object FilesReviewedByUser(ISession session, string head, int userId, ReviewIdentifier reviewId)
             {
                 Review review = null;
-                PathPair file = null;
+                FileReview file = null;
                 PathPair dto = null;
 
                 var revisionId = QueryOver.Of<ReviewRevision>()
@@ -107,10 +107,10 @@ namespace Web.Modules.Api.Queries
                 var files = session.QueryOver(() => review)
                     .WithSubquery.WhereProperty(() => review.RevisionId).In(revisionId)
                     .And(() => review.UserId == userId)
-                    .Inner.JoinAlias(() => review.ReviewedFiles, () => file)
+                    .Inner.JoinAlias(() => review.Files, () => file)
                     .SelectList(r => r
-                        .Select(() => file.OldPath).WithAlias(() => dto.OldPath)
-                        .Select(() => file.NewPath).WithAlias(() => dto.NewPath)
+                        .Select(() => file.File.OldPath).WithAlias(() => dto.OldPath)
+                        .Select(() => file.File.NewPath).WithAlias(() => dto.NewPath)
                     )
                     .TransformUsing(Transformers.AliasToBean<PathPair>())
                     .List<PathPair>();
