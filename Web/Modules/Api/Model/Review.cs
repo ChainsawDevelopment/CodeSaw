@@ -17,21 +17,65 @@ namespace Web.Modules.Api.Model
 
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
 
-        public virtual ISet<PathPair> ReviewedFiles { get; set; }
+        public virtual IList<FileReview> Files { get; set; }
 
         public Review()
         {
-            ReviewedFiles = new HashSet<PathPair>();
+            Files = new List<FileReview>();
         }
 
-        public virtual void ReviewFiles(IReadOnlyList<PathPair> files)
+        public virtual void ReviewFiles(IReadOnlyList<PathPair> allFiles, IReadOnlyList<PathPair> reviewedFiles)
         {
-            var actualFiles = new HashSet<PathPair>(files);
+            var unreviewed = allFiles.Except(reviewedFiles);
 
-            ReviewedFiles.IntersectWith(actualFiles);
+            foreach (var file in reviewedFiles)
+            {
+                var status = Files.SingleOrDefault(x => x.File == file);
 
-            ReviewedFiles.UnionWith(actualFiles);
+                if (status == null)
+                {
+                    status = new FileReview(file);
+                    Files.Add(status);
+                }
+
+                status.Status = FileReviewStatus.Reviewed;
+            }
+
+            foreach (var file in unreviewed)
+            {
+                var status = Files.SingleOrDefault(x => x.File == file);
+
+                if (status == null)
+                {
+                    status = new FileReview(file);
+                    Files.Add(status);
+                }
+
+                status.Status = FileReviewStatus.Unreviewed;
+            }
         }
+    }
+
+    public class FileReview
+    {
+        public PathPair File { get; private set; }
+        public FileReviewStatus Status { get; set; }
+
+        public FileReview(PathPair file)
+        {
+            File = file;
+        }
+
+        protected FileReview()
+        {
+            
+        }
+    }
+
+    public enum FileReviewStatus
+    {
+        Reviewed = 1,
+        Unreviewed = 2
     }
 
     public class ReviewConfig : ClassMapping<Review>
@@ -39,28 +83,27 @@ namespace Web.Modules.Api.Model
         public ReviewConfig()
         {
             Id(x => x.Id, id => id.Generator(Generators.Assigned));
-            Version(x => x.LastUpdatedAt, v =>
-            {
-                v.Type(new DateTimeOffsetType());
-            });
+            Version(x => x.LastUpdatedAt, v => { v.Type(new DateTimeOffsetType()); });
 
             Property(x => x.UserId);
             Property(x => x.RevisionId);
             Property(x => x.ReviewedAt);
 
-            Set(x => x.ReviewedFiles,
-                coll =>
-                {
-                    coll.Table("ReviewedFiles");
-                    coll.Lazy(CollectionLazy.Lazy);
-                    coll.Cascade(Cascade.DeleteOrphans);
-                    coll.Key(key => { key.Column("ReviewId"); });
-                },
-                el =>
-                {
-                    
-                }
-            );
+
+            Bag(x => x.Files, coll =>
+            {
+                coll.Table("ReviewFiles");
+                coll.Key(key => key.Column("ReviewId"));
+            });
+        }
+    }
+
+    public class FileReviewConfig : ComponentMapping<FileReview>
+    {
+        public FileReviewConfig()
+        {
+            Component(x => x.File);
+            Property(x => x.Status);
         }
     }
 
