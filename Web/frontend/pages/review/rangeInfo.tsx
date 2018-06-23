@@ -11,16 +11,29 @@ import { FileInfo } from "./state";
 import ReviewMark from "./reviewMark";
 import { PathPair, emptyPathPair } from "../../pathPair";
 import Icon from '@ui/elements/Icon';
+import scrollToComponent from 'react-scroll-to-component';
 
-const FileView = (props: { file: FileInfo }) => {
-    const { file } = props;
-    
-    return (
-        <>
-            <FileSummary file={file} />
-            {file.diff ? <DiffView hunks={file.diff.hunks} /> : null}
-        </>
-    );
+interface FileViewProps {
+    file: FileInfo
+}
+
+class FileView extends React.Component<FileViewProps> {
+    private renderedRef: HTMLSpanElement;
+
+    render(): JSX.Element {
+        const { file } = this.props;
+
+        return (
+            <span ref={span => this.renderedRef = span}>
+                <FileSummary file={file} />
+                {file.diff ? <DiffView hunks={file.diff.hunks} /> : null}
+            </span>
+        );
+    }
+
+    componentDidUpdate() {
+        scrollToComponent(this.renderedRef, {offset: -75, align: 'top', duration: 100, ease:'linear'});
+    }
 }
 
 const NoFileView = () => {
@@ -68,20 +81,10 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         const menuItems = [];
 
         if (selectedFile) {
-            // menuItems.push(<Menu.Item
-            //     key="file-path"
-            //     className="file-path"
-            //     content={selectedFile.path.newPath} />
-            // );
-
             menuItems.push(<Menu.Item key="review-mark">
-                <span className="file-path">{selectedFile.path.newPath}</span>
                 <ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>
                 <Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>
-            </Menu.Item>);
-
-            menuItems.push(<Menu.Item key="refresh-diff">
-                
+                <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
         }
 
