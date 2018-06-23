@@ -25,13 +25,13 @@ namespace GitLab
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
             _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");
 
-            //_client.ConfigureWebRequest(wr =>
-            //{
-            //    wr.Proxy = new WebProxy("127.0.0.1", 8888)
-            //    {
-            //        BypassProxyOnLocal = false
-            //    };
-            //});
+            _client.ConfigureWebRequest(wr =>
+            {
+                wr.Proxy = new WebProxy("127.0.0.1", 8888)
+                {
+                    BypassProxyOnLocal = false
+                };
+            });
 
             var serializer = new JsonSerializer();
             serializer.ContractResolver = new GitLabContractResolver();
@@ -153,6 +153,19 @@ namespace GitLab
             {
                 throw new GitLabApiFailedException(updateDescriptionRequest, restResponse);
             }
+        }
+
+        public async Task SetCommitStatus(int projectId, string commit, CommitStatus status)
+        {
+            await new RestRequest($"/projects/{projectId}/statuses/{commit}", Method.POST)
+                .AddJsonBody(new
+                {
+                    state = status.State.ToString().ToLower(),
+                    name = status.Name,
+                    target_url = status.TargetUrl,
+                    description = status.Description
+                })
+                .Execute(_client);
         }
 
         private static bool RrefAlreadyExists(IRestResponse createTagResponse)
