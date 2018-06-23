@@ -212,7 +212,7 @@ Target.create "DeployArtifacts" (ignore)
 open Fake.Core.TargetOperators
 
 "_DotNetRestore" ==> "_BackendBuild" ==> "Build"
-"_YarnInstall" ==> "_FrontendBuild" ==> "Build"
+"_YarnInstall" ==> "_FrontendBuild" ==> "Build" ==> "Package"
 
 "_CleanupNetworkShares" 
     ==> "_SetupNetworkShare" 
