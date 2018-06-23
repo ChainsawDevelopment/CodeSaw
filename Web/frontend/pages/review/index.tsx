@@ -81,20 +81,22 @@ const reviewPage = (props: Props): JSX.Element => {
 
             <h1>Review {props.currentReview.title}</h1>
 
+            <MergeApprover 
+                reviewId = {props.reviewId}
+                mergePullRequest={props.mergePullRequest}
+            />
+
             <VersionSelector
                 available={['base', ...pastRevisions, ...provisional]}
                 hasProvisonal={props.currentReview.hasProvisionalRevision}
                 range={props.currentRange}
                 onSelectRange={props.selectRevisionRange}
             />
-            <MergeApprover 
-                reviewId = {props.reviewId}
-                mergePullRequest={props.mergePullRequest}
-            />
 
-            <ReviewSummary />
+            <ReviewSummary 
+                onSelectFileForView={props.selectFileForView} />
 
-             <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
+            <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
 
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}

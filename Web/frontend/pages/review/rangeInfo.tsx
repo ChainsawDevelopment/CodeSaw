@@ -10,7 +10,7 @@ import ChangedFileTreePopup from "./fileTreePopup";
 import { FileInfo } from "./state";
 import ReviewMark from "./reviewMark";
 import { PathPair, emptyPathPair } from "../../pathPair";
-
+import Icon from '@ui/elements/Icon';
 
 const FileView = (props: { file: FileInfo }) => {
     const { file } = props;
@@ -68,17 +68,20 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         const menuItems = [];
 
         if (selectedFile) {
+            // menuItems.push(<Menu.Item
+            //     key="file-path"
+            //     className="file-path"
+            //     content={selectedFile.path.newPath} />
+            // );
+
             menuItems.push(<Menu.Item key="review-mark">
+                <span className="file-path">{selectedFile.path.newPath}</span>
                 <ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>
+                <Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>
             </Menu.Item>);
 
-            menuItems.push(<Menu.Item
-                key="file-path"
-                className="file-path"
-                content={selectedFile.path.newPath} />
-            );
             menuItems.push(<Menu.Item key="refresh-diff">
-                <Button onClick={() => onSelectFileForView(selectedFile.path)}>Refresh diff</Button>
+                
             </Menu.Item>);
         }
 
@@ -87,15 +90,18 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 <Segment>
                     <Sticky context={this.state.stickyContainer} id="file-sticky">
                         <Menu secondary id="file-menu">
-                            <Menu.Item key="file-selector">
-                                <ChangedFileTreePopup
-                                    paths={info.changes.map(i => i.path)}
-                                    selected={selectedFile ? selectedFile.path : emptyPathPair}
-                                    reviewedFiles={this.props.reviewedFiles}
-                                    onSelect={onSelectFileForView}
-                                />
-                            </Menu.Item>
                             {menuItems}
+                            <Menu.Menu position='right'>
+                                
+                                <Menu.Item key="file-selector">
+                                    <ChangedFileTreePopup
+                                        paths={info.changes.map(i => i.path)}
+                                        selected={selectedFile ? selectedFile.path : emptyPathPair}
+                                        reviewedFiles={this.props.reviewedFiles}
+                                        onSelect={onSelectFileForView}
+                                    />
+                                </Menu.Item>
+                            </Menu.Menu>
                         </Menu>
                     </Sticky>
                     <div>
