@@ -35,6 +35,9 @@ import * as PathPairs from "../../pathPair";
 import ReviewSummary from './reviewSummary';
 import CommentsView from './commentsView';
 
+import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
+import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+
 interface OwnProps {
     reviewId: ReviewId;
 }
@@ -48,6 +51,7 @@ interface DispatchProps {
     loadComments(reviewId: ReviewId): void;
     addComment(reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string);
     resolveComment(reviewId: ReviewId, commentId: string);
+    publishReview(): void;
 }
 
 interface StateProps {
@@ -77,24 +81,37 @@ const reviewPage = (props: Props): JSX.Element => {
 
     return (
         <div id="review-page">
-            <OnMount onMount={load} />
+            <Grid centered columns={2}>
+                <Grid.Row>
+                    <Grid.Column>
+        
+                    <OnMount onMount={load} />
 
-            <h1>Review {props.currentReview.title}</h1>
+                    <h1>Review {props.currentReview.title}</h1>
 
-            <VersionSelector
-                available={['base', ...pastRevisions, ...provisional]}
-                hasProvisonal={props.currentReview.hasProvisionalRevision}
-                range={props.currentRange}
-                onSelectRange={props.selectRevisionRange}
-            />
-            <MergeApprover 
-                reviewId = {props.reviewId}
-                mergePullRequest={props.mergePullRequest}
-            />
+                    <MergeApprover
+                        reviewId={props.reviewId}
+                        mergePullRequest={props.mergePullRequest}
+                    />
+                    <Divider />
+                    
+                    <VersionSelector
+                        available={['base', ...pastRevisions, ...provisional]}
+                        hasProvisonal={props.currentReview.hasProvisionalRevision}
+                        range={props.currentRange}
+                        onSelectRange={props.selectRevisionRange}
+                    />
 
-            <ReviewSummary />
+                    <ReviewSummary 
+                        onSelectFileForView={props.selectFileForView} />
 
-             <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
+                    <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
+
+                    </Grid.Column>
+                </Grid.Row>
+            </Grid>
+
+            <Divider />
 
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
@@ -102,6 +119,7 @@ const reviewPage = (props: Props): JSX.Element => {
                 onSelectFileForView={props.selectFileForView}
                 reviewFile={props.reviewFile}
                 reviewedFiles={props.reviewedFiles}
+                publishReview={props.publishReview}
             />) : null}
         </div>
     );
@@ -127,7 +145,8 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     },
     loadComments: (reviewId: ReviewId) => dispatch(loadComments({ reviewId })),
     addComment: (reviewId, content, needsResolution, parentId) => dispatch(addComment({ reviewId, content, needsResolution, parentId })),
-    resolveComment: (reviewId, commentId) => dispatch(resolveComment({ reviewId, commentId }))
+    resolveComment: (reviewId, commentId) => dispatch(resolveComment({ reviewId, commentId })),
+    publishReview: () => dispatch(publishReview({})),
 });
 
 export default connect(

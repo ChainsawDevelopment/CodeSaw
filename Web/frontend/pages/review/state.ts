@@ -128,8 +128,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         return {
             ...state,
             selectedFile: {
+                ...state.selectedFile,
                 path: action.payload.path,
-                diff: null,
                 treeEntry: treeEntry
             }
         };

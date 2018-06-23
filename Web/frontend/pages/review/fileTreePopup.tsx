@@ -57,7 +57,7 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
         return (
             <Popup
                 open={this.state.opened}
-                trigger={<Button color='green' content='Files' />}
+                trigger={<Button secondary content='Choose File...' />}
                 content={filesSelector}
                 onOpen={this._onOpen}
                 onClose={this._onClose}

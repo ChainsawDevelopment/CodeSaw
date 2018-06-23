@@ -7,6 +7,7 @@ import List from '@ui/elements/List';
 import Popup from '@ui/modules/Popup';
 import * as PathPairs from '../../pathPair';
 import { ReviewInfo } from '../../api/reviewer';
+import { SelectFileForViewHandler } from './rangeInfo';
 
 import "./reviewSummary.less";
 
@@ -34,7 +35,7 @@ const FileRevision = (props: {reviewers: string[]}) => {
     )
 };
 
-const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary: ReviewInfo }) => {
+const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary: ReviewInfo, onFileClick }) => {
     const fileStatus = props.summary.reviewSummary.find(x => x.file == props.file.newPath) || {revisions: {}};
     
     const revisionStatuses = props.revisions.map(r => 
@@ -45,10 +46,16 @@ const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary
 
     return (
         <Table.Row className='file-summary-row'>
-            <Table.Cell textAlign='left' className='file-path'>{props.file.newPath}</Table.Cell>
+            <Table.Cell textAlign='left' className='file-path'>
+                <a href="#" onClick={props.onFileClick}>{props.file.newPath}</a>
+            </Table.Cell>
             {revisionStatuses}
         </Table.Row>
     );
+}
+
+interface OwnProps {
+    onSelectFileForView: SelectFileForViewHandler;
 }
 
 interface StateProps {
@@ -57,13 +64,19 @@ interface StateProps {
     summary: ReviewInfo;
 }
 
-type Props = StateProps;
+type Props = StateProps & OwnProps;
 
 
 const reviewSummary = (props: Props) => {
     const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>)
 
-    const rows = props.files.map(f => <FileRow key={f.newPath} file={f} revisions={props.revisions} summary={props.summary} />);
+    const rows = props.files.map(f => <FileRow 
+        key={f.newPath} 
+        file={f} 
+        revisions={props.revisions} 
+        summary={props.summary} 
+        onFileClick={() => props.onSelectFileForView(f)}
+        />);
 
     return (
         <div className='review-summary'>

@@ -10,17 +10,30 @@ import ChangedFileTreePopup from "./fileTreePopup";
 import { FileInfo } from "./state";
 import ReviewMark from "./reviewMark";
 import { PathPair, emptyPathPair } from "../../pathPair";
+import Icon from '@ui/elements/Icon';
+import scrollToComponent from 'react-scroll-to-component';
 
+interface FileViewProps {
+    file: FileInfo
+}
 
-const FileView = (props: { file: FileInfo }) => {
-    const { file } = props;
-    
-    return (
-        <>
-            <FileSummary file={file} />
-            {file.diff ? <DiffView hunks={file.diff.hunks} /> : null}
-        </>
-    );
+class FileView extends React.Component<FileViewProps> {
+    private renderedRef: HTMLSpanElement;
+
+    render(): JSX.Element {
+        const { file } = this.props;
+
+        return (
+            <span ref={span => this.renderedRef = span}>
+                <FileSummary file={file} />
+                {file.diff ? <DiffView hunks={file.diff.hunks} /> : null}
+            </span>
+        );
+    }
+
+    componentDidUpdate() {
+        scrollToComponent(this.renderedRef, {offset: -75, align: 'top', duration: 100, ease:'linear'});
+    }
 }
 
 const NoFileView = () => {
@@ -42,6 +55,7 @@ export interface Props {
     onSelectFileForView: SelectFileForViewHandler;
     reviewFile: ReviewFileActions;
     reviewedFiles: PathPair[];
+    publishReview(): void;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -70,15 +84,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         if (selectedFile) {
             menuItems.push(<Menu.Item key="review-mark">
                 <ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>
-            </Menu.Item>);
-
-            menuItems.push(<Menu.Item
-                key="file-path"
-                className="file-path"
-                content={selectedFile.path.newPath} />
-            );
-            menuItems.push(<Menu.Item key="refresh-diff">
-                <Button onClick={() => onSelectFileForView(selectedFile.path)}>Refresh diff</Button>
+                <Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>
+                <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
         }
 
@@ -87,15 +94,19 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 <Segment>
                     <Sticky context={this.state.stickyContainer} id="file-sticky">
                         <Menu secondary id="file-menu">
-                            <Menu.Item key="file-selector">
-                                <ChangedFileTreePopup
-                                    paths={info.changes.map(i => i.path)}
-                                    selected={selectedFile ? selectedFile.path : emptyPathPair}
-                                    reviewedFiles={this.props.reviewedFiles}
-                                    onSelect={onSelectFileForView}
-                                />
-                            </Menu.Item>
                             {menuItems}
+                            <Menu.Menu position='right'>
+                                <Menu.Item>
+                                    <Button positive onClick={this.props.publishReview}>Publish Changes</Button>
+                                    &nbsp;
+                                    <ChangedFileTreePopup
+                                        paths={info.changes.map(i => i.path)}
+                                        selected={selectedFile ? selectedFile.path : emptyPathPair}
+                                        reviewedFiles={this.props.reviewedFiles}
+                                        onSelect={onSelectFileForView}
+                                    />
+                                </Menu.Item>
+                            </Menu.Menu>
                         </Menu>
                     </Sticky>
                     <div>

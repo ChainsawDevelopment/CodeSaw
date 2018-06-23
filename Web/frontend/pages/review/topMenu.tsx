@@ -26,12 +26,6 @@ const topMenu = (props: Props) => {
                 onClick={createLink}>
                 Create link in GitLab
             </Menu.Item>
-            <Menu.Item
-                className='page-menu publish'
-                
-                onClick={props.publishReview}>
-                Publish
-            </Menu.Item>
         </>
     );
 }
