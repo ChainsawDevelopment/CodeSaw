@@ -55,6 +55,7 @@ export interface Props {
     onSelectFileForView: SelectFileForViewHandler;
     reviewFile: ReviewFileActions;
     reviewedFiles: PathPair[];
+    publishReview(): void;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -95,8 +96,9 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                         <Menu secondary id="file-menu">
                             {menuItems}
                             <Menu.Menu position='right'>
-                                
-                                <Menu.Item key="file-selector">
+                                <Menu.Item>
+                                    <Button positive onClick={this.props.publishReview}>Publish Changes</Button>
+                                    &nbsp;
                                     <ChangedFileTreePopup
                                         paths={info.changes.map(i => i.path)}
                                         selected={selectedFile ? selectedFile.path : emptyPathPair}

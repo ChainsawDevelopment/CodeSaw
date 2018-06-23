@@ -51,6 +51,7 @@ interface DispatchProps {
     loadComments(reviewId: ReviewId): void;
     addComment(reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string);
     resolveComment(reviewId: ReviewId, commentId: string);
+    publishReview(): void;
 }
 
 interface StateProps {
@@ -118,6 +119,7 @@ const reviewPage = (props: Props): JSX.Element => {
                 onSelectFileForView={props.selectFileForView}
                 reviewFile={props.reviewFile}
                 reviewedFiles={props.reviewedFiles}
+                publishReview={props.publishReview}
             />) : null}
         </div>
     );
@@ -143,7 +145,8 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     },
     loadComments: (reviewId: ReviewId) => dispatch(loadComments({ reviewId })),
     addComment: (reviewId, content, needsResolution, parentId) => dispatch(addComment({ reviewId, content, needsResolution, parentId })),
-    resolveComment: (reviewId, commentId) => dispatch(resolveComment({ reviewId, commentId }))
+    resolveComment: (reviewId, commentId) => dispatch(resolveComment({ reviewId, commentId })),
+    publishReview: () => dispatch(publishReview({})),
 });
 
 export default connect(
