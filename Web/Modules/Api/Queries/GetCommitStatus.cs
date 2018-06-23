@@ -51,10 +51,15 @@ namespace Web.Modules.Api.Queries
                     items.Add("provisional revision for new changes");
                 }
 
-                if (summary.UnresolvedDiscussions>0)
+                if (summary.UnresolvedDiscussions > 0)
                 {
                     reviewPassed = false;
                     items.Add($"{summary.UnresolvedDiscussions} unresolved discussion(s)");
+                }
+
+                if (summary.ResolvedDiscussions > 0)
+                {
+                    items.Add($"{summary.ResolvedDiscussions} resolved discussion(s)");
                 }
 
                 return new CommitStatus

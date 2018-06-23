@@ -40,7 +40,11 @@ namespace Web.Cqrs
         {
             using (var session = _sessionFactory.OpenSession())
             {
-                Action<ContainerBuilder> enhanceScope = b => { b.RegisterInstance(session); };
+                Action<ContainerBuilder> enhanceScope = b =>
+                {
+                    b.RegisterInstance(session);
+                    b.RegisterType<EventAccumulator>().As<IEventBus>().AsSelf().SingleInstance();
+                };
 
                 using (var scope = _lifetimeScope.BeginLifetimeScope(enhanceScope))
                 using (var tx = session.BeginTransaction())
@@ -49,6 +53,10 @@ namespace Web.Cqrs
                     
                     await commandHandler.Handle(command);
                     
+                    await session.FlushAsync();
+
+                    await scope.Resolve<EventAccumulator>().Flush();
+
                     await tx.CommitAsync();
                 }
             }

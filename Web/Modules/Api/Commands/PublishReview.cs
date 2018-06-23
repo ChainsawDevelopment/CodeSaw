@@ -31,12 +31,14 @@ namespace Web.Modules.Api.Commands
             private readonly ISession _session;
             private readonly IRepository _api;
             private readonly ReviewUser _user;
+            private readonly IEventBus _eventBus;
 
-            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user)
+            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus)
             {
                 _session = session;
                 _api = api;
                 _user = user;
+                _eventBus = eventBus;
             }
 
             public override async Task Handle(PublishReview command)
@@ -75,6 +77,8 @@ namespace Web.Modules.Api.Commands
                 review.ReviewFiles(allFiles, command.ReviewedFiles);
 
                 await _session.SaveAsync(review);
+
+                _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }
 
             private async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, RevisionCommits commits)
