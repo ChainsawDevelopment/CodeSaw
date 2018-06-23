@@ -89,8 +89,8 @@ const reviewPage = (props: Props): JSX.Element => {
 
                     <h1>Review {props.currentReview.title}</h1>
 
-                    <MergeApprover 
-                        reviewId = {props.reviewId}
+                    <MergeApprover
+                        reviewId={props.reviewId}
                         mergePullRequest={props.mergePullRequest}
                     />
                     <Divider />
