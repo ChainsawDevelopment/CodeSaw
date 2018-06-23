@@ -1,3 +1,4 @@
+using System;
 using Nancy;
 using Nancy.ModelBinding;
 using RepositoryApi;
@@ -11,7 +12,7 @@ namespace Web.Modules.Api
     {
         protected ReviewIdentifier ReviewId => new ReviewIdentifier(Context.Parameters.projectId, Context.Parameters.reviewId);
 
-        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
+        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
         {
             Get("/comments", async _ => await query.Query(new GetCommentList(_.projectId, _.reviewId)));
 
@@ -63,7 +64,16 @@ namespace Web.Modules.Api
 
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
 
-            Get("/commit_status", async _ => await query.Query(new GetCommmitStatus(ReviewId)));
+            Get("/commit_status", async _ =>
+            {
+                var commitStatus = await query.Query(new GetCommmitStatus(ReviewId));
+
+                var mergeRequest = await api().MergeRequest(ReviewId.ProjectId, ReviewId.ReviewId);
+
+                await api().SetCommitStatus(ReviewId.ProjectId, mergeRequest.HeadCommit, commitStatus);
+
+                return commitStatus;
+            });
         }
     }
 }
