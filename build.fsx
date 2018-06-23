@@ -1,6 +1,10 @@
 #r "paket: groupref FakeBuild //"
 #load ".fake/build.fsx/intellisense.fsx"
+#if !FAKE
+  #r "./packages/NETStandard.Library/build/netstandard2.0/ref/netstandard.dll"
+#endif
 
+open Fake.Runtime
 open Fake.Core
 open Fake.DotNet
 open Fake.IO.FileSystemOperators
@@ -8,6 +12,15 @@ open Fake.JavaScript
 open System
 
 let root = __SOURCE_DIRECTORY__
+
+let private defaultYarnFileName =
+        Process.tryFindFileOnPath "yarn"
+        |> function
+            | Some yarn when System.IO.File.Exists yarn -> yarn
+            | _ -> "./packages/Yarnpkg.js/tools/yarn.cmd"
+
+let dotNetExe = ((Environment.environVarOrDefault "DOTNETCORE_SDK_PATH" "") </> "dotnet.exe")
+let yarnExe = (Environment.environVarOrDefault "YARN_PATH" defaultYarnFileName)
 
 let isProduction = (Fake.Core.Context.forceFakeContext()).Arguments |> List.contains "--production"
 
@@ -20,13 +33,17 @@ Target.create "_BackendBuild" (fun _ ->
         {opts with
             Configuration = if isProduction then DotNet.BuildConfiguration.Release else DotNet.BuildConfiguration.Debug
         }
+        |> DotNet.Options.withDotNetCliPath dotNetExe
 
     DotNet.build buildOpts (root </> "GitReviewer.sln")
 
 )
 
 Target.create "_YarnInstall" (fun _ -> 
-    Yarn.install id
+    Yarn.install (fun o ->
+       { o with
+           YarnFilePath = yarnExe  
+       })
 )
 
 Target.create "_FrontendBuild" (fun _ -> 
@@ -42,7 +59,10 @@ Target.create "_FrontendBuild" (fun _ ->
                 yield "-d"
         ] |> Args.toWindowsCommandLine
 
-    Yarn.exec args id
+    Yarn.exec args (fun o ->
+       { o with
+           YarnFilePath = yarnExe  
+       })
 )
 
 Target.create "Build" ignore
@@ -76,6 +96,7 @@ Target.create "Package" (fun _ ->
             OutputPath = Some(root </> "artifacts" </> "web")
             Runtime = Some "win10-x64"
         } 
+        |> DotNet.Options.withDotNetCliPath dotNetExe
         |> DotNet.Options.withWorkingDirectory (root </> "Web")
 
     DotNet.publish publishOpts ("Web.csproj")
@@ -87,6 +108,7 @@ Target.create "CreateDB" (fun _ ->
             WorkingDirectory = root </> "Db.Migrator"
             CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
         } 
+        |> DotNet.Options.withDotNetCliPath dotNetExe
         |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
     
 
@@ -108,13 +130,19 @@ Target.create "UpdateDB" (fun _ ->
             WorkingDirectory = root </> "Db.Migrator"
             CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
         } 
+        |> DotNet.Options.withDotNetCliPath dotNetExe
         |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
-    
-
+ 
     let args = 
         [
             "UpdateDB"
-            root </> "Web" </> "appsettings.local.json"
+            (root </> "Web" </> "appsettings.local.json")
+            (if isProduction 
+                then "/ConnectionStrings:Store"
+                else "")  
+            (if isProduction 
+                then (Environment.environVar "DEPLOYMENT_CONNECTION_STRING")
+                else "")  
         ] |> Seq.map Process.quoteIfNeeded |> FSharp.Core.String.concat " "
 
     let r = DotNet.exec setOpts "run" args
@@ -129,6 +157,7 @@ Target.create "RedoLast" (fun _ ->
             WorkingDirectory = root </> "Db.Migrator"
             CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
         } 
+        |> DotNet.Options.withDotNetCliPath dotNetExe
         |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
     
 
@@ -144,10 +173,52 @@ Target.create "RedoLast" (fun _ ->
         failwithf "DbMigrator failed with %A" r.Errors
 )
 
+Target.create "_CleanupNetworkShares" (fun _ ->
+    ignore(Shell.Exec("net", "use * /del /y"))
+)
+
+Target.create "_SetupNetworkShare" (fun _ ->
+    let userName = Environment.environVar "DEPLOYMENT_SHARE_USERNAME"
+    let password = Environment.environVar "DEPLOYMENT_SHARE_PASSWORD"
+    let path = Environment.environVar "DEPLOYMENT_PATH"
+
+    let result = Shell.Exec("
+        net", 
+        String.Format("use z: {2} {1} /user:{0} /persistent:yes", 
+            userName, 
+            password,
+            path))
+
+    if result <> 0 then
+        failwith "Failed to setup network share"
+)
+
+Target.create "_MakeAppOffline" (fun _ ->
+    System.IO.File.WriteAllText("z:\\app_offline.htm", "Deploying");
+)
+
+Target.create "_MakeAppOnline" (fun _ -> 
+    System.IO.File.Delete "z:\\app_offline.htm"
+)
+
+Target.create "_CopyArtifactsToNetworkShare" (fun _ ->
+    let result = Shell.Exec("robocopy", "/S artifacts/web/ z:")
+    if result > 8 then
+        failwithf "Failed to copy files to network share (error code %d)" result
+)
+
+Target.create "DeployArtifacts" (ignore)
+
 open Fake.Core.TargetOperators
 
 "_DotNetRestore" ==> "_BackendBuild" ==> "Build"
 "_YarnInstall" ==> "_FrontendBuild" ==> "Build"
 
+"_CleanupNetworkShares" 
+    ==> "_SetupNetworkShare" 
+    ==> "_MakeAppOffline" 
+    ==> "_CopyArtifactsToNetworkShare" 
+    ==> "_MakeAppOnline"
+    ==> "DeployArtifacts"
 
 Target.runOrDefaultWithArguments "Build"

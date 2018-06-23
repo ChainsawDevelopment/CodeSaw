@@ -4923,9 +4923,9 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.1.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-"react-diff-view@ssh://git@git.kplabs.pl:mnowak3/react-diff-view.git#git-reviewer":
+"react-diff-view@https://git.kplabs.pl/mnowak/react-diff-view.git#git-reviewer":
   version "1.4.11"
-  resolved "ssh://git@git.kplabs.pl:mnowak3/react-diff-view.git#dafaed6f6693ba142d8a7dfb6460e1936c44b1e6"
+  resolved "https://git.kplabs.pl/mnowak/react-diff-view.git#dafaed6f6693ba142d8a7dfb6460e1936c44b1e6"
   dependencies:
     classnames "^2.2.5"
     gitdiff-parser "0.0.8"

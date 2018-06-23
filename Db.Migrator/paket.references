@@ -2,4 +2,5 @@ FluentMigrator
 FluentMigrator.Runner
 Microsoft.Extensions.Configuration
 Microsoft.Extensions.Configuration.Json
+Microsoft.Extensions.Configuration.CommandLine
 System.Data.SqlClient
