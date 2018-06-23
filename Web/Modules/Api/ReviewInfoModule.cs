@@ -66,7 +66,7 @@ namespace Web.Modules.Api
 
             Get("/commit_status", async _ =>
             {
-                var commitStatus = await query.Query(new GetCommmitStatus(ReviewId));
+                var commitStatus = await query.Query(new GetCommitStatus(ReviewId));
 
                 var mergeRequest = await api().MergeRequest(ReviewId.ProjectId, ReviewId.ReviewId);
 

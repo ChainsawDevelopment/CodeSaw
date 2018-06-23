@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,6 +61,18 @@ namespace Web.Modules.Api.Queries
                         .ListAsync<FileStatus>();
                 }
 
+                Dictionary<CommentState, int> commentStates;
+                {
+                    commentStates = _session.Query<Comment>()
+                        .Where(x => x.ReviewId == query.ReviewId)
+                        .GroupBy(x => x.State)
+                        .Select(x => new {State = x.Key, Count = x.Count()})
+                        .ToDictionary(x => x.State, x => x.Count);
+
+                    var allStates = Enum.GetValues(typeof(CommentState)).Cast<CommentState>();
+                    commentStates.EnsureKeys(allStates, 0);
+                }
+
                 return new Result
                 {
                     RevisionForCurrentHead = mergeRequest.HeadCommit == latestRevision?.HeadCommit,
@@ -72,7 +85,8 @@ namespace Web.Modules.Api.Queries
                             ReviewedAt = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.RevisionNumber),
                             UnreviewedAt = x.Where(r => r.Status == FileReviewStatus.Unreviewed).Select(r => r.RevisionNumber),
                             ReviewedBy = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.ReviewedBy)
-                        })
+                        }),
+                    UnresolvedDiscussions = commentStates[CommentState.NeedsResolution]
                 };
             }
         }
@@ -83,6 +97,7 @@ namespace Web.Modules.Api.Queries
             public IList<FileStatus> FileStatuses { get; set; }
             public IDictionary<string, object> FileSummary { get; set; }
             public int LatestRevision { get; set; }
+            public int UnresolvedDiscussions { get; set; }
         }
 
         public class FileStatus
