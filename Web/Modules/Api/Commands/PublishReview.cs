@@ -17,6 +17,7 @@ namespace Web.Modules.Api.Commands
         public int ProjectId { get; set; }
         public int ReviewId { get; set; }
         public RevisionCommits Revision { get; set; } = new RevisionCommits();
+        public RevisionCommits Previous { get; set; } = new RevisionCommits();
         public List<PathPair> ReviewedFiles { get; set; } = new List<PathPair>();
 
         public class RevisionCommits
@@ -68,7 +69,7 @@ namespace Web.Modules.Api.Commands
 
                 review.ReviewedAt = DateTimeOffset.Now;
 
-                var allFiles = await _api.GetDiff(command.ProjectId, command.Revision.Base, command.Revision.Head)
+                var allFiles = await _api.GetDiff(command.ProjectId, command.Previous.Head, command.Revision.Head)
                     .ContinueWith(t => t.Result.Select(x => x.Path).ToList());
 
                 review.ReviewFiles(allFiles, command.ReviewedFiles);
