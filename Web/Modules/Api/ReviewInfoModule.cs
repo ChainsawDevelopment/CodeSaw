@@ -63,17 +63,6 @@ namespace Web.Modules.Api
             });
 
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
-
-            Get("/commit_status", async _ =>
-            {
-                var commitStatus = await query.Query(new GetCommitStatus(ReviewId));
-
-                var mergeRequest = await api().MergeRequest(ReviewId.ProjectId, ReviewId.ReviewId);
-
-                await api().SetCommitStatus(ReviewId.ProjectId, mergeRequest.HeadCommit, commitStatus);
-
-                return commitStatus;
-            });
         }
     }
 }
