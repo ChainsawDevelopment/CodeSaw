@@ -7,16 +7,16 @@ using Web.Modules.Api.Model;
 
 namespace Web.Modules.Api.Queries
 {
-    public class GetCommmitStatus : IQuery<CommitStatus>
+    public class GetCommitStatus : IQuery<CommitStatus>
     {
         public ReviewIdentifier ReviewId { get; }
 
-        public GetCommmitStatus(ReviewIdentifier reviewId)
+        public GetCommitStatus(ReviewIdentifier reviewId)
         {
             ReviewId = reviewId;
         }
 
-        public class Handler : IQueryHandler<GetCommmitStatus, CommitStatus>
+        public class Handler : IQueryHandler<GetCommitStatus, CommitStatus>
         {
             private readonly IQueryRunner _queryRunner;
 
@@ -25,7 +25,7 @@ namespace Web.Modules.Api.Queries
                 _queryRunner = queryRunner;
             }
 
-            public async Task<CommitStatus> Execute(GetCommmitStatus query)
+            public async Task<CommitStatus> Execute(GetCommitStatus query)
             {
                 var summary = await _queryRunner.Query(new GetReviewStatus(query.ReviewId));
 
@@ -49,6 +49,12 @@ namespace Web.Modules.Api.Queries
                 {
                     reviewPassed = false;
                     items.Add("provisional revision for new changes");
+                }
+
+                if (summary.UnresolvedDiscussions>0)
+                {
+                    reviewPassed = false;
+                    items.Add($"{summary.UnresolvedDiscussions} unresolved discussion(s)");
                 }
 
                 return new CommitStatus

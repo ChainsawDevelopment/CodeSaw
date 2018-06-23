@@ -25,13 +25,13 @@ namespace GitLab
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
             _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");
 
-            _client.ConfigureWebRequest(wr =>
-            {
-                wr.Proxy = new WebProxy("127.0.0.1", 8888)
-                {
-                    BypassProxyOnLocal = false
-                };
-            });
+            //_client.ConfigureWebRequest(wr =>
+            //{
+            //    wr.Proxy = new WebProxy("127.0.0.1", 8888)
+            //    {
+            //        BypassProxyOnLocal = false
+            //    };
+            //});
 
             var serializer = new JsonSerializer();
             serializer.ContractResolver = new GitLabContractResolver();
