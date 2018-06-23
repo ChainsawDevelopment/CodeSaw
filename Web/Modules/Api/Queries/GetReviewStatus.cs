@@ -46,7 +46,6 @@ namespace Web.Modules.Api.Queries
                     FileReview file = null;
                     FileStatus dto = null;
 
-
                     fileStatuses = await _session.QueryOver(() => review)
                         .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
                         .JoinAlias(() => review.Files, () => file)
@@ -64,6 +63,7 @@ namespace Web.Modules.Api.Queries
                 return new Result
                 {
                     RevisionForCurrentHead = mergeRequest.HeadCommit == latestRevision?.HeadCommit,
+                    LatestRevision = latestRevision.RevisionNumber,
                     FileStatuses = fileStatuses,
                     FileSummary = fileStatuses
                         .GroupBy(x => x.Path)
@@ -82,6 +82,7 @@ namespace Web.Modules.Api.Queries
             public bool RevisionForCurrentHead { get; set; }
             public IList<FileStatus> FileStatuses { get; set; }
             public IDictionary<string, object> FileSummary { get; set; }
+            public int LatestRevision { get; set; }
         }
 
         public class FileStatus

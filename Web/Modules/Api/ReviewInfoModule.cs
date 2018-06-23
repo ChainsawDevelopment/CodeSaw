@@ -62,6 +62,8 @@ namespace Web.Modules.Api
             });
 
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
+
+            Get("/commit_status", async _ => await query.Query(new GetCommmitStatus(ReviewId)));
         }
     }
 }
