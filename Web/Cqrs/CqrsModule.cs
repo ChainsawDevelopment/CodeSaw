@@ -20,6 +20,10 @@ namespace Web.Cqrs
 
             builder.RegisterType<QueryRunner>().As<IQueryRunner>()
                 .WithAttributeFiltering();
+
+            builder.RegisterAssemblyTypes(ThisAssembly)
+                .AsClosedTypesOf(typeof(IHandle<>))
+                .WithAttributeFiltering();
         }
     }
 }

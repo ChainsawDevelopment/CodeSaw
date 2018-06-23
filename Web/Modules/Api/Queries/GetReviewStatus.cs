@@ -86,7 +86,8 @@ namespace Web.Modules.Api.Queries
                             UnreviewedAt = x.Where(r => r.Status == FileReviewStatus.Unreviewed).Select(r => r.RevisionNumber),
                             ReviewedBy = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.ReviewedBy)
                         }),
-                    UnresolvedDiscussions = commentStates[CommentState.NeedsResolution]
+                    UnresolvedDiscussions = commentStates[CommentState.NeedsResolution],
+                    ResolvedDiscussions = commentStates[CommentState.Resolved]
                 };
             }
         }
@@ -98,6 +99,7 @@ namespace Web.Modules.Api.Queries
             public IDictionary<string, object> FileSummary { get; set; }
             public int LatestRevision { get; set; }
             public int UnresolvedDiscussions { get; set; }
+            public int ResolvedDiscussions { get; set; }
         }
 
         public class FileStatus
