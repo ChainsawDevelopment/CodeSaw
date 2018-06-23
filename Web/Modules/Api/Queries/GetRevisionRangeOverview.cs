@@ -69,6 +69,11 @@ namespace Web.Modules.Api.Queries
                         {
                             Head = currentCommit,
                             Base = ResolveBaseCommitHash(query._current, mergeRequest, r => commits[r].Base)
+                        },
+                        Previous = new
+                        {
+                            Head = previousCommit,
+                            Base = ResolveBaseCommitHash(query._previous, mergeRequest, r => commits[r].Base)
                         }
                     },
                     FilesReviewedByUser = FilesReviewedByUser(_session, currentCommit, userId, query._reviewId)
