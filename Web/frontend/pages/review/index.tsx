@@ -35,6 +35,9 @@ import * as PathPairs from "../../pathPair";
 import ReviewSummary from './reviewSummary';
 import CommentsView from './commentsView';
 
+import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
+import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+
 interface OwnProps {
     reviewId: ReviewId;
 }
@@ -77,26 +80,37 @@ const reviewPage = (props: Props): JSX.Element => {
 
     return (
         <div id="review-page">
-            <OnMount onMount={load} />
+            <Grid centered columns={2}>
+                <Grid.Row>
+                    <Grid.Column>
+        
+                    <OnMount onMount={load} />
 
-            <h1>Review {props.currentReview.title}</h1>
+                    <h1>Review {props.currentReview.title}</h1>
 
-            <MergeApprover 
-                reviewId = {props.reviewId}
-                mergePullRequest={props.mergePullRequest}
-            />
+                    <MergeApprover 
+                        reviewId = {props.reviewId}
+                        mergePullRequest={props.mergePullRequest}
+                    />
+                    <Divider />
+                    
+                    <VersionSelector
+                        available={['base', ...pastRevisions, ...provisional]}
+                        hasProvisonal={props.currentReview.hasProvisionalRevision}
+                        range={props.currentRange}
+                        onSelectRange={props.selectRevisionRange}
+                    />
 
-            <VersionSelector
-                available={['base', ...pastRevisions, ...provisional]}
-                hasProvisonal={props.currentReview.hasProvisionalRevision}
-                range={props.currentRange}
-                onSelectRange={props.selectRevisionRange}
-            />
+                    <ReviewSummary 
+                        onSelectFileForView={props.selectFileForView} />
 
-            <ReviewSummary 
-                onSelectFileForView={props.selectFileForView} />
+                    <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
 
-            <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
+                    </Grid.Column>
+                </Grid.Row>
+            </Grid>
+
+            <Divider />
 
             {props.rangeInfo ? (<RangeInfo
                 info={props.rangeInfo}
