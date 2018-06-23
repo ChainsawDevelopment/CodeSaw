@@ -17,8 +17,8 @@ node {
 			withEnv(["DEPLOYMENT_PATH=\\\\pila.fp.lan\\inetpub\\wwwroot"]) {
 				withCredentials(
 					[usernamePassword(credentialsId: 'pila_deployment_user', 
-						usernameVariable: 'DEPLOYMENT_USERNAME', 
-						passwordVariable: 'DEPLOYMENT_PASSWORD')]) {
+						usernameVariable: 'DEPLOYMENT_SHARE_USERNAME', 
+						passwordVariable: 'DEPLOYMENT_SHARE_PASSWORD')]) {
 					bat 'build.cmd -t DeployArtifacts --production'
 				}
 			}	

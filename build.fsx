@@ -178,8 +178,8 @@ Target.create "_CleanupNetworkShares" (fun _ ->
 )
 
 Target.create "_SetupNetworkShare" (fun _ ->
-    let userName = Environment.environVar "DEPLOYMENT_USERNAME"
-    let password = Environment.environVar "DEPLOYMENT_PASSWORD"
+    let userName = Environment.environVar "DEPLOYMENT_SHARE_USERNAME"
+    let password = Environment.environVar "DEPLOYMENT_SHARE_PASSWORD"
     let path = Environment.environVar "DEPLOYMENT_PATH"
 
     let result = Shell.Exec("
