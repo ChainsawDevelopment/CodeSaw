@@ -41,11 +41,14 @@ namespace Web.Modules.Api.Queries
             public async Task<IEnumerable<Item>> Execute(GetCommentList query)
             {
                 var comments = await (
-                    from c in _session.Query<Comment>()
-                    orderby c.CreatedAt
-                    where c.ReviewId == query._reviewId
-                    select c
-                ).ToListAsync();
+                        from c in _session.Query<Comment>()
+                        orderby c.CreatedAt
+                        where c.ReviewId == query._reviewId
+                        select c
+                    )
+                    .Fetch(x => x.User)
+                    .FetchMany(x => x.Children)
+                    .ToListAsync();
 
                 return comments.Where(x => x.Parent == null).Select(MapComment).ToArray();
             }
