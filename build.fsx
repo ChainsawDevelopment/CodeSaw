@@ -1,4 +1,9 @@
-#r "paket: groupref FakeBuild //"
+#r "paket: 
+nuget Fake.Core.Target prerelease
+nuget Fake.DotNet.Cli prerelease
+nuget Fake.JavaScript.Yarn prerelease
+nuget Fake.Runtime prerelease"
+
 #load ".fake/build.fsx/intellisense.fsx"
 #if !FAKE
   #r "./packages/NETStandard.Library/build/netstandard2.0/ref/netstandard.dll"

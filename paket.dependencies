@@ -28,11 +28,3 @@ nuget Microsoft.AspNetCore.Identity
 nuget System.Data.SqlClient
 
 clitool Microsoft.DotNet.Watcher.Tools
-
-group FakeBuild
-    source https://www.nuget.org/api/v2
-
-    nuget Fake.Core.Target prerelease
-    nuget Fake.DotNet.Cli prerelease
-    nuget Fake.JavaScript.Yarn prerelease
-    nuget Fake.Runtime prerelease
