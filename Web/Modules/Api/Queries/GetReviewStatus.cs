@@ -34,7 +34,7 @@ namespace Web.Modules.Api.Queries
 
             public async Task<Result> Execute(GetReviewStatus query)
             {
-                var mergeRequest = await _repository.MergeRequest(query.ReviewId.ProjectId, query.ReviewId.ReviewId);
+                var mergeRequest = await _repository.GetMergeRequestInfo(query.ReviewId.ProjectId, query.ReviewId.ReviewId);
                 var latestRevision = await _session.Query<ReviewRevision>()
                     .Where(x => x.ReviewId == query.ReviewId)
                     .OrderByDescending(x => x.RevisionNumber)

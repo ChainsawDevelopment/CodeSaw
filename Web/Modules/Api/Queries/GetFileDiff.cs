@@ -82,7 +82,7 @@ namespace Web.Modules.Api.Queries
 
         public async Task<GetFileDiff.Result> Execute(GetFileDiff query)
         {
-            var mergeRequest = await _api.MergeRequest(query.ReviewId.ProjectId, query.ReviewId.ReviewId);
+            var mergeRequest = await _api.GetMergeRequestInfo(query.ReviewId.ProjectId, query.ReviewId.ReviewId);
 
             var commits = _session.Query<ReviewRevision>().Where(x => x.ReviewId == query.ReviewId)
                 .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});

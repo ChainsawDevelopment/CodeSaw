@@ -47,7 +47,7 @@ namespace Web.Modules.Api.Queries
 
             public async Task<Result> Execute(GetRevisionRangeOverview query)
             {
-                var mergeRequest = await _api.MergeRequest(query._reviewId.ProjectId, query._reviewId.ReviewId);
+                var mergeRequest = await _api.GetMergeRequestInfo(query._reviewId.ProjectId, query._reviewId.ReviewId);
 
                 var commits = _session.Query<ReviewRevision>().Where(x => x.ReviewId == query._reviewId)
                     .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});

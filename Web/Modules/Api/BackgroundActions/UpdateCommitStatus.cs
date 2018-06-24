@@ -21,7 +21,7 @@ namespace Web.Modules.Api.BackgroundActions
         {
             var commitStatus = await _query.Query(new GetCommitStatus(@event.ReviewId));
 
-            var mergeRequest = await _api.MergeRequest(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId);
+            var mergeRequest = await _api.GetMergeRequestInfo(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId);
 
             await _api.SetCommitStatus(@event.ReviewId.ProjectId, mergeRequest.HeadCommit, commitStatus);
         }
