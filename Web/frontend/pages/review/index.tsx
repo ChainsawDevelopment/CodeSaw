@@ -91,6 +91,7 @@ const reviewPage = (props: Props): JSX.Element => {
 
                     <MergeApprover
                         reviewId={props.reviewId}
+                        reviewState={props.currentReview.state}
                         mergePullRequest={props.mergePullRequest}
                     />
                     <Divider />

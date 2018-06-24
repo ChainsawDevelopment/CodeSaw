@@ -6,6 +6,7 @@ nuget Diff.Match.Patch
 nuget FluentMigrator
 nuget LibGit2Sharp
 nuget Microsoft.NET.Test.Sdk
+nuget Nancy.Serialization.JsonNet 2.0.0-clinteastwood clinteastwood
 nuget NHibernate
 nuget NUnit
 nuget NUnit3TestAdapter
