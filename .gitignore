@@ -6,7 +6,7 @@ obj
 paket-files
 node_modules
 fake
-Web/wwwroot/dist.js
+Web/wwwroot/
 .fake
 .fake-tools
 artifacts
