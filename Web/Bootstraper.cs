@@ -71,8 +71,9 @@ namespace Web
                             return session.Query<ReviewUser>().Single(x => x.UserName == userName);
                         }
                     })
-                    .Keyed<ReviewUser>("currentUser")
-                    ;
+                    .Keyed<ReviewUser>("currentUser");
+
+                builder.RegisterInstance(context.Request.Url.SiteBase).Keyed<string>("SiteBase");
 
             };
 
