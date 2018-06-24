@@ -202,8 +202,8 @@ Target.create "_MakeAppOnline" (fun _ ->
 )
 
 Target.create "_CopyArtifactsToNetworkShare" (fun _ ->
-    let result = Shell.Exec("robocopy", "/S artifacts/web/ z:")
-    if result > 8 then
+    let result = Shell.Exec("xcopy", "artifacts\\web z: /S /C /I /R /Y")    
+    if result <> 0 then
         failwithf "Failed to copy files to network share (error code %d)" result
 )
 
