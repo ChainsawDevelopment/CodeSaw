@@ -54,7 +54,7 @@ namespace Web.Modules.Api.Queries
 
             public async Task<Result> Execute(GetReviewInfo query)
             {
-                var mr = await _api.MergeRequest(query._reviewId.ProjectId, query._reviewId.ReviewId);
+                var mr = await _api.GetMergeRequestInfo(query._reviewId.ProjectId, query._reviewId.ReviewId);
 
                 var pastRevisions = (
                     from r in _session.Query<ReviewRevision>()
@@ -70,7 +70,7 @@ namespace Web.Modules.Api.Queries
                 Review review = null;
                 ReviewRevision revision = null;
                 ReviewUser user = null;
-                FileReview file = null;//default(KeyValuePair<PathPair, FileReview>);
+                FileReview file = null;
 
                 var reviewSummary = _session.QueryOver(() => review)
                     .JoinEntityAlias(() => user, () => user.Id == review.UserId)

@@ -54,7 +54,7 @@ namespace GitLab
                 .Execute<ProjectInfo>(_client);
         }
 
-        public async Task<MergeRequest> MergeRequest(int projectId, int mergeRequestId)
+        public async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
         {
             return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}", Method.GET)
                 .Execute<MergeRequest>(_client);

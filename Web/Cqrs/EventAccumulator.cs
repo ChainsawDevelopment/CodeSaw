@@ -4,11 +4,6 @@ using Autofac;
 
 namespace Web.Cqrs
 {
-    public interface IEventBus
-    {
-        void Publish(Event @event);
-    }
-
     public class EventAccumulator : IEventBus
     {
         private readonly ILifetimeScope _scope;
@@ -41,15 +36,5 @@ namespace Web.Cqrs
                 await handler.Handle(@event);
             }
         }
-    }
-
-    public abstract class Event
-    {
-    }
-
-    public interface IHandle<TEvent>
-        where TEvent : Event
-    {
-        Task Handle(TEvent @event);
     }
 }
