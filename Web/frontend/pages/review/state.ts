@@ -98,7 +98,7 @@ const initial: ReviewState = {
         title: '',
         headCommit: '',
         baseCommit: '',
-        state: 'Opened',
+        state: 'opened',
         mergeStatus: 'unchecked',
         reviewSummary: []
     },

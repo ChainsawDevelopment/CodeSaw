@@ -59,6 +59,8 @@ export interface Review {
     author: string;
 }
 
+export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -70,7 +72,7 @@ export interface ReviewInfo {
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
-    state: 'Opened' | "Reopened" | "Merged" | "Closed";
+    state: ReviewInfoState;
     mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
     reviewSummary: {
         file: string;
