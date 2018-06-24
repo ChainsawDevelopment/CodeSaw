@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Content Remove="wwwroot\dist.js" />
+    <Content Remove="wwwroot/**" />
     <Content Remove="frontend/**/*.*" />
   </ItemGroup>
   <ItemGroup>

@@ -21,19 +21,34 @@ module.exports = {
     module: {
         rules: [
             { test: /\.js$/, loader: 'babel-loader', exclude: /node_modules/ },
-            { 
-                test: /\.tsx?$/, 
+            {
+                test: /\.tsx?$/,
                 loader: "ts-loader",
                 exclude: /node_modules/,
                 options: {
                     configFile: 'tsconfig.json'
                 }
             },
-            { test: /\.(css|less)$/, use: [
-                { loader: 'style-loader' },
-                { loader: 'css-loader' },
-                { loader: 'less-loader' }
-            ]}
+            {
+                test: /\.(css|less)$/, use: [
+                    { loader: 'style-loader' },
+                    { loader: 'css-loader' },
+                    { loader: 'less-loader' }
+                ]
+            },
+            {
+                test: /\.svg$/,
+                loader: 'svg-inline-loader'
+            },
+            {
+                test: /\.(png|jpg|gif)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {name: '[name].[ext]'}
+                    }
+                ]
+            }
         ]
     },
     mode: 'development',
