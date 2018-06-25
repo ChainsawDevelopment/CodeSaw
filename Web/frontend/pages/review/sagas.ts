@@ -88,6 +88,10 @@ function* loadReviewInfoSaga() {
             if (currentRange != null) {
                 newRange = currentRange;
             }
+
+            if(newRange.current == 'provisional' && !info.hasProvisionalRevision) {
+                newRange.current = info.pastRevisions[info.pastRevisions.length - 1].number;
+            }
         }
 
         yield put(selectCurrentRevisions({
