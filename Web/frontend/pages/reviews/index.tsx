@@ -46,7 +46,7 @@ const ReviewsList = (props: Props) => {
 
 const Reviews = (props: Props) => (
     <div>
-        <h1>Reviews</h1>
+        <h2>Reviews</h2>
         <OnMount onMount={props.loadReviews}/>
         <ReviewsList {...props} />
     </div>

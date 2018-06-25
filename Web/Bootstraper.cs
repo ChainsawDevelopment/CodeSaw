@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using Autofac.Core.Lifetime;
-using Autofac.Features.AttributeFilters;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Nancy;
-using Nancy.Bootstrapper;
 using Nancy.Bootstrappers.Autofac;
 using Nancy.Configuration;
 using Nancy.Conventions;
-using Nancy.Diagnostics;
+using Newtonsoft.Json;
 using NHibernate;
 using Web.Auth;
 using ISession = NHibernate.ISession;
@@ -51,6 +47,11 @@ namespace Web
             nancyConventions.ViewLocationConventions.Add((name, args, ctx) => $"Modules/{ctx.ModuleName}/Views/{name}");
         }
 
+        protected override void ConfigureApplicationContainer(ILifetimeScope container)
+        {
+            container.Update(builder => builder.RegisterType<CustomSerializer>().As<JsonSerializer>());
+        }
+
         protected override ILifetimeScope CreateRequestContainer(NancyContext context)
         {
             Action<ContainerBuilder> register = builder =>
@@ -71,9 +72,7 @@ namespace Web
                             return session.Query<ReviewUser>().Single(x => x.UserName == userName);
                         }
                     })
-                    .Keyed<ReviewUser>("currentUser")
-                    ;
-
+                    .Keyed<ReviewUser>("currentUser");
             };
 
             return GetApplicationContainer().BeginLifetimeScope(MatchingScopeLifetimeTags.RequestLifetimeScopeTag, register);

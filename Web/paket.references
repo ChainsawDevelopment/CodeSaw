@@ -10,6 +10,7 @@ Microsoft.AspNetCore.Authentication.OAuth
 Microsoft.AspNetCore.Identity
 NHibernate
 Nancy.Bootstrappers.Autofac
+Nancy.Serialization.JsonNet
 Autofac.Extensions.DependencyInjection
 System.Data.SqlClient
 Diff.Match.Patch
