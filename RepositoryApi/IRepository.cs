@@ -14,7 +14,7 @@ namespace RepositoryApi
         Task<string> GetFileContent(int projectId, string commitHash, string file);
         Task CreateRef(int projectId, string name, string commit);
         Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody);
-        Task MergePullRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage);
+        Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage);
         Task UpdateDescription(MergeRequest mergeRequest);
         Task SetCommitStatus(int projectId, string commit, CommitStatus status);
     }

@@ -87,7 +87,7 @@ namespace GitLab
             }
         }
         
-        public async Task MergePullRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)
+        public async Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)
         {
             var request = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}/merge", Method.PUT)
                 .AddQueryParameter("should_remove_source_branch", shouldRemoveBranch ? "true" : "false");
@@ -97,14 +97,22 @@ namespace GitLab
 
             var response = await _client.ExecuteTaskAsync(request);
 
-            if (response.StatusCode == HttpStatusCode.OK 
-                || response.StatusCode == HttpStatusCode.MethodNotAllowed 
-                || response.StatusCode == HttpStatusCode.NotAcceptable)
+            if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.MethodNotAllowed && response.StatusCode != HttpStatusCode.NotAcceptable)
             {
-                return;
+                throw new GitLabApiFailedException(
+                    $"Request {request.Method} {request.Resource} failed with {(int) response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
             }
 
-            throw new GitLabApiFailedException($"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
+            if (shouldRemoveBranch)
+            {
+                // So, GitLab is ignoring our request to delete source branch so we try to delete branch manually.
+                // Even if something changes on GitLab side and should_remove_source_branch is not ignored, DELETE request to branch will still succeed (unless it changes as well)
+
+                var branchName = JObject.Parse(response.Content).Property("source_branch").Value.Value<string>();
+
+                await new RestRequest($"/projects/{projectId}/repository/branches/{HttpUtility.UrlEncode(branchName)}", Method.DELETE)
+                    .Execute(_client);
+            }
         }
 
         public async Task CreateRef(int projectId, string name, string commit)

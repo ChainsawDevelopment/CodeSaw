@@ -28,7 +28,7 @@ namespace Web.Modules.Api.Commands
 
             public override async Task Handle(MergePullRequest command)
             {
-                await _api.MergePullRequest(command.ProjectId, command.ReviewId, command.ShouldRemoveBranch,
+                await _api.AcceptMergeRequest(command.ProjectId, command.ReviewId, command.ShouldRemoveBranch,
                     command.CommitMessage);
             }
         }
