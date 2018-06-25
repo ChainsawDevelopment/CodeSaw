@@ -47,7 +47,7 @@ namespace Web.Modules.Api.Queries
 
             public async Task<Result> Execute(GetRevisionRangeOverview query)
             {
-                var mergeRequest = await _api.MergeRequest(query._reviewId.ProjectId, query._reviewId.ReviewId);
+                var mergeRequest = await _api.GetMergeRequestInfo(query._reviewId.ProjectId, query._reviewId.ReviewId);
 
                 var commits = _session.Query<ReviewRevision>().Where(x => x.ReviewId == query._reviewId)
                     .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});
@@ -69,6 +69,11 @@ namespace Web.Modules.Api.Queries
                         {
                             Head = currentCommit,
                             Base = ResolveBaseCommitHash(query._current, mergeRequest, r => commits[r].Base)
+                        },
+                        Previous = new
+                        {
+                            Head = previousCommit,
+                            Base = ResolveBaseCommitHash(query._previous, mergeRequest, r => commits[r].Base)
                         }
                     },
                     FilesReviewedByUser = FilesReviewedByUser(_session, currentCommit, userId, query._reviewId)
@@ -96,7 +101,7 @@ namespace Web.Modules.Api.Queries
             private object FilesReviewedByUser(ISession session, string head, int userId, ReviewIdentifier reviewId)
             {
                 Review review = null;
-                PathPair file = null;
+                FileReview file = null;
                 PathPair dto = null;
 
                 var revisionId = QueryOver.Of<ReviewRevision>()
@@ -107,10 +112,10 @@ namespace Web.Modules.Api.Queries
                 var files = session.QueryOver(() => review)
                     .WithSubquery.WhereProperty(() => review.RevisionId).In(revisionId)
                     .And(() => review.UserId == userId)
-                    .Inner.JoinAlias(() => review.ReviewedFiles, () => file)
+                    .Inner.JoinAlias(() => review.Files, () => file)
                     .SelectList(r => r
-                        .Select(() => file.OldPath).WithAlias(() => dto.OldPath)
-                        .Select(() => file.NewPath).WithAlias(() => dto.NewPath)
+                        .Select(() => file.File.OldPath).WithAlias(() => dto.OldPath)
+                        .Select(() => file.File.NewPath).WithAlias(() => dto.NewPath)
                     )
                     .TransformUsing(Transformers.AliasToBean<PathPair>())
                     .List<PathPair>();

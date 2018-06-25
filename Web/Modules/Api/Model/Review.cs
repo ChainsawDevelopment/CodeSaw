@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NHibernate.Mapping.ByCode;
-using NHibernate.Mapping.ByCode.Conformist;
-using NHibernate.Type;
 using RepositoryApi;
 
 namespace Web.Modules.Api.Model
@@ -17,59 +14,64 @@ namespace Web.Modules.Api.Model
 
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
 
-        public virtual ISet<PathPair> ReviewedFiles { get; set; }
+        public virtual IList<FileReview> Files { get; set; }
 
         public Review()
         {
-            ReviewedFiles = new HashSet<PathPair>();
+            Files = new List<FileReview>();
         }
 
-        public virtual void ReviewFiles(IReadOnlyList<PathPair> files)
+        public virtual void ReviewFiles(IReadOnlyList<PathPair> allFiles, IReadOnlyList<PathPair> reviewedFiles)
         {
-            var actualFiles = new HashSet<PathPair>(files);
+            var unreviewed = allFiles.Except(reviewedFiles);
 
-            ReviewedFiles.IntersectWith(actualFiles);
-
-            ReviewedFiles.UnionWith(actualFiles);
-        }
-    }
-
-    public class ReviewConfig : ClassMapping<Review>
-    {
-        public ReviewConfig()
-        {
-            Id(x => x.Id, id => id.Generator(Generators.Assigned));
-            Version(x => x.LastUpdatedAt, v =>
+            foreach (var file in reviewedFiles)
             {
-                v.Type(new DateTimeOffsetType());
-            });
+                var status = Files.SingleOrDefault(x => x.File == file);
 
-            Property(x => x.UserId);
-            Property(x => x.RevisionId);
-            Property(x => x.ReviewedAt);
-
-            Set(x => x.ReviewedFiles,
-                coll =>
+                if (status == null)
                 {
-                    coll.Table("ReviewedFiles");
-                    coll.Lazy(CollectionLazy.Lazy);
-                    coll.Cascade(Cascade.DeleteOrphans);
-                    coll.Key(key => { key.Column("ReviewId"); });
-                },
-                el =>
-                {
-                    
+                    status = new FileReview(file);
+                    Files.Add(status);
                 }
-            );
+
+                status.Status = FileReviewStatus.Reviewed;
+            }
+
+            foreach (var file in unreviewed)
+            {
+                var status = Files.SingleOrDefault(x => x.File == file);
+
+                if (status == null)
+                {
+                    status = new FileReview(file);
+                    Files.Add(status);
+                }
+
+                status.Status = FileReviewStatus.Unreviewed;
+            }
         }
     }
 
-    public class PathPairConfig : ComponentMapping<PathPair>
+    public class FileReview
     {
-        public PathPairConfig()
+        public PathPair File { get; private set; }
+        public FileReviewStatus Status { get; set; }
+
+        public FileReview(PathPair file)
         {
-            Property(x=>x.OldPath);
-            Property(x=>x.NewPath);
+            File = file;
         }
+
+        protected FileReview()
+        {
+            
+        }
+    }
+
+    public enum FileReviewStatus
+    {
+        Reviewed = 1,
+        Unreviewed = 2
     }
 }

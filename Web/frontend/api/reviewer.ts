@@ -18,6 +18,10 @@ export interface RevisionRangeInfo {
         current: {
             head: string;
             base: string
+        };
+        previous: {
+            head: string;
+            base: string
         }
     };
     filesReviewedByUser: PathPairs.List
@@ -88,6 +92,10 @@ export interface ReviewSnapshot {
         head: string,
         base: string
     };
+    previous: {
+        head: string;
+        base: string;
+    }
     reviewedFiles: PathPairs.PathPair[];
 }
 

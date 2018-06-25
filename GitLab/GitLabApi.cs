@@ -54,7 +54,7 @@ namespace GitLab
                 .Execute<ProjectInfo>(_client);
         }
 
-        public async Task<MergeRequest> MergeRequest(int projectId, int mergeRequestId)
+        public async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
         {
             return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}", Method.GET)
                 .Execute<MergeRequest>(_client);
@@ -153,6 +153,19 @@ namespace GitLab
             {
                 throw new GitLabApiFailedException(updateDescriptionRequest, restResponse);
             }
+        }
+
+        public async Task SetCommitStatus(int projectId, string commit, CommitStatus status)
+        {
+            await new RestRequest($"/projects/{projectId}/statuses/{commit}", Method.POST)
+                .AddJsonBody(new
+                {
+                    state = status.State.ToString().ToLower(),
+                    name = status.Name,
+                    target_url = status.TargetUrl,
+                    description = status.Description
+                })
+                .Execute(_client);
         }
 
         private static bool RrefAlreadyExists(IRestResponse createTagResponse)

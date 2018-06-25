@@ -3,7 +3,6 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
-using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -27,7 +26,6 @@ using NHibernate.Mapping.ByCode;
 using RepositoryApi;
 using Web.Auth;
 using Web.Cqrs;
-using Web.Modules.Db;
 
 namespace Web
 {

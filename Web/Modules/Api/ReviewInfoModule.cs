@@ -1,5 +1,7 @@
+using System;
 using Nancy;
 using Nancy.ModelBinding;
+using RepositoryApi;
 using Web.Cqrs;
 using Web.Modules.Api.Commands;
 using Web.Modules.Api.Queries;
@@ -8,7 +10,9 @@ namespace Web.Modules.Api
 {
     public class ReviewInfoModule : NancyModule
     {
-        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
+        protected ReviewIdentifier ReviewId => new ReviewIdentifier(Context.Parameters.projectId, Context.Parameters.reviewId);
+
+        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
         {
             Get("/comments", async _ => await query.Query(new GetCommentList(_.projectId, _.reviewId)));
 
@@ -57,6 +61,8 @@ namespace Web.Modules.Api
                 await command.Execute(this.Bind<MergePullRequest>());
                 return new { };
             });
+
+            Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
         }
     }
 }

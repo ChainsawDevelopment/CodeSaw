@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Web
@@ -26,6 +27,17 @@ namespace Web
             }
 
             return -1;
+        }
+
+        public static void EnsureKeys<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<TKey> keys, TValue emptyValue)
+        {
+            foreach (var key in keys)
+            {
+                if (!@this.ContainsKey(key))
+                {
+                    @this[key] = emptyValue;
+                }
+            }
         }
     }
 }

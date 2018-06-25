@@ -117,6 +117,7 @@ function* publishReviewSaga() {
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
             revision: s.review.rangeInfo.commits.current,
+            previous: s.review.rangeInfo.commits.previous,
             reviewedFiles: s.review.reviewedFiles
         }));
 
