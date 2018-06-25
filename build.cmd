@@ -9,5 +9,7 @@ REM )
 
 rem dotnet restore %BASE%\dotnet-fake.csproj
 
+"%BASE%\.paket\paket.bootstrapper.exe"
+
 dotnet tool install "--tool-path=%BASE%.fake-tools" fake-cli
 "%BASE%\.fake-tools\fake.exe" run %BASE%\build.fsx -- %*

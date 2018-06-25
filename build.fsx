@@ -1,6 +1,7 @@
 #r "paket: 
 nuget Fake.Core.Target prerelease
 nuget Fake.DotNet.Cli prerelease
+nuget Fake.DotNet.Paket prerelease
 nuget Fake.JavaScript.Yarn prerelease
 nuget Fake.Runtime prerelease"
 
@@ -30,7 +31,7 @@ let yarnExe = (Environment.environVarOrDefault "YARN_PATH" defaultYarnFileName)
 let isProduction = (Fake.Core.Context.forceFakeContext()).Arguments |> List.contains "--production"
 
 Target.create "_DotNetRestore" (fun _ -> 
-    DotNet.restore id (root </> "GitReviewer.sln")
+    Paket.restore id
 )
 
 Target.create "_BackendBuild" (fun _ -> 
