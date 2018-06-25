@@ -10,7 +10,9 @@ import ChangedFileTreePopup from "./fileTreePopup";
 import { FileInfo } from "./state";
 import ReviewMark from "./reviewMark";
 import { PathPair, emptyPathPair } from "../../pathPair";
+import * as PathPairs from "../../pathPair";
 import Icon from '@ui/elements/Icon';
+import Popup from '@ui/modules/Popup';
 import scrollToComponent from 'react-scroll-to-component';
 
 interface FileViewProps {
@@ -76,15 +78,73 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         }
     }
 
+    private _findNextUnreviewedFile = (current: PathPair, direction: 1 | -1): PathPair => {
+        const currentIndex = this.props.info.changes.findIndex(p => PathPairs.equal(p.path, this.props.selectedFile.path));
+
+        if (currentIndex == -1) {
+            return null;
+        }
+
+        const {changes}= this.props.info;
+        const filesReviewedByUser = this.props.reviewedFiles;
+
+        let index = currentIndex;
+
+        while (true) {
+            index += direction;
+
+            if(index == -1) {
+                index = changes.length - 1;
+            } else if(index == changes.length) {
+                index = 0;
+            }
+
+            if (index == currentIndex) {
+                return current;
+            }
+
+            const candidate = changes[index].path;
+
+            if (!PathPairs.contains(filesReviewedByUser, candidate)) {
+                return candidate;
+            }
+        }
+    }
+
     render() {
         const { info, selectedFile, onSelectFileForView } = this.props;
 
         const menuItems = [];
 
         if (selectedFile) {
-            menuItems.push(<Menu.Item key="review-mark">
-                <ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>
-                <Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>
+            const nextFile = this._findNextUnreviewedFile(selectedFile.path, 1);
+            const prevFile = this._findNextUnreviewedFile(selectedFile.path, -1);
+
+            menuItems.push(<Menu.Item fitted key="review-mark">
+                <Popup
+                    trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>}
+                    content="Toggle review status"
+                />
+                
+            </Menu.Item>);
+            menuItems.push(<Menu.Item fitted key="refresh-diff">
+                <Popup
+                    trigger={<Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>}
+                    content="Refresh file diff"
+                />
+            </Menu.Item>);
+            menuItems.push(<Menu.Item fitted key="file-navigation">
+                <Popup
+                    trigger={<Icon onClick={() => onSelectFileForView(prevFile)} name="step backward" circular link />}
+                    content="Previous unreviewed file"
+                />
+                <Popup
+                
+                    trigger={<Icon onClick={() => onSelectFileForView(prevFile)} name="step backward" circular link />}
+                    content="Next unreviewed file"
+                />
+            </Menu.Item>);
+            menuItems.push(<Menu.Item fitted key="file-path">
                 <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
         }
