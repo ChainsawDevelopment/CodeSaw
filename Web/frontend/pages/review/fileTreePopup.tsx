@@ -2,8 +2,7 @@ import Popup from '@ui/modules/Popup';
 import Button from '@ui/elements/Button';
 
 import * as React from "react";
-import { RevisionRangeInfo } from "../../api/reviewer";
-import { FileInfo } from "./state";
+import { ReviewId } from "../../api/reviewer";
 import ChangedFileTree from './changedFileTree';
 import { PathPair } from '../../pathPair';
 
@@ -11,13 +10,12 @@ interface State {
     opened: boolean;
 }
 
-type SelectFileForViewHandler = (path: PathPair) => void;
-
 export interface Props {
     paths: PathPair[];
     selected:PathPair;
     reviewedFiles: PathPair[];
     onSelect(path: PathPair): void;
+    reviewId: ReviewId;
 }
 
 export default class ChangedFileTreePopup extends React.Component<Props, State> {
@@ -50,6 +48,7 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
                     selected={this.props.selected}
                     reviewedFiles={this.props.reviewedFiles}
                     onSelect={this._onSelect}
+                    reviewId={this.props.reviewId}
                 />
             </div>
         );

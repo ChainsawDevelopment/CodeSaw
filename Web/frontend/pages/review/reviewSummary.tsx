@@ -6,10 +6,11 @@ import Label from '@ui/elements/Label';
 import List from '@ui/elements/List';
 import Popup from '@ui/modules/Popup';
 import * as PathPairs from '../../pathPair';
-import { ReviewInfo } from '../../api/reviewer';
+import { ReviewInfo, ReviewId } from '../../api/reviewer';
 import { SelectFileForViewHandler } from './rangeInfo';
 
 import "./reviewSummary.less";
+import { FileLink } from './FileLink';
 
 const FileRevision = (props: {reviewers: string[]}) => {
     if (props.reviewers.length == 0) {
@@ -35,7 +36,7 @@ const FileRevision = (props: {reviewers: string[]}) => {
     )
 };
 
-const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary: ReviewInfo, onFileClick }) => {
+const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary: ReviewInfo, reviewId: ReviewId }) => {
     const fileStatus = props.summary.reviewSummary.find(x => x.file == props.file.newPath) || {revisions: {}};
     
     const revisionStatuses = props.revisions.map(r => 
@@ -47,7 +48,7 @@ const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary
     return (
         <Table.Row className='file-summary-row'>
             <Table.Cell textAlign='left' className='file-path'>
-                <a href="#" onClick={props.onFileClick}>{props.file.newPath}</a>
+                <FileLink reviewId={props.reviewId} path={props.file} />
             </Table.Cell>
             {revisionStatuses}
         </Table.Row>
@@ -55,7 +56,7 @@ const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary
 }
 
 interface OwnProps {
-    onSelectFileForView: SelectFileForViewHandler;
+    reviewId: ReviewId;
 }
 
 interface StateProps {
@@ -75,7 +76,7 @@ const reviewSummary = (props: Props) => {
         file={f} 
         revisions={props.revisions} 
         summary={props.summary} 
-        onFileClick={() => props.onSelectFileForView(f)}
+        reviewId={props.reviewId}
         />);
 
     return (

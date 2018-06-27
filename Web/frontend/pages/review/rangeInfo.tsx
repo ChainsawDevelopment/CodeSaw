@@ -3,7 +3,7 @@ import Menu from '@ui/collections/Menu';
 import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import { RevisionRangeInfo } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId } from "../../api/reviewer";
 import DiffView from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
@@ -14,6 +14,7 @@ import * as PathPairs from "../../pathPair";
 import Icon from '@ui/elements/Icon';
 import Popup from '@ui/modules/Popup';
 import scrollToComponent from 'react-scroll-to-component';
+import { FileLink } from "./FileLink";
 
 interface FileViewProps {
     file: FileInfo
@@ -32,10 +33,6 @@ class FileView extends React.Component<FileViewProps> {
             </span>
         );
     }
-
-    componentDidUpdate() {
-        scrollToComponent(this.renderedRef, {offset: -75, align: 'top', duration: 100, ease:'linear'});
-    }
 }
 
 const NoFileView = () => {
@@ -45,6 +42,7 @@ const NoFileView = () => {
 };
 
 export type SelectFileForViewHandler = (path: PathPair) => void;
+export type OnShowFileHandlerAvailable = (handler: () => void) => void;
 
 export interface ReviewFileActions {
     review(file: PathPair): void;
@@ -58,6 +56,8 @@ export interface Props {
     reviewFile: ReviewFileActions;
     reviewedFiles: PathPair[];
     publishReview(): void;
+    onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
+    reviewId: ReviewId;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -68,6 +68,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
     private _handleRef = el => {
         this.setState({ stickyContainer: el });
+        this.props.onShowFileHandlerAvailable(() => scrollToComponent(el, {offset: 0, align: 'top', duration: 100, ease:'linear'}));
     }
 
     private _changeFileReviewState = (newState: boolean) => {
@@ -134,15 +135,19 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 />
             </Menu.Item>);
             menuItems.push(<Menu.Item fitted key="file-navigation">
+                {prevFile && 
                 <Popup
-                    trigger={<Icon onClick={() => onSelectFileForView(prevFile)} name="step backward" circular link />}
+                    trigger={<FileLink reviewId={this.props.reviewId} path={prevFile} >
+                        <Icon name="step backward" circular link /></FileLink>}
                     content="Previous unreviewed file"
-                />
+                />}
+                {nextFile && 
                 <Popup
                 
-                    trigger={<Icon onClick={() => onSelectFileForView(nextFile)} name="step forward" circular link />}
+                    trigger={<FileLink reviewId={this.props.reviewId} path={nextFile} >
+                        <Icon name="step forward" circular link /></FileLink>}
                     content="Next unreviewed file"
-                />
+                />}
             </Menu.Item>);
             menuItems.push(<Menu.Item fitted key="file-path">
                 <span className="file-path">{selectedFile.path.newPath}</span>
@@ -164,6 +169,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                         selected={selectedFile ? selectedFile.path : emptyPathPair}
                                         reviewedFiles={this.props.reviewedFiles}
                                         onSelect={onSelectFileForView}
+                                        reviewId={this.props.reviewId}
                                     />
                                 </Menu.Item>
                             </Menu.Menu>
