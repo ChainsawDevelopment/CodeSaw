@@ -234,8 +234,6 @@ export class ReviewerApi {
     }
 
     public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {
-        const request = new Request(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/merge_request/merge`, acceptJson)
-
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/merge_request/merge`, {
             ...acceptJson,
             headers: {
