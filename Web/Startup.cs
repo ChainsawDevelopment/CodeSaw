@@ -164,7 +164,7 @@ namespace Web
 
             app.UseAuthentication();
 
-            app.ChallengeAllUnauthenticatedCalls();
+            app.MapWhen(ctx => !ctx.Request.Path.StartsWithSegments("/hooks"), sub => sub.ChallengeAllUnauthenticatedCalls());
 
             app.UseOwin(owin => { owin.UseNancy(opt => opt.Bootstrapper = new Bootstraper(assetServer, _container)); });
         }
