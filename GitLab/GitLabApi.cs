@@ -190,6 +190,7 @@ namespace GitLab
                 {
                     url = url,
                     push_events = hookEvents.HasFlag(HookEvents.Push),
+                    merge_requests_events = hookEvents.HasFlag(HookEvents.MergeRequest),
                     enable_ssl_verification = false
                 })
                 .Execute(_client);

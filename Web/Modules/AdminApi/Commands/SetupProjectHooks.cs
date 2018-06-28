@@ -26,7 +26,7 @@ namespace Web.Modules.AdminApi.Commands
 
             public override async Task Handle(SetupProjectHooks command)
             {
-                await _api.AddProjectHook(command.ProjectId, $"{_siteBase}/hooks/gitlab", HookEvents.Push);
+                await _api.AddProjectHook(command.ProjectId, $"{_siteBase}/hooks/gitlab", HookEvents.MergeRequest);
             }
         }
     }
