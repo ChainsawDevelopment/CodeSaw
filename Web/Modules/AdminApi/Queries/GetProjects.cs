@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RepositoryApi;
 using Web.Cqrs;
@@ -18,7 +20,10 @@ namespace Web.Modules.AdminApi.Queries
 
             public async Task<List<ProjectInfo>> Execute(GetProjects query)
             {
-                return await _api.GetProjects();
+                return (await _api.GetProjects())
+                    .OrderBy(x => x.Namespace, StringComparer.InvariantCultureIgnoreCase)
+                    .ThenBy(x => x.Name, StringComparer.InvariantCultureIgnoreCase)
+                    .ToList();
             }
         }
     }

@@ -1,4 +1,4 @@
-import  * as PathPairs from "../pathPair";
+import * as PathPairs from "../pathPair";
 
 export type RevisionId = 'base' | number | string | 'provisional';
 
@@ -110,6 +110,13 @@ export interface Comment {
     children: Comment[];
 }
 
+export interface ProjectInfo {
+    id: number;
+    namespace: string;
+    name: string;
+    canConfigureHooks: boolean;
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -151,13 +158,13 @@ export class ReviewerApi {
             .then(r => r.json())
             .then(r => r as ReviewInfo)
             .then(ri => {
-                for(let item of ri.reviewSummary) {
+                for (let item of ri.reviewSummary) {
                     const converted = {};
 
                     for (let rev of Object.keys(item.revisions)) {
                         converted[parseInt(rev)] = item.revisions[rev];
                     }
-                    
+
                     item.revisions = converted;
                 }
 
@@ -246,5 +253,11 @@ export class ReviewerApi {
                 commitMessage
             })
         });
+    }
+
+    public getProjects = (): Promise<ProjectInfo[]> => {
+        return fetch('/api/admin/projects', acceptJson)
+            .then(r => r.json())
+            .then(r => r as ProjectInfo[]);
     }
 }
