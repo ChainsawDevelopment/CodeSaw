@@ -176,6 +176,40 @@ namespace GitLab
                 .Execute(_client);
         }
 
+        public async Task<List<ProjectInfo>> GetProjects()
+        {
+            var result = await Paged<ProjectInfo>(new RestRequest("/projects"));
+
+            return result;
+        }
+
+        public async Task<List<T>> Paged<T>(RestRequest request)
+        {
+            var result = new List<T>();
+
+            var page = 1;
+
+            while (true)
+            {
+                request.AddOrUpdateParameter("page", page, ParameterType.QueryString);
+
+                var projects = await _client.ExecuteTaskAsync<List<T>>(request);
+
+                result.AddRange(projects.Data);
+
+                var totalPages = int.Parse(projects.Headers.Single(x => x.Name == "X-Total-Pages").Value.ToString());
+
+                if (page == totalPages)
+                {
+                    break;
+                }
+
+                page++;
+            }
+
+            return result;
+        }
+
         private static bool RrefAlreadyExists(IRestResponse createTagResponse)
         {
             // If ref already exists GitLab returns BadRequest code together with message
@@ -190,12 +224,22 @@ namespace GitLab
 
     public class GitLabContractResolver : DefaultContractResolver
     {
+        private const int MaintainerLevelAccess = 40;
+
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
             if (member.DeclaringType == typeof(ProjectInfo) && member.Name == nameof(ProjectInfo.Namespace))
             {
                 var prop = base.CreateProperty(member, memberSerialization);
                 prop.Converter = new InlineDeserialize(t => ((JObject)t).Property("name").Value.Value<string>());
+                return prop;
+            }
+
+            if (member.DeclaringType == typeof(ProjectInfo) && member.Name == nameof(ProjectInfo.CanConfigureHooks))
+            {
+                var prop = base.CreateProperty(member, memberSerialization);
+                prop.PropertyName = "permissions";
+                prop.Converter = new InlineDeserialize(ExtractCanConfigureHooksForProject);
                 return prop;
             }
 
@@ -236,6 +280,18 @@ namespace GitLab
             }
 
             return base.CreateProperty(member, memberSerialization);
+        }
+
+        private object ExtractCanConfigureHooksForProject(JToken arg)
+        {
+            var obj = (JObject) arg;
+
+            var projectAccess = obj.Property("project_access").Value.Value<JObject>()?.Property("access_level").Value.Value<int>();
+            var groupAccess = obj.Property("group_access").Value.Value<JObject>()?.Property("access_level").Value.Value<int>();
+
+            var accessLevel = Math.Max(projectAccess ?? -1, groupAccess ?? -1);
+
+            return accessLevel >= MaintainerLevelAccess;
         }
 
         protected override string ResolvePropertyName(string propertyName)
