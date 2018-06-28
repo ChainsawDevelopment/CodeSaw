@@ -10,6 +10,8 @@ export interface AdminState {
 export const loadProjects = createAction('LOAD_PROJECTS');
 export const projectsLoaded = createAction<ProjectInfo[]>('PROJECTS_LOADED');
 
+export const setupProjectHooks = createAction<{ projectId: number }>('SETUP_PROJECT_HOOKS');
+
 const initialState: AdminState = {
     projects: []
 }
