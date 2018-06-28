@@ -183,6 +183,18 @@ namespace GitLab
             return result;
         }
 
+        public async Task AddProjectHook(int projectId, string url, HookEvents hookEvents)
+        {
+            await new RestRequest($"/projects/{projectId}/hooks", Method.POST)
+                .AddJsonBody(new
+                {
+                    url = url,
+                    push_events = hookEvents.HasFlag(HookEvents.Push),
+                    enable_ssl_verification = false
+                })
+                .Execute(_client);
+        }
+
         public async Task<List<T>> Paged<T>(RestRequest request)
         {
             var result = new List<T>();

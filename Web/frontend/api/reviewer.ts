@@ -260,4 +260,11 @@ export class ReviewerApi {
             .then(r => r.json())
             .then(r => r as ProjectInfo[]);
     }
+
+    public setupProjectHooks = (projectId: number): Promise<any> => {
+        return fetch(`/api/admin/project/${projectId}/setup_hooks`, {
+            ...acceptJson,
+            method: 'POST'
+        });
+    }
 }

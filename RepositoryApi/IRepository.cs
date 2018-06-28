@@ -18,5 +18,6 @@ namespace RepositoryApi
         Task UpdateDescription(MergeRequest mergeRequest);
         Task SetCommitStatus(int projectId, string commit, CommitStatus status);
         Task<List<ProjectInfo>> GetProjects();
+        Task AddProjectHook(int projectId, string url, HookEvents hookEvents);
     }
 }
