@@ -83,7 +83,9 @@ namespace Web
             builder.RegisterType<SignInManager<ReviewUser>>().AsSelf();
             builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().InstancePerRequest().WithAttributeFiltering();
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
-            
+
+            builder.Register(ctx => Configuration.GetValue<string>("HookSiteBase", null) ?? ctx.ResolveKeyed<string>("SiteBase")).Keyed<string>("HookSiteBase");
+
             _container = builder.Build();
 
             return new AutofacServiceProvider(_container);
