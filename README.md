@@ -40,6 +40,8 @@ When created, the application will have `Application Id` and `Secret` assigned. 
             "url": "https://git.kplabs.pl",
             "clientId": "<Application id here>",
             "clientSecret": "<Secret here>",
-            "callbackPath": "<Relative Callback path here, i.e. /signin>"
-        }
+            "callbackPath": "<Relative Callback path here, i.e. /signin>",
+            "globalToken": "<Personal access token>" 
+        },
+         "HookSiteBase":  "<Hook adress>" 
     }
