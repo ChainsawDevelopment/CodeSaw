@@ -12,6 +12,8 @@ namespace Web
     {
         private readonly Lazy<string> _accessTokenLazy;
 
+        public TokenType Type { get; } = TokenType.OAuth;
+
         public string AccessToken => _accessTokenLazy.Value;
 
         public CachedGitAccessTokenSource(UserManager<ReviewUser> userManager, [CurrentUser]ReviewUser currentUser)

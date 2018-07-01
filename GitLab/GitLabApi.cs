@@ -23,7 +23,14 @@ namespace GitLab
         public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource)
         {
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
-            _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");
+            if (accessTokenSource.Type == TokenType.OAuth)
+            {
+                _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");
+            }
+            else if (accessTokenSource.Type == TokenType.Custom)
+            {
+                _client.AddDefaultHeader("Private-Token", accessTokenSource.AccessToken);
+            }
 
             //_client.ConfigureWebRequest(wr =>
             //{

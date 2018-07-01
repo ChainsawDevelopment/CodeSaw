@@ -2,6 +2,8 @@
 using System.Linq;
 using Autofac;
 using Autofac.Core.Lifetime;
+using Autofac.Features.AttributeFilters;
+using GitLab;
 using Microsoft.AspNetCore.Http;
 using Nancy;
 using Nancy.Bootstrappers.Autofac;
@@ -18,11 +20,13 @@ namespace Web
     {
         private readonly string assetServer;
         private readonly ILifetimeScope _rootContext;
+        private readonly string _globalToken;
 
-        public Bootstraper(string assetServer, ILifetimeScope rootContext)
+        public Bootstraper(string assetServer, ILifetimeScope rootContext, string globalToken)
         {
             this.assetServer = assetServer;
             _rootContext = rootContext;
+            _globalToken = globalToken;
         }
 
         protected override ILifetimeScope GetApplicationContainer()
@@ -75,9 +79,30 @@ namespace Web
                     .Keyed<ReviewUser>("currentUser");
 
                 builder.RegisterInstance(context.Request.Url.SiteBase).Keyed<string>("SiteBase");
+
+                if (context.CurrentUser!=null)
+                {
+                    builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().SingleInstance().WithAttributeFiltering();    
+                }
+                else
+                {
+                    //throw new NotSupportedException();
+                    builder.RegisterInstance(new CustomToken(_globalToken)).As<IGitAccessTokenSource>();
+                }
             };
 
             return GetApplicationContainer().BeginLifetimeScope(MatchingScopeLifetimeTags.RequestLifetimeScopeTag, register);
+        }
+    }
+
+    public class CustomToken : IGitAccessTokenSource
+    {
+        public TokenType Type { get; } = TokenType.Custom;
+        public string AccessToken { get; }
+
+        public CustomToken(string token)
+        {
+            AccessToken = token;
         }
     }
 }
