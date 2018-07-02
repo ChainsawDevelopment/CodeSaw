@@ -116,7 +116,7 @@ namespace Web.Modules.Api.Queries
 
             foreach (var content in contents)
             {
-                if (IsBinaryFilePredictor(content.Value))
+                if (IsBinaryFile(content.Value))
                     return HandleBinaryFile(contents, previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
             }
 
@@ -299,7 +299,7 @@ namespace Web.Modules.Api.Queries
             );
         }
 
-        private bool IsBinaryFilePredictor(string content)
+        private bool IsBinaryFile(string content)
         {
             var bytes = System.Text.Encoding.ASCII.GetBytes(content);
             var length = Math.Min(8000, bytes.Length);
