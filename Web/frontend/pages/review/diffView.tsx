@@ -6,6 +6,7 @@ import BinaryDiffView from './binaryDiffView';
 import 'react-diff-view/index.css';
 import './diffView.less';
 import * as classNames from "classnames";
+import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
 const mapHunkToView = (hunk: Hunk) => {
     var changes = [];
@@ -152,7 +153,7 @@ const diffView = (props: { diffInfo: FileDiff }) => {
     //     )
     // };
 
-    const markEdits = markWordEdits();
+    const markEdits = smartMarkEdits();
 
     return (
         <div>
