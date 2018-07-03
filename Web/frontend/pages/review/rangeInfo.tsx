@@ -28,7 +28,7 @@ class FileView extends React.Component<FileViewProps> {
         return (
             <span ref={span => this.renderedRef = span}>
                 <FileSummary file={file} />
-                {file.diff ? <DiffView hunks={file.diff.hunks} /> : null}
+                {file.diff ? <DiffView diffInfo={file.diff} /> : null}
             </span>
         );
     }

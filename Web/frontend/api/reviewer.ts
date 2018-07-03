@@ -46,8 +46,16 @@ export interface Hunk {
     oldPosition: HunkPosition;
 }
 
+export interface BinaryFileSizes {
+    previousSize: number;
+    currentSize: number;
+}
+
 export interface FileDiff {
     hunks: Hunk[];
+    isBinaryFile: boolean;
+    areBinaryEqual: boolean;
+    binarySizes: BinaryFileSizes;
 }
 
 export interface ReviewId {

@@ -33,6 +33,9 @@ namespace Web.Modules.Api.Queries
             public ReviewDebugInfo Contents { get; set; }
             public ReviewDebugInfo Commits { get; set; }
             public IEnumerable<HunkInfo> Hunks { get; set; }
+            public bool IsBinaryFile { get; set; }
+            public bool AreBinaryEqual { get; set; }
+            public BinaryFileSizesInfo BinarySizes { get; set; }
         }
 
         public class PatchPosition
@@ -66,6 +69,12 @@ namespace Web.Modules.Api.Queries
         {
             public string Previous { get; set; }
             public string Current { get; set; }
+        }
+
+        public class BinaryFileSizesInfo
+        {
+            public int PreviousSize { get; set; }
+            public int CurrentSize { get; set; }
         }
     }
 
@@ -104,6 +113,12 @@ namespace Web.Modules.Api.Queries
                     .Select(async c => new {File = c, content = await _api.GetFileContent(query.ReviewId.ProjectId, c.Commit, c.Path)})
                     .WhenAll())
                 .ToDictionary(x => x.File.Commit, x => x.content);
+
+            foreach (var content in contents)
+            {
+                if (IsBinaryFile(content.Value))
+                    return HandleBinaryFile(contents, previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
+            }
 
             var basePatch = FourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
             var reviewPatch = FourWayDiff.MakePatch(contents[previousCommit], contents[currentCommit]);
@@ -282,6 +297,59 @@ namespace Web.Modules.Api.Queries
                 s =>  selectCommit(s.Revision),
                 h => h.CommitHash == mergeRequest.HeadCommit ? mergeRequest.BaseCommit : h.CommitHash
             );
+        }
+
+        private bool IsBinaryFile(string content)
+        {
+            var bytes = System.Text.Encoding.ASCII.GetBytes(content);
+            var length = Math.Min(8000, bytes.Length);
+            for (var i = 0; i < length; ++i)
+                if (bytes[i] == 0)
+                    return true;
+
+            return false;
+        }
+
+        private GetFileDiff.Result HandleBinaryFile(IDictionary<string, string> contents, string previousBaseCommit, string  currentBaseCommit, string previousCommit, string currentCommit)
+        {
+            return new GetFileDiff.Result
+            {
+                Commits = new GetFileDiff.ReviewDebugInfo
+                {
+                    Review = new GetFileDiff.RevisionDebugInfo
+                    {
+                        Previous = previousCommit,
+                        Current = currentCommit
+                    },
+                    Base = new GetFileDiff.RevisionDebugInfo
+                    {
+                        Previous = previousBaseCommit,
+                        Current = currentBaseCommit
+                    }
+                },
+
+                Contents = new GetFileDiff.ReviewDebugInfo
+                {
+                    Review = new GetFileDiff.RevisionDebugInfo
+                    {
+                        Previous = contents[previousCommit],
+                        Current = contents[currentCommit]
+                    },
+                    Base = new GetFileDiff.RevisionDebugInfo
+                    {
+                        Previous = contents[previousBaseCommit],
+                        Current = contents[currentBaseCommit]
+                    }
+                },
+
+                IsBinaryFile = true,
+                AreBinaryEqual = contents[previousCommit] == contents[currentCommit],
+                BinarySizes = new GetFileDiff.BinaryFileSizesInfo
+                {
+                    PreviousSize = contents[previousCommit].Length,
+                    CurrentSize = contents[currentCommit].Length
+                }
+            };
         }
     }
 }
