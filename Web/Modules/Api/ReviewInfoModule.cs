@@ -44,18 +44,6 @@ namespace Web.Modules.Api
                 }
             });
 
-            Post("/comment/add", async _ =>
-            {
-                await command.Execute(this.Bind<AddComment>());
-                return new { };
-            });
-
-            Post("/comment/resolve", async _ =>
-            {
-                await command.Execute(this.Bind<ResolveComment>());
-                return new { };
-            });
-
             Post("/merge_request/merge", async _ =>
             {
                 await command.Execute(this.Bind<MergePullRequest>());

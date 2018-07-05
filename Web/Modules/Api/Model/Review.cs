@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RepositoryApi;
+using Web.Auth;
 
 namespace Web.Modules.Api.Model
 {

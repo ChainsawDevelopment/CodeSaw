@@ -2730,6 +2730,10 @@ grouped-queue@^0.3.3:
   dependencies:
     lodash "^4.17.2"
 
+guid-typescript@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/guid-typescript/-/guid-typescript-1.0.7.tgz#3fe0e10e3dd8abfc42c3d8c82b410e65e0df701f"
+
 har-schema@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/har-schema/-/har-schema-2.0.0.tgz#a94c2224ebcac04782a0d9035521f24735b7ec92"
@@ -3338,6 +3342,10 @@ isurl@^1.0.0-alpha5:
 js-base64@^2.1.9:
   version "2.4.5"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-2.4.5.tgz#e293cd3c7c82f070d700fc7a1ca0a2e69f101f92"
+
+js-joda@^1.8.2:
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/js-joda/-/js-joda-1.8.2.tgz#4a7f3aa0cd1e386c35d7628a741184d761cb1401"
 
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"

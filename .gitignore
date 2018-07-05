@@ -10,5 +10,6 @@ Web/wwwroot/
 .fake
 .fake-tools
 artifacts
+yarn-error.log
 
 Web/appsettings.local.json

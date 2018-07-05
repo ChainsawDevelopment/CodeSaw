@@ -77,9 +77,8 @@ namespace Db.Migrator
                 {
                     cmd.ExecuteNonQuery();
                 }
-                catch (SqlException e)
+                catch (SqlException)
                 {
-                    
                 }
 
                 cmd.CommandText = $"CREATE DATABASE [{targetDbName}]";

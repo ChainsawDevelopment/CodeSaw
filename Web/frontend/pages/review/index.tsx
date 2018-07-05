@@ -32,7 +32,7 @@ import "./review.less";
 import VersionSelector from './versionSelector';
 import * as PathPairs from "../../pathPair";
 import ReviewSummary from './reviewSummary';
-import CommentsView from './commentsView';
+import CommentsView, { CommentsActions } from './commentsView';
 import { PathPair, emptyPathPair } from "../../pathPair";
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
@@ -46,12 +46,10 @@ interface OwnProps {
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId, fileToPreload?: PathPair): void;
     selectRevisionRange(range: RevisionRange): void;
-    selectFileForView: SelectFileForViewHandler;    
+    selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
-    loadComments(reviewId: ReviewId): void;
-    addComment(reviewId: ReviewId, content: string, needsResolution: boolean, parentId?: string);
-    resolveComment(reviewId: ReviewId, commentId: string);
+    commentActions: CommentsActions;
     publishReview(): void;
 }
 
@@ -104,8 +102,6 @@ class reviewPage extends React.Component<Props> {
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
                 props.loadReviewInfo(props.reviewId,);
             }
-
-            props.loadComments(props.reviewId);
         };
         return (
             <div id="review-page">
@@ -135,11 +131,11 @@ class reviewPage extends React.Component<Props> {
                             onSelectRange={props.selectRevisionRange}
                         />
 
-                        <ReviewSummary 
-                            reviewId={props.reviewId}
-                            />
+                    <ReviewSummary
+                        reviewId={props.reviewId}
+                    />
 
-                        <CommentsView reviewId={props.reviewId} comments={props.comments} addComment={props.addComment} resolveComment={props.resolveComment} />
+                    <CommentsView comments={props.comments} actions={props.commentActions} />
 
                         </Grid.Column>
                     </Grid.Row>
@@ -180,9 +176,11 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
-    loadComments: (reviewId: ReviewId) => dispatch(loadComments({ reviewId })),
-    addComment: (reviewId, content, needsResolution, parentId) => dispatch(addComment({ reviewId, content, needsResolution, parentId })),
-    resolveComment: (reviewId, commentId) => dispatch(resolveComment({ reviewId, commentId })),
+    commentActions: {
+        load: () => dispatch(loadComments({})),
+        add: (content, filePath, changeKey, needsResolution, parentId) => dispatch(addComment({ content, filePath, changeKey, needsResolution, parentId })),
+        resolve: (commentId) => dispatch(resolveComment({ commentId }))
+    },
     publishReview: () => dispatch(publishReview({})),
 });
 
