@@ -154,9 +154,9 @@ const diffView = (props: { diffInfo: FileDiff }) => {
     };
 
     const widgets = {
-        [getChangeKey(viewHunks[1].changes[0])]: (
-            <span className="error">Line too long</span>
-        )
+        // [getChangeKey(viewHunks[1].changes[0])]: (
+        //     <span className="error">Line too long</span>
+        // )
     };
 
     const markEdits = markWordEdits();

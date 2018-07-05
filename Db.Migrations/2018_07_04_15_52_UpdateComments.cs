@@ -7,6 +7,8 @@ namespace Db.Migrations
     {
         public override void Up()
         {
+            Delete.FromTable("Comments").InSchema("dbo").AllRows();
+
             Delete.ForeignKey("FK_Comments_UserId_Users_Id").OnTable("Comments").InSchema("dbo");
 
             Delete.Column("ProjectId").FromTable("Comments").InSchema("dbo");
