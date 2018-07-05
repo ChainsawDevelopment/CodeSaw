@@ -86,7 +86,6 @@ namespace Web
                 }
                 else
                 {
-                    //throw new NotSupportedException();
                     builder.RegisterInstance(new CustomToken(_globalToken)).As<IGitAccessTokenSource>();
                 }
             };

@@ -13,8 +13,13 @@ namespace Web.Modules.Hooks
         {
             Post("/hooks/{type}", async _ =>
             {
-                var handler = hookHandler[(string)_.type];
-                
+                if (!hookHandler.TryGetValue((string) _.type, out var handler))
+                {
+                    return Response
+                        .AsJson(new {ok = false, msg = $"Unknown hook type {(string) _.type}"})
+                        .WithStatusCode(HttpStatusCode.BadRequest);
+                }
+
                 var headers = Request.Headers.ToDictionary(x => x.Key, x => x.Value);
 
                 var @event = new HookEvent(headers, Request.Body);
