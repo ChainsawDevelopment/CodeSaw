@@ -71,7 +71,7 @@ namespace GitLab
 
         public async Task<string> GetFileContent(int projectId, string commitHash, string file)
         {
-            var request = new RestRequest($"/projects/{projectId}/repository/files/{HttpUtility.UrlEncode(file)}/raw", Method.GET)
+            var request = new RestRequest($"/projects/{projectId}/repository/files/{Uri.EscapeDataString(file)}/raw", Method.GET)
                 .AddQueryParameter("ref", commitHash);
 
             var response = await _client.ExecuteGetTaskAsync(request);
