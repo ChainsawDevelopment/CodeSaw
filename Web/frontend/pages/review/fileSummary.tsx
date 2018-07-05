@@ -5,7 +5,7 @@ import Message from '@ui/collections/Message';
 export default (props: {file: FileInfo}): JSX.Element => {
     const items: JSX.Element[] = [];
 
-    if (props.file.treeEntry.renamedFile) {
+    if (props.file.treeEntry && props.file.treeEntry.renamedFile) {
         const { path } = props.file.treeEntry;
 
         items.push(

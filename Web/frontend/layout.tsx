@@ -22,12 +22,13 @@ const Home = () => (
         <Reviews />
     </span>);
 
-const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string}>) => {
-    const { projectId, id } = props.match.params;
+const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string, fileName: string}>) => {
+    const { projectId, id, fileName } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
 
-    return (<ReviewPage
+    return (<ReviewPage 
         reviewId={reviewId}
+        fileName={decodeURIComponent(fileName || '')}
     />)
 });
 
@@ -54,7 +55,7 @@ export default () => (
         <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
-                <Route path="/project/:projectId/review/:id" component={Review} />
+                <Route path="/project/:projectId/review/:id/:fileName?" component={Review} />
                 <Route path="/layout" component={Layout} />
             </ConnectedSwitch>
         </Container>

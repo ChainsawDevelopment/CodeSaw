@@ -67,7 +67,7 @@ function* loadReviewInfoSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ reviewId: ReviewId }> = yield take(loadReviewInfo);
+        const action: Action<{ reviewId: ReviewId, fileToPreload?: PathPairs.PathPair }> = yield take(loadReviewInfo);
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
@@ -94,6 +94,11 @@ function* loadReviewInfoSaga() {
         yield put(selectCurrentRevisions({
             range: newRange
         }))
+
+        if (action.payload.fileToPreload) {
+            yield take(loadedRevisionsRangeInfo);
+            yield put(selectFileForView({path: action.payload.fileToPreload}));
+        }
     }
 }
 
