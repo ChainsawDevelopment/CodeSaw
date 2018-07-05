@@ -39,7 +39,7 @@ export const selectFileForView = createAction<{ path: PathPairs.PathPair }>('SEL
 
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
-export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: PathPairs.PathPair }>('LOAD_REVIEW_INFO');
+export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
 export const loadComments = createAction<{}>('LOAD_COMMENTS');
