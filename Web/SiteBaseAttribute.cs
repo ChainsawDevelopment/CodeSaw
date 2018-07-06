@@ -11,4 +11,12 @@ namespace Web
             return context.ResolveKeyed<string>("SiteBase");
         }
     }
+    
+    public class HookSiteBaseAttribute : ParameterFilterAttribute
+    {
+        public override object ResolveParameter(ParameterInfo parameter, IComponentContext context)
+        {
+            return context.ResolveKeyed<string>("HookSiteBase");
+        }
+    }
 }

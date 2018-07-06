@@ -11,6 +11,7 @@ import ReviewPage from './pages/review';
 import ReviewPageTopMenu from './pages/review/topMenu';
 
 import Reviews from "./pages/reviews";
+import AdminPage from './pages/admin';
 
 import "./layout.less";
 import { ReviewId } from "./api/reviewer";
@@ -47,6 +48,9 @@ export default () => (
                 <Menu.Item as={(props) => (<Link to='/' {...props} />)}>
                     Home
                 </Menu.Item>
+                <Menu.Item as={(props) => (<Link to='/admin' {...props} />)}>
+                    Administration
+                </Menu.Item>
                 <ConnectedSwitch>
                     <Route path="/project/:projectId/review/:id" component={ReviewPageTopMenu} />
                 </ConnectedSwitch>
@@ -56,6 +60,7 @@ export default () => (
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
                 <Route path="/project/:projectId/review/:id/:fileName?" component={Review} />
+                <Route exact path="/admin" component={AdminPage} />
                 <Route path="/layout" component={Layout} />
             </ConnectedSwitch>
         </Container>

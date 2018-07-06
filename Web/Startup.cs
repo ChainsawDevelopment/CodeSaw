@@ -80,10 +80,14 @@ namespace Web
 
             builder.Register(BuildGitLabApi).As<IRepository>().InstancePerRequest(); ;
 
+            builder.RegisterType<GitLab.Hooks.HookHandler>().Named<RepositoryApi.Hooks.IHookHandler>("gitlab");
+            builder.RegisterType<Modules.Hooks.ReactToHook>().AsImplementedInterfaces();
+
             builder.RegisterType<SignInManager<ReviewUser>>().AsSelf();
-            builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().InstancePerRequest().WithAttributeFiltering();
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
-            
+
+            builder.Register(ctx => Configuration.GetValue<string>("HookSiteBase", null) ?? ctx.ResolveKeyed<string>("SiteBase")).Keyed<string>("HookSiteBase");
+
             _container = builder.Build();
 
             return new AutofacServiceProvider(_container);
@@ -159,12 +163,13 @@ namespace Web
             });
 
             var assetServer = Configuration.GetValue<string>("REVIEWER_ASSET_SERVER", null);
+            var globalToken = Configuration.GetSection("GitLab").GetValue<string>("globalToken");
 
             app.UseAuthentication();
 
-            app.ChallengeAllUnauthenticatedCalls();
+            app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/hooks"), sub => sub.ChallengeAllUnauthenticatedCalls());
 
-            app.UseOwin(owin => { owin.UseNancy(opt => opt.Bootstrapper = new Bootstraper(assetServer, _container)); });
+            app.UseOwin(owin => { owin.UseNancy(opt => opt.Bootstrapper = new Bootstraper(assetServer, _container, globalToken)); });
         }
     }
 }

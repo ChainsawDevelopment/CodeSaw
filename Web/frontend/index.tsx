@@ -14,6 +14,9 @@ import reviewSagas from './pages/review/sagas';
 import { reviewsReducer } from './pages/reviews/state';
 import reviewsSagas from './pages/reviews/sagas';
 
+import { adminReducer } from './pages/admin/state';
+import adminSagas from './pages/admin/sagas';
+
 interface State {
     router: RouterState
 }
@@ -30,7 +33,8 @@ const store = createStore(
     combineReducers({
         router: routerReducer,
         review: reviewReducer,
-        reviews: reviewsReducer
+        reviews: reviewsReducer,
+        admin: adminReducer
     }),
     composeEnhancers(
         applyMiddleware(historyMiddleware, sagaMiddleware)
@@ -42,6 +46,10 @@ for (const saga of reviewSagas) {
 }
 
 for (const saga of reviewsSagas) {
+    sagaMiddleware.run(saga);
+}
+
+for (const saga of adminSagas) {
     sagaMiddleware.run(saga);
 }
 
