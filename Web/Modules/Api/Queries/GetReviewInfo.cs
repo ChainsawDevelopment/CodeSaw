@@ -1,9 +1,7 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NHibernate;
-using NHibernate.Criterion;
 using NHibernate.Transform;
 using RepositoryApi;
 using Web.Auth;

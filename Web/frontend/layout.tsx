@@ -4,6 +4,7 @@ import './assets/favicon.png'
 import * as React from "react";
 import Menu from '@ui/collections/Menu';
 import Container from '@ui/elements/Container';
+import Icon from '@ui/elements/Icon';
 import { Link, Route, withRouter, RouteComponentProps } from "react-router-dom";
 import ConnectedSwitch from './routing/ConnectedSwitch';
 
@@ -15,6 +16,7 @@ import AdminPage from './pages/admin';
 
 import "./layout.less";
 import { ReviewId } from "./api/reviewer";
+import CurrentUser from './pages/user/User';
 
 const Home = () => (
     <span>
@@ -51,9 +53,15 @@ export default () => (
                 <Menu.Item as={(props) => (<Link to='/admin' {...props} />)}>
                     Administration
                 </Menu.Item>
-                <ConnectedSwitch>
-                    <Route path="/project/:projectId/review/:id" component={ReviewPageTopMenu} />
-                </ConnectedSwitch>
+                <Menu.Menu position='right'>
+                    <ConnectedSwitch>
+                        <Route path="/project/:projectId/review/:id" component={ReviewPageTopMenu} />
+                    </ConnectedSwitch>
+                    <Menu.Item>
+                        <Icon name="user" circular /> 
+                        <strong><CurrentUser /></strong>
+                    </Menu.Item>
+                </Menu.Menu>
             </Container>
         </Menu>
         <Container fluid id="main-content">
