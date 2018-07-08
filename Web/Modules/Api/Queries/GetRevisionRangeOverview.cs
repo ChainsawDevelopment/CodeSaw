@@ -113,6 +113,7 @@ namespace Web.Modules.Api.Queries
                     .WithSubquery.WhereProperty(() => review.RevisionId).In(revisionId)
                     .And(() => review.UserId == userId)
                     .Inner.JoinAlias(() => review.Files, () => file)
+                    .Where(() => file.Status == FileReviewStatus.Reviewed)
                     .SelectList(r => r
                         .Select(() => file.File.OldPath).WithAlias(() => dto.OldPath)
                         .Select(() => file.File.NewPath).WithAlias(() => dto.NewPath)
