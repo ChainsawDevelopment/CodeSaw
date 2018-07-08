@@ -24,7 +24,7 @@ namespace Web.Modules.Api
 
             Post("/registerlink", async _ =>
             {   
-                await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId, Context.Request.Url.SiteBase));
+                await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId));
                 return new { success = true };
             });
             
