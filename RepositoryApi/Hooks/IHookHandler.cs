@@ -24,5 +24,6 @@ namespace RepositoryApi.Hooks
     public interface ITriggerAction
     {
         Task MergeRequestChanged(int projectId, int reviewId);
+        Task NewMergeRequest(int projectId, int reviewId);
     }
 }

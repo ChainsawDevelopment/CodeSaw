@@ -20,5 +20,10 @@ namespace Web.Modules.Hooks
         {
             await _commands.Execute(new HandleReviewChange(new ReviewIdentifier(projectId, reviewId)));
         }
+
+        public async Task NewMergeRequest(int projectId, int reviewId)
+        {
+            await _commands.Execute(new HandleNewReview(new ReviewIdentifier(projectId, reviewId)));
+        }
     }
 }

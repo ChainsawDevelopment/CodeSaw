@@ -6,7 +6,7 @@ using Web.Modules.Api.Commands;
 using Web.Modules.Api.Model;
 using Web.Modules.Api.Queries;
 
-namespace Web.Modules.Api.BackgroundActions
+namespace Web.BackgroundActions
 {
     public class PublishReviewSummary : IHandle<ReviewPublishedEvent>
     {

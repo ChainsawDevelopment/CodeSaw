@@ -37,6 +37,10 @@ namespace GitLab.Hooks
             {
                 await trigger.MergeRequestChanged(projectId, reviewId);
             }
+            else if (action == "open")
+            {
+                await trigger.NewMergeRequest(projectId, reviewId);
+            }
         }
 
         private JObject ReadData(HookEvent @event)
