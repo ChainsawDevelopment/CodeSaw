@@ -3,7 +3,7 @@ import Menu from '@ui/collections/Menu';
 import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import { RevisionRangeInfo, ReviewId, Comment, FileComments } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId, Comment, FileComments, RevisionRange } from "../../api/reviewer";
 import DiffView from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
@@ -22,16 +22,19 @@ interface FileViewProps {
     file: FileInfo;
     comments: FileComments[];
     commentActions: C.CommentsActions;
+    revisionRange: RevisionRange;
 }
 
 class FileView extends React.Component<FileViewProps> {
     private renderedRef: HTMLSpanElement;
 
     render(): JSX.Element {
-        const { file, commentActions } = this.props;
+        const { file, commentActions, revisionRange } = this.props;
 
         const comments2 = this.props.comments
-            .filter(f => PathPairs.equal(f.filePath, file.path) && (f.revision == 1 || f.revision == 'base')) // TODO: current revision
+            .filter(f => 
+                PathPairs.equal(f.filePath, file.path) 
+                && (f.revision == revisionRange.current || f.revision == revisionRange.previous))
            ;
             
 
@@ -43,8 +46,8 @@ class FileView extends React.Component<FileViewProps> {
                         diffInfo={file.diff} 
                         comments={comments2}
                         commentActions={commentActions}
-                        leftSideRevision={'base'}
-                        rightSideRevision={1}
+                        leftSideRevision={revisionRange.previous}
+                        rightSideRevision={revisionRange.current}
                     /> 
                     : null}
             </span>
@@ -67,6 +70,7 @@ export interface ReviewFileActions {
 }
 
 export interface Props {
+    revisionRange: RevisionRange;
     info: RevisionRangeInfo;
     selectedFile: FileInfo & { isReviewed: boolean };
     onSelectFileForView: SelectFileForViewHandler;
@@ -202,7 +206,12 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                     </Sticky>
                     <div>
                         {selectedFile ?
-                            <FileView file={selectedFile} commentActions={actions} comments={this.props.fileComments}/>
+                            <FileView 
+                                file={selectedFile} 
+                                commentActions={actions} 
+                                comments={this.props.fileComments}
+                                revisionRange={this.props.revisionRange}
+                            />
                             : <NoFileView />
                         }
                     </div>

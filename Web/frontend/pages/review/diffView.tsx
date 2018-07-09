@@ -219,6 +219,8 @@ const diffView = (props: Props) => {
         commentsByChangeKey[changeKey] = fileComment.comments;
     }
 
+    console.log(commentsByChangeKey);
+
     let widgets = {};
 
     for (let key of Object.keys(commentsByChangeKey)) {
