@@ -3,7 +3,7 @@ import Menu from '@ui/collections/Menu';
 import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import { RevisionRangeInfo, ReviewId, Comment } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId, Comment, FileComments } from "../../api/reviewer";
 import DiffView from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
@@ -19,53 +19,22 @@ import { FileLink } from "./FileLink";
 import * as C from './commentsView';
 
 interface FileViewProps {
-    file: FileInfo
+    file: FileInfo;
+    comments: FileComments[];
+    commentActions: C.CommentsActions;
 }
 
 class FileView extends React.Component<FileViewProps> {
     private renderedRef: HTMLSpanElement;
 
     render(): JSX.Element {
-        const { file } = this.props;
+        const { file, commentActions } = this.props;
 
-        const comments: Comment[] = [
-            {
-                author: 'mnowak',
-                content: 'comment I11 part 1',
-                changeKey: 'I11',
-                children: [],
-                createdAt: '',
-                filePath: '',
-                id: '1',
-                state: 'NeedsResolution'
-            },
-            {
-                author: 'mnowak',
-                content: 'comment I21 part 1',
-                changeKey: 'I21',
-                children: [],
-                createdAt: '',
-                filePath: '',
-                id: '2',
-                state: 'NeedsResolution'
-            },
-            {
-                author: 'mnowak',
-                content: 'comment I21 part 2',
-                changeKey: 'I21',
-                children: [],
-                createdAt: '',
-                filePath: '',
-                id: '3',
-                state: 'NeedsResolution'
-            }
-        ];
-
-        const actions: C.CommentsActions = {
-            add: null,
-            load: null,
-            resolve: null
-        };
+        const comments2 = this.props.comments
+            .filter(f => PathPairs.equal(f.filePath, file.path))
+            .map(f => f.comments)
+            .reduce((a,b) => [...a, ...b]);
+            
 
         return (
             <span ref={span => this.renderedRef = span}>
@@ -73,8 +42,8 @@ class FileView extends React.Component<FileViewProps> {
                 {file.diff ? 
                     <DiffView 
                         diffInfo={file.diff} 
-                        comments={comments}
-                        commentActions={actions}
+                        comments={comments2}
+                        commentActions={commentActions}
                     /> 
                     : null}
             </span>
@@ -105,6 +74,7 @@ export interface Props {
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
     reviewId: ReviewId;
+    fileComments: FileComments[];
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -201,6 +171,13 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             </Menu.Item>);
         }
 
+        
+        const actions: C.CommentsActions = {
+            add: null,
+            load: null,
+            resolve: null
+        };
+
         return (
             <div ref={this._handleRef}>
                 <Segment>
@@ -224,7 +201,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                     </Sticky>
                     <div>
                         {selectedFile ?
-                            <FileView file={selectedFile} />
+                            <FileView file={selectedFile} commentActions={actions} comments={this.props.fileComments}/>
                             : <NoFileView />
                         }
                     </div>

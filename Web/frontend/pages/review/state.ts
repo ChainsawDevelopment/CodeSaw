@@ -98,7 +98,8 @@ const initial: ReviewState = {
         baseCommit: '',
         state: 'opened',
         mergeStatus: 'unchecked',
-        reviewSummary: []
+        reviewSummary: [],
+        fileComments: []
     },
     reviewedFiles: [],
     comments: []
@@ -146,7 +147,47 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (loadedReviewInfo.match(action)) {
         return {
             ...state,
-            currentReview: action.payload
+            currentReview: {
+                ...action.payload,
+                fileComments: [
+                    {
+                        revision: 1,
+                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        comments: [
+                            {
+                                author: 'mnowak',
+                                content: 'comment I11 part 1',
+                                changeKey: 'I11',
+                                children: [],
+                                createdAt: '',
+                                filePath: '',
+                                id: '1',
+                                state: 'NeedsResolution'
+                            },
+                            {
+                                author: 'mnowak',
+                                content: 'comment I21 part 1',
+                                changeKey: 'I21',
+                                children: [],
+                                createdAt: '',
+                                filePath: '',
+                                id: '2',
+                                state: 'NeedsResolution'
+                            },
+                            {
+                                author: 'mnowak',
+                                content: 'comment I21 part 2',
+                                changeKey: 'I21',
+                                children: [],
+                                createdAt: '',
+                                filePath: '',
+                                id: '3',
+                                state: 'NeedsResolution'
+                            }
+                        ]
+                    }
+                ]
+            }
         };
     }
 

@@ -186,8 +186,6 @@ const diffView = (props: Props) => {
         )
     }
 
-    console.log(widgets);
-
     const markEdits = smartMarkEdits();
 
     return (

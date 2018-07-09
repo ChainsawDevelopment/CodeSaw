@@ -157,6 +157,7 @@ class reviewPage extends React.Component<Props> {
                     publishReview={props.publishReview}
                     onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
                     reviewId={props.reviewId}
+                    fileComments={props.currentReview.fileComments}
                 />) : null}
             </div>
         );
