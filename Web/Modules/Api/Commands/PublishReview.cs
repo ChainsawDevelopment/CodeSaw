@@ -56,8 +56,6 @@ namespace Web.Modules.Api.Commands
                 {
                     Id = revisionComment.Id,
                     ReviewId = review.Id,
-                    ChangeKey = revisionComment.ChangeKey,
-                    FilePath = revisionComment.FilePath,
                     CreatedAt = DateTimeOffset.UtcNow,
                     ParentId = parent?.Id,
                     Content = revisionComment.Content,
@@ -87,8 +85,6 @@ namespace Web.Modules.Api.Commands
             public Guid Id { get; set; }
             public Guid? ParentId { get; set; }
             public string Content { get; set; }
-            public string FilePath { get; set; }
-            public string ChangeKey { get; set; }
             public CommentState? State { get; set; }
             public List<RevisionComment> Children { get; set; } = new List<RevisionComment>();
         }
