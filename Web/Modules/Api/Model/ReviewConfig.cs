@@ -15,10 +15,15 @@ namespace Web.Modules.Api.Model
             Property(x => x.RevisionId);
             Property(x => x.ReviewedAt);
 
-
             Bag(x => x.Files, coll =>
             {
                 coll.Table("ReviewFiles");
+                coll.Key(key => key.Column("ReviewId"));
+            });
+
+            Bag(x => x.FileComments, coll =>
+            {
+                coll.Table("FileComments");
                 coll.Key(key => key.Column("ReviewId"));
             });
         }
