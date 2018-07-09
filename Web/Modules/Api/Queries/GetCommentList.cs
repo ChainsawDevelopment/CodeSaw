@@ -48,7 +48,7 @@ namespace Web.Modules.Api.Queries
             {
                 var comments = await (
                         from comment in _session.Query<Comment>()
-                        join review in _session.Query<Review>() on comment.ReviewId equals review.Id
+                        join review in _session.Query<Review>() on comment.PostedInReviewId equals review.Id
                         join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
                         join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
                         orderby comment.CreatedAt

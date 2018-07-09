@@ -16,16 +16,18 @@ namespace Web.Modules.Api.Model
     {
         public virtual Guid Id { get; set; }
         public virtual Guid? ParentId { get; set; }
-        public virtual Guid ReviewId { get; set; }
+
+        public virtual Guid PostedInReviewId { get; set; }
+
         public virtual string Content { get; set; }
         public virtual CommentState State { get; set; }
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
         public virtual DateTimeOffset CreatedAt { get; set; }
     }
 
-    public class CommentMapping : ClassMapping<Comment>
+    public class ReviewCommentMapping : ClassMapping<Comment>
     {
-        public CommentMapping()
+        public ReviewCommentMapping()
         {
             Table("Comments");
 
@@ -43,7 +45,7 @@ namespace Web.Modules.Api.Model
                 mapper.NotNullable(true);
             });
             Property(x => x.ParentId);
-            Property(x => x.ReviewId);
+            Property(x => x.PostedInReviewId, c => c.Column("ReviewId"));
         }
     }
 }

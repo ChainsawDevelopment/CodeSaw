@@ -216,7 +216,10 @@ const diffView = (props: Props) => {
             }
         }
 
-        commentsByChangeKey[changeKey] = fileComment.comments;
+        commentsByChangeKey[changeKey] =[
+            ...commentsByChangeKey[changeKey] || [],
+            fileComment.comment
+        ] 
     }
 
     console.log(commentsByChangeKey);
