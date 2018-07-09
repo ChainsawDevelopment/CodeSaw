@@ -117,11 +117,12 @@ namespace Web
 
             var user = JObject.Parse(await response.Content.ReadAsStringAsync());
             var userName = user["username"].Value<string>();
+            var givenName = user["name"].Value<string>();
 
             context.RunClaimActions(user);
                         
             var commandDispatcher = context.HttpContext.RequestServices.GetService(typeof(ICommandDispatcher)) as ICommandDispatcher;
-            await commandDispatcher.Execute(new UserTicketCreated(userName, context.AccessToken));
+            await commandDispatcher.Execute(new UserTicketCreated(userName, givenName, context.AccessToken));
         }
 
         private GitLabApi BuildGitLabApi(IComponentContext ctx)

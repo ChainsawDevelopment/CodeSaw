@@ -11,8 +11,11 @@ import Layout from './layout';
 import { reviewReducer } from './pages/review/state';
 import reviewSagas from './pages/review/sagas';
 
+import userSagas from './pages/user/userSaga';
+
 import { reviewsReducer } from './pages/reviews/state';
 import reviewsSagas from './pages/reviews/sagas';
+import { usersReducer } from './pages/user/state';
 
 import { adminReducer } from './pages/admin/state';
 import adminSagas from './pages/admin/sagas';
@@ -34,7 +37,8 @@ const store = createStore(
         router: routerReducer,
         review: reviewReducer,
         reviews: reviewsReducer,
-        admin: adminReducer
+        admin: adminReducer,
+        currentUser: usersReducer
     }),
     composeEnhancers(
         applyMiddleware(historyMiddleware, sagaMiddleware)
@@ -50,6 +54,10 @@ for (const saga of reviewsSagas) {
 }
 
 for (const saga of adminSagas) {
+    sagaMiddleware.run(saga);
+}
+
+for (const saga of userSagas) {
     sagaMiddleware.run(saga);
 }
 

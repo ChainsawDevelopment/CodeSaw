@@ -22,7 +22,6 @@ const topMenu = (props: Props) => {
     return (
         <>
             <Menu.Item
-                position='right'
                 onClick={createLink}>
                 Create link in GitLab
             </Menu.Item>

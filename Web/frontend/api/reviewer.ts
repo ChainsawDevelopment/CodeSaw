@@ -1,4 +1,5 @@
 import * as PathPairs from "../pathPair";
+import { UserState } from "../rootState";
 
 export type RevisionId = 'base' | number | string | 'provisional';
 
@@ -247,5 +248,11 @@ export class ReviewerApi {
             ...acceptJson,
             method: 'POST'
         });
+    }
+
+    public getCurrentUser = (): Promise<UserState> => {
+        return fetch(`/api/user/current`, acceptJson)
+            .then(r => r.json())
+            .then(r => r as UserState);
     }
 }

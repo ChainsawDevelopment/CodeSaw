@@ -8,11 +8,13 @@ namespace Web.Auth
     public class UserTicketCreated : ICommand
     {
         public string UserName { get; }
+        public string GivenName { get; }
         public string AccessToken { get; }
 
-        public UserTicketCreated(string userName, string accessToken)
+        public UserTicketCreated(string userName, string givenName, string accessToken)
         {
             UserName = userName;
+            GivenName = givenName;
             AccessToken = accessToken;
         }
 
@@ -33,12 +35,14 @@ namespace Web.Auth
                 var existingUser = await _queryRunner.Query(new FindUserByName(command.UserName));
                 if (existingUser == null)
                 {
-                    await _session.SaveAsync(new ReviewUser() { UserName = command.UserName, Token = command.AccessToken });
+                    await _session.SaveAsync(new ReviewUser() { UserName = command.UserName, GivenName = command.GivenName, Token = command.AccessToken });
                     Console.WriteLine("New user created");
                 }
                 else
                 {
                     existingUser.Token = command.AccessToken;
+                    existingUser.GivenName = command.GivenName;
+                    
                     await _session.UpdateAsync(existingUser);
                     Console.WriteLine($"Found existing user with ID {existingUser.Id}, token updated.");
                 }
