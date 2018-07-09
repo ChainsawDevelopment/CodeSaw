@@ -11,8 +11,17 @@ import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 import * as C from './commentsView';
 import * as A from '../../api/reviewer';
 
+interface Change {
+    oldLineNumber: number;
+    newLineNumber: number;
+
+    isDelete: boolean;
+
+    [key:string]: any;
+}
+
 const mapHunkToView = (hunk: Hunk) => {
-    var changes = [];
+    var changes: Change[] = [];
 
     let oldLineCounter = hunk.oldPosition.start + 1;
     let newLineCounter = hunk.newPosition.start + 1;
@@ -77,7 +86,7 @@ const oppositeType = (type: string) => {
     }
 }
 
-const zipChanges = (changes: any[]) => {
+const zipChanges = (changes: Change[]): Change[] => {
     let result = [];
 
     let inserts = [];
@@ -137,8 +146,9 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
 
 interface Props {
     diffInfo: FileDiff;
-    comments: A.Comment[];
+    comments: A.FileComments[];
     commentActions: C.CommentsActions;
+    rightSideRevision: A.RevisionId;
 }
 
 interface CommentsByChangeKey {
@@ -164,16 +174,28 @@ const diffView = (props: Props) => {
         }
     };
 
-    
+    const commentsByChangeKey = {} as CommentsByChangeKey;
 
-    const commentsByChangeKey = props.comments.reduce(
-        (all:CommentsByChangeKey, comment: A.Comment): CommentsByChangeKey => ({
-            ...all,
-            [comment.changeKey]: [
-                ...all[comment.changeKey] || [],
-                comment
-            ]
-        }), {} as CommentsByChangeKey);
+    for (let fileComment of props.comments) {
+        let changeKey = 'TBD';
+
+        for (let hunk of viewHunks) {
+            for (let change of hunk.changes) {
+                if (change.newLineNumber != fileComment.lineNumber) { // TODO: check revision
+                    continue;
+                }
+
+                if (change.isDelete) { // TODO: check revision
+                    continue;
+                }
+                
+                changeKey = getChangeKey(change);
+                break;
+            }
+        }
+
+        commentsByChangeKey[changeKey] = fileComment.comments;
+    }
 
     let widgets = {};
 

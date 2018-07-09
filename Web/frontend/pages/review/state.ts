@@ -153,34 +153,36 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     {
                         revision: 1,
                         filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        lineNumber: 11,
                         comments: [
                             {
                                 author: 'mnowak',
                                 content: 'comment I11 part 1',
-                                changeKey: 'I11',
                                 children: [],
                                 createdAt: '',
-                                filePath: '',
                                 id: '1',
                                 state: 'NeedsResolution'
                             },
+                        ]
+                    },
+                    {
+                        revision: 1,
+                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        lineNumber: 21,
+                        comments: [
                             {
                                 author: 'mnowak',
                                 content: 'comment I21 part 1',
-                                changeKey: 'I21',
                                 children: [],
                                 createdAt: '',
-                                filePath: '',
                                 id: '2',
                                 state: 'NeedsResolution'
                             },
                             {
                                 author: 'mnowak',
                                 content: 'comment I21 part 2',
-                                changeKey: 'I21',
                                 children: [],
                                 createdAt: '',
-                                filePath: '',
                                 id: '3',
                                 state: 'NeedsResolution'
                             }
@@ -241,9 +243,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (addComment.match(action)) {
         const newComment: Comment = {
             author: 'NOT SUBMITTED',
-            changeKey: action.payload.changeKey,
             content: action.payload.content,
-            filePath: action.payload.filePath,
             state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
             createdAt: joda.LocalDateTime.now(joda.ZoneOffset.UTC).toString(),
             id: Guid.create().toString(),

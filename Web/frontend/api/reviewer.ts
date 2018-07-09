@@ -78,8 +78,9 @@ export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
 
 export interface FileComments
 {
-    revision: number;
+    revision: RevisionId;
     filePath: PathPairs.PathPair;
+    lineNumber: number;
     comments: Comment[];
 }
 
@@ -126,8 +127,6 @@ export interface Comment {
     id: string;
     author: string;
     content: string;
-    filePath: string;
-    changeKey: string;
     state: CommentState,
     createdAt: string;
     children: Comment[];

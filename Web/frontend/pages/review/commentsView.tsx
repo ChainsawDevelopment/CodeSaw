@@ -10,8 +10,6 @@ export interface CommentsActions {
 
 interface CommentsProps {
     comments: Comment[];
-    filePath?: string;
-    changeKey?: string;
     actions: CommentsActions;
 }
 
@@ -43,8 +41,6 @@ const mapComments = (
             createdAt={comment.createdAt}
             children={comment.children}
             actions={actions}
-            filePath={comment.filePath}
-            changeKey={comment.changeKey}
         />
     ));
 };
@@ -150,7 +146,7 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
                 {comments}
                 <Form reply onSubmit={onSubmit}>
                     <Form.TextArea onChange={onChangeReply} value={this.state.commentText} />
-                    <Button onClick={() => this.props.actions.add(this.state.commentText, this.props.filePath, this.props.changeKey, this.state.needsResolution)} secondary>Add Comment</Button>
+                    <Button onClick={() => this.props.actions.add(this.state.commentText, '', '', this.state.needsResolution)} secondary>Add Comment</Button>
                     <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                 </Form>
             </UIComment.Group>
