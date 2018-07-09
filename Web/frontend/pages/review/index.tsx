@@ -44,7 +44,7 @@ interface OwnProps {
 }
 
 interface DispatchProps {
-    loadReviewInfo(reviewId: ReviewId, fileToPreload?: PathPair): void;
+    loadReviewInfo(reviewId: ReviewId, fileToPreload?: string): void;
     selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
@@ -97,12 +97,20 @@ class reviewPage extends React.Component<Props> {
         const load = () => {
             if (!selectedFile && props.fileName) {
                 this.onShowFileHandlerAvailable = this.scrollToFileWhenHandlerIsAvailable;
-                props.loadReviewInfo(props.reviewId,{newPath: props.fileName, oldPath: props.fileName});
+                props.loadReviewInfo(props.reviewId, props.fileName);
             } else {        
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
                 props.loadReviewInfo(props.reviewId,);
             }
         };
+
+        const selectFileForView = () => {
+            const fullPath = props.rangeInfo.changes.find(f => f.path.newPath == props.fileName).path;
+
+            props.selectFileForView(fullPath);
+            this.onShowFile();
+        };
+
         return (
             <div id="review-page">
                 <Grid centered columns={2}>
@@ -110,10 +118,7 @@ class reviewPage extends React.Component<Props> {
                         <Grid.Column>
             
                         <OnMount onMount={load} />
-                        <OnPropChanged fileName={props.fileName} onPropChanged={() => {
-                            props.selectFileForView({newPath: props.fileName, oldPath: props.fileName});
-                            this.onShowFile();
-                        }} />
+                        <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
 
                         <h1>Review {props.currentReview.title}</h1>
 
@@ -168,7 +173,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
-    loadReviewInfo: (reviewId: ReviewId, fileToPreload?: PathPair) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
+    loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
     selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),

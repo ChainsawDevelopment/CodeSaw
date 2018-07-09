@@ -16,7 +16,7 @@ import {
     MergePullRequestArgs
 } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment, RevisionRangeInfo } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
@@ -67,7 +67,7 @@ function* loadReviewInfoSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ reviewId: ReviewId, fileToPreload?: PathPairs.PathPair }> = yield take(loadReviewInfo);
+        const action: Action<{ reviewId: ReviewId, fileToPreload?: string }> = yield take(loadReviewInfo);
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
@@ -96,8 +96,11 @@ function* loadReviewInfoSaga() {
         }))
 
         if (action.payload.fileToPreload) {
-            yield take(loadedRevisionsRangeInfo);
-            yield put(selectFileForView({path: action.payload.fileToPreload}));
+            const rangeInfo: Action<RevisionRangeInfo> = yield take(loadedRevisionsRangeInfo);
+
+            const fullPath = rangeInfo.payload.changes.find(f => f.path.newPath == action.payload.fileToPreload).path;
+
+            yield put(selectFileForView({path: fullPath}));
         }
     }
 }
