@@ -98,7 +98,8 @@ const initial: ReviewState = {
         baseCommit: '',
         state: 'opened',
         mergeStatus: 'unchecked',
-        reviewSummary: []
+        reviewSummary: [],
+        fileComments: []
     },
     reviewedFiles: [],
     comments: []
@@ -146,7 +147,64 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (loadedReviewInfo.match(action)) {
         return {
             ...state,
-            currentReview: action.payload
+            currentReview: {
+                ...action.payload,
+                fileComments: [
+                    {
+                        revision: 1,
+                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        lineNumber: 11,
+                        comments: [
+                            {
+                                author: 'mnowak',
+                                content: 'comment I11 part 1',
+                                children: [],
+                                createdAt: '',
+                                id: '1',
+                                state: 'NeedsResolution'
+                            },
+                        ]
+                    },
+                    {
+                        revision: 'base',
+                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        lineNumber: 10,
+                        comments: [
+                            {
+                                author: 'mnowak',
+                                content: 'comment E10 part 1',
+                                children: [],
+                                createdAt: '',
+                                id: '2',
+                                state: 'NeedsResolution'
+                            },
+                        ]
+                    },
+                    {
+                        revision: 1,
+                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        lineNumber: 21,
+                        comments: [
+                            {
+                                author: 'mnowak',
+                                content: 'comment I21 part 1',
+                                children: [],
+                                createdAt: '',
+                                id: '3',
+                                state: 'NeedsResolution'
+                            },
+                            {
+                                author: 'mnowak',
+                                content: 'comment I21 part 2',
+                                children: [],
+                                createdAt: '',
+                                id: '4',
+                                state: 'NeedsResolution'
+                            }
+                        ]
+                    }
+                ]
+            }
         };
     }
 
@@ -200,9 +258,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (addComment.match(action)) {
         const newComment: Comment = {
             author: 'NOT SUBMITTED',
-            changeKey: action.payload.changeKey,
             content: action.payload.content,
-            filePath: action.payload.filePath,
             state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
             createdAt: joda.LocalDateTime.now(joda.ZoneOffset.UTC).toString(),
             id: Guid.create().toString(),

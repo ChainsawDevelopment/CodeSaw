@@ -8,8 +8,21 @@ import './diffView.less';
 import * as classNames from "classnames";
 import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
+import * as C from './commentsView';
+import * as A from '../../api/reviewer';
+
+interface Change {
+    oldLineNumber: number;
+    newLineNumber: number;
+
+    isDelete: boolean;
+    isInsert: boolean;
+
+    [key:string]: any;
+}
+
 const mapHunkToView = (hunk: Hunk) => {
-    var changes = [];
+    var changes: Change[] = [];
 
     let oldLineCounter = hunk.oldPosition.start + 1;
     let newLineCounter = hunk.newPosition.start + 1;
@@ -74,7 +87,7 @@ const oppositeType = (type: string) => {
     }
 }
 
-const zipChanges = (changes: any[]) => {
+const zipChanges = (changes: Change[]): Change[] => {
     let result = [];
 
     let inserts = [];
@@ -132,7 +145,43 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
-const diffView = (props: { diffInfo: FileDiff }) => {
+interface Props {
+    diffInfo: FileDiff;
+    comments: A.FileComments[];
+    commentActions: C.CommentsActions;
+    leftSideRevision: A.RevisionId;
+    rightSideRevision: A.RevisionId;
+}
+
+interface CommentsByChangeKey {
+    [changeKey: string]: A.Comment[];
+}
+
+const leftSideMatch = (change: Change, comment: A.FileComments) => {
+    if (change.isInsert) {
+        return false;
+    }
+
+    if (change.oldLineNumber != comment.lineNumber) {
+        return false;
+    }
+
+    return true;
+}
+
+const rightSideMatch = (change: Change, comment: A.FileComments) => {
+    if (change.isDelete) {
+        return false;
+    }
+
+    if (change.newLineNumber != comment.lineNumber) {
+        return false;
+    }
+
+    return true;
+}
+
+const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
@@ -141,9 +190,6 @@ const diffView = (props: { diffInfo: FileDiff }) => {
     const toggleChangeComment = (change) => {
         console.log(`old: ${change.oldLineNumber} new: ${change.newLineNumber}, con: ${change.content}`);
         console.log(`key: ${getChangeKey(change)}`);
-//        [getChangeKey(viewHunks[1].changes[0])]: (
-//            <span className="error">Line too long</span>
-//        )
     };
 
     const events = {
@@ -154,11 +200,37 @@ const diffView = (props: { diffInfo: FileDiff }) => {
         }
     };
 
-    const widgets = {
-        // [getChangeKey(viewHunks[1].changes[0])]: (
-        //     <span className="error">Line too long</span>
-        // )
-    };
+    const commentsByChangeKey = {} as CommentsByChangeKey;
+
+    for (let fileComment of props.comments) {
+        let changeKey = 'TBD';
+
+        let match = fileComment.revision == props.leftSideRevision ? leftSideMatch : rightSideMatch;
+
+        for (let hunk of viewHunks) {
+            for (let change of hunk.changes) {
+                if(match(change, fileComment)) {
+                    changeKey = getChangeKey(change);
+                    break;
+                }
+            }
+        }
+
+        commentsByChangeKey[changeKey] = fileComment.comments;
+    }
+
+    console.log(commentsByChangeKey);
+
+    let widgets = {};
+
+    for (let key of Object.keys(commentsByChangeKey)) {
+        widgets[key] = (
+            <C.default 
+                comments={commentsByChangeKey[key]}
+                actions={props.commentActions}
+            />
+        )
+    }
 
     const markEdits = smartMarkEdits();
 
