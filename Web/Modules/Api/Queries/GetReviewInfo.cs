@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using NHibernate;
@@ -25,6 +26,7 @@ namespace Web.Modules.Api.Queries
             public object ReviewSummary { get; set; }
             public MergeStatus MergeStatus { get; set; }
             public MergeRequestState State { get; set; }
+            public object[] FileComments { get; set; }
         }
 
         public class Revision
@@ -95,9 +97,57 @@ namespace Web.Modules.Api.Queries
                     HasProvisionalRevision = hasUnreviewedChanges,
                     HeadCommit = mr.HeadCommit,
                     BaseCommit = mr.BaseCommit,
-                State =  mr.State,
-                MergeStatus = mr.MergeStatus,
-                    ReviewSummary = reviewSummary
+                    State =  mr.State,
+                    MergeStatus = mr.MergeStatus,
+                    ReviewSummary = reviewSummary,
+                    FileComments = new []
+                    {
+                        new
+                        {
+                            revision = 1,
+                            filePath = new PathPair(){OldPath = "file2.cpp", NewPath = "file2.cpp"},
+                            lineNumber = 11,
+                            comments = new []
+                            {
+                                new GetCommentList.Item
+                                {
+                                    Author = "mnowak",
+                                    Content = "(S) comment I11 part 1",
+                                    Children = Enumerable.Empty<GetCommentList.Item>(),
+                                    CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
+                                    State = "NeedsResolution",
+                                    Id = Guid.Parse("{1DB17094-5BA1-455F-8158-D92A8AE19C0F}")
+                                }
+                            }
+                        },
+                        new
+                        {
+                            revision = 1,
+                            filePath = new PathPair(){OldPath = "file2.cpp", NewPath = "file2.cpp"},
+                            lineNumber = 21,
+                            comments = new []
+                            {
+                                new GetCommentList.Item
+                                {
+                                    Author = "mnowak",
+                                    Content = "(S) comment I21 part 1",
+                                    Children = Enumerable.Empty<GetCommentList.Item>(),
+                                    CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
+                                    State = "NeedsResolution",
+                                    Id = Guid.Parse("{4E386044-6EAC-486E-A897-23811C04418E}")
+                                },
+                                new GetCommentList.Item
+                                {
+                                    Author = "mnowak",
+                                    Content = "(S) comment I21 part 2",
+                                    Children = Enumerable.Empty<GetCommentList.Item>(),
+                                    CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
+                                    State = "NeedsResolution",
+                                    Id = Guid.Parse("(BE1DD971-8110-4720-853A-0B6188AF0A68)")
+                                }
+                            }
+                        }
+                    }
                 };
             }
         }
