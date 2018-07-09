@@ -25,8 +25,6 @@ namespace Web.Modules.Api.Queries
             public Guid Id { get; set; }
             public string Author { get; set; }
             public string Content { get; set; }
-            public string FilePath { get; set; }
-            public string ChangeKey { get; set; }
             public string State { get; set; }
             public DateTimeOffset CreatedAt { get; set; }
             public IEnumerable<Item> Children { get; set; }
@@ -59,8 +57,6 @@ namespace Web.Modules.Api.Queries
                         {
                             Id = comment.Id,
                             Content = comment.Content,
-                            FilePath = comment.FilePath,
-                            ChangeKey = comment.ChangeKey,
                             CreatedAt = comment.CreatedAt,
                             Author = user.UserName,
                             State = comment.State.ToString(),
