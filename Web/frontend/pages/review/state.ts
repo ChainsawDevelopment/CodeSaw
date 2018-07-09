@@ -166,6 +166,21 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         ]
                     },
                     {
+                        revision: 'base',
+                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
+                        lineNumber: 10,
+                        comments: [
+                            {
+                                author: 'mnowak',
+                                content: 'comment E10 part 1',
+                                children: [],
+                                createdAt: '',
+                                id: '2',
+                                state: 'NeedsResolution'
+                            },
+                        ]
+                    },
+                    {
                         revision: 1,
                         filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
                         lineNumber: 21,
@@ -175,7 +190,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                                 content: 'comment I21 part 1',
                                 children: [],
                                 createdAt: '',
-                                id: '2',
+                                id: '3',
                                 state: 'NeedsResolution'
                             },
                             {
@@ -183,7 +198,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                                 content: 'comment I21 part 2',
                                 children: [],
                                 createdAt: '',
-                                id: '3',
+                                id: '4',
                                 state: 'NeedsResolution'
                             }
                         ]

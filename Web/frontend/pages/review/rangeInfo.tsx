@@ -31,7 +31,7 @@ class FileView extends React.Component<FileViewProps> {
         const { file, commentActions } = this.props;
 
         const comments2 = this.props.comments
-            .filter(f => PathPairs.equal(f.filePath, file.path) && f.revision == 1) // TODO: current revision
+            .filter(f => PathPairs.equal(f.filePath, file.path) && (f.revision == 1 || f.revision == 'base')) // TODO: current revision
            ;
             
 
@@ -43,6 +43,7 @@ class FileView extends React.Component<FileViewProps> {
                         diffInfo={file.diff} 
                         comments={comments2}
                         commentActions={commentActions}
+                        leftSideRevision={'base'}
                         rightSideRevision={1}
                     /> 
                     : null}

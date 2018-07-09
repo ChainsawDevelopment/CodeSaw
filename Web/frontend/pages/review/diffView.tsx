@@ -16,6 +16,7 @@ interface Change {
     newLineNumber: number;
 
     isDelete: boolean;
+    isInsert: boolean;
 
     [key:string]: any;
 }
@@ -148,11 +149,36 @@ interface Props {
     diffInfo: FileDiff;
     comments: A.FileComments[];
     commentActions: C.CommentsActions;
+    leftSideRevision: A.RevisionId;
     rightSideRevision: A.RevisionId;
 }
 
 interface CommentsByChangeKey {
     [changeKey: string]: A.Comment[];
+}
+
+const leftSideMatch = (change: Change, comment: A.FileComments) => {
+    if (change.isInsert) {
+        return false;
+    }
+
+    if (change.oldLineNumber != comment.lineNumber) {
+        return false;
+    }
+
+    return true;
+}
+
+const rightSideMatch = (change: Change, comment: A.FileComments) => {
+    if (change.isDelete) {
+        return false;
+    }
+
+    if (change.newLineNumber != comment.lineNumber) {
+        return false;
+    }
+
+    return true;
 }
 
 const diffView = (props: Props) => {
@@ -179,18 +205,14 @@ const diffView = (props: Props) => {
     for (let fileComment of props.comments) {
         let changeKey = 'TBD';
 
+        let match = fileComment.revision == props.leftSideRevision ? leftSideMatch : rightSideMatch;
+
         for (let hunk of viewHunks) {
             for (let change of hunk.changes) {
-                if (change.newLineNumber != fileComment.lineNumber) { // TODO: check revision
-                    continue;
+                if(match(change, fileComment)) {
+                    changeKey = getChangeKey(change);
+                    break;
                 }
-
-                if (change.isDelete) { // TODO: check revision
-                    continue;
-                }
-                
-                changeKey = getChangeKey(change);
-                break;
             }
         }
 
