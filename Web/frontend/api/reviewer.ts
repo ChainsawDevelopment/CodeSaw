@@ -11,6 +11,8 @@ export interface RevisionRange {
 export interface ChangedFile {
     path: PathPairs.PathPair;
     renamedFile: boolean;
+    deletedFile: boolean;
+    newFile: boolean;
 }
 
 export interface RevisionRangeInfo {
