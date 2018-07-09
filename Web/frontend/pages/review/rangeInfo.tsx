@@ -3,7 +3,7 @@ import Menu from '@ui/collections/Menu';
 import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import { RevisionRangeInfo, ReviewId } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId, Comment } from "../../api/reviewer";
 import DiffView from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
@@ -16,6 +16,8 @@ import Popup from '@ui/modules/Popup';
 import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
+import * as C from './commentsView';
+
 interface FileViewProps {
     file: FileInfo
 }
@@ -26,10 +28,55 @@ class FileView extends React.Component<FileViewProps> {
     render(): JSX.Element {
         const { file } = this.props;
 
+        const comments: Comment[] = [
+            {
+                author: 'mnowak',
+                content: 'comment I11 part 1',
+                changeKey: 'I11',
+                children: [],
+                createdAt: '',
+                filePath: '',
+                id: '1',
+                state: 'NeedsResolution'
+            },
+            {
+                author: 'mnowak',
+                content: 'comment I21 part 1',
+                changeKey: 'I21',
+                children: [],
+                createdAt: '',
+                filePath: '',
+                id: '2',
+                state: 'NeedsResolution'
+            },
+            {
+                author: 'mnowak',
+                content: 'comment I21 part 2',
+                changeKey: 'I21',
+                children: [],
+                createdAt: '',
+                filePath: '',
+                id: '3',
+                state: 'NeedsResolution'
+            }
+        ];
+
+        const actions: C.CommentsActions = {
+            add: null,
+            load: null,
+            resolve: null
+        };
+
         return (
             <span ref={span => this.renderedRef = span}>
                 <FileSummary file={file} />
-                {file.diff ? <DiffView diffInfo={file.diff} /> : null}
+                {file.diff ? 
+                    <DiffView 
+                        diffInfo={file.diff} 
+                        comments={comments}
+                        commentActions={actions}
+                    /> 
+                    : null}
             </span>
         );
     }

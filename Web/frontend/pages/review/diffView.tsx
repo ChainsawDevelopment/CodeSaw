@@ -8,6 +8,9 @@ import './diffView.less';
 import * as classNames from "classnames";
 import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
+import * as C from './commentsView';
+import * as A from '../../api/reviewer';
+
 const mapHunkToView = (hunk: Hunk) => {
     var changes = [];
 
@@ -132,7 +135,17 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
-const diffView = (props: { diffInfo: FileDiff }) => {
+interface Props {
+    diffInfo: FileDiff;
+    comments: A.Comment[];
+    commentActions: C.CommentsActions;
+}
+
+interface CommentsByChangeKey {
+    [changeKey: string]: A.Comment[];
+}
+
+const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
@@ -141,9 +154,6 @@ const diffView = (props: { diffInfo: FileDiff }) => {
     const toggleChangeComment = (change) => {
         console.log(`old: ${change.oldLineNumber} new: ${change.newLineNumber}, con: ${change.content}`);
         console.log(`key: ${getChangeKey(change)}`);
-//        [getChangeKey(viewHunks[1].changes[0])]: (
-//            <span className="error">Line too long</span>
-//        )
     };
 
     const events = {
@@ -154,11 +164,29 @@ const diffView = (props: { diffInfo: FileDiff }) => {
         }
     };
 
-    const widgets = {
-        // [getChangeKey(viewHunks[1].changes[0])]: (
-        //     <span className="error">Line too long</span>
-        // )
-    };
+    
+
+    const commentsByChangeKey = props.comments.reduce(
+        (all:CommentsByChangeKey, comment: A.Comment): CommentsByChangeKey => ({
+            ...all,
+            [comment.changeKey]: [
+                ...all[comment.changeKey] || [],
+                comment
+            ]
+        }), {} as CommentsByChangeKey);
+
+    let widgets = {};
+
+    for (let key of Object.keys(commentsByChangeKey)) {
+        widgets[key] = (
+            <C.default 
+                comments={commentsByChangeKey[key]}
+                actions={props.commentActions}
+            />
+        )
+    }
+
+    console.log(widgets);
 
     const markEdits = smartMarkEdits();
 
