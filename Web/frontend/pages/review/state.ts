@@ -147,64 +147,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (loadedReviewInfo.match(action)) {
         return {
             ...state,
-            currentReview: {
-                ...action.payload,
-                fileComments: [
-                    {
-                        revision: 1,
-                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
-                        lineNumber: 11,
-                        comments: [
-                            {
-                                author: 'mnowak',
-                                content: 'comment I11 part 1',
-                                children: [],
-                                createdAt: '',
-                                id: '1',
-                                state: 'NeedsResolution'
-                            },
-                        ]
-                    },
-                    {
-                        revision: 'base',
-                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
-                        lineNumber: 10,
-                        comments: [
-                            {
-                                author: 'mnowak',
-                                content: 'comment E10 part 1',
-                                children: [],
-                                createdAt: '',
-                                id: '2',
-                                state: 'NeedsResolution'
-                            },
-                        ]
-                    },
-                    {
-                        revision: 1,
-                        filePath: {newPath: 'file2.cpp', oldPath: 'file2.cpp'},
-                        lineNumber: 21,
-                        comments: [
-                            {
-                                author: 'mnowak',
-                                content: 'comment I21 part 1',
-                                children: [],
-                                createdAt: '',
-                                id: '3',
-                                state: 'NeedsResolution'
-                            },
-                            {
-                                author: 'mnowak',
-                                content: 'comment I21 part 2',
-                                children: [],
-                                createdAt: '',
-                                id: '4',
-                                state: 'NeedsResolution'
-                            }
-                        ]
-                    }
-                ]
-            }
+            currentReview: action.payload
         };
     }
 
