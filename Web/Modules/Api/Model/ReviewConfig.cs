@@ -20,25 +20,6 @@ namespace Web.Modules.Api.Model
                 coll.Table("ReviewFiles");
                 coll.Key(key => key.Column("ReviewId"));
             });
-
-            Bag(x => x.FileComments, e =>
-            {
-                e.Key(key =>
-                {
-                    key.NotNullable(true);
-                    key.Column(c=>
-                    {
-                        c.Name("ReviewId");
-                        c.NotNullable(true);
-                    });
-                });
-                e.Cascade(Cascade.All.Include(Cascade.DeleteOrphans));
-                e.Lazy(CollectionLazy.Lazy);
-                //e.Inverse(true);
-            }, c =>
-            {
-                c.OneToMany();
-            });
         }
     }
     

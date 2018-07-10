@@ -12,18 +12,20 @@ namespace Web.Modules.Api.Model
         Resolved
     }
 
-    public class Comment<TReviewedItem>
+    public class Comment
     {
         public virtual Guid Id { get; set; }
         public virtual Guid? ParentId { get; set; }
-        public virtual Guid ReviewedItemId { get; set; }
+
+        public virtual Guid PostedInReviewId { get; set; }
+
         public virtual string Content { get; set; }
         public virtual CommentState State { get; set; }
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
         public virtual DateTimeOffset CreatedAt { get; set; }
     }
 
-    public class ReviewCommentMapping : ClassMapping<Comment<Review>>
+    public class ReviewCommentMapping : ClassMapping<Comment>
     {
         public ReviewCommentMapping()
         {
@@ -43,31 +45,7 @@ namespace Web.Modules.Api.Model
                 mapper.NotNullable(true);
             });
             Property(x => x.ParentId);
-            Property(x => x.ReviewedItemId, p => p.Column("ReviewId"));
-        }
-    }
-
-    public class FileCommentMapping : ClassMapping<Comment<FileComment>>
-    {
-        public FileCommentMapping()
-        {
-            Table("FileComments");
-
-            Id(x => x.Id, id => id.Generator(Generators.Assigned));
-            Version(x => x.LastUpdatedAt, mapper =>
-            {
-                mapper.Type(new DateTimeOffsetType());
-            });
-
-            Property(x => x.Content, mapper => mapper.NotNullable(true));
-            Property(x => x.CreatedAt, mapper => mapper.NotNullable(true));
-            Property(x => x.State, mapper =>
-            {
-                mapper.Type<EnumStringType<CommentState>>();
-                mapper.NotNullable(true);
-            });
-            Property(x => x.ParentId);
-            Property(x => x.ReviewedItemId, p => p.Column("FileDiscussionId"));
+            Property(x => x.PostedInReviewId, c => c.Column("ReviewId"));
         }
     }
 }

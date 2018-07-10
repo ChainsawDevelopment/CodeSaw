@@ -81,7 +81,7 @@ export interface FileComments
     revision: RevisionId;
     filePath: PathPairs.PathPair;
     lineNumber: number;
-    comments: Comment[];
+    comment: Comment;
 }
 
 export interface ReviewInfo {

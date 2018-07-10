@@ -9,20 +9,11 @@ namespace Db.Migrations
         {
             Create.Table("FileDiscussions").InSchema("dbo")
                 .WithColumn("Id").AsGuid().NotNullable().PrimaryKey()
-                .WithColumn("ReviewId").AsGuid().NotNullable().ForeignKey("Review", "Id")
+                .WithColumn("RevisionId").AsGuid().NotNullable().ForeignKey("Revisions", "Id")
+                .WithColumn("RootCommentId").AsGuid().NotNullable().ForeignKey("Comments", "Id")
                 .WithColumn("OldPath").AsString()
                 .WithColumn("NewPath").AsString()
                 .WithColumn("LineNumber").AsInt32().NotNullable()
-                .WithColumn("LastUpdatedAt").AsDateTimeOffset().NotNullable()
-                ;
-
-            Create.Table("FileComments").InSchema("dbo")
-                .WithColumn("Id").AsGuid().NotNullable().PrimaryKey()
-                .WithColumn("FileDiscussionId").AsGuid().NotNullable().ForeignKey("FileDiscussions", "Id")
-                .WithColumn("ParentId").AsGuid().Nullable()
-                .WithColumn("Content").AsString().NotNullable()
-                .WithColumn("State").AsString().NotNullable()
-                .WithColumn("CreatedAt").AsDateTimeOffset().NotNullable()
                 .WithColumn("LastUpdatedAt").AsDateTimeOffset().NotNullable()
                 ;
         }
@@ -30,7 +21,6 @@ namespace Db.Migrations
         public override void Down()
         {
             Delete.Table("FileDiscussions").InSchema("dbo");
-            Delete.Table("FileComments").InSchema("dbo");
         }
     }
 }

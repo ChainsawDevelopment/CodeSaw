@@ -17,12 +17,9 @@ namespace Web.Modules.Api.Model
 
         public virtual IList<FileReview> Files { get; set; }
 
-        public virtual IList<FileComment> FileComments { get; set; }
-
         public Review()
         {
             Files = new List<FileReview>();
-            FileComments = new List<FileComment>();
         }
 
         public virtual void ReviewFiles(IReadOnlyList<PathPair> allFiles, IReadOnlyList<PathPair> reviewedFiles)
@@ -77,14 +74,5 @@ namespace Web.Modules.Api.Model
     {
         Reviewed = 1,
         Unreviewed = 2
-    }
-
-    public class FileComment
-    {
-        public virtual Guid Id { get; set; }
-        public virtual PathPair File { get; set; }
-        public virtual int LineNumber { get; set; }
-        public virtual IList<Comment<FileComment>> Comments { get; set; } = new List<Comment<FileComment>>();
-        public virtual DateTimeOffset LastUpdatedAt { get; set; }
     }
 }
