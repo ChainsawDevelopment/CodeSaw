@@ -30,7 +30,6 @@ export interface ReviewState {
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
     comments: Comment[];
-    pendingfileComments: PendingFileComment[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -108,13 +107,7 @@ const initial: ReviewState = {
         fileComments: []
     },
     reviewedFiles: [],
-    comments: [],
-    pendingfileComments: [
-        {
-            lineNumber: 12,
-            path: {oldPath: 'file2.cpp', newPath: 'file2.cpp'}
-        }
-    ]
+    comments: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {

@@ -145,13 +145,19 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
+export interface LineCommentsActions {
+    showCommentsForLine(lineNumber: number): void;
+    hideCommentsForLine(lineNumber: number): void;
+}
+
 interface Props {
     diffInfo: FileDiff;
     comments: A.FileComments[];
     commentActions: C.CommentsActions;
+    lineCommentsActions: LineCommentsActions;
     leftSideRevision: A.RevisionId;
     rightSideRevision: A.RevisionId;
-    pendingCommentLines: number[];
+    visibleCommentLines: number[];
 }
 
 interface CommentsByChangeKey {
@@ -182,6 +188,7 @@ const rightSideMatch = (change: Change, lineNumber: number) => {
     return true;
 }
 
+
 const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
@@ -189,15 +196,17 @@ const diffView = (props: Props) => {
 
     const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
     const toggleChangeComment = (change) => {
-        console.log(`old: ${change.oldLineNumber} new: ${change.newLineNumber}, con: ${change.content}`);
-        console.log(`key: ${getChangeKey(change)}`);
+        const lineNumber = change.newLineNumber;
+        if (props.visibleCommentLines.indexOf(lineNumber) == -1) {
+            props.lineCommentsActions.showCommentsForLine(lineNumber);
+        } else {
+            props.lineCommentsActions.hideCommentsForLine(lineNumber);
+        }
     };
 
     const events = {
         gutter: {
-            onClick: (change) => {
-                toggleChangeComment(change);
-            }
+            onClick: toggleChangeComment
         }
     };
 
@@ -223,7 +232,7 @@ const diffView = (props: Props) => {
         ] 
     }
 
-    for (let lineNumber of props.pendingCommentLines) {
+    for (let lineNumber of props.visibleCommentLines) {
         let changeKey = 'TBD';
 
         for (let hunk of viewHunks) {

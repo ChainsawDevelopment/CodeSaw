@@ -4,10 +4,10 @@ import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
 import { RevisionRangeInfo, ReviewId, Comment, FileComments, RevisionRange } from "../../api/reviewer";
-import DiffView from './diffView';
+import DiffView, { LineCommentsActions } from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
-import { FileInfo } from "./state";
+import { FileInfo, PendingFileComment } from "./state";
 import ReviewMark from "./reviewMark";
 import { PathPair, emptyPathPair } from "../../pathPair";
 import * as PathPairs from "../../pathPair";
@@ -25,8 +25,28 @@ interface FileViewProps {
     revisionRange: RevisionRange;
 }
 
-class FileView extends React.Component<FileViewProps> {
+class FileView extends React.Component<FileViewProps, { visibleCommentLines: number[] }> {
     private renderedRef: HTMLSpanElement;
+
+    constructor(props: FileViewProps) {
+        super(props);
+
+        this.state = {
+            visibleCommentLines: []
+        };
+    }
+
+    private hideLine(line: number) {
+        this.setState({
+            visibleCommentLines: this.state.visibleCommentLines.filter(f => f != line)
+        });
+    }
+
+    private showLine(line: number) {
+        this.setState({
+            visibleCommentLines: [...this.state.visibleCommentLines, line]
+        });
+    }
 
     render(): JSX.Element {
         const { file, commentActions, revisionRange } = this.props;
@@ -37,6 +57,10 @@ class FileView extends React.Component<FileViewProps> {
                 && (f.revision == revisionRange.current || f.revision == revisionRange.previous))
            ;
             
+        const lineCommentsActions: LineCommentsActions = {
+            hideCommentsForLine: l => this.hideLine(l),
+            showCommentsForLine: l => this.showLine(l)
+        }
 
         return (
             <span ref={span => this.renderedRef = span}>
@@ -48,7 +72,8 @@ class FileView extends React.Component<FileViewProps> {
                         commentActions={commentActions}
                         leftSideRevision={revisionRange.previous}
                         rightSideRevision={revisionRange.current}
-                        pendingCommentLines={[12, 22]}
+                        visibleCommentLines={this.state.visibleCommentLines}
+                        lineCommentsActions={lineCommentsActions}
                     /> 
                     : null}
             </span>

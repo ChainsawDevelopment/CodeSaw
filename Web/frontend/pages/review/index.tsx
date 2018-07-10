@@ -12,7 +12,8 @@ import {
     loadComments,
     addComment,
     resolveComment,
-    mergePullRequest
+    mergePullRequest,
+    PendingFileComment
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -171,7 +172,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
-    comments: state.review.comments
+    comments: state.review.comments,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
