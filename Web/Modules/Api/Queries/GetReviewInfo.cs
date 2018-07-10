@@ -100,55 +100,31 @@ namespace Web.Modules.Api.Queries
                     State = mr.State,
                     MergeStatus = mr.MergeStatus,
                     ReviewSummary = reviewSummary,
-                    FileComments = new[]
-                    {
-                        new
-                        {
-                            revision = 1,
-                            filePath = new PathPair() {OldPath = "file2.cpp", NewPath = "file2.cpp"},
-                            lineNumber = 11,
-                            comment = new GetCommentList.Item
-                            {
-                                Author = "mnowak",
-                                Content = "(S) comment I11 part 1",
-                                Children = Enumerable.Empty<GetCommentList.Item>(),
-                                CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
-                                State = "NeedsResolution",
-                                Id = Guid.Parse("{1DB17094-5BA1-455F-8158-D92A8AE19C0F}")
-                            }
-                        },
-                        new
-                        {
-                            revision = 1,
-                            filePath = new PathPair() {OldPath = "file2.cpp", NewPath = "file2.cpp"},
-                            lineNumber = 21,
-                            comment = new GetCommentList.Item
-                            {
-                                Author = "mnowak",
-                                Content = "(S) comment I21 part 1",
-                                Children = Enumerable.Empty<GetCommentList.Item>(),
-                                CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
-                                State = "NeedsResolution",
-                                Id = Guid.Parse("{4E386044-6EAC-486E-A897-23811C04418E}")
-                            }
-                        },
-                        new
-                        {
-                            revision = 1,
-                            filePath = new PathPair() {OldPath = "file2.cpp", NewPath = "file2.cpp"},
-                            lineNumber = 21,
-                            comment = new GetCommentList.Item
-                            {
-                                Author = "mnowak",
-                                Content = "(S) comment I21 part 2",
-                                Children = Enumerable.Empty<GetCommentList.Item>(),
-                                CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
-                                State = "NeedsResolution",
-                                Id = Guid.Parse("(BE1DD971-8110-4720-853A-0B6188AF0A68)")
-                            }
-                        }
-                    }
+                    FileComments = GetFileComments()
                 };
+            }
+
+            private object[] GetFileComments()
+            {
+                var q = from discussion in _session.Query<FileDiscussion>()
+                    join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
+                    select new
+                    {
+                        revision = revision.RevisionNumber,
+                        filePath = discussion.File,
+                        lineNumber = discussion.LineNumber,
+                        comment = new GetCommentList.Item
+                        {
+                            Author = "mnowak",
+                            Content = discussion.RootComment.Content,
+                            Children = Enumerable.Empty<GetCommentList.Item>(),
+                            CreatedAt = discussion.RootComment.CreatedAt,
+                            State = discussion.RootComment.State.ToString(),
+                            Id = discussion.RootComment.Id
+                        }
+                    };
+
+                return q.ToArray();
             }
         }
 
