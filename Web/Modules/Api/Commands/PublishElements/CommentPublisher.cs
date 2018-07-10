@@ -25,7 +25,7 @@ namespace Web.Modules.Api.Commands.PublishElements
         }
         private async Task PublishComment(PublishReview.RevisionComment revisionComment, Review review)
         {
-            var comment = await _session.Query<Comment>().FirstOrDefaultAsync(x => x.Id == revisionComment.Id);
+            var comment = await _session.Query<Comment<Review>>().FirstOrDefaultAsync(x => x.Id == revisionComment.Id);
 
             if (comment != null)
             { 
@@ -44,13 +44,13 @@ namespace Web.Modules.Api.Commands.PublishElements
             else
             {
                 var parent = revisionComment.ParentId != null
-                    ? await _session.Query<Comment>().FirstAsync(x => x.Id == revisionComment.ParentId)
+                    ? await _session.Query<Comment<Review>>().FirstAsync(x => x.Id == revisionComment.ParentId)
                     : null;
 
-                await _session.SaveAsync(new Comment
+                await _session.SaveAsync(new Comment<Review>
                 {
                     Id = revisionComment.Id,
-                    ReviewId = review.Id,
+                    ReviewedItemId = review.Id,
                     CreatedAt = DateTimeOffset.UtcNow,
                     ParentId = parent?.Id,
                     Content = revisionComment.Content,

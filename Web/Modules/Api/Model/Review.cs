@@ -84,7 +84,7 @@ namespace Web.Modules.Api.Model
         public virtual Guid Id { get; set; }
         public virtual PathPair File { get; set; }
         public virtual int LineNumber { get; set; }
-        public virtual IList<Comment> Comments { get; set; } = new List<Comment>();
+        public virtual IList<Comment<FileComment>> Comments { get; set; } = new List<Comment<FileComment>>();
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
     }
 }

@@ -47,8 +47,8 @@ namespace Web.Modules.Api.Queries
             public async Task<IEnumerable<Item>> Execute(GetCommentList query)
             {
                 var comments = await (
-                        from comment in _session.Query<Comment>()
-                        join review in _session.Query<Review>() on comment.ReviewId equals review.Id
+                        from comment in _session.Query<Comment<Review>>()
+                        join review in _session.Query<Review>() on comment.ReviewedItemId equals review.Id
                         join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
                         join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
                         orderby comment.CreatedAt

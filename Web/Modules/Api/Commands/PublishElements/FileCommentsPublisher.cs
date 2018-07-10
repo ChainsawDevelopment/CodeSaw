@@ -26,9 +26,10 @@ namespace Web.Modules.Api.Commands.PublishElements
                 LineNumber = 11,
                 Comments =
                 {
-                    new Comment()
+                    new Comment<FileComment>()
                     {
-                        ReviewId = review.Id,
+                        Id = GuidComb.Generate(),
+                        ReviewedItemId = review.Id,
                         Content = "(DB) comment I11 part 1",
                         CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
                         State = CommentState.NeedsResolution
@@ -43,16 +44,18 @@ namespace Web.Modules.Api.Commands.PublishElements
                 LineNumber = 21,
                 Comments =
                 {
-                    new Comment()
+                    new Comment<FileComment>()
                     {
-                        ReviewId = review.Id,
+                        Id = GuidComb.Generate(),
+                        ReviewedItemId = review.Id,
                         Content = "(DB) comment I21 part 1",
                         CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
                         State = CommentState.NeedsResolution
                     },
-                    new Comment()
+                    new Comment<FileComment>()
                     {
-                        ReviewId = review.Id,
+                        Id = GuidComb.Generate(),
+                        ReviewedItemId = review.Id,
                         Content = "(DB) comment I21 part 2",
                         CreatedAt = new DateTimeOffset(2018, 07, 09, 20, 00, 00, TimeSpan.FromHours(1)),
                         State = CommentState.NeedsResolution
