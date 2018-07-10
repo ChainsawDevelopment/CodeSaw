@@ -48,6 +48,7 @@ class FileView extends React.Component<FileViewProps> {
                         commentActions={commentActions}
                         leftSideRevision={revisionRange.previous}
                         rightSideRevision={revisionRange.current}
+                        pendingCommentLines={[12, 22]}
                     /> 
                     : null}
             </span>

@@ -18,6 +18,11 @@ export interface FileInfo {
     treeEntry: ChangedFile;
 }
 
+export interface PendingFileComment {
+    path: PathPairs.PathPair;
+    lineNumber: number;
+}
+
 export interface ReviewState {
     range: RevisionRange;
     rangeInfo: RevisionRangeInfo;
@@ -25,6 +30,7 @@ export interface ReviewState {
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
     comments: Comment[];
+    pendingfileComments: PendingFileComment[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -102,7 +108,13 @@ const initial: ReviewState = {
         fileComments: []
     },
     reviewedFiles: [],
-    comments: []
+    comments: [],
+    pendingfileComments: [
+        {
+            lineNumber: 12,
+            path: {oldPath: 'file2.cpp', newPath: 'file2.cpp'}
+        }
+    ]
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
