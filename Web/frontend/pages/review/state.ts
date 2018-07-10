@@ -18,6 +18,11 @@ export interface FileInfo {
     treeEntry: ChangedFile;
 }
 
+export interface PendingFileComment {
+    path: PathPairs.PathPair;
+    lineNumber: number;
+}
+
 export interface ReviewState {
     range: RevisionRange;
     rangeInfo: RevisionRangeInfo;
@@ -65,8 +70,6 @@ export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW
 export interface AddCommentArgs {
     parentId?: string;
     content: string;
-    filePath: string;
-    changeKey: string;
     needsResolution: boolean;
 }
 

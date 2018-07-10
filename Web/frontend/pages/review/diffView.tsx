@@ -145,41 +145,49 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
+export interface LineCommentsActions {
+    showCommentsForLine(lineNumber: number): void;
+    hideCommentsForLine(lineNumber: number): void;
+}
+
 interface Props {
     diffInfo: FileDiff;
     comments: A.FileComments[];
     commentActions: C.CommentsActions;
+    lineCommentsActions: LineCommentsActions;
     leftSideRevision: A.RevisionId;
     rightSideRevision: A.RevisionId;
+    visibleCommentLines: number[];
 }
 
 interface CommentsByChangeKey {
     [changeKey: string]: A.Comment[];
 }
 
-const leftSideMatch = (change: Change, comment: A.FileComments) => {
+const leftSideMatch = (change: Change, lineNumber: number) => {
     if (change.isInsert) {
         return false;
     }
 
-    if (change.oldLineNumber != comment.lineNumber) {
+    if (change.oldLineNumber != lineNumber) {
         return false;
     }
 
     return true;
 }
 
-const rightSideMatch = (change: Change, comment: A.FileComments) => {
+const rightSideMatch = (change: Change, lineNumber: number) => {
     if (change.isDelete) {
         return false;
     }
 
-    if (change.newLineNumber != comment.lineNumber) {
+    if (change.newLineNumber != lineNumber) {
         return false;
     }
 
     return true;
 }
+
 
 const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
@@ -188,15 +196,17 @@ const diffView = (props: Props) => {
 
     const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
     const toggleChangeComment = (change) => {
-        console.log(`old: ${change.oldLineNumber} new: ${change.newLineNumber}, con: ${change.content}`);
-        console.log(`key: ${getChangeKey(change)}`);
+        const lineNumber = change.newLineNumber;
+        if (props.visibleCommentLines.indexOf(lineNumber) == -1) {
+            props.lineCommentsActions.showCommentsForLine(lineNumber);
+        } else {
+            props.lineCommentsActions.hideCommentsForLine(lineNumber);
+        }
     };
 
     const events = {
         gutter: {
-            onClick: (change) => {
-                toggleChangeComment(change);
-            }
+            onClick: toggleChangeComment
         }
     };
 
@@ -209,7 +219,7 @@ const diffView = (props: Props) => {
 
         for (let hunk of viewHunks) {
             for (let change of hunk.changes) {
-                if(match(change, fileComment)) {
+                if(match(change, fileComment.lineNumber)) {
                     changeKey = getChangeKey(change);
                     break;
                 }
@@ -222,7 +232,20 @@ const diffView = (props: Props) => {
         ] 
     }
 
-    console.log(commentsByChangeKey);
+    for (let lineNumber of props.visibleCommentLines) {
+        let changeKey = 'TBD';
+
+        for (let hunk of viewHunks) {
+            for (let change of hunk.changes) {
+                if(rightSideMatch(change, lineNumber)) {
+                    changeKey = getChangeKey(change);
+                    break;
+                }
+            }
+        }
+
+        commentsByChangeKey[changeKey] = commentsByChangeKey[changeKey] || [];
+    }
 
     let widgets = {};
 
