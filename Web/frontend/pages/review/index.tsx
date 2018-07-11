@@ -186,7 +186,7 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     },
     commentActions: {
         load: () => dispatch(loadComments({})),
-        add: (content, filePath, changeKey, needsResolution, parentId) => dispatch(addComment({ content, filePath, changeKey, needsResolution, parentId })),
+        add: (content, needsResolution, parentId) => dispatch(addComment({ content, needsResolution, parentId })),
         resolve: (commentId) => dispatch(resolveComment({ commentId }))
     },
     publishReview: () => dispatch(publishReview({})),

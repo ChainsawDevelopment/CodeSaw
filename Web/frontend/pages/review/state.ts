@@ -70,8 +70,6 @@ export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW
 export interface AddCommentArgs {
     parentId?: string;
     content: string;
-    filePath: string;
-    changeKey: string;
     needsResolution: boolean;
 }
 
