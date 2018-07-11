@@ -8,7 +8,8 @@ import {
     RevisionRange,
     ReviewId,
     ChangedFile,
-    Comment
+    Comment,
+    FileDiscussion
 } from '../../api/reviewer';
 import * as PathPairs from '../../pathPair';
 
@@ -18,10 +19,6 @@ export interface FileInfo {
     treeEntry: ChangedFile;
 }
 
-export interface PendingFileComment {
-    path: PathPairs.PathPair;
-    lineNumber: number;
-}
 
 export interface ReviewState {
     range: RevisionRange;
@@ -30,6 +27,7 @@ export interface ReviewState {
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
     comments: Comment[];
+    unpublishedFileDiscussions: FileDiscussion[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -85,6 +83,8 @@ export interface MergePullRequestArgs {
 
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
 
+export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean  }>('START_FILE_DISCUSSION');
+
 const initial: ReviewState = {
     range: {
         previous: 'base',
@@ -105,7 +105,8 @@ const initial: ReviewState = {
         fileComments: []
     },
     reviewedFiles: [],
-    comments: []
+    comments: [],
+    unpublishedFileDiscussions: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -234,6 +235,28 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             comments: commentsState
         }
+    }
+
+    if (startFileDiscussion.match(action)) {
+        return {
+            ...state,
+            unpublishedFileDiscussions: [
+                ...state.unpublishedFileDiscussions,
+                {
+                    revision: state.range.current,
+                    filePath: action.payload.path,
+                    lineNumber: action.payload.lineNumber,
+                    comment: {
+                        state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                        author: 'NOT SUBMITTED',
+                        content: action.payload.content,
+                        children: [],
+                        createdAt: '',
+                        id: (Math.max(0, ...state.unpublishedFileDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                    }
+                }
+            ]
+        };
     }
 
     return state;

@@ -13,7 +13,7 @@ import {
     addComment,
     resolveComment,
     mergePullRequest,
-    PendingFileComment
+    startFileDiscussion
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -21,7 +21,8 @@ import {
     RevisionRange,
     ReviewId,
     RevisionId,
-    Comment
+    Comment,
+    FileDiscussion
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -52,6 +53,7 @@ interface DispatchProps {
     reviewFile: ReviewFileActions;
     commentActions: CommentsActions;
     publishReview(): void;
+    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
 interface StateProps {
@@ -61,6 +63,7 @@ interface StateProps {
     selectedFile: FileInfo;
     reviewedFiles: PathPairs.List;
     comments: Comment[];
+    unpublishedFileDiscussion: FileDiscussion[];
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -160,6 +163,8 @@ class reviewPage extends React.Component<Props> {
                     reviewId={props.reviewId}
                     fileComments={props.currentReview.fileComments}
                     revisionRange={props.currentRange}
+                    startFileDiscussion={props.startFileDiscussion}
+                    unpublishedFileDiscussion={props.unpublishedFileDiscussion}
                 />) : null}
             </div>
         );
@@ -173,6 +178,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     comments: state.review.comments,
+    unpublishedFileDiscussion: state.review.unpublishedFileDiscussions
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -190,6 +196,7 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
         resolve: (commentId) => dispatch(resolveComment({ commentId }))
     },
     publishReview: () => dispatch(publishReview({})),
+    startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution }))
 });
 
 export default connect(
