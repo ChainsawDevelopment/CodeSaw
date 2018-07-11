@@ -148,11 +148,12 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
 export interface LineCommentsActions {
     showCommentsForLine(lineNumber: number): void;
     hideCommentsForLine(lineNumber: number): void;
+    startFileDiscussion(lineNumber: number, content: string, needResolution: boolean): void;
 }
 
 interface Props {
     diffInfo: FileDiff;
-    comments: A.FileComments[];
+    comments: A.FileDiscussion[];
     commentActions: C.CommentsActions;
     lineCommentsActions: LineCommentsActions;
     leftSideRevision: A.RevisionId;
@@ -161,7 +162,10 @@ interface Props {
 }
 
 interface CommentsByChangeKey {
-    [changeKey: string]: A.Comment[];
+    [changeKey: string]: {
+        lineNumber: number;
+        comments: A.Comment[];
+    }
 }
 
 const leftSideMatch = (change: Change, lineNumber: number) => {
@@ -226,10 +230,12 @@ const diffView = (props: Props) => {
             }
         }
 
-        commentsByChangeKey[changeKey] =[
-            ...commentsByChangeKey[changeKey] || [],
-            fileComment.comment
-        ] 
+        const existing = commentsByChangeKey[changeKey] || { comments: [], lineNumber: fileComment.lineNumber };
+
+        commentsByChangeKey[changeKey] = {
+            ...existing,
+            comments: [...existing.comments, fileComment.comment]
+        }
     }
 
     for (let lineNumber of props.visibleCommentLines) {
@@ -244,16 +250,28 @@ const diffView = (props: Props) => {
             }
         }
 
-        commentsByChangeKey[changeKey] = commentsByChangeKey[changeKey] || [];
+        commentsByChangeKey[changeKey] =commentsByChangeKey[changeKey] || { comments: [], lineNumber: lineNumber };
     }
 
     let widgets = {};
 
     for (let key of Object.keys(commentsByChangeKey)) {
+        const commentActions: C.CommentsActions = {
+            add: (content, needResolution, parentId) => {
+                if (parentId == null) {
+                    props.lineCommentsActions.startFileDiscussion(commentsByChangeKey[key].lineNumber, content, needResolution);
+                } else {
+                    throw 'NotSupported';
+                }
+            },
+            resolve: () => {throw 'NotSupported';},
+            load: () => {throw 'NotSupported';}
+        }
+
         widgets[key] = (
             <C.default 
-                comments={commentsByChangeKey[key]}
-                actions={props.commentActions}
+                comments={commentsByChangeKey[key].comments}
+                actions={commentActions}
             />
         )
     }

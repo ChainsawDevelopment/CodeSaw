@@ -7,21 +7,32 @@ using Web.Modules.Api.Model;
 
 namespace Web.Modules.Api.Commands.PublishElements
 {
-    public class CommentPublisher
+    public class ReviewDiscussionsPublisher
     {
         private readonly ISession _session;
 
-        public CommentPublisher(ISession session)
+        public ReviewDiscussionsPublisher(ISession session)
         {
             _session = session;
         }
 
-        public async Task PublishComments(IEnumerable<PublishReview.RevisionComment> comments, Review review)
+        public async Task Publish(IEnumerable<PublishReview.RevisionComment> comments, Review review)
         {
-            return;
             foreach (var comment in comments)
             {
-                await PublishComment(comment, review);
+                await _session.SaveAsync(new ReviewDiscussion
+                {
+                    Id = GuidComb.Generate(),
+                    RevisionId = review.RevisionId,
+                    RootComment = new Comment
+                    {
+                        Id = GuidComb.Generate(),
+                        Content = comment.Content,
+                        State = comment.State.Value,
+                        PostedInReviewId = review.Id,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    }
+                });
             }
         }
         private async Task PublishComment(PublishReview.RevisionComment revisionComment, Review review)

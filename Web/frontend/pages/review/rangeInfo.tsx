@@ -3,11 +3,11 @@ import Menu from '@ui/collections/Menu';
 import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import { RevisionRangeInfo, ReviewId, Comment, FileComments, RevisionRange } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId, Comment, FileDiscussion, RevisionRange } from "../../api/reviewer";
 import DiffView, { LineCommentsActions } from './diffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
-import { FileInfo, PendingFileComment } from "./state";
+import { FileInfo } from "./state";
 import ReviewMark from "./reviewMark";
 import { PathPair, emptyPathPair } from "../../pathPair";
 import * as PathPairs from "../../pathPair";
@@ -20,9 +20,11 @@ import * as C from './commentsView';
 
 interface FileViewProps {
     file: FileInfo;
-    comments: FileComments[];
+    comments: FileDiscussion[];
+    unpublishedFileDiscussions: FileDiscussion[];
     commentActions: C.CommentsActions;
     revisionRange: RevisionRange;
+    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
 class FileView extends React.Component<FileViewProps, { visibleCommentLines: number[] }> {
@@ -51,15 +53,21 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
     render(): JSX.Element {
         const { file, commentActions, revisionRange } = this.props;
 
-        const comments2 = this.props.comments
+        const fileDiscussions = this.props.comments
             .filter(f => 
                 PathPairs.equal(f.filePath, file.path) 
                 && (f.revision == revisionRange.current || f.revision == revisionRange.previous))
            ;
+
+        const unpublishedDiscussion = this.props.unpublishedFileDiscussions
+                .filter(f => PathPairs.equal(f.filePath, file.path));
             
         const lineCommentsActions: LineCommentsActions = {
             hideCommentsForLine: l => this.hideLine(l),
-            showCommentsForLine: l => this.showLine(l)
+            showCommentsForLine: l => this.showLine(l),
+            startFileDiscussion: (lineNumber, content, needResolution) => {
+                this.props.startFileDiscussion(file.path, lineNumber, content, needResolution)
+            }
         }
 
         return (
@@ -68,7 +76,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                 {file.diff ? 
                     <DiffView 
                         diffInfo={file.diff} 
-                        comments={comments2}
+                        comments={fileDiscussions.concat(unpublishedDiscussion)}
                         commentActions={commentActions}
                         leftSideRevision={revisionRange.previous}
                         rightSideRevision={revisionRange.current}
@@ -105,7 +113,9 @@ export interface Props {
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
     reviewId: ReviewId;
-    fileComments: FileComments[];
+    fileComments: FileDiscussion[];
+    unpublishedFileDiscussion: FileDiscussion[];
+    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -237,6 +247,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                 commentActions={actions} 
                                 comments={this.props.fileComments}
                                 revisionRange={this.props.revisionRange}
+                                startFileDiscussion={this.props.startFileDiscussion}
+                                unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
                             />
                             : <NoFileView />
                         }

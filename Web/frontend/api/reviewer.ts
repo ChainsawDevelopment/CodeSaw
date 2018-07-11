@@ -76,7 +76,7 @@ export interface Review {
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
 
-export interface FileComments
+export interface FileDiscussion
 {
     revision: RevisionId;
     filePath: PathPairs.PathPair;
@@ -104,7 +104,7 @@ export interface ReviewInfo {
         }
     }[];
 
-    fileComments: FileComments[];
+    fileComments: FileDiscussion[];
 }
 
 export interface ReviewSnapshot {
@@ -119,6 +119,12 @@ export interface ReviewSnapshot {
     }
     reviewedFiles: PathPairs.PathPair[];
     comments: Comment[];
+    startedFileDiscussions: {
+        file: PathPairs.PathPair;
+        lineNumber: number;
+        needsResolution: boolean;
+        content: string;
+    }[];
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved';
