@@ -9,32 +9,17 @@ interface StateProps {
     reviewId: ReviewId;
 }
 
-interface DispatchProps {
-    publishReview(): void;
-    createGitLabLink(reviewId: ReviewId);
-}
-
-type Props = StateProps & DispatchProps;
+type Props = StateProps;
 
 const topMenu = (props: Props) => {
-    const createLink = () => props.createGitLabLink(props.reviewId);
 
     return (
-        <>
-            <Menu.Item
-                onClick={createLink}>
-                Create link in GitLab
-            </Menu.Item>
-        </>
+        <span></span>
     );
 }
 
 export default connect(
     (state: RootState): StateProps => ({
         reviewId: state.review.currentReview.reviewId
-    }),
-    (dispatch): DispatchProps => ({
-        publishReview: () => dispatch(publishReview({})),
-        createGitLabLink: (reviewId) => dispatch(createGitLabLink({ reviewId }))
     })
 )(topMenu);
