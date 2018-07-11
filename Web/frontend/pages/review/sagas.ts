@@ -124,7 +124,13 @@ function* publishReviewSaga() {
             revision: s.review.rangeInfo.commits.current,
             previous: s.review.rangeInfo.commits.previous,
             reviewedFiles: s.review.reviewedFiles,
-            comments: s.review.comments
+            comments: s.review.comments,
+            startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
+                file: d.filePath,
+                lineNumber: d.lineNumber,
+                needsResolution: d.comment.state == 'NeedsResolution',
+                content: d.comment.content
+            }))
         }));
 
         for (let i = 0; i < 100; i++) {

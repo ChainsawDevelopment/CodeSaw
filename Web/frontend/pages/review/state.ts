@@ -151,7 +151,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (loadedReviewInfo.match(action)) {
         return {
             ...state,
-            currentReview: action.payload
+            currentReview: action.payload,
+            unpublishedFileDiscussions: []
         };
     }
 

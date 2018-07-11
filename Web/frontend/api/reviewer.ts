@@ -119,6 +119,12 @@ export interface ReviewSnapshot {
     }
     reviewedFiles: PathPairs.PathPair[];
     comments: Comment[];
+    startedFileDiscussions: {
+        file: PathPairs.PathPair;
+        lineNumber: number;
+        needsResolution: boolean;
+        content: string;
+    }[];
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved';
