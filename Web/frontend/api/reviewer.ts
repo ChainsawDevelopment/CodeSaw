@@ -84,6 +84,12 @@ export interface FileDiscussion
     comment: Comment;
 }
 
+export interface ReviewDiscussion 
+{
+    revision: RevisionId;
+    comment: Comment;
+}
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -118,10 +124,13 @@ export interface ReviewSnapshot {
         base: string;
     }
     reviewedFiles: PathPairs.PathPair[];
-    comments: Comment[];
     startedFileDiscussions: {
         file: PathPairs.PathPair;
         lineNumber: number;
+        content: string;
+        needsResolution: boolean;
+    }[];
+    startedReviewDiscussions: {
         needsResolution: boolean;
         content: string;
     }[];

@@ -9,16 +9,17 @@ import {
     ReviewId,
     ChangedFile,
     Comment,
-    FileDiscussion
+    FileDiscussion,
+    ReviewDiscussion
 } from '../../api/reviewer';
 import * as PathPairs from '../../pathPair';
+import { create } from 'domain';
 
 export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
     treeEntry: ChangedFile;
 }
-
 
 export interface ReviewState {
     range: RevisionRange;
@@ -28,6 +29,7 @@ export interface ReviewState {
     reviewedFiles: PathPairs.List;
     comments: Comment[];
     unpublishedFileDiscussions: FileDiscussion[];
+    unpublishedReviewDiscussions: ReviewDiscussion[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -84,6 +86,7 @@ export interface MergePullRequestArgs {
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
 
 export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean  }>('START_FILE_DISCUSSION');
+export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean }>('START_REVIEW_DISCUSSION');
 
 const initial: ReviewState = {
     range: {
@@ -106,7 +109,8 @@ const initial: ReviewState = {
     },
     reviewedFiles: [],
     comments: [],
-    unpublishedFileDiscussions: []
+    unpublishedFileDiscussions: [],
+    unpublishedReviewDiscussions: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -152,7 +156,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         return {
             ...state,
             currentReview: action.payload,
-            unpublishedFileDiscussions: []
+            unpublishedFileDiscussions: [],
+            unpublishedReviewDiscussions: []
         };
     }
 
@@ -258,6 +263,26 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 }
             ]
         };
+    }
+
+    if (startReviewDiscussion.match(action)) {
+        return {
+            ...state,
+            unpublishedReviewDiscussions: [
+                ...state.unpublishedReviewDiscussions,
+                {
+                    revision: state.range.current,
+                    comment: {
+                        state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                        author: 'NOT SUBMITTED',
+                        content: action.payload.content,
+                        children: [],
+                        createdAt: '',
+                        id: (Math.max(0, ...state.unpublishedReviewDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                    }
+                }
+            ]
+        }
     }
 
     return state;
