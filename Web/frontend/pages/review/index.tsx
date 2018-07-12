@@ -23,7 +23,8 @@ import {
     ReviewId,
     RevisionId,
     Comment,
-    FileDiscussion
+    FileDiscussion,
+    ReviewDiscussion
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -66,6 +67,7 @@ interface StateProps {
     reviewedFiles: PathPairs.List;
     comments: Comment[];
     unpublishedFileDiscussion: FileDiscussion[];
+    unpublishedReviewDiscussions: ReviewDiscussion[];
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -123,6 +125,7 @@ class reviewPage extends React.Component<Props> {
         }
 
         const comments: Comment[] = props.currentReview.reviewDiscussions
+            .concat(props.unpublishedReviewDiscussions)
             .map(d => d.comment);
 
         return (
@@ -189,6 +192,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     reviewedFiles: state.review.reviewedFiles,
     comments: state.review.comments,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
+    unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
