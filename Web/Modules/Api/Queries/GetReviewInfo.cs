@@ -27,6 +27,7 @@ namespace Web.Modules.Api.Queries
             public MergeStatus MergeStatus { get; set; }
             public MergeRequestState State { get; set; }
             public object[] FileComments { get; set; }
+            public object[] ReviewDiscussions { get; set; }
         }
 
         public class Revision
@@ -100,8 +101,30 @@ namespace Web.Modules.Api.Queries
                     State = mr.State,
                     MergeStatus = mr.MergeStatus,
                     ReviewSummary = reviewSummary,
-                    FileComments = GetFileComments()
+                    FileComments = GetFileComments(),
+                    ReviewDiscussions = GetReviewDiscussions()
                 };
+            }
+
+            private object[] GetReviewDiscussions()
+            {
+                var q = from discussion in _session.Query<ReviewDiscussion>()
+                    join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
+                    select new
+                    {
+                        revision = revision.RevisionNumber,
+                        comment = new GetCommentList.Item
+                        {
+                            Author = "mnowak",
+                            Content = discussion.RootComment.Content,
+                            Children = Enumerable.Empty<GetCommentList.Item>(),
+                            CreatedAt = discussion.RootComment.CreatedAt,
+                            State = discussion.RootComment.State.ToString(),
+                            Id = discussion.RootComment.Id
+                        }
+                    };
+
+                return q.ToArray();
             }
 
             private object[] GetFileComments()

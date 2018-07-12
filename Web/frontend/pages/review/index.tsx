@@ -122,6 +122,9 @@ class reviewPage extends React.Component<Props> {
             add: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution)
         }
 
+        const comments: Comment[] = props.currentReview.reviewDiscussions
+            .map(d => d.comment);
+
         return (
             <div id="review-page">
                 <Grid centered columns={2}>
@@ -151,7 +154,7 @@ class reviewPage extends React.Component<Props> {
                                 reviewId={props.reviewId}
                             />
 
-                            <CommentsView comments={props.comments} actions={commentActions} />
+                            <CommentsView comments={comments} actions={commentActions} />
 
                         </Grid.Column>
                     </Grid.Row>
@@ -185,7 +188,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     comments: state.review.comments,
-    unpublishedFileDiscussion: state.review.unpublishedFileDiscussions
+    unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({

@@ -13,7 +13,6 @@ import {
     ReviewDiscussion
 } from '../../api/reviewer';
 import * as PathPairs from '../../pathPair';
-import { create } from 'domain';
 
 export interface FileInfo {
     path: PathPairs.PathPair;
@@ -105,7 +104,8 @@ const initial: ReviewState = {
         state: 'opened',
         mergeStatus: 'unchecked',
         reviewSummary: [],
-        fileComments: []
+        fileComments: [],
+        reviewDiscussions: []
     },
     reviewedFiles: [],
     comments: [],
