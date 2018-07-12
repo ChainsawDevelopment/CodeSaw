@@ -26,7 +26,7 @@ namespace Web.Modules.Api.Commands.PublishElements
             _session = session;
         }
 
-        public async Task Handle(NewFileDiscussion[] discussions, Review review)
+        public async Task Publish(NewFileDiscussion[] discussions, Review review)
         {
             foreach (var discussion in discussions)
             {
