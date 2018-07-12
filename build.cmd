@@ -11,5 +11,12 @@ rem dotnet restore %BASE%\dotnet-fake.csproj
 
 "%BASE%\.paket\paket.bootstrapper.exe"
 
-dotnet tool install "--tool-path=%BASE%.fake-tools" fake-cli
+set DOTNET=dotnet
+
+if not ("%DOTNETCORE_SDK_PATH%" == "") (
+    set DOTNET=%DOTNETCORE_SDK_PATH%\%DOTNET%
+    set DOTNET_ROOT=%DOTNETCORE_SDK_PATH%
+)
+
+%DOTNET% tool install "--tool-path=%BASE%.fake-tools" fake-cli
 "%BASE%\.fake-tools\fake.exe" run %BASE%\build.fsx -- %*
