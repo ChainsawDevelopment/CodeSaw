@@ -84,6 +84,12 @@ export interface FileDiscussion
     comment: Comment;
 }
 
+export interface ReviewDiscussion 
+{
+    revision: RevisionId;
+    comment: Comment;
+}
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -104,7 +110,8 @@ export interface ReviewInfo {
         }
     }[];
 
-    fileComments: FileDiscussion[];
+    fileDiscussions: FileDiscussion[];
+    reviewDiscussions: ReviewDiscussion[];
 }
 
 export interface ReviewSnapshot {
@@ -118,10 +125,13 @@ export interface ReviewSnapshot {
         base: string;
     }
     reviewedFiles: PathPairs.PathPair[];
-    comments: Comment[];
     startedFileDiscussions: {
         file: PathPairs.PathPair;
         lineNumber: number;
+        content: string;
+        needsResolution: boolean;
+    }[];
+    startedReviewDiscussions: {
         needsResolution: boolean;
         content: string;
     }[];
@@ -230,12 +240,6 @@ export class ReviewerApi {
                 throw new ReviewConcurrencyError()
             }
         });
-    }
-
-    public getComments = (reviewId: ReviewId): Promise<Comment[]> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comments`, acceptJson)
-            .then(r => r.json())
-            .then(r => r as Comment[]);
     }
 
     public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {

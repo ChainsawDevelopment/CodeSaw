@@ -8,9 +8,6 @@ import './diffView.less';
 import * as classNames from "classnames";
 import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
-import * as C from './commentsView';
-import * as A from '../../api/reviewer';
-
 interface Change {
     oldLineNumber: number;
     newLineNumber: number;
@@ -145,27 +142,18 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
-export interface LineCommentsActions {
-    showCommentsForLine(lineNumber: number): void;
-    hideCommentsForLine(lineNumber: number): void;
-    startFileDiscussion(lineNumber: number, content: string, needResolution: boolean): void;
+export type DiffSide = 'left' | 'right';
+
+export interface LineWidget {
+    side: DiffSide;
+    lineNumber: number;
+    widget: JSX.Element;
 }
 
-interface Props {
+export interface Props {
     diffInfo: FileDiff;
-    comments: A.FileDiscussion[];
-    commentActions: C.CommentsActions;
-    lineCommentsActions: LineCommentsActions;
-    leftSideRevision: A.RevisionId;
-    rightSideRevision: A.RevisionId;
-    visibleCommentLines: number[];
-}
-
-interface CommentsByChangeKey {
-    [changeKey: string]: {
-        lineNumber: number;
-        comments: A.Comment[];
-    }
+    lineWidgets: LineWidget[];
+    onLineClick?: (side: DiffSide, line: number) => void;
 }
 
 const leftSideMatch = (change: Change, lineNumber: number) => {
@@ -199,81 +187,34 @@ const diffView = (props: Props) => {
     }
 
     const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
-    const toggleChangeComment = (change) => {
-        const lineNumber = change.newLineNumber;
-        if (props.visibleCommentLines.indexOf(lineNumber) == -1) {
-            props.lineCommentsActions.showCommentsForLine(lineNumber);
-        } else {
-            props.lineCommentsActions.hideCommentsForLine(lineNumber);
-        }
-    };
 
     const events = {
         gutter: {
-            onClick: toggleChangeComment
+            onClick: change => {
+                if(props.onLineClick) {
+                    const lineNumber = change.newLineNumber;
+                    props.onLineClick('right', lineNumber); // TODO: detect side
+                }
+            }
         }
     };
 
-    const commentsByChangeKey = {} as CommentsByChangeKey;
-
-    for (let fileComment of props.comments) {
-        let changeKey = 'TBD';
-
-        let match = fileComment.revision == props.leftSideRevision ? leftSideMatch : rightSideMatch;
-
-        for (let hunk of viewHunks) {
-            for (let change of hunk.changes) {
-                if(match(change, fileComment.lineNumber)) {
-                    changeKey = getChangeKey(change);
-                    break;
-                }
-            }
-        }
-
-        const existing = commentsByChangeKey[changeKey] || { comments: [], lineNumber: fileComment.lineNumber };
-
-        commentsByChangeKey[changeKey] = {
-            ...existing,
-            comments: [...existing.comments, fileComment.comment]
-        }
-    }
-
-    for (let lineNumber of props.visibleCommentLines) {
-        let changeKey = 'TBD';
-
-        for (let hunk of viewHunks) {
-            for (let change of hunk.changes) {
-                if(rightSideMatch(change, lineNumber)) {
-                    changeKey = getChangeKey(change);
-                    break;
-                }
-            }
-        }
-
-        commentsByChangeKey[changeKey] =commentsByChangeKey[changeKey] || { comments: [], lineNumber: lineNumber };
-    }
-
     let widgets = {};
 
-    for (let key of Object.keys(commentsByChangeKey)) {
-        const commentActions: C.CommentsActions = {
-            add: (content, needResolution, parentId) => {
-                if (parentId == null) {
-                    props.lineCommentsActions.startFileDiscussion(commentsByChangeKey[key].lineNumber, content, needResolution);
-                } else {
-                    throw 'NotSupported';
-                }
-            },
-            resolve: () => {throw 'NotSupported';},
-            load: () => {throw 'NotSupported';}
-        }
+    for (let item of props.lineWidgets) {
+        const match = item.side == 'left' ? leftSideMatch : rightSideMatch;
 
-        widgets[key] = (
-            <C.default 
-                comments={commentsByChangeKey[key].comments}
-                actions={commentActions}
-            />
-        )
+        for (let hunk of viewHunks) {
+            for (let change of hunk.changes) {
+                if( !match(change, item.lineNumber)) {
+                    continue;
+                }
+
+                widgets[getChangeKey(change)] = item.widget;
+
+                break;
+            }
+        }
     }
 
     const markEdits = smartMarkEdits();

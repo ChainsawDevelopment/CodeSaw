@@ -46,6 +46,8 @@ namespace Web.Modules.Api.Queries
 
             public async Task<IEnumerable<Item>> Execute(GetCommentList query)
             {
+                return Enumerable.Empty<Item>();
+
                 var comments = await (
                         from comment in _session.Query<Comment>()
                         join review in _session.Query<Review>() on comment.PostedInReviewId equals review.Id

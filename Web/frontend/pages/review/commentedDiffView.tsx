@@ -1,0 +1,104 @@
+import * as React from 'react';
+
+import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffView';
+import * as A from '../../api/reviewer';
+import * as C from './commentsView';
+
+export interface LineCommentsActions {
+    showCommentsForLine(lineNumber: number): void;
+    hideCommentsForLine(lineNumber: number): void;
+    startFileDiscussion(lineNumber: number, content: string, needResolution: boolean): void;
+}
+
+interface CommentProps {
+    comments: A.FileDiscussion[];
+    commentActions: C.CommentsActions;
+    lineCommentsActions: LineCommentsActions;
+    visibleCommentLines: number[];
+    leftSideRevision: A.RevisionId;
+    rightSideRevision: A.RevisionId;
+}
+
+interface CalculatedProps {
+    lineWidgets: any[];
+    onLineClick: (side: DiffSide, line: number) => void;
+}
+
+type CalculatedFields = Exclude<keyof DiffViewProps, keyof CalculatedProps>;
+type PassthroughProps = { [K in CalculatedFields]: DiffViewProps[K] };
+
+type Props = PassthroughProps & CommentProps;
+
+const buildLineWidgets = (props: Props) => {
+    const lineComments = {
+        left: new Map<number, A.Comment[]>(),
+        right: new Map<number, A.Comment[]>()
+    }
+    
+    for (let fileComment of props.comments) {
+        let side = fileComment.revision == props.leftSideRevision ? 'left' : 'right';
+        lineComments[side].set(fileComment.lineNumber, [
+            ...(lineComments[side].get(fileComment.lineNumber) || []),
+            fileComment.comment
+        ]);
+    }
+    
+    for (let lineNumber of props.visibleCommentLines) {
+        lineComments.right.set(lineNumber, lineComments.right.get(lineNumber) || []);
+    }
+
+    const lineWidgets: LineWidget[] = [];
+    for(let side of ['left', 'right']) {
+        for (let [lineNumber, comments] of lineComments[side]) {
+            const commentActions: C.CommentsActions = {
+                add: (content, needResolution, parentId) => {
+                    if (parentId == null) {
+                        props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
+                    } else {
+                        throw 'NotSupported';
+                    }
+                },
+                resolve: () => {throw 'NotSupported';}
+            }
+
+            lineWidgets.push({
+                lineNumber,
+                side: side as DiffSide,
+                widget: (
+                    <C.default 
+                        comments={comments}
+                        actions={commentActions}
+                    />
+                )
+            })
+        }
+    }
+
+    return lineWidgets;
+}
+
+export default (props: Props) => {
+    const { 
+        comments, 
+        commentActions,
+        leftSideRevision, 
+        rightSideRevision,
+        ...diffViewProps 
+    } = props;
+
+    const lineWidgets = buildLineWidgets(props);
+
+    const toggleChangeComment = (side, lineNumber) => {
+        if (props.visibleCommentLines.indexOf(lineNumber) == -1) {
+            props.lineCommentsActions.showCommentsForLine(lineNumber);
+        } else {
+            props.lineCommentsActions.hideCommentsForLine(lineNumber);
+        }
+    };
+
+    return <DiffView 
+        {...diffViewProps} 
+        lineWidgets={lineWidgets}
+        onLineClick={toggleChangeComment}
+    />
+};

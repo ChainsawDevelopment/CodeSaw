@@ -26,7 +26,8 @@ namespace Web.Modules.Api.Queries
             public object ReviewSummary { get; set; }
             public MergeStatus MergeStatus { get; set; }
             public MergeRequestState State { get; set; }
-            public object[] FileComments { get; set; }
+            public object[] FileDiscussions { get; set; }
+            public object[] ReviewDiscussions { get; set; }
         }
 
         public class Revision
@@ -100,14 +101,40 @@ namespace Web.Modules.Api.Queries
                     State = mr.State,
                     MergeStatus = mr.MergeStatus,
                     ReviewSummary = reviewSummary,
-                    FileComments = GetFileComments()
+                    FileDiscussions = GetFileDiscussions(),
+                    ReviewDiscussions = GetReviewDiscussions()
                 };
             }
 
-            private object[] GetFileComments()
+            private object[] GetReviewDiscussions()
+            {
+                var q = from discussion in _session.Query<ReviewDiscussion>()
+                    join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
+                    join commentReview in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals commentReview.Id
+                    join user in _session.Query<ReviewUser>() on commentReview.UserId equals user.Id
+                    select new
+                    {
+                        revision = revision.RevisionNumber,
+                        comment = new GetCommentList.Item
+                        {
+                            Author = user.UserName,
+                            Content = discussion.RootComment.Content,
+                            Children = Enumerable.Empty<GetCommentList.Item>(),
+                            CreatedAt = discussion.RootComment.CreatedAt,
+                            State = discussion.RootComment.State.ToString(),
+                            Id = discussion.RootComment.Id
+                        }
+                    };
+
+                return q.ToArray();
+            }
+
+            private object[] GetFileDiscussions()
             {
                 var q = from discussion in _session.Query<FileDiscussion>()
                     join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
+                    join commentReview in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals commentReview.Id
+                    join user in _session.Query<ReviewUser>() on commentReview.UserId equals user.Id
                     select new
                     {
                         revision = revision.RevisionNumber,
@@ -115,7 +142,7 @@ namespace Web.Modules.Api.Queries
                         lineNumber = discussion.LineNumber,
                         comment = new GetCommentList.Item
                         {
-                            Author = "mnowak",
+                            Author = user.UserName,
                             Content = discussion.RootComment.Content,
                             Children = Enumerable.Empty<GetCommentList.Item>(),
                             CreatedAt = discussion.RootComment.CreatedAt,

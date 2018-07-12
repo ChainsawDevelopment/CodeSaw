@@ -10,8 +10,6 @@ import {
     publishReview,
     createGitLabLink,
     CreateGitLabLinkArgs,
-    loadComments,
-    loadedComments,
     mergePullRequest,
     MergePullRequestArgs
 } from './state';
@@ -74,7 +72,6 @@ function* loadReviewInfoSaga() {
         const currentRange: RevisionRange = yield select((s: RootState) => s.review.range);
 
         yield put(loadedReviewInfo(info));
-        yield put(loadComments({}));
 
         let newRange: RevisionRange = {
             previous: 'base',
@@ -124,12 +121,15 @@ function* publishReviewSaga() {
             revision: s.review.rangeInfo.commits.current,
             previous: s.review.rangeInfo.commits.previous,
             reviewedFiles: s.review.reviewedFiles,
-            comments: s.review.comments,
             startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
                 file: d.filePath,
                 lineNumber: d.lineNumber,
                 needsResolution: d.comment.state == 'NeedsResolution',
                 content: d.comment.content
+            })),
+            startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
+                content: d.comment.content,
+                needsResolution: d.comment.state == 'NeedsResolution'
             }))
         }));
 
@@ -147,19 +147,6 @@ function* publishReviewSaga() {
         }
 
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId }));
-    }
-}
-
-function* loadCommentsSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        yield take(loadComments);
-
-        const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
-        const comments: Comment[] = yield api.getComments(currentReview);
-
-        yield put(loadedComments(comments));
     }
 }
 
@@ -182,5 +169,4 @@ export default [
     createGitLabLinkSaga,
     publishReviewSaga,
     mergePullRequestSaga,
-    loadCommentsSaga
 ];
