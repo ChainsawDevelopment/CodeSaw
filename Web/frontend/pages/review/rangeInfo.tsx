@@ -4,7 +4,7 @@ import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
 import { RevisionRangeInfo, ReviewId, Comment, FileDiscussion, RevisionRange } from "../../api/reviewer";
-import DiffView, { LineCommentsActions } from './diffView';
+import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
 import { FileInfo } from "./state";
@@ -74,7 +74,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
             <span ref={span => this.renderedRef = span}>
                 <FileSummary file={file} />
                 {file.diff ? 
-                    <DiffView 
+                    <CommentedDiffView 
                         diffInfo={file.diff} 
                         comments={fileDiscussions.concat(unpublishedDiscussion)}
                         commentActions={commentActions}
