@@ -174,7 +174,7 @@ class reviewPage extends React.Component<Props> {
                     publishReview={props.publishReview}
                     onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
                     reviewId={props.reviewId}
-                    fileComments={props.currentReview.fileComments}
+                    fileComments={props.currentReview.fileDiscussions}
                     revisionRange={props.currentRange}
                     startFileDiscussion={props.startFileDiscussion}
                     unpublishedFileDiscussion={props.unpublishedFileDiscussion}

@@ -110,7 +110,7 @@ export interface ReviewInfo {
         }
     }[];
 
-    fileComments: FileDiscussion[];
+    fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
 }
 

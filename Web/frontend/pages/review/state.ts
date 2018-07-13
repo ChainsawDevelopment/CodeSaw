@@ -104,7 +104,7 @@ const initial: ReviewState = {
         state: 'opened',
         mergeStatus: 'unchecked',
         reviewSummary: [],
-        fileComments: [],
+        fileDiscussions: [],
         reviewDiscussions: []
     },
     reviewedFiles: [],
