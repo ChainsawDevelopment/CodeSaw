@@ -23,15 +23,6 @@ namespace Web.Modules.Api.Commands
         public List<NewReviewDiscussion> StartedReviewDiscussions { get; set; } = new List<NewReviewDiscussion>();
         public NewFileDiscussion[] StartedFileDiscussions { get; set; }
 
-        public class RevisionComment
-        {
-            public Guid Id { get; set; }
-            public Guid? ParentId { get; set; }
-            public string Content { get; set; }
-            public CommentState? State { get; set; }
-            public List<RevisionComment> Children { get; set; } = new List<RevisionComment>();
-        }
-
         public class RevisionCommits
         {
             public string Head { get; set; }

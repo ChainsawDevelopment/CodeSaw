@@ -242,12 +242,6 @@ export class ReviewerApi {
         });
     }
 
-    public getComments = (reviewId: ReviewId): Promise<Comment[]> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comments`, acceptJson)
-            .then(r => r.json())
-            .then(r => r as Comment[]);
-    }
-
     public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/merge_request/merge`, {
             ...acceptJson,

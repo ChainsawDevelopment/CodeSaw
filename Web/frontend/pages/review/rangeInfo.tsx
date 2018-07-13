@@ -215,7 +215,6 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         
         const actions: C.CommentsActions = {
             add: null,
-            load: null,
             resolve: null
         };
 

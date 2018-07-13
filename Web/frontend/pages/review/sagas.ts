@@ -10,8 +10,6 @@ import {
     publishReview,
     createGitLabLink,
     CreateGitLabLinkArgs,
-    loadComments,
-    loadedComments,
     mergePullRequest,
     MergePullRequestArgs
 } from './state';
@@ -74,7 +72,6 @@ function* loadReviewInfoSaga() {
         const currentRange: RevisionRange = yield select((s: RootState) => s.review.range);
 
         yield put(loadedReviewInfo(info));
-        yield put(loadComments({}));
 
         let newRange: RevisionRange = {
             previous: 'base',
@@ -153,19 +150,6 @@ function* publishReviewSaga() {
     }
 }
 
-function* loadCommentsSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        yield take(loadComments);
-
-        const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
-        const comments: Comment[] = yield api.getComments(currentReview);
-
-        yield put(loadedComments(comments));
-    }
-}
-
 function* mergePullRequestSaga() {
     const api = new ReviewerApi();
 
@@ -185,5 +169,4 @@ export default [
     createGitLabLinkSaga,
     publishReviewSaga,
     mergePullRequestSaga,
-    loadCommentsSaga
 ];

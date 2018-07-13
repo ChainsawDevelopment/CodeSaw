@@ -26,7 +26,6 @@ export interface ReviewState {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
-    comments: Comment[];
     unpublishedFileDiscussions: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
 }
@@ -46,9 +45,6 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
 
-export const loadComments = createAction<{}>('LOAD_COMMENTS');
-export const loadedComments = createAction<Comment[]>('LOADED_COMMENTS');
-
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
     head: string;
@@ -65,16 +61,6 @@ export const publishReview = createAction<{}>('PUBLISH_REVIEW');
 
 export const reviewFile = createAction<{ path: PathPairs.PathPair }>('REVIEW_FILE');
 export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW_FILE');
-
-export interface AddCommentArgs {
-    parentId?: string;
-    content: string;
-    needsResolution: boolean;
-}
-
-export const addComment = createAction<AddCommentArgs>('ADD_COMMENT');
-
-export const resolveComment = createAction<{ commentId: string }>('RESOLVE_COMMENT');
 
 export interface MergePullRequestArgs {
     reviewId: ReviewId;
@@ -108,7 +94,6 @@ const initial: ReviewState = {
         reviewDiscussions: []
     },
     reviewedFiles: [],
-    comments: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: []
 };
@@ -186,13 +171,6 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         };
     }
 
-    if (loadedComments.match(action)) {
-        return {
-            ...state,
-            comments: action.payload
-        };
-    }
-
     const findCommentById = (id: string, comments: Comment[]): Comment => {
         for (const comment of comments) {
             if (comment.id === id) {
@@ -206,41 +184,6 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         }
 
         return null;
-    }
-
-    if (addComment.match(action)) {
-        const newComment: Comment = {
-            author: 'NOT SUBMITTED',
-            content: action.payload.content,
-            state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
-            createdAt: joda.LocalDateTime.now(joda.ZoneOffset.UTC).toString(),
-            id: Guid.create().toString(),
-            children: []
-        }
-
-        const commentsState = JSON.parse(JSON.stringify(state.comments)) as Comment[];
-        if (action.payload.parentId) {
-            const parentComment = findCommentById(action.payload.parentId, commentsState);
-            parentComment.children.push(newComment);
-        } else {
-            commentsState.push(newComment);
-        }
-
-        return {
-            ...state,
-            comments: commentsState
-        }
-    }
-
-    if (resolveComment.match(action)) {
-        const commentsState = JSON.parse(JSON.stringify(state.comments)) as Comment[];
-        const comment = findCommentById(action.payload.commentId, commentsState);
-        comment.state = 'Resolved';
-
-        return {
-            ...state,
-            comments: commentsState
-        }
     }
 
     if (startFileDiscussion.match(action)) {

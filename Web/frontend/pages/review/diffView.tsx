@@ -264,8 +264,7 @@ const diffView = (props: Props) => {
                     throw 'NotSupported';
                 }
             },
-            resolve: () => {throw 'NotSupported';},
-            load: () => {throw 'NotSupported';}
+            resolve: () => {throw 'NotSupported';}
         }
 
         widgets[key] = (

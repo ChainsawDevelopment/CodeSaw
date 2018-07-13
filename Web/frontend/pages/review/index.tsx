@@ -9,9 +9,6 @@ import {
     publishReview,
     reviewFile,
     unreviewFile,
-    loadComments,
-    addComment,
-    resolveComment,
     mergePullRequest,
     startFileDiscussion,
     startReviewDiscussion
@@ -53,7 +50,6 @@ interface DispatchProps {
     selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
-    commentActions: CommentsActions;
     publishReview(): void;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
     startReviewDiscussion(content: string, needsResolution: boolean): void;
@@ -65,7 +61,6 @@ interface StateProps {
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
     reviewedFiles: PathPairs.List;
-    comments: Comment[];
     unpublishedFileDiscussion: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
 }
@@ -120,8 +115,8 @@ class reviewPage extends React.Component<Props> {
         };
 
         const commentActions: CommentsActions = {
-            ...props.commentActions,
-            add: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution)
+            add: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
+            resolve: () => { throw new Error('Not supported'); }
         }
 
         const comments: Comment[] = props.currentReview.reviewDiscussions
@@ -190,7 +185,6 @@ const mapStateToProps = (state: RootState): StateProps => ({
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
-    comments: state.review.comments,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions
 });
@@ -203,11 +197,6 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
-    },
-    commentActions: {
-        load: () => dispatch(loadComments({})),
-        add: (content, needsResolution, parentId) => dispatch(addComment({ content, needsResolution, parentId })),
-        resolve: (commentId) => dispatch(resolveComment({ commentId }))
     },
     publishReview: () => dispatch(publishReview({})),
     startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution })),

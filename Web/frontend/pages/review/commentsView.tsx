@@ -3,7 +3,6 @@ import { Button, Checkbox, CheckboxProps, Comment as UIComment, Form, Header, Te
 import { ReviewId, Comment } from "../../api/reviewer";
 
 export interface CommentsActions {
-    load(): void;
     add(content: string, needsResolution: boolean, parentId?: string);
     resolve(commentId: string);
 }
