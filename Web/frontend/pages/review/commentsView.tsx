@@ -2,9 +2,12 @@ import * as React from "react";
 import { Button, Checkbox, CheckboxProps, Comment as UIComment, Form, Header, TextAreaProps } from "semantic-ui-react"
 import { ReviewId, Comment } from "../../api/reviewer";
 
+import "./commentsView.less";
+
 export interface CommentsActions {
     add(content: string, needsResolution: boolean, parentId?: string);
     resolve(commentId: string);
+    unresolve(commentId: string);
 }
 
 interface CommentsProps {
@@ -80,12 +83,18 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             this.props.actions.resolve(this.props.id);
         }
 
+        const unresolveComment = () => {
+            this.props.actions.unresolve(this.props.id);
+        }
+
         const renderStatus = () => {
             switch (this.props.state) {
                 case 'NoActionNeeded':
                     return;
                 case 'NeedsResolution':
                     return <UIComment.Action onClick={resolveComment}>Resolve</UIComment.Action>
+                case 'ResolvePending':
+                    return <UIComment.Action className="resolved-pending" onClick={unresolveComment}>Resolved (pending)</UIComment.Action>
                 case 'Resolved':
                     return <span>Resolved</span>;
             }

@@ -17,6 +17,7 @@ interface CommentProps {
     visibleCommentLines: number[];
     leftSideRevision: A.RevisionId;
     rightSideRevision: A.RevisionId;
+    pendingResolved: string[];
 }
 
 interface CalculatedProps {
@@ -39,7 +40,10 @@ const buildLineWidgets = (props: Props) => {
         let side = fileComment.revision == props.leftSideRevision ? 'left' : 'right';
         lineComments[side].set(fileComment.lineNumber, [
             ...(lineComments[side].get(fileComment.lineNumber) || []),
-            fileComment.comment
+            {
+                ...fileComment.comment,
+                state: props.pendingResolved.indexOf(fileComment.comment.id) >= 0 ? 'ResolvePending' : fileComment.comment.state
+            }
         ]);
     }
     
@@ -58,7 +62,8 @@ const buildLineWidgets = (props: Props) => {
                         throw 'NotSupported';
                     }
                 },
-                resolve: () => {throw 'NotSupported';}
+                resolve: props.commentActions.resolve,
+                unresolve: props.commentActions.unresolve
             }
 
             lineWidgets.push({
@@ -83,6 +88,7 @@ export default (props: Props) => {
         commentActions,
         leftSideRevision, 
         rightSideRevision,
+        pendingResolved,
         ...diffViewProps 
     } = props;
 

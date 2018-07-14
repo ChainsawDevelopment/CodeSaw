@@ -22,6 +22,7 @@ namespace Web.Modules.Api.Commands
         public List<PathPair> ReviewedFiles { get; set; } = new List<PathPair>();
         public List<NewReviewDiscussion> StartedReviewDiscussions { get; set; } = new List<NewReviewDiscussion>();
         public NewFileDiscussion[] StartedFileDiscussions { get; set; }
+        public List<Guid> ResolvedDiscussions { get; set; } = new List<Guid>(); // root comment ids
 
         public class RevisionCommits
         {
@@ -82,8 +83,8 @@ namespace Web.Modules.Api.Commands
                 await _session.SaveAsync(review);
 
                 await new ReviewDiscussionsPublisher(_session).Publish(command.StartedReviewDiscussions, review);
-
                 await new FileDiscussionsPublisher(_session).Publish(command.StartedFileDiscussions, review);
+                await new ResolveDiscussions(_session).Publish(command.ResolvedDiscussions);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }

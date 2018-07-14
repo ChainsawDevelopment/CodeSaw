@@ -135,9 +135,10 @@ export interface ReviewSnapshot {
         needsResolution: boolean;
         content: string;
     }[];
+    resolvedDiscussions: string[]; // root comment ids
 }
 
-export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved';
+export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';
 
 export interface Comment {
     id: string;
