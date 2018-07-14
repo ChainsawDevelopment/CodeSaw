@@ -130,7 +130,8 @@ function* publishReviewSaga() {
             startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
                 content: d.comment.content,
                 needsResolution: d.comment.state == 'NeedsResolution'
-            }))
+            })),
+            resolvedDiscussions: s.review.unpublishedResolvedDiscussions
         }));
 
         for (let i = 0; i < 100; i++) {

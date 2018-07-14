@@ -28,6 +28,7 @@ export interface ReviewState {
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussions: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
+    unpublishedResolvedDiscussions: string[]; // root comment id
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -73,6 +74,9 @@ export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_R
 export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean  }>('START_FILE_DISCUSSION');
 export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean }>('START_REVIEW_DISCUSSION');
 
+export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
+export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
+
 const initial: ReviewState = {
     range: {
         previous: 'base',
@@ -95,7 +99,8 @@ const initial: ReviewState = {
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
-    unpublishedReviewDiscussions: []
+    unpublishedReviewDiscussions: [],
+    unpublishedResolvedDiscussions: [ 'e20d9a09-7392-41b5-90f7-a91b013f09ff' ]
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -142,7 +147,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             currentReview: action.payload,
             unpublishedFileDiscussions: [],
-            unpublishedReviewDiscussions: []
+            unpublishedReviewDiscussions: [],
+            unpublishedResolvedDiscussions: []
         };
     }
 
@@ -225,7 +231,28 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     }
                 }
             ]
+        };
+    }
+
+    if (unresolveDiscussion.match(action)) {
+        return {
+            ...state,
+            unpublishedResolvedDiscussions: state.unpublishedResolvedDiscussions.filter(id => id != action.payload.rootCommentId)
+        };
+    }
+
+    if (resolveDiscussion.match(action)) {
+        if (state.unpublishedResolvedDiscussions.indexOf(action.payload.rootCommentId) >= 0) {
+            return state;
         }
+
+        return {
+            ...state,
+            unpublishedResolvedDiscussions: [
+                ...state.unpublishedResolvedDiscussions,
+                action.payload.rootCommentId
+            ]
+        };
     }
 
     return state;

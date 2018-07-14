@@ -11,7 +11,9 @@ import {
     unreviewFile,
     mergePullRequest,
     startFileDiscussion,
-    startReviewDiscussion
+    startReviewDiscussion,
+    resolveDiscussion,
+    unresolveDiscussion
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -53,6 +55,8 @@ interface DispatchProps {
     publishReview(): void;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
     startReviewDiscussion(content: string, needsResolution: boolean): void;
+    resolveDiscussion(rootCommentId: string): void;
+    unresolveDiscussion(rootCommentId: string): void;
 }
 
 interface StateProps {
@@ -63,6 +67,7 @@ interface StateProps {
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussion: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
+    unpublishedResolvedDiscussions: string[];
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -116,12 +121,16 @@ class reviewPage extends React.Component<Props> {
 
         const commentActions: CommentsActions = {
             add: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
-            resolve: () => { throw new Error('Not supported'); }
+            resolve: props.resolveDiscussion,
+            unresolve: props.unresolveDiscussion
         }
 
         const comments: Comment[] = props.currentReview.reviewDiscussions
             .concat(props.unpublishedReviewDiscussions)
-            .map(d => d.comment);
+            .map(d => ({
+                ...d.comment,
+                state: props.unpublishedResolvedDiscussions.indexOf(d.comment.id) >= 0 ? 'ResolvePending' : d.comment.state
+            }));
 
         return (
             <div id="review-page">
@@ -173,6 +182,8 @@ class reviewPage extends React.Component<Props> {
                     revisionRange={props.currentRange}
                     startFileDiscussion={props.startFileDiscussion}
                     unpublishedFileDiscussion={props.unpublishedFileDiscussion}
+                    commentActions={commentActions}
+                    pendingResolved={props.unpublishedResolvedDiscussions}
                 />) : null}
             </div>
         );
@@ -186,7 +197,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
-    unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions
+    unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
+    unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -200,7 +212,9 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     },
     publishReview: () => dispatch(publishReview({})),
     startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution })),
-    startReviewDiscussion: (content, needsResolution) => dispatch(startReviewDiscussion({ content, needsResolution }))
+    startReviewDiscussion: (content, needsResolution) => dispatch(startReviewDiscussion({ content, needsResolution })),
+    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({rootCommentId})),
+    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({rootCommentId})),
 });
 
 export default connect(

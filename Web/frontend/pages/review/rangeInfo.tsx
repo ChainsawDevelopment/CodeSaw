@@ -22,6 +22,7 @@ interface FileViewProps {
     file: FileInfo;
     comments: FileDiscussion[];
     unpublishedFileDiscussions: FileDiscussion[];
+    pendingResolved: string[];
     commentActions: C.CommentsActions;
     revisionRange: RevisionRange;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
@@ -82,6 +83,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         rightSideRevision={revisionRange.current}
                         visibleCommentLines={this.state.visibleCommentLines}
                         lineCommentsActions={lineCommentsActions}
+                        pendingResolved={this.props.pendingResolved}
                     /> 
                     : null}
             </span>
@@ -116,6 +118,8 @@ export interface Props {
     fileComments: FileDiscussion[];
     unpublishedFileDiscussion: FileDiscussion[];
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
+    commentActions: C.CommentsActions;
+    pendingResolved: string[];
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -212,12 +216,6 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             </Menu.Item>);
         }
 
-        
-        const actions: C.CommentsActions = {
-            add: null,
-            resolve: null
-        };
-
         return (
             <div ref={this._handleRef}>
                 <Segment>
@@ -243,11 +241,12 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                         {selectedFile ?
                             <FileView 
                                 file={selectedFile} 
-                                commentActions={actions} 
+                                commentActions={this.props.commentActions} 
                                 comments={this.props.fileComments}
                                 revisionRange={this.props.revisionRange}
                                 startFileDiscussion={this.props.startFileDiscussion}
                                 unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
+                                pendingResolved={this.props.pendingResolved}
                             />
                             : <NoFileView />
                         }
