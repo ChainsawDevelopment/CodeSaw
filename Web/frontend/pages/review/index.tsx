@@ -13,7 +13,9 @@ import {
     startFileDiscussion,
     startReviewDiscussion,
     resolveDiscussion,
-    unresolveDiscussion
+    unresolveDiscussion,
+    replyToComment,
+    CommentReply
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -36,7 +38,6 @@ import VersionSelector from './versionSelector';
 import * as PathPairs from "../../pathPair";
 import ReviewSummary from './reviewSummary';
 import CommentsView, { CommentsActions } from './commentsView';
-import { PathPair, emptyPathPair } from "../../pathPair";
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
 import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
@@ -57,6 +58,7 @@ interface DispatchProps {
     startReviewDiscussion(content: string, needsResolution: boolean): void;
     resolveDiscussion(rootCommentId: string): void;
     unresolveDiscussion(rootCommentId: string): void;
+    addReply(parentCommentId: string, content: string): void;
 }
 
 interface StateProps {
@@ -68,6 +70,7 @@ interface StateProps {
     unpublishedFileDiscussion: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
+    unpublishedReplies: CommentReply[];
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -121,7 +124,7 @@ class reviewPage extends React.Component<Props> {
 
         const commentActions: CommentsActions = {
             addNew: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
-            addReply: (parentId, content) => {},
+            addReply: props.addReply,
             resolve: props.resolveDiscussion,
             unresolve: props.unresolveDiscussion
         }
@@ -162,7 +165,7 @@ class reviewPage extends React.Component<Props> {
                                 reviewId={props.reviewId}
                             />
 
-                            <CommentsView comments={comments} actions={commentActions} />
+                            <CommentsView comments={comments} actions={commentActions} unpublishedReplies={props.unpublishedReplies} />
 
                         </Grid.Column>
                     </Grid.Row>
@@ -199,7 +202,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     reviewedFiles: state.review.reviewedFiles,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
-    unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions
+    unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
+    unpublishedReplies: state.review.unpublishedReplies
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -214,8 +218,9 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     publishReview: () => dispatch(publishReview({})),
     startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution })),
     startReviewDiscussion: (content, needsResolution) => dispatch(startReviewDiscussion({ content, needsResolution })),
-    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({rootCommentId})),
-    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({rootCommentId})),
+    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({ rootCommentId })),
+    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({ rootCommentId })),
+    addReply: (parentId, content) => dispatch(replyToComment({ parentId, content }))
 });
 
 export default connect(

@@ -20,6 +20,12 @@ export interface FileInfo {
     treeEntry: ChangedFile;
 }
 
+export interface CommentReply {
+    id: string;
+    parentId: string;
+    content: string;
+}
+
 export interface ReviewState {
     range: RevisionRange;
     rangeInfo: RevisionRangeInfo;
@@ -29,6 +35,8 @@ export interface ReviewState {
     unpublishedFileDiscussions: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[]; // root comment id
+    unpublishedReplies: CommentReply[];
+    nextReplyId: number;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -76,7 +84,7 @@ export const startReviewDiscussion = createAction<{ content: string; needsResolu
 
 export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
 export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
-export const replyToComment = createAction<{ parentCommentId: string, content: string }>('REPLY_TO_COMMENT');
+export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 
 const initial: ReviewState = {
     range: {
@@ -101,7 +109,9 @@ const initial: ReviewState = {
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
-    unpublishedResolvedDiscussions: []
+    unpublishedResolvedDiscussions: [],
+    unpublishedReplies: [],
+    nextReplyId: 0,
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -149,7 +159,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             currentReview: action.payload,
             unpublishedFileDiscussions: [],
             unpublishedReviewDiscussions: [],
-            unpublishedResolvedDiscussions: []
+            unpublishedResolvedDiscussions: [],
+            unpublishedReplies: []
         };
     }
 
@@ -258,7 +269,16 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
 
     if (replyToComment.match(action)) {
         return {
-            ...state
+            ...state,
+            nextReplyId: state.nextReplyId + 1,
+            unpublishedReplies: [
+                ...state.unpublishedReplies,
+                {
+                    id: 'REPLY-' + state.nextReplyId,
+                    parentId: action.payload.parentId,
+                    content: action.payload.content
+                }
+            ]
         };
     }
 

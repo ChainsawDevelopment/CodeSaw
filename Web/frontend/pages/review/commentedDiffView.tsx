@@ -59,7 +59,7 @@ const buildLineWidgets = (props: Props) => {
                     props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
                 },
                 addReply: (parentId, content) => {
-                    
+                    props.commentActions.addReply(parentId, content)
                 },
                 resolve: props.commentActions.resolve,
                 unresolve: props.commentActions.unresolve

@@ -13,6 +13,11 @@ export interface CommentsActions {
 
 interface CommentsProps {
     comments: Comment[];
+    unpublishedReplies?: {
+        id: string;
+        parentId: string;
+        content: string;
+    }[];
     actions: CommentsActions;
 }
 
