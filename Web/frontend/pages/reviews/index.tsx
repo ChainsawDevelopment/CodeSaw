@@ -1,5 +1,4 @@
 import * as React from "react";
-import LinkButton from "../../components/LinkButton";
 import { Link } from 'react-router-dom';
 import List from '@ui/elements/List';
 import Image from '@ui/elements/Image';
@@ -13,13 +12,13 @@ import "./reviews.less";
 const ReviewItem = (props: {review: Review}) => {
     return (
         <List.Item className="review-item">
-            <Image avatar src='https://www.gravatar.com/avatar/00000000000000000000000000000000' />
+            <Image avatar src={props.review.author.avatarUrl} />
             <List.Content>
                 <List.Header>
                     <span className="project">{props.review.project}</span>
                     <span className="review-title"><Link to={`/project/${props.review.reviewId.projectId}/review/${props.review.reviewId.reviewId}`}>{props.review.title}</Link></span>
                 </List.Header>
-                <List.Description>{props.review.changesCount} changes by {props.review.author}</List.Description>
+                <List.Description>{props.review.changesCount} changes by {props.review.author.givenName}</List.Description>
             </List.Content>
         </List.Item>
     );
@@ -59,5 +58,5 @@ export default connect(
     }),
     (dispatch: Dispatch): DispatchProps => ({
         loadReviews: () => dispatch(loadReviews())
-    })    
+    })
 )(Reviews);

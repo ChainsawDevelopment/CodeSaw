@@ -29,7 +29,7 @@ const Review = withRouter((props: RouteComponentProps<{projectId: string; id: st
     const { projectId, id, fileName } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
 
-    return (<ReviewPage 
+    return (<ReviewPage
         reviewId={reviewId}
         fileName={decodeURIComponent(fileName || '')}
     />)
@@ -58,7 +58,7 @@ export default () => (
                         <Route path="/project/:projectId/review/:id" component={ReviewPageTopMenu} />
                     </ConnectedSwitch>
                     <Menu.Item>
-                        <Icon name="user" circular /> 
+                        <Icon name="user" circular />
                         <strong><CurrentUser /></strong>
                     </Menu.Item>
                 </Menu.Menu>

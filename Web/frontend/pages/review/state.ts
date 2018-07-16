@@ -1,6 +1,4 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { Guid } from 'guid-typescript';
-import * as joda from 'js-joda';
 import {
     RevisionRangeInfo,
     FileDiff,
@@ -12,6 +10,7 @@ import {
     FileDiscussion,
     ReviewDiscussion
 } from '../../api/reviewer';
+import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
 
 export interface FileInfo {
@@ -76,8 +75,8 @@ export interface MergePullRequestArgs {
 
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
 
-export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean  }>('START_FILE_DISCUSSION');
-export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean }>('START_REVIEW_DISCUSSION');
+export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean, currentUser: UserState }>('START_FILE_DISCUSSION');
+export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean, currentUser: UserState }>('START_REVIEW_DISCUSSION');
 
 export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
 export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
@@ -208,7 +207,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     lineNumber: action.payload.lineNumber,
                     comment: {
                         state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
-                        author: 'NOT SUBMITTED',
+                        author: action.payload.currentUser,
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
@@ -228,7 +227,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     revision: state.range.current,
                     comment: {
                         state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
-                        author: 'NOT SUBMITTED',
+                        author: action.payload.currentUser,
                         content: action.payload.content,
                         children: [],
                         createdAt: '',

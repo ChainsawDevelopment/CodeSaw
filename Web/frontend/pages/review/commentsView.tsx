@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Button, Checkbox, CheckboxProps, Comment as UIComment, Form, Header, TextAreaProps } from "semantic-ui-react"
-import { ReviewId, Comment } from "../../api/reviewer";
+import { Comment } from "../../api/reviewer";
 
 import "./commentsView.less";
 
@@ -102,9 +102,9 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
         return (
             <UIComment>
-                <UIComment.Avatar src='http://rs300.pbsrc.com/albums/nn5/jezzeble/cow%20and%20chicken/cow_chicken.gif~c200' />
+                <UIComment.Avatar src={this.props.author.avatarUrl} />
                 <UIComment.Content>
-                    <UIComment.Author>{this.props.author}</UIComment.Author>
+                    <UIComment.Author>{this.props.author.givenName}</UIComment.Author>
                     <UIComment.Metadata>
                         <div>{this.props.createdAt}</div>
                     </UIComment.Metadata>

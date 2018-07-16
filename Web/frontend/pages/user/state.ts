@@ -3,7 +3,8 @@ import actionCreatorFactory, { AnyAction } from "typescript-fsa";
 
 const initial: UserState = {
     userName: "",
-    givenName: ""
+    givenName: "",
+    avatarUrl: ""
 }
 
 const createAction = actionCreatorFactory('USER');

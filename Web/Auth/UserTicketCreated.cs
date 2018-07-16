@@ -9,12 +9,14 @@ namespace Web.Auth
     {
         public string UserName { get; }
         public string GivenName { get; }
+        public string AvatarUrl { get; }
         public string AccessToken { get; }
 
-        public UserTicketCreated(string userName, string givenName, string accessToken)
+        public UserTicketCreated(string userName, string givenName, string avatarUrl, string accessToken)
         {
             UserName = userName;
             GivenName = givenName;
+            AvatarUrl = avatarUrl;
             AccessToken = accessToken;
         }
 
@@ -23,7 +25,6 @@ namespace Web.Auth
             private readonly ISession _session;
             private readonly IQueryRunner _queryRunner;
             
-
             public Handler(ISession session, IQueryRunner queryRunner)
             {
                 _session = session;
@@ -35,13 +36,20 @@ namespace Web.Auth
                 var existingUser = await _queryRunner.Query(new FindUserByName(command.UserName));
                 if (existingUser == null)
                 {
-                    await _session.SaveAsync(new ReviewUser() { UserName = command.UserName, GivenName = command.GivenName, Token = command.AccessToken });
+                    await _session.SaveAsync(new ReviewUser
+                    {
+                        UserName = command.UserName,
+                        GivenName = command.GivenName,
+                        AvatarUrl = command.AvatarUrl,
+                        Token = command.AccessToken
+                    });
                     Console.WriteLine("New user created");
                 }
                 else
                 {
                     existingUser.Token = command.AccessToken;
                     existingUser.GivenName = command.GivenName;
+                    existingUser.AvatarUrl = command.AvatarUrl;
                     
                     await _session.UpdateAsync(existingUser);
                     Console.WriteLine($"Found existing user with ID {existingUser.Id}, token updated.");
