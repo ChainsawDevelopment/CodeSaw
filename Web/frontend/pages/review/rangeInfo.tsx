@@ -1,29 +1,30 @@
 import * as React from "react";
+
 import Menu from '@ui/collections/Menu';
 import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import { RevisionRangeInfo, ReviewId, Comment, FileDiscussion, RevisionRange } from "../../api/reviewer";
-import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
-import FileSummary from './fileSummary';
-import ChangedFileTreePopup from "./fileTreePopup";
-import { FileInfo } from "./state";
-import ReviewMark from "./reviewMark";
-import { PathPair, emptyPathPair } from "../../pathPair";
-import * as PathPairs from "../../pathPair";
 import Icon from '@ui/elements/Icon';
 import Popup from '@ui/modules/Popup';
 import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
-import * as C from './commentsView';
+import * as PathPairs from "../../pathPair";
+import { RevisionRangeInfo, ReviewId, Comment, FileDiscussion, RevisionRange } from "../../api/reviewer";
+import { FileInfo } from "./state";
+
+import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
+import { CommentsActions } from "./commentsView";
+import FileSummary from './fileSummary';
+import ChangedFileTreePopup from "./fileTreePopup";
+import ReviewMark from "./reviewMark";
 
 interface FileViewProps {
     file: FileInfo;
     comments: FileDiscussion[];
     unpublishedFileDiscussions: FileDiscussion[];
     pendingResolved: string[];
-    commentActions: C.CommentsActions;
+    commentActions: CommentsActions;
     revisionRange: RevisionRange;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
@@ -97,12 +98,12 @@ const NoFileView = () => {
     )
 };
 
-export type SelectFileForViewHandler = (path: PathPair) => void;
+export type SelectFileForViewHandler = (path: PathPairs.PathPair) => void;
 export type OnShowFileHandlerAvailable = (handler: () => void) => void;
 
 export interface ReviewFileActions {
-    review(file: PathPair): void;
-    unreview(file: PathPair): void;
+    review(file: PathPairs.PathPair): void;
+    unreview(file: PathPairs.PathPair): void;
 }
 
 export interface Props {
@@ -111,14 +112,14 @@ export interface Props {
     selectedFile: FileInfo & { isReviewed: boolean };
     onSelectFileForView: SelectFileForViewHandler;
     reviewFile: ReviewFileActions;
-    reviewedFiles: PathPair[];
+    reviewedFiles: PathPairs.PathPair[];
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
     reviewId: ReviewId;
     fileComments: FileDiscussion[];
     unpublishedFileDiscussion: FileDiscussion[];
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
-    commentActions: C.CommentsActions;
+    commentActions: CommentsActions;
     pendingResolved: string[];
 }
 
@@ -141,7 +142,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         }
     }
 
-    private _findNextUnreviewedFile = (current: PathPair, direction: 1 | -1): PathPair => {
+    private _findNextUnreviewedFile = (current: PathPairs.PathPair, direction: 1 | -1): PathPairs.PathPair => {
         const currentIndex = this.props.info.changes.findIndex(p => PathPairs.equal(p.path, this.props.selectedFile.path));
 
         if (currentIndex == -1) {
@@ -228,7 +229,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                     &nbsp;
                                     <ChangedFileTreePopup
                                         paths={info.changes.map(i => i.path)}
-                                        selected={selectedFile ? selectedFile.path : emptyPathPair}
+                                        selected={selectedFile ? selectedFile.path : PathPairs.emptyPathPair}
                                         reviewedFiles={this.props.reviewedFiles}
                                         onSelect={onSelectFileForView}
                                         reviewId={this.props.reviewId}

@@ -100,7 +100,7 @@ const initial: ReviewState = {
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
-    unpublishedResolvedDiscussions: [ 'e20d9a09-7392-41b5-90f7-a91b013f09ff' ]
+    unpublishedResolvedDiscussions: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {

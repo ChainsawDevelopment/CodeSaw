@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffView';
-import * as A from '../../api/reviewer';
-import * as C from './commentsView';
+import { FileDiscussion, RevisionId } from '../../api/reviewer';
+import CommentsView, { CommentsActions } from './commentsView';
 
 export interface LineCommentsActions {
     showCommentsForLine(lineNumber: number): void;
@@ -11,12 +11,12 @@ export interface LineCommentsActions {
 }
 
 interface CommentProps {
-    comments: A.FileDiscussion[];
-    commentActions: C.CommentsActions;
+    comments: FileDiscussion[];
+    commentActions: CommentsActions;
     lineCommentsActions: LineCommentsActions;
     visibleCommentLines: number[];
-    leftSideRevision: A.RevisionId;
-    rightSideRevision: A.RevisionId;
+    leftSideRevision: RevisionId;
+    rightSideRevision: RevisionId;
     pendingResolved: string[];
 }
 
@@ -32,8 +32,8 @@ type Props = PassthroughProps & CommentProps;
 
 const buildLineWidgets = (props: Props) => {
     const lineComments = {
-        left: new Map<number, A.Comment[]>(),
-        right: new Map<number, A.Comment[]>()
+        left: new Map<number, Comment[]>(),
+        right: new Map<number, Comment[]>()
     }
     
     for (let fileComment of props.comments) {
@@ -54,7 +54,7 @@ const buildLineWidgets = (props: Props) => {
     const lineWidgets: LineWidget[] = [];
     for(let side of ['left', 'right']) {
         for (let [lineNumber, comments] of lineComments[side]) {
-            const commentActions: C.CommentsActions = {
+            const commentActions: CommentsActions = {
                 add: (content, needResolution, parentId) => {
                     if (parentId == null) {
                         props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
@@ -70,7 +70,7 @@ const buildLineWidgets = (props: Props) => {
                 lineNumber,
                 side: side as DiffSide,
                 widget: (
-                    <C.default 
+                    <CommentsView
                         comments={comments}
                         actions={commentActions}
                     />
