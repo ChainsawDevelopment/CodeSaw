@@ -66,12 +66,14 @@ export interface ReviewId {
     reviewId: number;
 }
 
+export type ReviewAuthor = UserState;
+
 export interface Review {
     reviewId: ReviewId;
     project: string;
     title: string;
     changesCount: number;
-    author: string;
+    author: ReviewAuthor;
 }
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
@@ -84,7 +86,7 @@ export interface FileDiscussion
     comment: Comment;
 }
 
-export interface ReviewDiscussion 
+export interface ReviewDiscussion
 {
     revision: RevisionId;
     comment: Comment;
@@ -142,7 +144,7 @@ export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | '
 
 export interface Comment {
     id: string;
-    author: string;
+    author: UserState;
     content: string;
     state: CommentState,
     createdAt: string;

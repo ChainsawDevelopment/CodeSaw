@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NHibernate;
 using RepositoryApi;
 using Web.Cqrs;
 
@@ -11,7 +10,7 @@ namespace Web.Modules.Api.Queries
     {
         public class Item
         {
-            public string Author { get; set; }
+            public UserInfo Author { get; set; }
             public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
             public string Project { get; set; }
@@ -37,10 +36,10 @@ namespace Web.Modules.Api.Queries
 
                 return (from mr in activeMergeRequest
                         join project in projects on mr.ProjectId equals project.Id
-                        select new Item()
+                        select new Item
                         {
                             ReviewId = new ReviewIdentifier(mr.ProjectId, mr.Id),
-                            Author = mr.Author.Name,
+                            Author = mr.Author,
                             Title = mr.Title,
                             Project = $"{project.Namespace}/{project.Name}",
                             ChangesCount = 12

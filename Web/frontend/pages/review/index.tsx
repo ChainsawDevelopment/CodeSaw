@@ -28,7 +28,7 @@ import {
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
 import { connect } from "react-redux";
-import { RootState } from "../../rootState";
+import { UserState, RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
 import MergeApprover from './mergeApprover';
 import "./review.less";
@@ -53,13 +53,14 @@ interface DispatchProps {
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
     publishReview(): void;
-    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
-    startReviewDiscussion(content: string, needsResolution: boolean): void;
+    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean, currentUser?: UserState): void;
+    startReviewDiscussion(content: string, needsResolution: boolean, currentUser?: UserState): void;
     resolveDiscussion(rootCommentId: string): void;
     unresolveDiscussion(rootCommentId: string): void;
 }
 
 interface StateProps {
+    currentUser: UserState;
     currentReview: ReviewInfo;
     currentRange: RevisionRange;
     rangeInfo: RevisionRangeInfo;
@@ -191,6 +192,7 @@ class reviewPage extends React.Component<Props> {
 };
 
 const mapStateToProps = (state: RootState): StateProps => ({
+    currentUser: state.currentUser,
     currentReview: state.review.currentReview,
     currentRange: state.review.range,
     rangeInfo: state.review.rangeInfo,
@@ -211,13 +213,20 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
     publishReview: () => dispatch(publishReview({})),
-    startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution })),
-    startReviewDiscussion: (content, needsResolution) => dispatch(startReviewDiscussion({ content, needsResolution })),
     resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({rootCommentId})),
     unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({rootCommentId})),
+    startFileDiscussion: (path, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution, currentUser })),
+    startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser }))
 });
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    mapDispatchToProps,
+    (stateProps, dispatchProps, ownProps) => ({
+        ...ownProps,
+        ...stateProps,
+        ...dispatchProps,
+        startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatchProps.startFileDiscussion(path, lineNumber, content, needsResolution, stateProps.currentUser),
+        startReviewDiscussion: (content, needsResolution) => dispatchProps.startReviewDiscussion(content, needsResolution, stateProps.currentUser)
+    })
 )(reviewPage);
