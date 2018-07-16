@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link } from 'react-router-dom';
 import List from '@ui/elements/List';
 import Image from '@ui/elements/Image';
+import Segment from '@ui/elements/Segment';
 import { connect, Dispatch } from "react-redux";
 import { RootState } from "../../rootState";
 import { loadReviews } from "./state";
@@ -36,19 +37,45 @@ type Props = StateProps & DispatchProps;
 
 const ReviewsList = (props: Props) => {
     return (
-        <List>
-            {props.list.map(r => (<ReviewItem key={`${r.reviewId.projectId}/${r.reviewId.reviewId}`} review={r} />))}
-        </List>
+        <Segment>
+            <List divided relaxed>
+                {props.list.map(r => (<ReviewItem key={`${r.reviewId.projectId}/${r.reviewId.reviewId}`} review={r} />))}
+            </List>
+        </Segment>
     );
 };
 
+const ProjectReviewsList = (props: Props) => {
+    const grouped = props.list.reduce((map: Map<string, Review[]>, item: Review) => {
+        const group = map.get(item.project);
+        if (!group) {
+            map.set(item.project, [item]);
+        } else {
+            group.push(item);
+        }
+
+        return map;
+    }, new Map<string, Review[]>());
+
+    const reviewLists = [];
+    for (const key of grouped.keys()) {
+        const items = grouped.get(key);
+        reviewLists.push(<ReviewsList key={key} list={items} loadReviews={props.loadReviews} />);
+    }
+
+    return (
+        <>
+            {reviewLists}
+        </>
+    );
+};
 
 const Reviews = (props: Props) => (
-    <div>
+    <>
         <h2>Reviews</h2>
         <OnMount onMount={props.loadReviews}/>
-        <ReviewsList {...props} />
-    </div>
+        <ProjectReviewsList {...props} />
+    </>
 );
 
 
