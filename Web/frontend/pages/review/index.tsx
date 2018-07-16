@@ -9,10 +9,11 @@ import {
     publishReview,
     reviewFile,
     unreviewFile,
-    loadComments,
-    addComment,
-    resolveComment,
-    mergePullRequest
+    mergePullRequest,
+    startFileDiscussion,
+    startReviewDiscussion,
+    resolveDiscussion,
+    unresolveDiscussion
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -20,7 +21,9 @@ import {
     RevisionRange,
     ReviewId,
     RevisionId,
-    Comment
+    Comment,
+    FileDiscussion,
+    ReviewDiscussion
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -49,8 +52,11 @@ interface DispatchProps {
     selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
-    commentActions: CommentsActions;
     publishReview(): void;
+    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
+    startReviewDiscussion(content: string, needsResolution: boolean): void;
+    resolveDiscussion(rootCommentId: string): void;
+    unresolveDiscussion(rootCommentId: string): void;
 }
 
 interface StateProps {
@@ -59,7 +65,9 @@ interface StateProps {
     rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
     reviewedFiles: PathPairs.List;
-    comments: Comment[];
+    unpublishedFileDiscussion: FileDiscussion[];
+    unpublishedReviewDiscussions: ReviewDiscussion[];
+    unpublishedResolvedDiscussions: string[];
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -68,7 +76,7 @@ class reviewPage extends React.Component<Props> {
     private showFileHandler: () => void;
 
     onShowFile() {
-        if(this.showFileHandler) {
+        if (this.showFileHandler) {
             this.showFileHandler()
         }
     }
@@ -91,16 +99,16 @@ class reviewPage extends React.Component<Props> {
         const pastRevisions = props.currentReview.pastRevisions.map(i => i.number);
 
         const selectedFile = props.selectedFile ?
-            {...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path)}
+            { ...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path) }
             : null;
 
         const load = () => {
             if (!selectedFile && props.fileName) {
                 this.onShowFileHandlerAvailable = this.scrollToFileWhenHandlerIsAvailable;
                 props.loadReviewInfo(props.reviewId, props.fileName);
-            } else {        
+            } else {
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
-                props.loadReviewInfo(props.reviewId,);
+                props.loadReviewInfo(props.reviewId, );
             }
         };
 
@@ -111,36 +119,49 @@ class reviewPage extends React.Component<Props> {
             this.onShowFile();
         };
 
+        const commentActions: CommentsActions = {
+            add: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
+            resolve: props.resolveDiscussion,
+            unresolve: props.unresolveDiscussion
+        }
+
+        const comments: Comment[] = props.currentReview.reviewDiscussions
+            .concat(props.unpublishedReviewDiscussions)
+            .map(d => ({
+                ...d.comment,
+                state: props.unpublishedResolvedDiscussions.indexOf(d.comment.id) >= 0 ? 'ResolvePending' : d.comment.state
+            }));
+
         return (
             <div id="review-page">
                 <Grid centered columns={2}>
                     <Grid.Row>
                         <Grid.Column>
-            
-                        <OnMount onMount={load} />
-                        <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
 
-                        <h1>Review {props.currentReview.title}</h1>
+                            <OnMount onMount={load} />
+                            <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
 
-                        <MergeApprover
-                            reviewId={props.reviewId}
-                            reviewState={props.currentReview.state}
-                            mergePullRequest={props.mergePullRequest}
-                        />
-                        <Divider />
-                        
-                        <VersionSelector
-                            available={['base', ...pastRevisions, ...provisional]}
-                            hasProvisonal={props.currentReview.hasProvisionalRevision}
-                            range={props.currentRange}
-                            onSelectRange={props.selectRevisionRange}
-                        />
+                            <h1>Review {props.currentReview.title}</h1>
 
-                    <ReviewSummary
-                        reviewId={props.reviewId}
-                    />
+                            <MergeApprover
+                                reviewId={props.reviewId}
+                                reviewState={props.currentReview.state}
+                                mergePullRequest={props.mergePullRequest}
+                            />
+                            <Divider />
 
-                    <CommentsView comments={props.comments} actions={props.commentActions} />
+                            <VersionSelector
+                                available={['base', ...pastRevisions, ...provisional]}
+                                hasProvisonal={props.currentReview.hasProvisionalRevision}
+                                range={props.currentRange}
+                                onSelectRange={props.selectRevisionRange}
+                            />
+
+                            <ReviewSummary
+                                reviewId={props.reviewId}
+                            />
+
+                            <CommentsView comments={comments} actions={commentActions} />
 
                         </Grid.Column>
                     </Grid.Row>
@@ -157,6 +178,12 @@ class reviewPage extends React.Component<Props> {
                     publishReview={props.publishReview}
                     onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
                     reviewId={props.reviewId}
+                    fileComments={props.currentReview.fileDiscussions}
+                    revisionRange={props.currentRange}
+                    startFileDiscussion={props.startFileDiscussion}
+                    unpublishedFileDiscussion={props.unpublishedFileDiscussion}
+                    commentActions={commentActions}
+                    pendingResolved={props.unpublishedResolvedDiscussions}
                 />) : null}
             </div>
         );
@@ -169,7 +196,9 @@ const mapStateToProps = (state: RootState): StateProps => ({
     rangeInfo: state.review.rangeInfo,
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
-    comments: state.review.comments
+    unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
+    unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
+    unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
@@ -181,12 +210,11 @@ const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
-    commentActions: {
-        load: () => dispatch(loadComments({})),
-        add: (content, filePath, changeKey, needsResolution, parentId) => dispatch(addComment({ content, filePath, changeKey, needsResolution, parentId })),
-        resolve: (commentId) => dispatch(resolveComment({ commentId }))
-    },
     publishReview: () => dispatch(publishReview({})),
+    startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution })),
+    startReviewDiscussion: (content, needsResolution) => dispatch(startReviewDiscussion({ content, needsResolution })),
+    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({rootCommentId})),
+    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({rootCommentId})),
 });
 
 export default connect(

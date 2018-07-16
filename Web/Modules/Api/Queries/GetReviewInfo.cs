@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NHibernate;
@@ -25,6 +27,8 @@ namespace Web.Modules.Api.Queries
             public object ReviewSummary { get; set; }
             public MergeStatus MergeStatus { get; set; }
             public MergeRequestState State { get; set; }
+            public object[] FileDiscussions { get; set; }
+            public object[] ReviewDiscussions { get; set; }
         }
 
         public class Revision
@@ -65,12 +69,30 @@ namespace Web.Modules.Api.Queries
 
                 var hasUnreviewedChanges = lastRevisionHead != mr.HeadCommit;
 
+                return new Result
+                {
+                    ReviewId = query._reviewId,
+                    Title = mr.Title,
+                    PastRevisions = pastRevisions,
+                    HasProvisionalRevision = hasUnreviewedChanges,
+                    HeadCommit = mr.HeadCommit,
+                    BaseCommit = mr.BaseCommit,
+                    State = mr.State,
+                    MergeStatus = mr.MergeStatus,
+                    ReviewSummary = GetReviewSummary(query),
+                    FileDiscussions = GetFileDiscussions(query),
+                    ReviewDiscussions = GetReviewDiscussions(query)
+                };
+            }
+
+            private IList<object> GetReviewSummary(GetReviewInfo query)
+            {
                 Review review = null;
                 ReviewRevision revision = null;
                 ReviewUser user = null;
                 FileReview file = null;
 
-                var reviewSummary = _session.QueryOver(() => review)
+                return _session.QueryOver(() => review)
                     .JoinEntityAlias(() => user, () => user.Id == review.UserId)
                     .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
                     .Where(() => revision.ReviewId == query._reviewId)
@@ -85,20 +107,56 @@ namespace Web.Modules.Api.Queries
                     )
                     .TransformUsing(new ReviewSummaryTransformer())
                     .List<object>();
+            }
 
+            private object[] GetReviewDiscussions(GetReviewInfo query)
+            {
+                var q = from discussion in _session.Query<ReviewDiscussion>()
+                    join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
+                    where revision.ReviewId == query._reviewId
+                    join commentReview in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals commentReview.Id
+                    join user in _session.Query<ReviewUser>() on commentReview.UserId equals user.Id
+                    select new
+                    {
+                        revision = revision.RevisionNumber,
+                        comment = new CommentItem
+                        {
+                            Author = user.UserName,
+                            Content = discussion.RootComment.Content,
+                            Children = Enumerable.Empty<CommentItem>(),
+                            CreatedAt = discussion.RootComment.CreatedAt,
+                            State = discussion.RootComment.State.ToString(),
+                            Id = discussion.RootComment.Id
+                        }
+                    };
 
-                return new Result
-                {
-                    ReviewId = query._reviewId,
-                    Title = mr.Title,
-                    PastRevisions = pastRevisions,
-                    HasProvisionalRevision = hasUnreviewedChanges,
-                    HeadCommit = mr.HeadCommit,
-                    BaseCommit = mr.BaseCommit,
-                State =  mr.State,
-                MergeStatus = mr.MergeStatus,
-                    ReviewSummary = reviewSummary
-                };
+                return q.ToArray();
+            }
+
+            private object[] GetFileDiscussions(GetReviewInfo query)
+            {
+                var q = from discussion in _session.Query<FileDiscussion>()
+                    join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
+                    where revision.ReviewId == query._reviewId
+                    join commentReview in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals commentReview.Id
+                    join user in _session.Query<ReviewUser>() on commentReview.UserId equals user.Id
+                    select new
+                    {
+                        revision = revision.RevisionNumber,
+                        filePath = discussion.File,
+                        lineNumber = discussion.LineNumber,
+                        comment = new CommentItem
+                        {
+                            Author = user.UserName,
+                            Content = discussion.RootComment.Content,
+                            Children = Enumerable.Empty<CommentItem>(),
+                            CreatedAt = discussion.RootComment.CreatedAt,
+                            State = discussion.RootComment.State.ToString(),
+                            Id = discussion.RootComment.Id
+                        }
+                    };
+
+                return q.ToArray();
             }
         }
 
@@ -134,6 +192,16 @@ namespace Web.Modules.Api.Queries
                 public string File { get; set; }
                 public string UserName { get; set; }
             }
+        }
+
+        public class CommentItem
+        {
+            public Guid Id { get; set; }
+            public string Author { get; set; }
+            public string Content { get; set; }
+            public string State { get; set; }
+            public DateTimeOffset CreatedAt { get; set; }
+            public IEnumerable<CommentItem> Children { get; set; }
         }
     }
 }

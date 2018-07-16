@@ -2,16 +2,16 @@ import * as React from "react";
 import { Button, Checkbox, CheckboxProps, Comment as UIComment, Form, Header, TextAreaProps } from "semantic-ui-react"
 import { ReviewId, Comment } from "../../api/reviewer";
 
+import "./commentsView.less";
+
 export interface CommentsActions {
-    load(): void;
-    add(content: string, filePath: string, changeKey: string, needsResolution: boolean, parentId?: string);
+    add(content: string, needsResolution: boolean, parentId?: string);
     resolve(commentId: string);
+    unresolve(commentId: string);
 }
 
 interface CommentsProps {
     comments: Comment[];
-    filePath?: string;
-    changeKey?: string;
     actions: CommentsActions;
 }
 
@@ -43,8 +43,6 @@ const mapComments = (
             createdAt={comment.createdAt}
             children={comment.children}
             actions={actions}
-            filePath={comment.filePath}
-            changeKey={comment.changeKey}
         />
     ));
 };
@@ -77,12 +75,16 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const form = (
             <Form reply onSubmit={onSubmit}>
                 <Form.TextArea onChange={onChangeReply} value={this.state.replyText} />
-                <Button onClick={() => this.props.actions.add(this.state.replyText, null, null, false, this.props.id)} primary>Add Comment</Button>
+                <Button onClick={() => this.props.actions.add(this.state.replyText, false, this.props.id)} primary>Add Comment</Button>
             </Form>
         );
 
         const resolveComment = () => {
             this.props.actions.resolve(this.props.id);
+        }
+
+        const unresolveComment = () => {
+            this.props.actions.unresolve(this.props.id);
         }
 
         const renderStatus = () => {
@@ -91,6 +93,8 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     return;
                 case 'NeedsResolution':
                     return <UIComment.Action onClick={resolveComment}>Resolve</UIComment.Action>
+                case 'ResolvePending':
+                    return <UIComment.Action className="resolved-pending" onClick={unresolveComment}>Resolved (pending)</UIComment.Action>
                 case 'Resolved':
                     return <span>Resolved</span>;
             }
@@ -150,7 +154,7 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
                 {comments}
                 <Form reply onSubmit={onSubmit}>
                     <Form.TextArea onChange={onChangeReply} value={this.state.commentText} />
-                    <Button onClick={() => this.props.actions.add(this.state.commentText, this.props.filePath, this.props.changeKey, this.state.needsResolution)} secondary>Add Comment</Button>
+                    <Button onClick={() => this.props.actions.add(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
                     <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                 </Form>
             </UIComment.Group>

@@ -76,6 +76,20 @@ export interface Review {
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
 
+export interface FileDiscussion
+{
+    revision: RevisionId;
+    filePath: PathPairs.PathPair;
+    lineNumber: number;
+    comment: Comment;
+}
+
+export interface ReviewDiscussion 
+{
+    revision: RevisionId;
+    comment: Comment;
+}
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -95,6 +109,9 @@ export interface ReviewInfo {
             [revision: number]: string[];
         }
     }[];
+
+    fileDiscussions: FileDiscussion[];
+    reviewDiscussions: ReviewDiscussion[];
 }
 
 export interface ReviewSnapshot {
@@ -108,17 +125,25 @@ export interface ReviewSnapshot {
         base: string;
     }
     reviewedFiles: PathPairs.PathPair[];
-    comments: Comment[];
+    startedFileDiscussions: {
+        file: PathPairs.PathPair;
+        lineNumber: number;
+        content: string;
+        needsResolution: boolean;
+    }[];
+    startedReviewDiscussions: {
+        needsResolution: boolean;
+        content: string;
+    }[];
+    resolvedDiscussions: string[]; // root comment ids
 }
 
-export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved';
+export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';
 
 export interface Comment {
     id: string;
     author: string;
     content: string;
-    filePath: string;
-    changeKey: string;
     state: CommentState,
     createdAt: string;
     children: Comment[];
@@ -216,12 +241,6 @@ export class ReviewerApi {
                 throw new ReviewConcurrencyError()
             }
         });
-    }
-
-    public getComments = (reviewId: ReviewId): Promise<Comment[]> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/comments`, acceptJson)
-            .then(r => r.json())
-            .then(r => r as Comment[]);
     }
 
     public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {

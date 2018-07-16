@@ -65,7 +65,7 @@ namespace Web.Modules.Api.Queries
                 {
                     commentStates = (
                             from comment in _session.Query<Comment>()
-                            join review in _session.Query<Review>() on comment.ReviewId equals review.Id
+                            join review in _session.Query<Review>() on comment.PostedInReviewId equals review.Id
                             join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
                             group comment by comment.State into g
                             select new { State = g.Key, Count = g.Count() }

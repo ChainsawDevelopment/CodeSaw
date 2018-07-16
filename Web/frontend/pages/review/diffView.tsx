@@ -8,8 +8,18 @@ import './diffView.less';
 import * as classNames from "classnames";
 import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
+interface Change {
+    oldLineNumber: number;
+    newLineNumber: number;
+
+    isDelete: boolean;
+    isInsert: boolean;
+
+    [key:string]: any;
+}
+
 const mapHunkToView = (hunk: Hunk) => {
-    var changes = [];
+    var changes: Change[] = [];
 
     let oldLineCounter = hunk.oldPosition.start + 1;
     let newLineCounter = hunk.newPosition.start + 1;
@@ -74,7 +84,7 @@ const oppositeType = (type: string) => {
     }
 }
 
-const zipChanges = (changes: any[]) => {
+const zipChanges = (changes: Change[]): Change[] => {
     let result = [];
 
     let inserts = [];
@@ -132,33 +142,80 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     return result;
 }
 
-const diffView = (props: { diffInfo: FileDiff }) => {
+export type DiffSide = 'left' | 'right';
+
+export interface LineWidget {
+    side: DiffSide;
+    lineNumber: number;
+    widget: JSX.Element;
+}
+
+export interface Props {
+    diffInfo: FileDiff;
+    lineWidgets: LineWidget[];
+    onLineClick?: (side: DiffSide, line: number) => void;
+}
+
+const leftSideMatch = (change: Change, lineNumber: number) => {
+    if (change.isInsert) {
+        return false;
+    }
+
+    if (change.oldLineNumber != lineNumber) {
+        return false;
+    }
+
+    return true;
+}
+
+const rightSideMatch = (change: Change, lineNumber: number) => {
+    if (change.isDelete) {
+        return false;
+    }
+
+    if (change.newLineNumber != lineNumber) {
+        return false;
+    }
+
+    return true;
+}
+
+
+const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
 
     const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
-    const toggleChangeComment = (change) => {
-        console.log(`old: ${change.oldLineNumber} new: ${change.newLineNumber}, con: ${change.content}`);
-        console.log(`key: ${getChangeKey(change)}`);
-//        [getChangeKey(viewHunks[1].changes[0])]: (
-//            <span className="error">Line too long</span>
-//        )
-    };
 
     const events = {
         gutter: {
-            onClick: (change) => {
-                toggleChangeComment(change);
+            onClick: change => {
+                if(props.onLineClick) {
+                    const lineNumber = change.newLineNumber;
+                    props.onLineClick('right', lineNumber); // TODO: detect side
+                }
             }
         }
     };
 
-    const widgets = {
-        // [getChangeKey(viewHunks[1].changes[0])]: (
-        //     <span className="error">Line too long</span>
-        // )
-    };
+    let widgets = {};
+
+    for (let item of props.lineWidgets) {
+        const match = item.side == 'left' ? leftSideMatch : rightSideMatch;
+
+        for (let hunk of viewHunks) {
+            for (let change of hunk.changes) {
+                if( !match(change, item.lineNumber)) {
+                    continue;
+                }
+
+                widgets[getChangeKey(change)] = item.widget;
+
+                break;
+            }
+        }
+    }
 
     const markEdits = smartMarkEdits();
 

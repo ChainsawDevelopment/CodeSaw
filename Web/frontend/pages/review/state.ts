@@ -8,7 +8,9 @@ import {
     RevisionRange,
     ReviewId,
     ChangedFile,
-    Comment
+    Comment,
+    FileDiscussion,
+    ReviewDiscussion
 } from '../../api/reviewer';
 import * as PathPairs from '../../pathPair';
 
@@ -24,7 +26,9 @@ export interface ReviewState {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
-    comments: Comment[];
+    unpublishedFileDiscussions: FileDiscussion[];
+    unpublishedReviewDiscussions: ReviewDiscussion[];
+    unpublishedResolvedDiscussions: string[]; // root comment id
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -41,9 +45,6 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
-
-export const loadComments = createAction<{}>('LOAD_COMMENTS');
-export const loadedComments = createAction<Comment[]>('LOADED_COMMENTS');
 
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
@@ -62,18 +63,6 @@ export const publishReview = createAction<{}>('PUBLISH_REVIEW');
 export const reviewFile = createAction<{ path: PathPairs.PathPair }>('REVIEW_FILE');
 export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW_FILE');
 
-export interface AddCommentArgs {
-    parentId?: string;
-    content: string;
-    filePath: string;
-    changeKey: string;
-    needsResolution: boolean;
-}
-
-export const addComment = createAction<AddCommentArgs>('ADD_COMMENT');
-
-export const resolveComment = createAction<{ commentId: string }>('RESOLVE_COMMENT');
-
 export interface MergePullRequestArgs {
     reviewId: ReviewId;
     shouldRemoveBranch: boolean;
@@ -81,6 +70,12 @@ export interface MergePullRequestArgs {
 }
 
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
+
+export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean  }>('START_FILE_DISCUSSION');
+export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean }>('START_REVIEW_DISCUSSION');
+
+export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
+export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
 
 const initial: ReviewState = {
     range: {
@@ -98,10 +93,14 @@ const initial: ReviewState = {
         baseCommit: '',
         state: 'opened',
         mergeStatus: 'unchecked',
-        reviewSummary: []
+        reviewSummary: [],
+        fileDiscussions: [],
+        reviewDiscussions: []
     },
     reviewedFiles: [],
-    comments: []
+    unpublishedFileDiscussions: [],
+    unpublishedReviewDiscussions: [],
+    unpublishedResolvedDiscussions: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -146,7 +145,10 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (loadedReviewInfo.match(action)) {
         return {
             ...state,
-            currentReview: action.payload
+            currentReview: action.payload,
+            unpublishedFileDiscussions: [],
+            unpublishedReviewDiscussions: [],
+            unpublishedResolvedDiscussions: []
         };
     }
 
@@ -175,13 +177,6 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         };
     }
 
-    if (loadedComments.match(action)) {
-        return {
-            ...state,
-            comments: action.payload
-        };
-    }
-
     const findCommentById = (id: string, comments: Comment[]): Comment => {
         for (const comment of comments) {
             if (comment.id === id) {
@@ -197,41 +192,67 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         return null;
     }
 
-    if (addComment.match(action)) {
-        const newComment: Comment = {
-            author: 'NOT SUBMITTED',
-            changeKey: action.payload.changeKey,
-            content: action.payload.content,
-            filePath: action.payload.filePath,
-            state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
-            createdAt: joda.LocalDateTime.now(joda.ZoneOffset.UTC).toString(),
-            id: Guid.create().toString(),
-            children: []
-        }
-
-        const commentsState = JSON.parse(JSON.stringify(state.comments)) as Comment[];
-        if (action.payload.parentId) {
-            const parentComment = findCommentById(action.payload.parentId, commentsState);
-            parentComment.children.push(newComment);
-        } else {
-            commentsState.push(newComment);
-        }
-
+    if (startFileDiscussion.match(action)) {
         return {
             ...state,
-            comments: commentsState
-        }
+            unpublishedFileDiscussions: [
+                ...state.unpublishedFileDiscussions,
+                {
+                    revision: state.range.current,
+                    filePath: action.payload.path,
+                    lineNumber: action.payload.lineNumber,
+                    comment: {
+                        state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                        author: 'NOT SUBMITTED',
+                        content: action.payload.content,
+                        children: [],
+                        createdAt: '',
+                        id: (Math.max(0, ...state.unpublishedFileDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                    }
+                }
+            ]
+        };
     }
 
-    if (resolveComment.match(action)) {
-        const commentsState = JSON.parse(JSON.stringify(state.comments)) as Comment[];
-        const comment = findCommentById(action.payload.commentId, commentsState);
-        comment.state = 'Resolved';
+    if (startReviewDiscussion.match(action)) {
+        return {
+            ...state,
+            unpublishedReviewDiscussions: [
+                ...state.unpublishedReviewDiscussions,
+                {
+                    revision: state.range.current,
+                    comment: {
+                        state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                        author: 'NOT SUBMITTED',
+                        content: action.payload.content,
+                        children: [],
+                        createdAt: '',
+                        id: (Math.max(0, ...state.unpublishedReviewDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                    }
+                }
+            ]
+        };
+    }
+
+    if (unresolveDiscussion.match(action)) {
+        return {
+            ...state,
+            unpublishedResolvedDiscussions: state.unpublishedResolvedDiscussions.filter(id => id != action.payload.rootCommentId)
+        };
+    }
+
+    if (resolveDiscussion.match(action)) {
+        if (state.unpublishedResolvedDiscussions.indexOf(action.payload.rootCommentId) >= 0) {
+            return state;
+        }
 
         return {
             ...state,
-            comments: commentsState
-        }
+            unpublishedResolvedDiscussions: [
+                ...state.unpublishedResolvedDiscussions,
+                action.payload.rootCommentId
+            ]
+        };
     }
 
     return state;
