@@ -5,7 +5,7 @@ using Web.Modules.Api.Commands;
 using Web.Modules.Api.Queries;
 using Web.Modules.Hooks;
 
-namespace Web.Modules.Api.BackgroundActions
+namespace Web.BackgroundActions
 {
     public class UpdateCommitStatus : IHandle<ReviewPublishedEvent>, IHandle<ReviewChangedExternallyEvent>
     {
