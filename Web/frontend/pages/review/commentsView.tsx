@@ -110,7 +110,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     </UIComment.Metadata>
                     <UIComment.Text>{this.props.content}</UIComment.Text>
                     <UIComment.Actions>
-                        <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
+                        {this.state.replyVisible && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
                         {renderStatus()}
                     </UIComment.Actions>
                     {this.state.replyVisible ? form : null}
