@@ -11,13 +11,15 @@ export interface CommentsActions {
     unresolve(commentId: string);
 }
 
+interface Reply {
+    id: string;
+    parentId: string;
+    content: string;
+}
+
 interface CommentsProps {
     comments: Comment[];
-    unpublishedReplies?: {
-        id: string;
-        parentId: string;
-        content: string;
-    }[];
+    unpublishedReplies?: Reply[];
     actions: CommentsActions;
 }
 
@@ -127,6 +129,34 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
     }
 }
 
+const mergeCommentsWithReplies = (
+    comments: Comment[],
+    replies:  Reply[]
+): Comment[] => {
+    const result: Comment[] = [];
+
+    const replyToComment = (reply: Reply): Comment => ({
+        id: reply.id,
+        author: 'dupa dupa',
+        content: reply.content,
+        state: 'NoActionNeeded',
+        createdAt: '',
+        children: [] as Comment[]
+    });
+
+    for (let item of comments) {
+        result.push({
+            ...item,
+            children: mergeCommentsWithReplies([
+                ...item.children,
+                ...replies.filter(r => r.parentId == item.id).map(replyToComment)
+            ], replies)
+        });
+    }
+
+    return result;
+}
+
 export default class CommentsComponent extends React.Component<CommentsProps, CommentsState> {
     constructor(props: CommentsProps) {
         super(props);
@@ -138,7 +168,8 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
     }
 
     render(): JSX.Element {
-        const comments = mapComments(this.props.comments, this.props.actions);
+        const commentsWithReplies = mergeCommentsWithReplies(this.props.comments, this.props.unpublishedReplies || []);
+        const comments = mapComments(commentsWithReplies, this.props.actions);
 
         const onSubmit = () => {
             this.setState({ commentText: '' });
