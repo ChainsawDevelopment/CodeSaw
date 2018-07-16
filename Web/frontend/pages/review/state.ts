@@ -71,11 +71,12 @@ export interface MergePullRequestArgs {
 
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
 
-export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean  }>('START_FILE_DISCUSSION');
+export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean }>('START_FILE_DISCUSSION');
 export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean }>('START_REVIEW_DISCUSSION');
 
 export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
 export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
+export const replyToComment = createAction<{ parentCommentId: string, content: string }>('REPLY_TO_COMMENT');
 
 const initial: ReviewState = {
     range: {
@@ -252,6 +253,12 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 ...state.unpublishedResolvedDiscussions,
                 action.payload.rootCommentId
             ]
+        };
+    }
+
+    if (replyToComment.match(action)) {
+        return {
+            ...state
         };
     }
 

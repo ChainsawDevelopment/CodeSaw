@@ -55,12 +55,11 @@ const buildLineWidgets = (props: Props) => {
     for(let side of ['left', 'right']) {
         for (let [lineNumber, comments] of lineComments[side]) {
             const commentActions: CommentsActions = {
-                add: (content, needResolution, parentId) => {
-                    if (parentId == null) {
-                        props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
-                    } else {
-                        throw 'NotSupported';
-                    }
+                addNew: (content, needResolution) => {
+                    props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
+                },
+                addReply: (parentId, content) => {
+                    
                 },
                 resolve: props.commentActions.resolve,
                 unresolve: props.commentActions.unresolve

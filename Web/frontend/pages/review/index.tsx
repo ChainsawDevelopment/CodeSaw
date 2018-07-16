@@ -120,7 +120,8 @@ class reviewPage extends React.Component<Props> {
         };
 
         const commentActions: CommentsActions = {
-            add: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
+            addNew: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
+            addReply: (parentId, content) => {},
             resolve: props.resolveDiscussion,
             unresolve: props.unresolveDiscussion
         }

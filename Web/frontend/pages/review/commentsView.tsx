@@ -5,7 +5,8 @@ import { ReviewId, Comment } from "../../api/reviewer";
 import "./commentsView.less";
 
 export interface CommentsActions {
-    add(content: string, needsResolution: boolean, parentId?: string);
+    addNew(content: string, needsResolution: boolean);
+    addReply(parentId: string, content: string):void;
     resolve(commentId: string);
     unresolve(commentId: string);
 }
@@ -75,7 +76,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const form = (
             <Form reply onSubmit={onSubmit}>
                 <Form.TextArea onChange={onChangeReply} value={this.state.replyText} />
-                <Button onClick={() => this.props.actions.add(this.state.replyText, false, this.props.id)} primary>Add Comment</Button>
+                <Button onClick={() => this.props.actions.addReply(this.props.id, this.state.replyText)} primary>Add Comment</Button> 
             </Form>
         );
 
@@ -154,7 +155,7 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
                 {comments}
                 <Form reply onSubmit={onSubmit}>
                     <Form.TextArea onChange={onChangeReply} value={this.state.commentText} />
-                    <Button onClick={() => this.props.actions.add(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
+                    <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
                     <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                 </Form>
             </UIComment.Group>
