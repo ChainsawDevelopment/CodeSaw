@@ -19,7 +19,6 @@ interface CommentProps {
     rightSideRevision: RevisionId;
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
-    currentUserName: string;
 }
 
 interface CalculatedProps {

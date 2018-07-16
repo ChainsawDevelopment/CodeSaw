@@ -23,6 +23,7 @@ namespace Web.Modules.Api.Commands
         public List<NewReviewDiscussion> StartedReviewDiscussions { get; set; } = new List<NewReviewDiscussion>();
         public NewFileDiscussion[] StartedFileDiscussions { get; set; }
         public List<Guid> ResolvedDiscussions { get; set; } = new List<Guid>(); // root comment ids
+        public List<RepliesPublisher.Item> Replies { get; set; } = new List<RepliesPublisher.Item>();
 
         public class RevisionCommits
         {
@@ -54,6 +55,7 @@ namespace Web.Modules.Api.Commands
                 await new ReviewDiscussionsPublisher(_session).Publish(command.StartedReviewDiscussions, review);
                 await new FileDiscussionsPublisher(_session).Publish(command.StartedFileDiscussions, review);
                 await new ResolveDiscussions(_session).Publish(command.ResolvedDiscussions);
+                await new RepliesPublisher(_session).Publish(command.Replies, review);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }

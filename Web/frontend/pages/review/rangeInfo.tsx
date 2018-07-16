@@ -27,7 +27,6 @@ interface FileViewProps {
     unpublishedReplies: CommentReply[];
     commentActions: CommentsActions;
     revisionRange: RevisionRange;
-    currentUserName: string;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
@@ -88,7 +87,6 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         lineCommentsActions={lineCommentsActions}
                         pendingResolved={this.props.pendingResolved}
                         unpublishedReplies={this.props.unpublishedReplies}
-                        currentUserName={this.props.currentUserName}
                     /> 
                     : null}
             </span>
@@ -126,7 +124,6 @@ export interface Props {
     commentActions: CommentsActions;
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
-    currentUserName: string;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -255,7 +252,6 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                 unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
                                 pendingResolved={this.props.pendingResolved}
                                 unpublishedReplies={this.props.unpublishedReplies}
-                                currentUserName={this.props.currentUserName}
                             />
                             : <NoFileView />
                         }

@@ -71,7 +71,6 @@ interface StateProps {
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
-    currentUserName: string;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -194,7 +193,6 @@ class reviewPage extends React.Component<Props> {
                     commentActions={commentActions}
                     pendingResolved={props.unpublishedResolvedDiscussions}
                     unpublishedReplies={props.unpublishedReplies}
-                    currentUserName={props.currentUserName}
                 />) : null}
             </div>
         );
@@ -210,8 +208,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
-    unpublishedReplies: state.review.unpublishedReplies,
-    currentUserName: state.currentUser.userName
+    unpublishedReplies: state.review.unpublishedReplies
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
