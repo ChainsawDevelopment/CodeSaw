@@ -38,6 +38,16 @@ namespace Web.Modules.Api.Queries
             public string Head { get; set; }
         }
 
+        public class CommentItem
+        {
+            public Guid Id { get; set; }
+            public UserInfo Author { get; set; }
+            public string Content { get; set; }
+            public string State { get; set; }
+            public DateTimeOffset CreatedAt { get; set; }
+            public List<CommentItem> Children { get; set; } = new List<CommentItem>();
+        }
+
         public GetReviewInfo(int projectId, int reviewId)
         {
             _reviewId = new ReviewIdentifier(projectId, reviewId);
@@ -69,6 +79,7 @@ namespace Web.Modules.Api.Queries
 
                 var hasUnreviewedChanges = lastRevisionHead != mr.HeadCommit;
 
+                var commentsTree = GetCommentsTree(query);
                 return new Result
                 {
                     ReviewId = query._reviewId,
@@ -80,9 +91,43 @@ namespace Web.Modules.Api.Queries
                     State = mr.State,
                     MergeStatus = mr.MergeStatus,
                     ReviewSummary = GetReviewSummary(query),
-                    FileDiscussions = GetFileDiscussions(query),
-                    ReviewDiscussions = GetReviewDiscussions(query)
+                    FileDiscussions = GetFileDiscussions(query, commentsTree),
+                    ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
                 };
+            }
+
+            private Dictionary<Guid, CommentItem> GetCommentsTree(GetReviewInfo query)
+            {
+                var comments = (from comment in _session.Query<Comment>()
+                        join review in _session.Query<Review>() on comment.PostedInReviewId equals review.Id
+                        join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                        where revision.ReviewId == query._reviewId
+                        join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
+                        select new
+                        {
+                            comment = new CommentItem
+                            {
+                                Author = new UserInfo { Name = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
+                                Content = comment.Content,
+                                CreatedAt = comment.CreatedAt,
+                                State = comment.State.ToString(),
+                                Id = comment.Id
+                            },
+                            parentId = comment.ParentId
+                        })
+                    .ToDictionary(x => x.comment.Id, x => x);
+
+                foreach (var comment in comments.Values)
+                {
+                    if (comment.parentId != null)
+                    {
+                        comments[comment.parentId.Value].comment.Children.Add(comment.comment);
+                    }
+                }
+
+                return comments
+                    .Where(x => x.Value.parentId == null)
+                    .ToDictionary(x=>x.Value.comment.Id, x => x.Value.comment);
             }
 
             private IList<object> GetReviewSummary(GetReviewInfo query)
@@ -109,51 +154,31 @@ namespace Web.Modules.Api.Queries
                     .List<object>();
             }
 
-            private object[] GetReviewDiscussions(GetReviewInfo query)
+            private object[] GetReviewDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
             {
                 var q = from discussion in _session.Query<ReviewDiscussion>()
                     join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
                     where revision.ReviewId == query._reviewId
-                    join commentReview in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals commentReview.Id
-                    join user in _session.Query<ReviewUser>() on commentReview.UserId equals user.Id
                     select new
                     {
                         revision = revision.RevisionNumber,
-                        comment = new CommentItem
-                        {
-                            Author = new UserInfo { Name = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
-                            Content = discussion.RootComment.Content,
-                            Children = Enumerable.Empty<CommentItem>(),
-                            CreatedAt = discussion.RootComment.CreatedAt,
-                            State = discussion.RootComment.State.ToString(),
-                            Id = discussion.RootComment.Id
-                        }
+                        comment = comments[discussion.RootComment.Id]
                     };
 
                 return q.ToArray();
             }
 
-            private object[] GetFileDiscussions(GetReviewInfo query)
+            private object[] GetFileDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
             {
                 var q = from discussion in _session.Query<FileDiscussion>()
                     join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
                     where revision.ReviewId == query._reviewId
-                    join commentReview in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals commentReview.Id
-                    join user in _session.Query<ReviewUser>() on commentReview.UserId equals user.Id
                     select new
                     {
                         revision = revision.RevisionNumber,
                         filePath = discussion.File,
                         lineNumber = discussion.LineNumber,
-                        comment = new CommentItem
-                        {
-                            Author = new UserInfo { Name = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
-                            Content = discussion.RootComment.Content,
-                            Children = Enumerable.Empty<CommentItem>(),
-                            CreatedAt = discussion.RootComment.CreatedAt,
-                            State = discussion.RootComment.State.ToString(),
-                            Id = discussion.RootComment.Id
-                        }
+                        comment = comments[discussion.RootComment.Id]
                     };
 
                 return q.ToArray();
@@ -192,16 +217,6 @@ namespace Web.Modules.Api.Queries
                 public string File { get; set; }
                 public string UserName { get; set; }
             }
-        }
-
-        public class CommentItem
-        {
-            public Guid Id { get; set; }
-            public UserInfo Author { get; set; }
-            public string Content { get; set; }
-            public string State { get; set; }
-            public DateTimeOffset CreatedAt { get; set; }
-            public IEnumerable<CommentItem> Children { get; set; }
         }
     }
 }

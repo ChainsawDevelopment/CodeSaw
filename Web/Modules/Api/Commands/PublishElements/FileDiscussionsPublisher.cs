@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Web.Modules.Api.Commands.PublishElements
         public int LineNumber { get; set; }
         public bool NeedsResolution { get; set; }
         public string Content { get; set; }
+        public string TemporaryId { get; set; }
     }
 
     public class FileDiscussionsPublisher
@@ -26,10 +28,14 @@ namespace Web.Modules.Api.Commands.PublishElements
             _session = session;
         }
 
-        public async Task Publish(NewFileDiscussion[] discussions, Review review)
+        public async Task Publish(NewFileDiscussion[] discussions, Review review, Dictionary<string, Guid> newCommentsMap)
         {
             foreach (var discussion in discussions)
             {
+                var commentId = GuidComb.Generate();
+
+                newCommentsMap[discussion.TemporaryId] = commentId;
+
                 await _session.SaveAsync(new FileDiscussion
                 {
                     RevisionId = review.RevisionId,
@@ -38,7 +44,7 @@ namespace Web.Modules.Api.Commands.PublishElements
                     LineNumber = discussion.LineNumber,
                     RootComment = new Comment
                     {
-                        Id = GuidComb.Generate(),
+                        Id = commentId,
                         PostedInReviewId = review.Id,
                         State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
                         Content = discussion.Content,

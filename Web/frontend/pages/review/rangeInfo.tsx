@@ -10,7 +10,7 @@ import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
 import * as PathPairs from "../../pathPair";
-import { RevisionRangeInfo, ReviewId, Comment, FileDiscussion, RevisionRange } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId, FileDiscussion, RevisionRange, CommentReply } from "../../api/reviewer";
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
@@ -18,14 +18,17 @@ import { CommentsActions } from "./commentsView";
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
 import ReviewMark from "./reviewMark";
+import { UserState } from "../../rootState";
 
 interface FileViewProps {
     file: FileInfo;
     comments: FileDiscussion[];
     unpublishedFileDiscussions: FileDiscussion[];
     pendingResolved: string[];
+    unpublishedReplies: CommentReply[];
     commentActions: CommentsActions;
     revisionRange: RevisionRange;
+    currentUser: UserState;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
@@ -85,6 +88,8 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         visibleCommentLines={this.state.visibleCommentLines}
                         lineCommentsActions={lineCommentsActions}
                         pendingResolved={this.props.pendingResolved}
+                        unpublishedReplies={this.props.unpublishedReplies}
+                        currentUser={this.props.currentUser}
                     /> 
                     : null}
             </span>
@@ -121,6 +126,8 @@ export interface Props {
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
     commentActions: CommentsActions;
     pendingResolved: string[];
+    unpublishedReplies: CommentReply[];
+    currentUser: UserState;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -248,6 +255,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                 startFileDiscussion={this.props.startFileDiscussion}
                                 unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
                                 pendingResolved={this.props.pendingResolved}
+                                unpublishedReplies={this.props.unpublishedReplies}
+                                currentUser={this.props.currentUser}
                             />
                             : <NoFileView />
                         }
