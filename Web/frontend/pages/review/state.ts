@@ -8,7 +8,8 @@ import {
     ChangedFile,
     Comment,
     FileDiscussion,
-    ReviewDiscussion
+    ReviewDiscussion,
+    ReviewAuthor
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
