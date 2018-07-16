@@ -201,16 +201,16 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions
 });
 
-const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectRevisionRange: range => dispatch(selectCurrentRevisions({ range })),
+    selectRevisionRange: range => dispatch(selectCurrentRevisions({ range, fileToLoad: ownProps.fileName })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
-    publishReview: () => dispatch(publishReview({})),
+    publishReview: () => dispatch(publishReview({fileToLoad: ownProps.fileName})),
     startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution })),
     startReviewDiscussion: (content, needsResolution) => dispatch(startReviewDiscussion({ content, needsResolution })),
     resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({rootCommentId})),
