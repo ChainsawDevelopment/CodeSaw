@@ -114,6 +114,12 @@ export interface ReviewInfo {
     reviewDiscussions: ReviewDiscussion[];
 }
 
+export interface CommentReply {
+    id: string;
+    parentId: string;
+    content: string;
+}
+
 export interface ReviewSnapshot {
     reviewId: ReviewId;
     revision: {
@@ -136,6 +142,7 @@ export interface ReviewSnapshot {
         content: string;
     }[];
     resolvedDiscussions: string[]; // root comment ids
+    replies: CommentReply[];
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';

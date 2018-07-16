@@ -14,8 +14,7 @@ import {
     startReviewDiscussion,
     resolveDiscussion,
     unresolveDiscussion,
-    replyToComment,
-    CommentReply
+    replyToComment
 } from "./state";
 import {
     RevisionRangeInfo,
@@ -25,7 +24,8 @@ import {
     RevisionId,
     Comment,
     FileDiscussion,
-    ReviewDiscussion
+    ReviewDiscussion,
+    CommentReply
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -71,6 +71,7 @@ interface StateProps {
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
+    currentUserName: string;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -165,7 +166,11 @@ class reviewPage extends React.Component<Props> {
                                 reviewId={props.reviewId}
                             />
 
-                            <CommentsView comments={comments} actions={commentActions} unpublishedReplies={props.unpublishedReplies} />
+                            <CommentsView 
+                                comments={comments} 
+                                actions={commentActions} 
+                                unpublishedReplies={props.unpublishedReplies} 
+                            />
 
                         </Grid.Column>
                     </Grid.Row>
@@ -188,6 +193,8 @@ class reviewPage extends React.Component<Props> {
                     unpublishedFileDiscussion={props.unpublishedFileDiscussion}
                     commentActions={commentActions}
                     pendingResolved={props.unpublishedResolvedDiscussions}
+                    unpublishedReplies={props.unpublishedReplies}
+                    currentUserName={props.currentUserName}
                 />) : null}
             </div>
         );
@@ -203,7 +210,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
-    unpublishedReplies: state.review.unpublishedReplies
+    unpublishedReplies: state.review.unpublishedReplies,
+    currentUserName: state.currentUser.userName
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({

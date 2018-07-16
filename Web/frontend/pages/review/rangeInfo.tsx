@@ -10,7 +10,7 @@ import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
 import * as PathPairs from "../../pathPair";
-import { RevisionRangeInfo, ReviewId, Comment, FileDiscussion, RevisionRange } from "../../api/reviewer";
+import { RevisionRangeInfo, ReviewId, FileDiscussion, RevisionRange, CommentReply } from "../../api/reviewer";
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
@@ -24,8 +24,10 @@ interface FileViewProps {
     comments: FileDiscussion[];
     unpublishedFileDiscussions: FileDiscussion[];
     pendingResolved: string[];
+    unpublishedReplies: CommentReply[];
     commentActions: CommentsActions;
     revisionRange: RevisionRange;
+    currentUserName: string;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
@@ -85,6 +87,8 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         visibleCommentLines={this.state.visibleCommentLines}
                         lineCommentsActions={lineCommentsActions}
                         pendingResolved={this.props.pendingResolved}
+                        unpublishedReplies={this.props.unpublishedReplies}
+                        currentUserName={this.props.currentUserName}
                     /> 
                     : null}
             </span>
@@ -121,6 +125,8 @@ export interface Props {
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
     commentActions: CommentsActions;
     pendingResolved: string[];
+    unpublishedReplies: CommentReply[];
+    currentUserName: string;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -248,6 +254,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                 startFileDiscussion={this.props.startFileDiscussion}
                                 unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
                                 pendingResolved={this.props.pendingResolved}
+                                unpublishedReplies={this.props.unpublishedReplies}
+                                currentUserName={this.props.currentUserName}
                             />
                             : <NoFileView />
                         }

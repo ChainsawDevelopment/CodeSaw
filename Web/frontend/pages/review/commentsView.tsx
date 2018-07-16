@@ -19,7 +19,7 @@ interface Reply {
 
 interface CommentsProps {
     comments: Comment[];
-    unpublishedReplies?: Reply[];
+    unpublishedReplies: Reply[];
     actions: CommentsActions;
 }
 
@@ -137,7 +137,7 @@ const mergeCommentsWithReplies = (
 
     const replyToComment = (reply: Reply): Comment => ({
         id: reply.id,
-        author: 'dupa dupa',
+        author: 'NOT SUBMITTED',
         content: reply.content,
         state: 'NoActionNeeded',
         createdAt: '',
@@ -168,7 +168,7 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
     }
 
     render(): JSX.Element {
-        const commentsWithReplies = mergeCommentsWithReplies(this.props.comments, this.props.unpublishedReplies || []);
+        const commentsWithReplies = mergeCommentsWithReplies(this.props.comments, this.props.unpublishedReplies);
         const comments = mapComments(commentsWithReplies, this.props.actions);
 
         const onSubmit = () => {

@@ -131,7 +131,8 @@ function* publishReviewSaga() {
                 content: d.comment.content,
                 needsResolution: d.comment.state == 'NeedsResolution'
             })),
-            resolvedDiscussions: s.review.unpublishedResolvedDiscussions
+            resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
+            replies: s.review.unpublishedReplies
         }));
 
         for (let i = 0; i < 100; i++) {

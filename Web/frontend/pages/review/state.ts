@@ -1,6 +1,5 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
-import { Guid } from 'guid-typescript';
-import * as joda from 'js-joda';
+
 import {
     RevisionRangeInfo,
     FileDiff,
@@ -10,7 +9,8 @@ import {
     ChangedFile,
     Comment,
     FileDiscussion,
-    ReviewDiscussion
+    ReviewDiscussion,
+    CommentReply
 } from '../../api/reviewer';
 import * as PathPairs from '../../pathPair';
 
@@ -18,12 +18,6 @@ export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
     treeEntry: ChangedFile;
-}
-
-export interface CommentReply {
-    id: string;
-    parentId: string;
-    content: string;
 }
 
 export interface ReviewState {

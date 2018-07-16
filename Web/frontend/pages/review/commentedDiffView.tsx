@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffView';
-import { FileDiscussion, RevisionId } from '../../api/reviewer';
+import { FileDiscussion, RevisionId, CommentReply } from '../../api/reviewer';
 import CommentsView, { CommentsActions } from './commentsView';
 
 export interface LineCommentsActions {
@@ -18,6 +18,8 @@ interface CommentProps {
     leftSideRevision: RevisionId;
     rightSideRevision: RevisionId;
     pendingResolved: string[];
+    unpublishedReplies: CommentReply[];
+    currentUserName: string;
 }
 
 interface CalculatedProps {
@@ -72,6 +74,7 @@ const buildLineWidgets = (props: Props) => {
                     <CommentsView
                         comments={comments}
                         actions={commentActions}
+                        unpublishedReplies={props.unpublishedReplies}
                     />
                 )
             })
@@ -88,6 +91,7 @@ export default (props: Props) => {
         leftSideRevision, 
         rightSideRevision,
         pendingResolved,
+        unpublishedReplies,
         ...diffViewProps 
     } = props;
 
