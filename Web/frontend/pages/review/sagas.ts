@@ -122,12 +122,14 @@ function* publishReviewSaga() {
             previous: s.review.rangeInfo.commits.previous,
             reviewedFiles: s.review.reviewedFiles,
             startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
+                temporaryId: d.comment.id,
                 file: d.filePath,
                 lineNumber: d.lineNumber,
                 needsResolution: d.comment.state == 'NeedsResolution',
                 content: d.comment.content
             })),
             startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
+                temporaryId: d.comment.id,
                 content: d.comment.content,
                 needsResolution: d.comment.state == 'NeedsResolution'
             })),

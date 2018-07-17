@@ -52,10 +52,12 @@ namespace Web.Modules.Api.Commands
 
                 var review = await new FindOrCreateReviewPublisher(_session, _api, _user).FindOrCreateReview(command, reviewId);
 
-                await new ReviewDiscussionsPublisher(_session).Publish(command.StartedReviewDiscussions, review);
-                await new FileDiscussionsPublisher(_session).Publish(command.StartedFileDiscussions, review);
+                var newCommentsMap = new Dictionary<string, Guid>();
+
+                await new ReviewDiscussionsPublisher(_session).Publish(command.StartedReviewDiscussions, review, newCommentsMap);
+                await new FileDiscussionsPublisher(_session).Publish(command.StartedFileDiscussions, review, newCommentsMap);
                 await new ResolveDiscussions(_session).Publish(command.ResolvedDiscussions);
-                await new RepliesPublisher(_session).Publish(command.Replies, review);
+                await new RepliesPublisher(_session).Publish(command.Replies, review, newCommentsMap);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }

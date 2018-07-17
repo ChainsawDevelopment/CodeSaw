@@ -31,6 +31,7 @@ export interface ReviewState {
     unpublishedResolvedDiscussions: string[]; // root comment id
     unpublishedReplies: CommentReply[];
     nextReplyId: number;
+    nextDiscussionCommentId: number;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -103,6 +104,7 @@ const initial: ReviewState = {
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
+    nextDiscussionCommentId: 0,
     unpublishedResolvedDiscussions: [],
     unpublishedReplies: [],
     nextReplyId: 0,
@@ -201,6 +203,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (startFileDiscussion.match(action)) {
         return {
             ...state,
+            nextDiscussionCommentId: state.nextDiscussionCommentId + 1,
             unpublishedFileDiscussions: [
                 ...state.unpublishedFileDiscussions,
                 {
@@ -213,7 +216,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
-                        id: (Math.max(0, ...state.unpublishedFileDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                        id: `FILE-${state.nextDiscussionCommentId}`
                     }
                 }
             ]
@@ -223,6 +226,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (startReviewDiscussion.match(action)) {
         return {
             ...state,
+            nextDiscussionCommentId: state.nextDiscussionCommentId + 1,
             unpublishedReviewDiscussions: [
                 ...state.unpublishedReviewDiscussions,
                 {
@@ -233,7 +237,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
-                        id: (Math.max(0, ...state.unpublishedReviewDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                        id: `REVIEW-${state.nextDiscussionCommentId}`
                     }
                 }
             ]

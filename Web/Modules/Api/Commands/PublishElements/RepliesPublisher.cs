@@ -16,7 +16,7 @@ namespace Web.Modules.Api.Commands.PublishElements
             _session = session;
         }
 
-        public async Task Publish(List<Item> replies, Review review)
+        public async Task Publish(List<Item> replies, Review review, Dictionary<string, Guid> newCommentsMap)
         {
             while (true)
             {
@@ -31,6 +31,16 @@ namespace Web.Modules.Api.Commands.PublishElements
                 {
                     var id = GuidComb.Generate();
 
+                    Guid parentId;
+                    if (newCommentsMap.TryGetValue(item.ParentId, out var savedParentId))
+                    {
+                        parentId = savedParentId;
+                    }
+                    else
+                    {
+                        parentId = Guid.Parse(item.ParentId);
+                    }
+
                     await _session.SaveAsync(new Comment
                     {
                         Id = id,
@@ -38,7 +48,7 @@ namespace Web.Modules.Api.Commands.PublishElements
                         PostedInReviewId = review.Id,
                         Content = item.Content,
                         CreatedAt = DateTimeOffset.UtcNow,
-                        ParentId = Guid.Parse(item.ParentId)
+                        ParentId = parentId
                     });
 
                     var nowHaveParent = replies.Where(x => x.ParentId == item.Id);

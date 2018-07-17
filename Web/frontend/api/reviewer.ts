@@ -132,12 +132,14 @@ export interface ReviewSnapshot {
     }
     reviewedFiles: PathPairs.PathPair[];
     startedFileDiscussions: {
+        temporaryId: string;
         file: PathPairs.PathPair;
         lineNumber: number;
         content: string;
         needsResolution: boolean;
     }[];
     startedReviewDiscussions: {
+        temporaryId: string;
         needsResolution: boolean;
         content: string;
     }[];
