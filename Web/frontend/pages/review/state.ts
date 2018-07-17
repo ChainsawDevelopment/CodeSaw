@@ -35,6 +35,7 @@ const createAction = actionCreatorFactory('REVIEW');
 
 export interface SelectCurrentRevisions {
     range: RevisionRange;
+    fileToLoad?: string;
 }
 export const selectCurrentRevisions = createAction<SelectCurrentRevisions>('SELECT_CURRENT_REVISIONS');
 export const loadedRevisionsRangeInfo = createAction<RevisionRangeInfo>('LOADED_REVISION_RANGE_INFO');
@@ -56,9 +57,13 @@ export interface CreateGitLabLinkArgs {
     reviewId: ReviewId;
 }
 
+export interface PublishReviewArgs {
+    fileToLoad: string;
+}
+
 export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
 
-export const publishReview = createAction<{}>('PUBLISH_REVIEW');
+export const publishReview = createAction<PublishReviewArgs>('PUBLISH_REVIEW');
 
 export const reviewFile = createAction<{ path: PathPairs.PathPair }>('REVIEW_FILE');
 export const unreviewFile = createAction<{ path: PathPairs.PathPair }>('UNREVIEW_FILE');

@@ -11,7 +11,8 @@ import {
     createGitLabLink,
     CreateGitLabLinkArgs,
     mergePullRequest,
-    MergePullRequestArgs
+    MergePullRequestArgs,
+    PublishReviewArgs
 } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment, RevisionRangeInfo } from '../../api/reviewer';
@@ -41,6 +42,13 @@ function* loadRevisionRangeDetailsSaga() {
         const info = yield api.getRevisionRangeInfo(currentRange.reviewId, resolveProvisional(action.payload.range, currentRange.headCommit));
 
         yield put(loadedRevisionsRangeInfo(info));
+
+        if (action.payload.fileToLoad) {
+            const changeDetails = (info as RevisionRangeInfo).changes.find(f => f.path.newPath == action.payload.fileToLoad);
+            if (changeDetails) {
+                yield put(selectFileForView({ path: changeDetails.path }));
+            }
+        }
     }
 }
 
@@ -115,7 +123,7 @@ function* createGitLabLinkSaga() {
 function* publishReviewSaga() {
     const api = new ReviewerApi();
     for (; ;) {
-        const action: Action<{}> = yield take(publishReview);
+        const action: Action<PublishReviewArgs> = yield take(publishReview);
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
             revision: s.review.rangeInfo.commits.current,
@@ -147,7 +155,7 @@ function* publishReviewSaga() {
             yield delay(5000);
         }
 
-        yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId }));
+        yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId, fileToPreload: action.payload.fileToLoad }));
     }
 }
 
