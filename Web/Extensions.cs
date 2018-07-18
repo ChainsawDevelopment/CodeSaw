@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Web
 {
@@ -11,7 +12,11 @@ namespace Web
             return await Task.WhenAll(source);
         }
 
-        
+        public static async Task<IDictionary<TKey, TValue>> ToDictionaryAsync<T, TKey, TValue>(this Task<IEnumerable<T>> source, Func<T, TKey> keySelector, Func<T, TValue> valueSelector)
+        {
+            return (await source).ToDictionary(keySelector, valueSelector);
+        }
+
         public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind, IEqualityComparer<T> comparer)
         {
             int index = -1;
@@ -39,5 +44,7 @@ namespace Web
                 }
             }
         }
+
+        public static IEnumerable<T> Union<T>(this IEnumerable<T> source, params T[] elements) => source.Union<T>((IEnumerable<T>) elements);
     }
 }

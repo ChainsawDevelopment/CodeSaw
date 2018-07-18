@@ -81,6 +81,8 @@ namespace Web.Modules.Api.Queries
                 {
                     RevisionForCurrentHead = mergeRequest.HeadCommit == latestRevision?.HeadCommit,
                     LatestRevision = latestRevision?.RevisionNumber,
+                    CurrentHead = mergeRequest.HeadCommit,
+                    CurrentBase = mergeRequest.BaseCommit,
                     FileStatuses = fileStatuses,
                     FileSummary = fileStatuses
                         .GroupBy(x => x.Path)
@@ -104,6 +106,8 @@ namespace Web.Modules.Api.Queries
             public int? LatestRevision { get; set; }
             public int UnresolvedDiscussions { get; set; }
             public int ResolvedDiscussions { get; set; }
+            public string CurrentHead { get; set; }
+            public string CurrentBase { get; set; }
         }
 
         public class FileStatus

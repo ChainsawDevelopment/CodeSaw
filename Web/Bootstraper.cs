@@ -12,6 +12,7 @@ using Nancy.Conventions;
 using Newtonsoft.Json;
 using NHibernate;
 using Web.Auth;
+using Web.Serialization;
 using ISession = NHibernate.ISession;
 
 namespace Web
