@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Web
+namespace Web.Serialization
 {
     public class CustomSerializer : JsonSerializer
     {
@@ -13,6 +13,7 @@ namespace Web
             {
                 CamelCaseText = true
             });
+            Converters.Add(new RevisionIdConverter());
         }
     }
 }

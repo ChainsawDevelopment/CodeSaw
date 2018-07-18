@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using NHibernate.Type;
 using RepositoryApi;
+using Web.Cqrs;
+using Web.Modules.Api.Queries;
 
 namespace Web.Modules.Api.Model
 {
-    public class ReviewRevision
+    public class ReviewRevision 
     {
         public virtual Guid Id { get; set; }
         public virtual ReviewIdentifier ReviewId { get; set; }
