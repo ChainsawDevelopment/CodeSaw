@@ -1,8 +1,5 @@
 import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
 import {
-    selectCurrentRevisions,
-    SelectCurrentRevisions,
-    loadedRevisionsRangeInfo,
     selectFileForView,
     loadedFileDiff,
     loadReviewInfo,
@@ -12,10 +9,11 @@ import {
     CreateGitLabLinkArgs,
     mergePullRequest,
     MergePullRequestArgs,
-    PublishReviewArgs
+    PublishReviewArgs,
+    loadedFilesToReview
 } from './state';
 import { Action, ActionCreator } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment, RevisionRangeInfo } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment, RevisionRangeInfo, FilesToReview } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
@@ -27,31 +25,6 @@ const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange =
     }
 }
 
-function* loadRevisionRangeDetailsSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        const action: Action<SelectCurrentRevisions> = yield take(selectCurrentRevisions);
-
-        const currentRange = yield select((state: RootState) => ({
-            reviewId: state.review.currentReview.reviewId,
-            range: state.review.range,
-            headCommit: state.review.currentReview.headCommit
-        }));
-
-        const info = yield api.getRevisionRangeInfo(currentRange.reviewId, resolveProvisional(action.payload.range, currentRange.headCommit));
-
-        yield put(loadedRevisionsRangeInfo(info));
-
-        if (action.payload.fileToLoad) {
-            const changeDetails = (info as RevisionRangeInfo).changes.find(f => f.path.newPath == action.payload.fileToLoad);
-            if (changeDetails) {
-                yield put(selectFileForView({ path: changeDetails.path }));
-            }
-        }
-    }
-}
-
 function* loadFileDiffSaga() {
     const api = new ReviewerApi();
 
@@ -59,7 +32,10 @@ function* loadFileDiffSaga() {
         const action: Action<{ path: PathPairs.PathPair }> = yield take(selectFileForView);
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
-            range: state.review.range,
+            range: {
+                previous: state.review.selectedFile.fileToReview.previous,
+                current: state.review.selectedFile.fileToReview.current,
+            },
             headCommit: state.review.currentReview.headCommit
         }));
 
@@ -77,9 +53,12 @@ function* loadReviewInfoSaga() {
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
-        const currentRange: RevisionRange = yield select((s: RootState) => s.review.range);
 
         yield put(loadedReviewInfo(info));
+
+        const filesToReview: FilesToReview = yield api.getFilesToReview(action.payload.reviewId);
+
+        yield put(loadedFilesToReview(filesToReview.filesToReview))
 
         let newRange: RevisionRange = {
             previous: 'base',
@@ -87,23 +66,19 @@ function* loadReviewInfoSaga() {
         }
 
         if (currentReview && action.payload.reviewId.projectId == currentReview.projectId && action.payload.reviewId.reviewId == currentReview.reviewId) {
-            if (currentRange != null) {
-                newRange = currentRange;
-            }
+            // if (currentRange != null) {
+            //     newRange = currentRange;
+            // }
 
             if(newRange.current == 'provisional' && !info.hasProvisionalRevision) {
                 newRange.current = info.pastRevisions[info.pastRevisions.length - 1].number;
             }
         }
 
-        yield put(selectCurrentRevisions({
-            range: newRange
-        }))
-
         if (action.payload.fileToPreload) {
-            const rangeInfo: Action<RevisionRangeInfo> = yield take(loadedRevisionsRangeInfo);
+            // const rangeInfo: Action<RevisionRangeInfo> = yield take(loadedRevisionsRangeInfo);
 
-            const fullPath = rangeInfo.payload.changes.find(f => f.path.newPath == action.payload.fileToPreload).path;
+            const fullPath = filesToReview.filesToReview.find(f => f.path.newPath == action.payload.fileToPreload).path;
 
             yield put(selectFileForView({path: fullPath}));
         }
@@ -126,8 +101,10 @@ function* publishReviewSaga() {
         const action: Action<PublishReviewArgs> = yield take(publishReview);
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
-            revision: s.review.rangeInfo.commits.current,
-            previous: s.review.rangeInfo.commits.previous,
+            revision: {
+                base: s.review.currentReview.baseCommit,
+                head: s.review.currentReview.headCommit
+            },
             reviewedFiles: s.review.reviewedFiles,
             startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
                 temporaryId: d.comment.id,
@@ -175,7 +152,6 @@ function* mergePullRequestSaga() {
 }
 
 export default [
-    loadRevisionRangeDetailsSaga,
     loadFileDiffSaga,
     loadReviewInfoSaga,
     createGitLabLinkSaga,

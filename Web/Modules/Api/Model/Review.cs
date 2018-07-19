@@ -73,6 +73,7 @@ namespace Web.Modules.Api.Model
     public enum FileReviewStatus
     {
         Reviewed = 1,
+        [Obsolete]
         Unreviewed = 2
     }
 }

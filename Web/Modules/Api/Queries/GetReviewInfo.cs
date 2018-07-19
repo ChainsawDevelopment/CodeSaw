@@ -23,6 +23,7 @@ namespace Web.Modules.Api.Queries
             public Revision[] PastRevisions { get; set; }
             public bool HasProvisionalRevision { get; set; }
             public string HeadCommit { get; set; }
+            public RevisionId HeadRevision { get; set; }
             public string BaseCommit { get; set; }
             public object ReviewSummary { get; set; }
             public MergeStatus MergeStatus { get; set; }
@@ -77,7 +78,7 @@ namespace Web.Modules.Api.Queries
 
                 var lastRevisionHead = pastRevisions.LastOrDefault()?.Head;
 
-                var hasUnreviewedChanges = lastRevisionHead != mr.HeadCommit;
+                var hasProvisionalRevision = lastRevisionHead != mr.HeadCommit;
 
                 var commentsTree = GetCommentsTree(query);
                 return new Result
@@ -85,9 +86,10 @@ namespace Web.Modules.Api.Queries
                     ReviewId = query._reviewId,
                     Title = mr.Title,
                     PastRevisions = pastRevisions,
-                    HasProvisionalRevision = hasUnreviewedChanges,
+                    HasProvisionalRevision = hasProvisionalRevision,
                     HeadCommit = mr.HeadCommit,
                     BaseCommit = mr.BaseCommit,
+                    HeadRevision = hasProvisionalRevision ? (RevisionId)new RevisionId.Hash(mr.HeadCommit) : new RevisionId.Selected(pastRevisions.Last().Number),
                     State = mr.State,
                     MergeStatus = mr.MergeStatus,
                     ReviewSummary = GetReviewSummary(query),

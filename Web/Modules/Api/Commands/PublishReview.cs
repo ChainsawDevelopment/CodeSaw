@@ -18,7 +18,6 @@ namespace Web.Modules.Api.Commands
         public int ProjectId { get; set; }
         public int ReviewId { get; set; }
         public RevisionCommits Revision { get; set; } = new RevisionCommits();
-        public RevisionCommits Previous { get; set; } = new RevisionCommits();
         public List<PathPair> ReviewedFiles { get; set; } = new List<PathPair>();
         public List<NewReviewDiscussion> StartedReviewDiscussions { get; set; } = new List<NewReviewDiscussion>();
         public NewFileDiscussion[] StartedFileDiscussions { get; set; }
