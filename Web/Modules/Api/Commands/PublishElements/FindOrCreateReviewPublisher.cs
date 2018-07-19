@@ -51,10 +51,7 @@ namespace Web.Modules.Api.Commands.PublishElements
 
             review.ReviewedAt = DateTimeOffset.Now;
 
-            var allFiles = await _api.GetDiff(command.ProjectId, command.Previous.Head, command.Revision.Head)
-                .ContinueWith(t => t.Result.Select(x => x.Path).ToList());
-
-            review.ReviewFiles(allFiles, command.ReviewedFiles);
+            review.ReviewFiles(command.ReviewedFiles, command.ReviewedFiles);
 
             await _session.SaveAsync(review);
             return review;

@@ -105,6 +105,7 @@ export interface ReviewInfo {
     headCommit: string;
     baseCommit: string;
     webUrl: string;
+    headRevision: RevisionId;
     state: ReviewInfoState;
     mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
     reviewSummary: {
@@ -130,10 +131,6 @@ export interface ReviewSnapshot {
         head: string,
         base: string
     };
-    previous: {
-        head: string;
-        base: string;
-    }
     reviewedFiles: PathPairs.PathPair[];
     startedFileDiscussions: {
         temporaryId: string;
@@ -169,6 +166,17 @@ export interface ProjectInfo {
     canConfigureHooks: boolean;
 }
 
+export interface FileToReview {
+    path: PathPairs.PathPair;
+    previous: RevisionId;
+    current: RevisionId;
+    hasChanges: boolean;
+}
+
+export interface FilesToReview {
+    filesToReview: FileToReview[];
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -183,15 +191,6 @@ export class ReviewConcurrencyError extends Error {
 }
 
 export class ReviewerApi {
-    public getRevisionRangeInfo = (reviewId: ReviewId, range: RevisionRange): Promise<RevisionRangeInfo> => {
-        return fetch(
-            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revisions/${range.previous}/${range.current}`,
-            acceptJson
-        )
-            .then(r => r.json())
-            .then(r => r as RevisionRangeInfo);
-    }
-
     public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
@@ -288,5 +287,11 @@ export class ReviewerApi {
         return fetch(`/api/user/current`, acceptJson)
             .then(r => r.json())
             .then(r => r as UserState);
+    }
+
+    public getFilesToReview = (reviewId: ReviewId): Promise<FilesToReview> => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/files`, acceptJson)
+            .then(r => r.json())
+            .then(r => r as FilesToReview);
     }
 }

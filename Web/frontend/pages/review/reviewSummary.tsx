@@ -12,7 +12,7 @@ import { SelectFileForViewHandler } from './rangeInfo';
 import "./reviewSummary.less";
 import { FileLink } from './FileLink';
 
-const FileRevision = (props: {reviewers: string[]}) => {
+const FileRevision = (props: { reviewers: string[] }) => {
     if (props.reviewers.length == 0) {
         return null;
     }
@@ -29,19 +29,19 @@ const FileRevision = (props: {reviewers: string[]}) => {
 
     return (
         <Popup trigger={label}>
-           <List>
-               {reviewers}
+            <List>
+                {reviewers}
             </List>
         </Popup>
     )
 };
 
 const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary: ReviewInfo, reviewId: ReviewId }) => {
-    const fileStatus = props.summary.reviewSummary.find(x => x.file == props.file.newPath) || {revisions: {}};
-    
-    const revisionStatuses = props.revisions.map(r => 
+    const fileStatus = props.summary.reviewSummary.find(x => x.file == props.file.newPath) || { revisions: {} };
+
+    const revisionStatuses = props.revisions.map(r =>
         <Table.Cell key={r} className='revision-status'>
-            <FileRevision reviewers={fileStatus.revisions[r] || []}/>
+            <FileRevision reviewers={fileStatus.revisions[r] || []} />
         </Table.Cell>
     );
 
@@ -71,13 +71,13 @@ type Props = StateProps & OwnProps;
 const reviewSummary = (props: Props) => {
     const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>)
 
-    const rows = props.files.map(f => <FileRow 
-        key={f.newPath} 
-        file={f} 
-        revisions={props.revisions} 
-        summary={props.summary} 
+    const rows = props.files.map(f => <FileRow
+        key={f.newPath}
+        file={f}
+        revisions={props.revisions}
+        summary={props.summary}
         reviewId={props.reviewId}
-        />);
+    />);
 
     return (
         <div className='review-summary'>
@@ -97,7 +97,7 @@ const reviewSummary = (props: Props) => {
 
 const mapStateToProps = (state: RootState): StateProps => ({
     revisions: state.review.currentReview.pastRevisions.map(r => r.number),
-    files: state.review.rangeInfo ? state.review.rangeInfo.changes.map(f => f.path) : [],
+    files: state.review.filesToReview.map(f => f.path),
     summary: state.review.currentReview
 });
 

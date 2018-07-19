@@ -12,6 +12,7 @@ import {
     ReviewDiscussion,
     ReviewAuthor,
     CommentReply,
+    FileToReview,
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
@@ -19,14 +20,14 @@ import * as PathPairs from '../../pathPair';
 export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
-    treeEntry: ChangedFile;
+    // treeEntry: ChangedFile;
+    fileToReview: FileToReview;
 }
 
 export interface ReviewState {
-    range: RevisionRange;
-    rangeInfo: RevisionRangeInfo;
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
+    filesToReview: FileToReview[];
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussions: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
@@ -34,16 +35,10 @@ export interface ReviewState {
     unpublishedReplies: CommentReply[];
     nextReplyId: number;
     nextDiscussionCommentId: number;
+    filesReviewedByUser: PathPairs.List;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
-
-export interface SelectCurrentRevisions {
-    range: RevisionRange;
-    fileToLoad?: string;
-}
-export const selectCurrentRevisions = createAction<SelectCurrentRevisions>('SELECT_CURRENT_REVISIONS');
-export const loadedRevisionsRangeInfo = createAction<RevisionRangeInfo>('LOADED_REVISION_RANGE_INFO');
 
 export const selectFileForView = createAction<{ path: PathPairs.PathPair }>('SELECT_FILE_FOR_VIEW');
 
@@ -51,6 +46,8 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
+
+export const loadedFilesToReview = createAction<FileToReview[]>('LOADED_FILES_TO_REVIEW');
 
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
@@ -89,11 +86,6 @@ export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLV
 export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 
 const initial: ReviewState = {
-    range: {
-        previous: 'base',
-        current: 'base'
-    },
-    rangeInfo: null,
     selectedFile: null,
     currentReview: {
         hasProvisionalRevision: false,
@@ -103,12 +95,14 @@ const initial: ReviewState = {
         headCommit: '',
         baseCommit: '',
         webUrl: '',
+        headRevision: '',
         state: 'opened',
         mergeStatus: 'unchecked',
         reviewSummary: [],
         fileDiscussions: [],
         reviewDiscussions: []
     },
+    filesToReview: [],
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
@@ -116,33 +110,20 @@ const initial: ReviewState = {
     unpublishedResolvedDiscussions: [],
     unpublishedReplies: [],
     nextReplyId: 0,
+    filesReviewedByUser: []
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
-    if (isType(action, selectCurrentRevisions)) {
-        return {
-            ...state,
-            range: action.payload.range
-        };
-    }
-
-    if (loadedRevisionsRangeInfo.match(action)) {
-        return {
-            ...state,
-            rangeInfo: action.payload,
-            selectedFile: null,
-            reviewedFiles: action.payload.filesReviewedByUser
-        }
-    }
-
     if (selectFileForView.match(action)) {
-        const treeEntry = state.rangeInfo.changes.find(x => x.path.newPath == action.payload.path.newPath);
+        // const treeEntry = state.rangeInfo.changes.find(x => x.path.newPath == action.payload.path.newPath);
+        const fileToReview = state.filesToReview.find(x => PathPairs.equal(x.path, action.payload.path))
         return {
             ...state,
             selectedFile: {
                 ...state.selectedFile,
                 path: action.payload.path,
-                treeEntry: treeEntry
+                // treeEntry: treeEntry,
+                fileToReview: fileToReview
             }
         };
     }
@@ -165,6 +146,19 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedReviewDiscussions: [],
             unpublishedResolvedDiscussions: [],
             unpublishedReplies: []
+        };
+    }
+
+    if (loadedFilesToReview.match(action)) {
+        const reviewedFiles = action.payload
+                .filter(f => !f.hasChanges)
+                .map(f => f.path);
+
+        return {
+            ...state,
+            filesToReview: action.payload,
+            filesReviewedByUser: reviewedFiles,
+            reviewedFiles: reviewedFiles,
         };
     }
 
@@ -215,7 +209,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedFileDiscussions: [
                 ...state.unpublishedFileDiscussions,
                 {
-                    revision: state.range.current,
+                    revision: state.currentReview.headRevision,
                     filePath: action.payload.path,
                     lineNumber: action.payload.lineNumber,
                     comment: {
@@ -238,7 +232,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedReviewDiscussions: [
                 ...state.unpublishedReviewDiscussions,
                 {
-                    revision: state.range.current,
+                    revision: state.currentReview.headRevision,
                     comment: {
                         state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
                         author: action.payload.currentUser,

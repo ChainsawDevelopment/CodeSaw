@@ -26,10 +26,10 @@ const describeFileOperations = (treeEntry: ChangedFile): JSX.Element => {
 export default (props: {file: FileInfo}): JSX.Element => {
     const items: JSX.Element[] = [];
 
-    if (props.file.treeEntry)
-    {
-        items.push(describeFileOperations(props.file.treeEntry));
-    } 
+    // if (props.file.treeEntry)
+    // {
+    //     items.push(describeFileOperations(props.file.treeEntry));
+    // } 
 
     if(items.length == 0) {
         return null;
@@ -38,6 +38,11 @@ export default (props: {file: FileInfo}): JSX.Element => {
     return (
         <Message className="file-summary">
             <Message.Content>
+                <div>Show diff 
+                    <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.previous}</pre> </strong>
+                    to <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.current}</pre> </strong>
+                    changes: <strong>{props.file.fileToReview.hasChanges ? "YES" : "NO"}</strong> 
+                </div>
                 {items}
             </Message.Content>
         </Message>

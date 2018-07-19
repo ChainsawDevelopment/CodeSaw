@@ -2,7 +2,6 @@ import * as React from "react";
 
 import { Dispatch } from "redux";
 import {
-    selectCurrentRevisions,
     selectFileForView,
     loadReviewInfo,
     FileInfo,
@@ -19,13 +18,12 @@ import {
 import {
     RevisionRangeInfo,
     ReviewInfo,
-    RevisionRange,
     ReviewId,
-    RevisionId,
     Comment,
     FileDiscussion,
     ReviewDiscussion,
-    CommentReply
+    CommentReply,
+    FileToReview
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -34,10 +32,10 @@ import { UserState, RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
 import MergeApprover from './mergeApprover';
 import "./review.less";
-import VersionSelector from './versionSelector';
 import * as PathPairs from "../../pathPair";
 import ReviewSummary from './reviewSummary';
 import CommentsView, { CommentsActions } from './commentsView';
+import FilesToReview from './filesToReview';
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
 import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
@@ -49,7 +47,6 @@ interface OwnProps {
 
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId, fileToPreload?: string): void;
-    selectRevisionRange(range: RevisionRange): void;
     selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
@@ -64,8 +61,7 @@ interface DispatchProps {
 interface StateProps {
     currentUser: UserState;
     currentReview: ReviewInfo;
-    currentRange: RevisionRange;
-    rangeInfo: RevisionRangeInfo;
+    filesToReview: FileToReview[];
     selectedFile: FileInfo;
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussion: FileDiscussion[];
@@ -98,9 +94,6 @@ class reviewPage extends React.Component<Props> {
 
     render() {
         const props = this.props;
-        const provisional: RevisionId[] = props.currentReview.hasProvisionalRevision ? ['provisional'] : [];
-
-        const pastRevisions = props.currentReview.pastRevisions.map(i => i.number);
 
         const selectedFile = props.selectedFile ?
             { ...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path) }
@@ -117,7 +110,7 @@ class reviewPage extends React.Component<Props> {
         };
 
         const selectFileForView = () => {
-            const fullPath = props.rangeInfo.changes.find(f => f.path.newPath == props.fileName).path;
+            const fullPath = props.filesToReview.find(f => f.path.newPath == props.fileName).path;
 
             props.selectFileForView(fullPath);
             this.onShowFile();
@@ -156,16 +149,18 @@ class reviewPage extends React.Component<Props> {
                             />
                             <Divider />
 
-                            <VersionSelector
-                                available={['base', ...pastRevisions, ...provisional]}
-                                hasProvisonal={props.currentReview.hasProvisionalRevision}
-                                range={props.currentRange}
-                                onSelectRange={props.selectRevisionRange}
-                            />
-
-                            <ReviewSummary
-                                reviewId={props.reviewId}
-                            />
+                            <Grid columns={2}>
+                                <Grid.Row>
+                                    <Grid.Column>
+                                        <ReviewSummary
+                                            reviewId={props.reviewId}
+                                        />
+                                    </Grid.Column>
+                                    <Grid.Column>
+                                        <FilesToReview />
+                                    </Grid.Column>
+                                </Grid.Row>
+                            </Grid>
 
                             <CommentsView 
                                 comments={comments} 
@@ -180,8 +175,8 @@ class reviewPage extends React.Component<Props> {
 
                 <Divider />
 
-                {props.rangeInfo ? (<RangeInfo
-                    info={props.rangeInfo}
+                <RangeInfo
+                    filesToReview={props.filesToReview}
                     selectedFile={selectedFile}
                     onSelectFileForView={props.selectFileForView}
                     reviewFile={props.reviewFile}
@@ -190,14 +185,13 @@ class reviewPage extends React.Component<Props> {
                     onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
                     reviewId={props.reviewId}
                     fileComments={props.currentReview.fileDiscussions}
-                    revisionRange={props.currentRange}
                     startFileDiscussion={props.startFileDiscussion}
                     unpublishedFileDiscussion={props.unpublishedFileDiscussion}
                     commentActions={commentActions}
                     pendingResolved={props.unpublishedResolvedDiscussions}
                     unpublishedReplies={props.unpublishedReplies}
                     currentUser={props.currentUser}
-                />) : null}
+                />
             </div>
         );
     }
@@ -206,8 +200,7 @@ class reviewPage extends React.Component<Props> {
 const mapStateToProps = (state: RootState): StateProps => ({
     currentUser: state.currentUser,
     currentReview: state.review.currentReview,
-    currentRange: state.review.range,
-    rangeInfo: state.review.rangeInfo,
+    filesToReview: state.review.filesToReview,
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
@@ -218,7 +211,6 @@ const mapStateToProps = (state: RootState): StateProps => ({
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectRevisionRange: range => dispatch(selectCurrentRevisions({ range, fileToLoad: ownProps.fileName })),
     selectFileForView: (path) => dispatch(selectFileForView({ path })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
