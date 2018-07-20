@@ -12,6 +12,7 @@ namespace Web.Auth
             Property(x => x.UserName);
             Property(x => x.Token);
             Property(x => x.GivenName);
+            Property(x => x.AvatarUrl);
         }
     }
 }

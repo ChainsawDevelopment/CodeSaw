@@ -5,6 +5,7 @@ import { AdminState } from "./pages/admin/state";
 export interface UserState {
     userName: string;
     givenName: string;
+    avatarUrl: string;
 }
 
 export interface RootState {
