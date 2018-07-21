@@ -7,6 +7,7 @@ using NHibernate.Criterion;
 using NHibernate.Linq;
 using NHibernate.Transform;
 using RepositoryApi;
+using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Model;
 
@@ -79,6 +80,12 @@ namespace Web.Modules.Api.Queries
 
                 return new Result
                 {
+                    Title = mergeRequest.Title,
+                    MergeRequestState = mergeRequest.State,
+                    MergeStatus = mergeRequest.MergeStatus,
+
+                    FileReviewSummary = GetFileSummary(query),
+
                     RevisionForCurrentHead = mergeRequest.HeadCommit == latestRevision?.HeadCommit,
                     LatestRevision = latestRevision?.RevisionNumber,
                     CurrentHead = mergeRequest.HeadCommit,
@@ -89,17 +96,66 @@ namespace Web.Modules.Api.Queries
                         .ToDictionary(x => x.Key, x => (object) new
                         {
                             ReviewedAt = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.RevisionNumber),
-                            UnreviewedAt = x.Where(r => r.Status == FileReviewStatus.Unreviewed).Select(r => r.RevisionNumber),
                             ReviewedBy = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.ReviewedBy)
                         }),
                     UnresolvedDiscussions = commentStates[CommentState.NeedsResolution],
                     ResolvedDiscussions = commentStates[CommentState.Resolved]
                 };
             }
+
+            private FileReviewSummary GetFileSummary(GetReviewStatus query)
+            {
+                var q =
+                    from review in _session.Query<Review>()
+                    join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                    join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
+                    where revision.ReviewId == query.ReviewId
+                    from file in review.Files
+                    where file.Status == FileReviewStatus.Reviewed
+                    orderby revision.RevisionNumber
+                    select new
+                    {
+                        Path = file.File,
+                        revision.RevisionNumber,
+                        User = user.UserName
+                    };
+
+                var fileSummary = new Dictionary<PathPair, HashSet<(int Revision, string User)>>();
+
+                foreach (var file in q)
+                {
+                    if (fileSummary.TryGetValue(file.Path, out var revisions))
+                    {
+                        revisions.Add((file.RevisionNumber, file.User));
+                        continue;
+                    }
+
+                    var replaces = fileSummary.Keys.SingleOrDefault(x => x.NewPath == file.Path.OldPath);
+                    if (replaces != null)
+                    {
+                        var pastRevisions = fileSummary[replaces];
+                        pastRevisions.Add((file.RevisionNumber, file.User));
+                        fileSummary.Remove(replaces);
+                        fileSummary.Add(file.Path, pastRevisions);
+                        continue;
+                    }
+
+                    fileSummary.Add(file.Path, new HashSet<(int Revision, string User)> { (file.RevisionNumber, file.User) });
+                }
+
+                return new FileReviewSummary(fileSummary.ToDictionary(
+                    x => x.Key,
+                    x => new FileReviewSummary.File
+                    {
+                        RevisionReviewers = x.Value.GroupBy(i => i.Revision).ToDictionary(i => i.Key, i => i.Select(j => j.User).ToList())
+                    }
+                ));
+            }
         }
 
         public class Result
         {
+            public FileReviewSummary FileReviewSummary { get; set; }
             public bool RevisionForCurrentHead { get; set; }
             public IList<FileStatus> FileStatuses { get; set; }
             public IDictionary<string, object> FileSummary { get; set; }
@@ -108,6 +164,9 @@ namespace Web.Modules.Api.Queries
             public int ResolvedDiscussions { get; set; }
             public string CurrentHead { get; set; }
             public string CurrentBase { get; set; }
+            public string Title { get; set; }
+            public MergeRequestState MergeRequestState { get; set; }
+            public MergeStatus MergeStatus { get; set; }
         }
 
         public class FileStatus
@@ -116,6 +175,44 @@ namespace Web.Modules.Api.Queries
             public int ReviewedBy { get; set; }
             public string Path { get; set; }
             public FileReviewStatus Status { get; set; }
+        }
+    }
+
+    public class FileReviewSummary : Dictionary<PathPair, FileReviewSummary.File>
+    {
+        public FileReviewSummary()
+        {
+        }
+
+        public FileReviewSummary(IDictionary<PathPair, File> items): base(items)
+        {
+        }
+
+        public FileReviewSummary LimitToUser(string userName)
+        {
+            var result = new FileReviewSummary();
+
+            foreach (var (path, file) in this)
+            {
+                var revisionsWithUsersReview = file.RevisionReviewers.Where(x => x.Value.Contains(userName)).ToDictionary(x => x.Key, x => x.Value);
+
+                if (!revisionsWithUsersReview.Any())
+                {
+                    continue;
+                }
+
+                result[path] = new File
+                {
+                    RevisionReviewers = revisionsWithUsersReview
+                };
+            }
+
+            return result;
+        }
+
+        public class File
+        {
+            public Dictionary<int, List<string>> RevisionReviewers { get; set; } = new Dictionary<int, List<string>>();
         }
     }
 }

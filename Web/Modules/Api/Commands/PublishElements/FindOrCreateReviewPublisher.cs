@@ -51,7 +51,7 @@ namespace Web.Modules.Api.Commands.PublishElements
 
             review.ReviewedAt = DateTimeOffset.Now;
 
-            review.ReviewFiles(command.ReviewedFiles, command.ReviewedFiles);
+            review.ReviewFiles(command.ReviewedFiles);
 
             await _session.SaveAsync(review);
             return review;

@@ -19,31 +19,34 @@ namespace Tests.Api
 {
     public class GetFilesToReviewTest
     {
+        private const string BaseHash = "BA5EBA5EBA5EBA5EBA5EBA5EBA5EBA5EBA5EBA5E";
+
         private ReviewUser _currentUser;
-        private GetFilesInReview.Handler _handler;
+        private GetFilesToReview.Handler _handler;
         private ReviewIdentifier _reviewId;
         private Mock<IQueryRunner> _query;
         private Mock<IRepository> _repository;
 
         private static Constraint HasChanges
-            => Has.Property(nameof(GetFilesInReview.FileToReview.HasChanges)).EqualTo(true).WithMessage("has changes");
+            => Has.Property(nameof(GetFilesToReview.FileToReview.HasChanges)).EqualTo(true).WithMessage("has changes");
 
         private static Constraint HasNoChanges
-            => Has.Property(nameof(GetFilesInReview.FileToReview.HasChanges)).EqualTo(false).WithMessage("has no changes");
+            => Has.Property(nameof(GetFilesToReview.FileToReview.HasChanges)).EqualTo(false).WithMessage("has no changes");
 
         [SetUp]
         public void SetUp()
         {
             _currentUser = new ReviewUser
             {
-                Id = 5
+                Id = 5,
+                UserName = "test"
             };
 
             _query = new Mock<IQueryRunner>(MockBehavior.Strict);
 
             _repository = new Mock<IRepository>(MockBehavior.Strict);
 
-            _handler = new GetFilesInReview.Handler(_currentUser, _query.Object, _repository.Object);
+            _handler = new GetFilesToReview.Handler(_currentUser, _query.Object, _repository.Object);
             _reviewId = new ReviewIdentifier(101, 202);
         }
 
@@ -55,24 +58,36 @@ namespace Tests.Api
                 {
                     RevisionForCurrentHead = true,
                     LatestRevision = 3,
-                    CurrentBase = "base-base",
+                    CurrentBase = BaseHash,
                     CurrentHead = "3-head",
-                    FileStatuses = new[]
+                    FileReviewSummary = new FileReviewSummary()
                     {
-                        FileStatus(1, "never-reviewed.txt", FileReviewStatus.Unreviewed),
-                        FileStatus(2, "never-reviewed.txt", FileReviewStatus.Unreviewed),
-                        
-                        FileStatus(1, "reviewed-at-1.txt", FileReviewStatus.Reviewed),
-                        FileStatus(2, "reviewed-at-1.txt", FileReviewStatus.Unreviewed),
+                        [PathPair.Make("reviewed-at-1.txt")] = new Dictionary<int, List<string>>
+                        {
+                            [1] = new List<string> {_currentUser.UserName}
+                        },
+                        //    FileStatus(1, "reviewed-at-1.txt"),
 
-                        FileStatus(1, "reviewed-at-1-changes.txt", FileReviewStatus.Reviewed),
-                        FileStatus(2, "reviewed-at-1-changes.txt", FileReviewStatus.Unreviewed),
+                        [PathPair.Make("reviewed-at-1-changes.txt")] = new Dictionary<int, List<string>>
+                        {
+                            [1] = new List<string> {_currentUser.UserName}
+                        },
 
-                        FileStatus(1, "once-reviewed-now-removed.txt", FileReviewStatus.Reviewed),
-                        FileStatus(2, "once-reviewed-now-removed.txt", FileReviewStatus.Unreviewed),
+                        //    FileStatus(1, "reviewed-at-1-changes.txt"),
 
-                        FileStatus(1, "renamed-after-review-at-1.old", FileReviewStatus.Reviewed),
-                        FileStatus(2, "renamed-after-review-at-1.old", FileReviewStatus.Unreviewed),
+                        [PathPair.Make("once-reviewed-now-removed.txt")] = new Dictionary<int, List<string>>
+                        {
+                            [1] = new List<string> {_currentUser.UserName}
+                        },
+
+                        //    FileStatus(1, "once-reviewed-now-removed.txt"),
+
+                        [PathPair.Make("renamed-after-review-at-1.old")] = new Dictionary<int, List<string>>
+                        {
+                            [1] = new List<string> {_currentUser.UserName}
+                        },
+
+                        //    FileStatus(1, "renamed-after-review-at-1.old"),
                     }
                 });
 
@@ -90,36 +105,39 @@ namespace Tests.Api
                 new FileDiff {Path = PathPair.Make("renamed-after-review-at-1.old", "renamed-after-review-at-1.new"), RenamedFile = true}
             });
 
-            _repository.Setup(x => x.GetDiff(101, "base-base", "3-head")).ReturnsAsync(new List<FileDiff>
+            _repository.Setup(x => x.GetDiff(101, BaseHash, "3-head")).ReturnsAsync(new List<FileDiff>
             {
                 new FileDiff {Path = PathPair.Make("never-reviewed.txt")},
                 new FileDiff {Path = PathPair.Make("reviewed-at-1.txt")},
                 new FileDiff {Path = PathPair.Make("new-file.txt")},
-                new FileDiff {Path = PathPair.Make("renamed-after-review-at-1.old", "renamed-after-review-at-1.new")}
+                new FileDiff {Path = PathPair.Make("renamed-after-review-at-1.old", "renamed-after-review-at-1.new"), RenamedFile = true}
             });
 
             var result = await Execute();
+            result.FilesToReview.Select(x=>x.Path).ToList().ForEach(x=>Console.WriteLine($"{x.OldPath} -> {x.NewPath}"));
 
-            Assert.That(ForFile(result, "never-reviewed.txt"), HasRange("base", "3") & HasChanges);
+            Assert.That(ForFile(result, "never-reviewed.txt"), HasRange(BaseHash, "3") & HasChanges);
             Assert.That(ForFile(result, "reviewed-at-1.txt"), HasRange("1", "3") & HasNoChanges);
             Assert.That(ForFile(result, "reviewed-at-1-changes.txt"), HasRange("1", "3") & HasChanges);
-            Assert.That(ForFile(result, "new-file.txt"), HasRange("base", "3") & HasChanges);
+            Assert.That(ForFile(result, "new-file.txt"), HasRange(BaseHash, "3") & HasChanges);
             Assert.That(ForFile(result, "once-reviewed-now-removed.txt"), HasRange("1", "3") & HasNoChanges);
-            Assert.That(ForFile(result, "renamed-after-review-at-1.old"), HasRange("1", "3") & HasChanges);
+            Assert.That(ForFile(result, "renamed-after-review-at-1.new"), HasRange("1", "3") & HasChanges);
+
+            Assert.That(result.FilesToReview, Has.Count.EqualTo(6));
         }
 
-        private GetReviewStatus.FileStatus FileStatus(int revisionNumber, string file, FileReviewStatus reviewStatus)
+        private GetReviewStatus.FileStatus FileStatus(int revisionNumber, string file)
         {
             return new GetReviewStatus.FileStatus()
             {
                 Path =file,
                 ReviewedBy = _currentUser.Id,
                 RevisionNumber = revisionNumber,
-                Status = reviewStatus
+                Status = FileReviewStatus.Reviewed
             };
         }
 
-        private GetFilesInReview.FileToReview ForFile(GetFilesInReview.Result result, string path)
+        private GetFilesToReview.FileToReview ForFile(GetFilesToReview.Result result, string path)
         {
             return result.FilesToReview.SingleOrDefault(x => x.Path.NewPath == path);
         }
@@ -127,13 +145,13 @@ namespace Tests.Api
         private Constraint HasRange(string previous, string current)
         {
             return Has
-                .Property(nameof(GetFilesInReview.FileToReview.Previous)).EqualTo(RevisionId.Parse(previous))
-                .And.Property(nameof(GetFilesInReview.FileToReview.Current)).EqualTo(RevisionId.Parse(current));
+                .Property(nameof(GetFilesToReview.FileToReview.Previous)).EqualTo(RevisionId.Parse(previous))
+                .And.Property(nameof(GetFilesToReview.FileToReview.Current)).EqualTo(RevisionId.Parse(current));
         }
 
-        private async Task<GetFilesInReview.Result> Execute()
+        private async Task<GetFilesToReview.Result> Execute()
         {
-            var result = await _handler.Execute(new GetFilesInReview(_reviewId));
+            var result = await _handler.Execute(new GetFilesToReview(_reviewId));
 
             var serializer = new CustomSerializer()
             {

@@ -12,4 +12,18 @@
     .revision, .revision-status {
         width: 5em;
     }
+
+    td {
+        &.current {
+            background-color: lightskyblue;
+        }
+
+        &.previous {
+            background-color: lightcyan;
+        }
+
+        &.current.previous {
+            background-color: lightgreen;
+        }
+    }
 }

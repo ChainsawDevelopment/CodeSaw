@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NHibernate;
-using NHibernate.Transform;
 using RepositoryApi;
 using Web.Auth;
 using Web.Cqrs;
@@ -18,6 +16,7 @@ namespace Web.Modules.Api.Queries
 
         public class Result
         {
+            public Dictionary<PathPair, File> Files { get; set; }
             public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
             public Revision[] PastRevisions { get; set; }
@@ -30,6 +29,7 @@ namespace Web.Modules.Api.Queries
             public MergeRequestState State { get; set; }
             public object[] FileDiscussions { get; set; }
             public object[] ReviewDiscussions { get; set; }
+            public List<GetFilesToReview.FileToReview> FilesToReview { get; set; }
         }
 
         public class Revision
@@ -49,6 +49,12 @@ namespace Web.Modules.Api.Queries
             public List<CommentItem> Children { get; set; } = new List<CommentItem>();
         }
 
+        public class File
+        {
+            public FileReviewSummary.File Summary { get; set; }
+            public GetFilesToReview.FileToReview Review { get; set; }
+        }
+
         public GetReviewInfo(int projectId, int reviewId)
         {
             _reviewId = new ReviewIdentifier(projectId, reviewId);
@@ -56,19 +62,17 @@ namespace Web.Modules.Api.Queries
 
         public class Handler : IQueryHandler<GetReviewInfo, Result>
         {
-            private readonly IRepository _api;
             private readonly ISession _session;
+            private readonly IQueryRunner _query;
 
-            public Handler(IRepository api, ISession session)
+            public Handler(ISession session, IQueryRunner query)
             {
-                _api = api;
                 _session = session;
+                _query = query;
             }
 
             public async Task<Result> Execute(GetReviewInfo query)
             {
-                var mr = await _api.GetMergeRequestInfo(query._reviewId.ProjectId, query._reviewId.ReviewId);
-
                 var pastRevisions = (
                     from r in _session.Query<ReviewRevision>()
                     where r.ReviewId == query._reviewId
@@ -76,25 +80,58 @@ namespace Web.Modules.Api.Queries
                     select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
                 ).ToArray();
 
-                var lastRevisionHead = pastRevisions.LastOrDefault()?.Head;
-
-                var hasProvisionalRevision = lastRevisionHead != mr.HeadCommit;
-
                 var commentsTree = GetCommentsTree(query);
+
+                var (reviewStatus, filesToReview) = await TaskHelper.WhenAll(
+                    _query.Query(new GetReviewStatus(query._reviewId)),
+                    _query.Query(new GetFilesToReview(query._reviewId, true))
+                );
+
+                var filesSummary = new Dictionary<PathPair, File>();
+
+                foreach (var file in filesToReview.FilesToReview)
+                {
+                    filesSummary.Add(file.Path, new File
+                    {
+                        Review = file,
+                        Summary = new FileReviewSummary.File()
+                    });
+                }
+
+                foreach (var (path, summary) in reviewStatus.FileReviewSummary)
+                {
+                    var matching = filesSummary.Select(x => x.WrapAsNullable()).SingleOrDefault(x => x.Value.Key == path || x.Value.Key.OldPath == path.NewPath);
+
+                    if (matching.HasValue)
+                    {
+                        filesSummary[matching.Value.Key].Summary = summary;
+                    }
+                    else
+                    {
+                        //filesSummary[path] = new File
+                        //{
+                        //    Summary = summary,
+                        //    Review = null
+                        //};
+                    }
+                }
+
                 return new Result
                 {
                     ReviewId = query._reviewId,
-                    Title = mr.Title,
+                    Title = reviewStatus.Title,
                     PastRevisions = pastRevisions,
-                    HasProvisionalRevision = hasProvisionalRevision,
-                    HeadCommit = mr.HeadCommit,
-                    BaseCommit = mr.BaseCommit,
-                    HeadRevision = hasProvisionalRevision ? (RevisionId)new RevisionId.Hash(mr.HeadCommit) : new RevisionId.Selected(pastRevisions.Last().Number),
-                    State = mr.State,
-                    MergeStatus = mr.MergeStatus,
-                    ReviewSummary = GetReviewSummary(query),
+                    HasProvisionalRevision = !reviewStatus.RevisionForCurrentHead,
+                    HeadCommit = reviewStatus.CurrentHead,
+                    BaseCommit = reviewStatus.CurrentBase,
+                    HeadRevision = reviewStatus.RevisionForCurrentHead ? new RevisionId.Selected(pastRevisions.Last().Number) : (RevisionId)new RevisionId.Hash(reviewStatus.CurrentHead),
+                    State = reviewStatus.MergeRequestState,
+                    MergeStatus = reviewStatus.MergeStatus,
+                    ReviewSummary = reviewStatus.FileReviewSummary,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
+                    FilesToReview = filesToReview.FilesToReview,
+                    Files = filesSummary
                 };
             }
 
@@ -132,30 +169,6 @@ namespace Web.Modules.Api.Queries
                     .ToDictionary(x=>x.Value.comment.Id, x => x.Value.comment);
             }
 
-            private IList<object> GetReviewSummary(GetReviewInfo query)
-            {
-                Review review = null;
-                ReviewRevision revision = null;
-                ReviewUser user = null;
-                FileReview file = null;
-
-                return _session.QueryOver(() => review)
-                    .JoinEntityAlias(() => user, () => user.Id == review.UserId)
-                    .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
-                    .Where(() => revision.ReviewId == query._reviewId)
-                    .Left.JoinQueryOver(() => review.Files, () => file, () => file.Status == FileReviewStatus.Reviewed)
-                    .OrderBy(() => file.File.NewPath).Asc
-                    .ThenBy(() => revision.RevisionNumber).Asc
-                    .SelectList(l => l
-                        .Select(() => revision.RevisionNumber)
-                        .Select(() => file.File.NewPath)
-                        .Select(() => user.UserName)
-                        .Select(() => review.UserId)
-                    )
-                    .TransformUsing(new ReviewSummaryTransformer())
-                    .List<object>();
-            }
-
             private object[] GetReviewDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
             {
                 var q = from discussion in _session.Query<ReviewDiscussion>()
@@ -184,40 +197,6 @@ namespace Web.Modules.Api.Queries
                     };
 
                 return q.ToArray();
-            }
-        }
-
-        private class ReviewSummaryTransformer : IResultTransformer
-        {
-            public object TransformTuple(object[] tuple, string[] aliases)
-            {
-                return new Item
-                {
-                    RevisionNumber = (int) tuple[0],
-                    File = (string) tuple[1],
-                    UserName = (string) tuple[2]
-                };
-            }
-
-            public IList TransformList(IList collection)
-            {
-                var q = from item in collection.OfType<Item>()
-                    group item by item.File
-                    into byFile
-                    select new
-                    {
-                        File = byFile.Key,
-                        Revisions = byFile.GroupBy(x => x.RevisionNumber).ToDictionary(x => x.Key.ToString(), x => (object) x.Select(y => y.UserName).ToList())
-                    };
-
-                return q.ToList();
-            }
-
-            private class Item
-            {
-                public int RevisionNumber { get; set; }
-                public string File { get; set; }
-                public string UserName { get; set; }
             }
         }
     }

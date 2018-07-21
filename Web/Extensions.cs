@@ -46,5 +46,16 @@ namespace Web
         }
 
         public static IEnumerable<T> Union<T>(this IEnumerable<T> source, params T[] elements) => source.Union<T>((IEnumerable<T>) elements);
+
+        public static void RemoveRange<T>(this IList<T> list, IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                list.Remove(item);
+            }
+        }
+
+        public static T? WrapAsNullable<T>(this T value)
+            where T : struct => value;
     }
 }

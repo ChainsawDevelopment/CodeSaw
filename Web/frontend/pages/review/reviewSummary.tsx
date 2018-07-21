@@ -5,12 +5,11 @@ import Table from '@ui/collections/Table';
 import Label from '@ui/elements/Label';
 import List from '@ui/elements/List';
 import Popup from '@ui/modules/Popup';
-import * as PathPairs from '../../pathPair';
-import { ReviewInfo, ReviewId } from '../../api/reviewer';
-import { SelectFileForViewHandler } from './rangeInfo';
+import { ReviewInfo, ReviewId, FileToReview, ReviewFiles, ReviewFile, RevisionId } from '../../api/reviewer';
 
 import "./reviewSummary.less";
 import { FileLink } from './FileLink';
+import * as classNames from 'classnames';
 
 const FileRevision = (props: { reviewers: string[] }) => {
     if (props.reviewers.length == 0) {
@@ -36,19 +35,35 @@ const FileRevision = (props: { reviewers: string[] }) => {
     )
 };
 
-const FileRow = (props: { file: PathPairs.PathPair, revisions: number[]; summary: ReviewInfo, reviewId: ReviewId }) => {
-    const fileStatus = props.summary.reviewSummary.find(x => x.file == props.file.newPath) || { revisions: {} };
+const FileRow = (props: { revisions: number[]; hasProvisional: boolean; reviewId: ReviewId; file2: ReviewFile; headCommit: string }) => {
+    const isRevisionMatch = (left: RevisionId, right: RevisionId) => {
+        return left == right 
+            || (left == 'provisional' && right == props.headCommit)
+            || (right == 'provisional' && left == props.headCommit);
+    };
+
+    const classes = (revision: number | 'provisional') => classNames({
+        'revision-status': true,
+        'current': isRevisionMatch(revision, props.file2.review.current),
+        'previous': isRevisionMatch(revision, props.file2.review.previous),
+    });
+
+    const fileStatus = props.file2.summary;
 
     const revisionStatuses = props.revisions.map(r =>
-        <Table.Cell key={r} className='revision-status'>
-            <FileRevision reviewers={fileStatus.revisions[r] || []} />
+        <Table.Cell key={r} className={classes(r)}>
+            <div><FileRevision reviewers={fileStatus.revisionReviewers[r] || []} /></div>
         </Table.Cell>
     );
+
+    if (props.hasProvisional) {
+        revisionStatuses.push(<Table.Cell key={'provisional'} className={classes('provisional')}><div>&nbsp;</div></Table.Cell>);
+    }
 
     return (
         <Table.Row className='file-summary-row'>
             <Table.Cell textAlign='left' className='file-path'>
-                <FileLink reviewId={props.reviewId} path={props.file} />
+                <FileLink reviewId={props.reviewId} path={props.file2.review.path} />
             </Table.Cell>
             {revisionStatuses}
         </Table.Row>
@@ -61,22 +76,30 @@ interface OwnProps {
 
 interface StateProps {
     revisions: number[];
-    files: PathPairs.List;
-    summary: ReviewInfo;
+    hasProvisional: boolean;
+    files: ReviewFiles;
+    headCommit: string;
 }
 
 type Props = StateProps & OwnProps;
 
 
 const reviewSummary = (props: Props) => {
-    const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>)
+    const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>);
 
-    const rows = props.files.map(f => <FileRow
-        key={f.newPath}
-        file={f}
+    if (props.hasProvisional) {
+        headers.push(<Table.HeaderCell key={'provisional'} className='revision'>&perp;</Table.HeaderCell>);
+    }
+
+    const files = Object.keys(props.files).map(f=>props.files[f]);
+
+    const rows = files.map(f => <FileRow
+        key={f.review.path.newPath}
+        file2={f}
         revisions={props.revisions}
-        summary={props.summary}
+        hasProvisional={props.hasProvisional}
         reviewId={props.reviewId}
+        headCommit={props.headCommit}
     />);
 
     return (
@@ -97,8 +120,9 @@ const reviewSummary = (props: Props) => {
 
 const mapStateToProps = (state: RootState): StateProps => ({
     revisions: state.review.currentReview.pastRevisions.map(r => r.number),
-    files: state.review.filesToReview.map(f => f.path),
-    summary: state.review.currentReview
+    hasProvisional: state.review.currentReview.hasProvisionalRevision,
+    files: state.review.currentReview.files,
+    headCommit: state.review.currentReview.headCommit
 });
 
 export default connect(

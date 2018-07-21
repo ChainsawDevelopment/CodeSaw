@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using NHibernate.Criterion;
-using NHibernate.Linq;
+using NHibernate;
 using RepositoryApi;
 using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Commands.PublishElements;
-using Web.Modules.Api.Model;
-using ISession = NHibernate.ISession;
 
 namespace Web.Modules.Api.Commands
 {
