@@ -19,7 +19,10 @@ const ReviewItem = (props: {review: Review}) => {
                     <span className="project">{props.review.project}</span>
                     <span className="review-title"><Link to={`/project/${props.review.reviewId.projectId}/review/${props.review.reviewId.reviewId}`}>{props.review.title}</Link></span>
                 </List.Header>
-                <List.Description>{props.review.changesCount} changes by {props.review.author.givenName}</List.Description>
+                <List.Description>
+                    {props.review.changesCount} changes by {props.review.author.givenName}<br />
+                    Link: <a href={props.review.webUrl}>{props.review.webUrl}</a>
+                </List.Description>
             </List.Content>
         </List.Item>
     );

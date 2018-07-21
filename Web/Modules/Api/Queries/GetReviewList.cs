@@ -14,6 +14,7 @@ namespace Web.Modules.Api.Queries
             public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
             public string Project { get; set; }
+            public string WebUrl { get; set; }
             public int ChangesCount { get; set; }
         }
 
@@ -42,6 +43,7 @@ namespace Web.Modules.Api.Queries
                             Author = mr.Author,
                             Title = mr.Title,
                             Project = $"{project.Namespace}/{project.Name}",
+                            WebUrl = mr.WebUrl,
                             ChangesCount = 12
                         }
                     ).ToList();

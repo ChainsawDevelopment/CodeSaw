@@ -68,7 +68,8 @@ namespace GitLab
                         MergeStatus = mr.MergeStatus,
                         ProjectId = mr.ProjectId,
                         State = mr.State,
-                        Title = mr.Title                        
+                        Title = mr.Title,
+                        WebUrl = mr.WebUrl
                     }).ToList();
                 });
         }
