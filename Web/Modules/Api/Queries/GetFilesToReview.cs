@@ -11,16 +11,18 @@ using Web.Modules.Api.Model;
 
 namespace Web.Modules.Api.Queries
 {
-    public class GetFilesInReview : IQuery<GetFilesInReview.Result>
+    public class GetFilesToReview : IQuery<GetFilesToReview.Result>
     {
         public ReviewIdentifier ReviewId { get; }
+        public bool CurrentUserOnly { get; }
 
-        public GetFilesInReview(ReviewIdentifier reviewId)
+        public GetFilesToReview(ReviewIdentifier reviewId, bool currentUserOnly)
         {
             ReviewId = reviewId;
+            CurrentUserOnly = currentUserOnly;
         }
 
-        public class Handler : IQueryHandler<GetFilesInReview, Result>
+        public class Handler : IQueryHandler<GetFilesToReview, Result>
         {
             private readonly ReviewUser _currentUser;
             private readonly IQueryRunner _query;
@@ -33,7 +35,7 @@ namespace Web.Modules.Api.Queries
                 _api = api;
             }
 
-            public async Task<Result> Execute(GetFilesInReview query)
+            public async Task<Result> Execute(GetFilesToReview query)
             {
                 var reviewStatus = await _query.Query(new GetReviewStatus(query.ReviewId));
 
@@ -54,19 +56,38 @@ namespace Web.Modules.Api.Queries
 
                 var fullDiff = await _api.GetDiff(query.ReviewId.ProjectId, reviewStatus.CurrentBase, reviewStatus.CurrentHead);
 
-                var fileStatuses = reviewStatus.FileStatuses;
+                var fileStatuses = reviewStatus.FileReviewSummary;
+
+                if (query.CurrentUserOnly)
+                {
+                    fileStatuses = fileStatuses.LimitToUser(_currentUser.UserName);
+                }
 
                 var lastReviewed = fileStatuses
-                    .Where(x => x.ReviewedBy == _currentUser.Id)
-                    .Where(x => x.Status == FileReviewStatus.Reviewed)
-                    .GroupBy(x => x.Path)
-                    .ToDictionary(x => PathPair.Make(x.Key), x => x.Max(y => y.RevisionNumber));
+                    .ToDictionary(x => x.Key, x => x.Value.RevisionReviewers.Keys.Max());
 
                 var filesToReview = new List<FileToReview>();
 
-                var allFiles = fullDiff.Select(x => x.Path)
-                    .Union(fileStatuses.Select(x => PathPair.Make(x.Path)))
-                    .Distinct();
+                var allFiles = lastReviewed.Keys.ToList();
+
+                foreach (var fileFromDiff in fullDiff)
+                {
+                    if (allFiles.Contains(fileFromDiff.Path))
+                    {
+                        continue;
+                    }
+
+                    var matching = allFiles.SingleOrDefault(x => x.NewPath == fileFromDiff.Path.OldPath);
+                    if (matching == null)
+                    {
+                        allFiles.Add(fileFromDiff.Path); // new file
+                    }
+                    else if (matching != fileFromDiff.Path)
+                    {
+                        var idx = allFiles.IndexOf(matching);
+                        allFiles[idx] = matching.WithNewName(fileFromDiff.Path.NewPath); // rename
+                    }
+                }
 
                 foreach (var file in allFiles)
                 {
@@ -74,6 +95,10 @@ namespace Web.Modules.Api.Queries
                     if (lastReviewed.TryGetValue(file, out var revision))
                     {
                         baseRevision = new RevisionId.Selected(revision);
+                    }
+                    else if(lastReviewed.TryGetValue(PathPair.Make(file.OldPath), out var revision2))
+                    {
+                        baseRevision = new RevisionId.Selected(revision2);
                     }
                     else
                     {
@@ -91,13 +116,44 @@ namespace Web.Modules.Api.Queries
 
                 var ranges = filesToReview
                     .Select(x => (Base: x.Previous, Head: x.Current))
+                    .Where(x => revisions[x.Base] != revisions[currentRevision])
                     .Distinct();
 
                 var diffs = await ranges
                     .Select(async range => (Range: range, Diff: await _api.GetDiff(query.ReviewId.ProjectId, revisions[range.Base].HeadCommit, revisions[range.Head].HeadCommit)))
                     .WhenAll()
                     .ToDictionaryAsync(x => x.Range, x => x.Diff);
-                    
+
+                diffs[(currentRevision, currentRevision)] = new List<FileDiff>();
+
+                foreach (var (range, diff) in diffs)
+                {
+                    foreach (var fileDiff in diff)
+                    {
+                        if (!fileDiff.RenamedFile)
+                        {
+                            continue;
+                        }
+
+                        var renameTarget = filesToReview.SingleOrDefault(f => f.Previous == range.Base && f.Current == range.Head && fileDiff.Path.OldPath == f.Path.NewPath);
+
+                        if (renameTarget == null)
+                        {
+                            Console.WriteLine("Unmatched rename");
+                            continue;
+                        }
+
+                        Console.WriteLine("Renamed detecte");
+
+                        var toRemove = filesToReview.Single(x => 
+                                x.Previous is RevisionId.Base
+                                && x.Current == range.Head && x.Path == PathPair.Make(fileDiff.Path.NewPath));
+
+                        filesToReview.Remove(toRemove);
+                        
+                        renameTarget.Path = renameTarget.Path.WithNewName(fileDiff.Path.NewPath);
+                    }
+                }
 
                 foreach (var fileToReview in filesToReview)
                 {
@@ -105,9 +161,18 @@ namespace Web.Modules.Api.Queries
 
                     var diff = diffs[range];
 
-                    var fileChanged = diff.Any(x => x.Path.OldPath == fileToReview.Path.NewPath);
+                    var fileChanged = diff.SingleOrDefault(x => fileToReview.Path == x.Path);
 
-                    fileToReview.HasChanges = fileChanged;
+                    fileToReview.RecordDiff(fileChanged);
+                }
+
+                foreach (var fileToReview in filesToReview)
+                {
+                    fileToReview.Previous = fileToReview.Previous.Resolve<RevisionId>(
+                        resolveBase: () => new RevisionId.Hash(reviewStatus.CurrentBase),
+                        resolveSelected: s => s,
+                        resolveHash: h => h
+                    );
                 }
 
                 return new Result
@@ -129,7 +194,29 @@ namespace Web.Modules.Api.Queries
             public RevisionId Current { get; set; }
             public bool HasChanges { get; set; }
 
+            public bool IsDeletedFile { get; set; }
+
+            public bool IsNewFile { get; set; }
+
+            public bool IsRenamedFile { get; set; }
+
             public override string ToString() => $"{Path.NewPath} {Previous} -> {Current} (changes: {HasChanges})";
+
+
+            public void RecordDiff(FileDiff fileChanged)
+            {
+                if (fileChanged == null)
+                {
+                    HasChanges = false;
+                    Current = Previous;
+                    return;
+                }
+
+                HasChanges = true;
+                IsRenamedFile = fileChanged.RenamedFile;
+                IsNewFile = fileChanged.NewFile;
+                IsDeletedFile = fileChanged.DeletedFile;
+            }
         }
     }
 

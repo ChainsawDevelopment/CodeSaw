@@ -108,15 +108,22 @@ export interface ReviewInfo {
     headRevision: RevisionId;
     state: ReviewInfoState;
     mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
-    reviewSummary: {
-        file: string;
-        revisions: {
-            [revision: number]: string[];
-        }
-    }[];
-
     fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
+    files: ReviewFiles;
+}
+
+export interface ReviewFiles {
+    [file: string]: ReviewFile;
+}
+
+export interface ReviewFile {
+    summary: {
+        revisionReviewers: {
+            [revision: number]: string[];
+        }
+    };
+    review: FileToReview;
 }
 
 export interface CommentReply {
@@ -171,6 +178,9 @@ export interface FileToReview {
     previous: RevisionId;
     current: RevisionId;
     hasChanges: boolean;
+    isRenamedFile: boolean;
+    isNewFile: boolean;
+    isDeletedFile: boolean;
 }
 
 export interface FilesToReview {
@@ -207,20 +217,20 @@ export class ReviewerApi {
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(r => r.json())
-            .then(r => r as ReviewInfo)
-            .then(ri => {
-                for (let item of ri.reviewSummary) {
-                    const converted = {};
+            .then(r => r as ReviewInfo);
+            // .then(ri => {
+            //     for (let item of ri.reviewSummary) {
+            //         const converted = {};
 
-                    for (let rev of Object.keys(item.revisions)) {
-                        converted[parseInt(rev)] = item.revisions[rev];
-                    }
+            //         for (let rev of Object.keys(item.revisions)) {
+            //             converted[parseInt(rev)] = item.revisions[rev];
+            //         }
 
-                    item.revisions = converted;
-                }
+            //         item.revisions = converted;
+            //     }
 
-                return ri;
-            });
+            //     return ri;
+            // });
     }
 
     public createGitLabLink = (reviewId: ReviewId) => {

@@ -110,10 +110,11 @@ class reviewPage extends React.Component<Props> {
         };
 
         const selectFileForView = () => {
-            const fullPath = props.filesToReview.find(f => f.path.newPath == props.fileName).path;
-
-            props.selectFileForView(fullPath);
-            this.onShowFile();
+            const file = props.currentReview.files[props.fileName];
+            if (file != null) {
+                props.selectFileForView(file.review.path);
+                this.onShowFile();
+            }
         };
 
         const commentActions: CommentsActions = {
@@ -149,23 +150,25 @@ class reviewPage extends React.Component<Props> {
                             />
                             <Divider />
 
-                            <Grid columns={2}>
+                            <Grid columns={1}>
                                 <Grid.Row>
                                     <Grid.Column>
                                         <ReviewSummary
                                             reviewId={props.reviewId}
                                         />
                                     </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row>
                                     <Grid.Column>
                                         <FilesToReview />
                                     </Grid.Column>
                                 </Grid.Row>
                             </Grid>
 
-                            <CommentsView 
-                                comments={comments} 
-                                actions={commentActions} 
-                                unpublishedReplies={props.unpublishedReplies} 
+                            <CommentsView
+                                comments={comments}
+                                actions={commentActions}
+                                unpublishedReplies={props.unpublishedReplies}
                                 currentUser={props.currentUser}
                             />
 
@@ -200,7 +203,7 @@ class reviewPage extends React.Component<Props> {
 const mapStateToProps = (state: RootState): StateProps => ({
     currentUser: state.currentUser,
     currentReview: state.review.currentReview,
-    filesToReview: state.review.filesToReview,
+    filesToReview: state.review.reviewableFiles.map(f => f.review),
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
@@ -217,11 +220,11 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
-    publishReview: () => dispatch(publishReview({fileToLoad: ownProps.fileName})),
+    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileName })),
     startFileDiscussion: (path, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution, currentUser })),
     startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
-    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({rootCommentId})),
-    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({rootCommentId})),
+    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({ rootCommentId })),
+    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({ rootCommentId })),
     addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
 });
 

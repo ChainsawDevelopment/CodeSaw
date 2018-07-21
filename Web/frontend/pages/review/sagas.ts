@@ -10,9 +10,8 @@ import {
     mergePullRequest,
     MergePullRequestArgs,
     PublishReviewArgs,
-    loadedFilesToReview
 } from './state';
-import { Action, ActionCreator } from "typescript-fsa";
+import { Action } from "typescript-fsa";
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment, RevisionRangeInfo, FilesToReview } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
@@ -56,31 +55,22 @@ function* loadReviewInfoSaga() {
 
         yield put(loadedReviewInfo(info));
 
-        const filesToReview: FilesToReview = yield api.getFilesToReview(action.payload.reviewId);
-
-        yield put(loadedFilesToReview(filesToReview.filesToReview))
-
         let newRange: RevisionRange = {
             previous: 'base',
             current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1].number
         }
 
         if (currentReview && action.payload.reviewId.projectId == currentReview.projectId && action.payload.reviewId.reviewId == currentReview.reviewId) {
-            // if (currentRange != null) {
-            //     newRange = currentRange;
-            // }
-
-            if (newRange.current == 'provisional' && !info.hasProvisionalRevision) {
+            if(newRange.current == 'provisional' && !info.hasProvisionalRevision) {
                 newRange.current = info.pastRevisions[info.pastRevisions.length - 1].number;
             }
         }
 
         if (action.payload.fileToPreload) {
-            // const rangeInfo: Action<RevisionRangeInfo> = yield take(loadedRevisionsRangeInfo);
-
-            const fullPath = filesToReview.filesToReview.find(f => f.path.newPath == action.payload.fileToPreload).path;
-
-            yield put(selectFileForView({path: fullPath}));
+            const file = info.files[action.payload.fileToPreload];
+            if(file != null) {
+                yield put(selectFileForView({path: file.review.path}));
+            }
         }
     }
 }

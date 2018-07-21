@@ -2,7 +2,7 @@ import * as React from "react";
 import Table from '@ui/collections/Table';
 import { connect } from "react-redux";
 import { RootState } from "../../rootState";
-import { FileToReview } from "../../api/reviewer";
+import { FileToReview, ReviewFiles, ReviewFile } from "../../api/reviewer";
 
 const FileRow = (props: { file: FileToReview }) => {
     const { file } = props;
@@ -18,13 +18,13 @@ const FileRow = (props: { file: FileToReview }) => {
 }
 
 interface StateProps {
-    filesToReview: FileToReview[];
+    files: ReviewFile[];
 }
 
 type Props = StateProps;
 
 const filesToReview = (props: Props): JSX.Element => {
-    const files = props.filesToReview.map(f => <FileRow key={f.path.newPath} file={f} />)
+    const files = props.files.map(f => <FileRow key={f.review.path.newPath} file={f.review} />)
 
     return (
         <div className="files-to-review">
@@ -47,6 +47,6 @@ const filesToReview = (props: Props): JSX.Element => {
 
 export default connect(
     (state: RootState): StateProps => ({
-        filesToReview: state.review.filesToReview
+        files: Object.keys(state.review.currentReview.files).map(f => state.review.currentReview.files[f])
     })
 )(filesToReview);

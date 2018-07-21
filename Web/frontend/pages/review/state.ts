@@ -13,6 +13,8 @@ import {
     ReviewAuthor,
     CommentReply,
     FileToReview,
+    FilesToReview,
+    ReviewFile,
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
@@ -20,14 +22,12 @@ import * as PathPairs from '../../pathPair';
 export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
-    // treeEntry: ChangedFile;
     fileToReview: FileToReview;
 }
 
 export interface ReviewState {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
-    filesToReview: FileToReview[];
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussions: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
@@ -36,6 +36,7 @@ export interface ReviewState {
     nextReplyId: number;
     nextDiscussionCommentId: number;
     filesReviewedByUser: PathPairs.List;
+    reviewableFiles: ReviewFile[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -46,8 +47,6 @@ export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
-
-export const loadedFilesToReview = createAction<FileToReview[]>('LOADED_FILES_TO_REVIEW');
 
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
@@ -98,11 +97,10 @@ const initial: ReviewState = {
         headRevision: '',
         state: 'opened',
         mergeStatus: 'unchecked',
-        reviewSummary: [],
         fileDiscussions: [],
-        reviewDiscussions: []
+        reviewDiscussions: [],
+        files: {},
     },
-    filesToReview: [],
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
@@ -110,20 +108,20 @@ const initial: ReviewState = {
     unpublishedResolvedDiscussions: [],
     unpublishedReplies: [],
     nextReplyId: 0,
-    filesReviewedByUser: []
+    filesReviewedByUser: [],
+    reviewableFiles: [],
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
     if (selectFileForView.match(action)) {
-        // const treeEntry = state.rangeInfo.changes.find(x => x.path.newPath == action.payload.path.newPath);
-        const fileToReview = state.filesToReview.find(x => PathPairs.equal(x.path, action.payload.path))
+        const { files } = state.currentReview;
+        const file = Object.keys(files).map(x => files[x].review).find(x => PathPairs.equal(x.path, action.payload.path));
         return {
             ...state,
             selectedFile: {
                 ...state.selectedFile,
                 path: action.payload.path,
-                // treeEntry: treeEntry,
-                fileToReview: fileToReview
+                fileToReview: file,
             }
         };
     }
@@ -139,26 +137,20 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (loadedReviewInfo.match(action)) {
+        const files = Object.keys(action.payload.files).map(f => action.payload.files[f])
+
+        const fileInCurrentRevision = files.filter(f => f.review.current == action.payload.headCommit || f.review.current == action.payload.headRevision);
+        const reviewedFiles = fileInCurrentRevision.filter(f => !f.review.hasChanges).map(f => f.review.path)
+        
         return {
             ...state,
             currentReview: action.payload,
+            reviewedFiles: reviewedFiles,
+            reviewableFiles: fileInCurrentRevision,
             unpublishedFileDiscussions: [],
             unpublishedReviewDiscussions: [],
             unpublishedResolvedDiscussions: [],
-            unpublishedReplies: []
-        };
-    }
-
-    if (loadedFilesToReview.match(action)) {
-        const reviewedFiles = action.payload
-                .filter(f => !f.hasChanges)
-                .map(f => f.path);
-
-        return {
-            ...state,
-            filesToReview: action.payload,
-            filesReviewedByUser: reviewedFiles,
-            reviewedFiles: reviewedFiles,
+            unpublishedReplies: [],
         };
     }
 
