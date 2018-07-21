@@ -121,7 +121,7 @@ namespace Web.Modules.Api.Queries
                         revision = revision.RevisionNumber,
                         comment = new CommentItem
                         {
-                            Author = new UserInfo { Name = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
+                            Author = new UserInfo { GivenName = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
                             Content = discussion.RootComment.Content,
                             Children = Enumerable.Empty<CommentItem>(),
                             CreatedAt = discussion.RootComment.CreatedAt,
@@ -147,7 +147,7 @@ namespace Web.Modules.Api.Queries
                         lineNumber = discussion.LineNumber,
                         comment = new CommentItem
                         {
-                            Author = new UserInfo { Name = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
+                            Author = new UserInfo { GivenName = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
                             Content = discussion.RootComment.Content,
                             Children = Enumerable.Empty<CommentItem>(),
                             CreatedAt = discussion.RootComment.CreatedAt,
