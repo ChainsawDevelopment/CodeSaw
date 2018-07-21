@@ -107,7 +107,7 @@ namespace Web.Modules.Api.Queries
                         {
                             comment = new CommentItem
                             {
-                                Author = new UserInfo { Name = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
+                                Author = new UserInfo { GivenName = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
                                 Content = comment.Content,
                                 CreatedAt = comment.CreatedAt,
                                 State = comment.State.ToString(),

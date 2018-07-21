@@ -52,7 +52,25 @@ namespace GitLab
             return await new RestRequest("/merge_requests", Method.GET)
                 .AddQueryParameter("state", state)
                 .AddQueryParameter("scope", scope)
-                .Execute<List<MergeRequest>>(_client);
+                .Execute<List<GitLabMergeRequest>>(_client)
+                .ContinueWith(x =>
+                {
+                    return x.Result.Select(mr => new MergeRequest
+                    {
+                        Author = new UserInfo
+                        {
+                            Username = mr.Author.Username,
+                            GivenName = mr.Author.Name,
+                            AvatarUrl = mr.Author.AvatarUrl
+                        },
+                        Description = mr.Description,
+                        Id = mr.Iid,
+                        MergeStatus = mr.MergeStatus,
+                        ProjectId = mr.ProjectId,
+                        State = mr.State,
+                        Title = mr.Title                        
+                    }).ToList();
+                });
         }
 
         public async Task<ProjectInfo> Project(int projectId)
