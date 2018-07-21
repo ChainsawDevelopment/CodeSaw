@@ -91,7 +91,7 @@ function* loadReviewInfoSaga() {
                 newRange = currentRange;
             }
 
-            if(newRange.current == 'provisional' && !info.hasProvisionalRevision) {
+            if (newRange.current == 'provisional' && !info.hasProvisionalRevision) {
                 newRange.current = info.pastRevisions[info.pastRevisions.length - 1].number;
             }
         }

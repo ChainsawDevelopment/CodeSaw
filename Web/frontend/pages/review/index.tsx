@@ -143,6 +143,7 @@ class reviewPage extends React.Component<Props> {
                             <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
 
                             <h1>Review {props.currentReview.title}</h1>
+                            <a href={props.currentReview.webUrl}>{props.currentReview.webUrl}</a>
 
                             <MergeApprover
                                 reviewId={props.reviewId}

@@ -72,6 +72,7 @@ export interface Review {
     reviewId: ReviewId;
     project: string;
     title: string;
+    webUrl: string;
     changesCount: number;
     author: ReviewAuthor;
 }
@@ -103,6 +104,7 @@ export interface ReviewInfo {
     hasProvisionalRevision: boolean;
     headCommit: string;
     baseCommit: string;
+    webUrl: string;
     state: ReviewInfoState;
     mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
     reviewSummary: {
