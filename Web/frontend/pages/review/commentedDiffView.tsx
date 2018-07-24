@@ -1,8 +1,9 @@
 import * as React from 'react';
 
 import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffView';
-import { FileDiscussion, RevisionId } from '../../api/reviewer';
+import { FileDiscussion, RevisionId, CommentReply } from '../../api/reviewer';
 import CommentsView, { CommentsActions } from './commentsView';
+import { UserState } from '../../rootState';
 
 export interface LineCommentsActions {
     showCommentsForLine(lineNumber: number): void;
@@ -18,6 +19,8 @@ interface CommentProps {
     leftSideRevision: RevisionId;
     rightSideRevision: RevisionId;
     pendingResolved: string[];
+    unpublishedReplies: CommentReply[];
+    currentUser: UserState;
 }
 
 interface CalculatedProps {
@@ -55,12 +58,11 @@ const buildLineWidgets = (props: Props) => {
     for(let side of ['left', 'right']) {
         for (let [lineNumber, comments] of lineComments[side]) {
             const commentActions: CommentsActions = {
-                add: (content, needResolution, parentId) => {
-                    if (parentId == null) {
-                        props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
-                    } else {
-                        throw 'NotSupported';
-                    }
+                addNew: (content, needResolution) => {
+                    props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
+                },
+                addReply: (parentId, content) => {
+                    props.commentActions.addReply(parentId, content)
                 },
                 resolve: props.commentActions.resolve,
                 unresolve: props.commentActions.unresolve
@@ -73,6 +75,8 @@ const buildLineWidgets = (props: Props) => {
                     <CommentsView
                         comments={comments}
                         actions={commentActions}
+                        unpublishedReplies={props.unpublishedReplies}
+                        currentUser={props.currentUser}
                     />
                 )
             })
@@ -89,6 +93,7 @@ export default (props: Props) => {
         leftSideRevision, 
         rightSideRevision,
         pendingResolved,
+        unpublishedReplies,
         ...diffViewProps 
     } = props;
 

@@ -116,6 +116,12 @@ export interface ReviewInfo {
     reviewDiscussions: ReviewDiscussion[];
 }
 
+export interface CommentReply {
+    id: string;
+    parentId: string;
+    content: string;
+}
+
 export interface ReviewSnapshot {
     reviewId: ReviewId;
     revision: {
@@ -128,16 +134,19 @@ export interface ReviewSnapshot {
     }
     reviewedFiles: PathPairs.PathPair[];
     startedFileDiscussions: {
+        temporaryId: string;
         file: PathPairs.PathPair;
         lineNumber: number;
         content: string;
         needsResolution: boolean;
     }[];
     startedReviewDiscussions: {
+        temporaryId: string;
         needsResolution: boolean;
         content: string;
     }[];
     resolvedDiscussions: string[]; // root comment ids
+    replies: CommentReply[];
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';

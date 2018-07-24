@@ -3,16 +3,26 @@ import { Button, Checkbox, CheckboxProps, Comment as UIComment, Form, Header, Te
 import { Comment } from "../../api/reviewer";
 
 import "./commentsView.less";
+import { UserState } from "../../rootState";
 
 export interface CommentsActions {
-    add(content: string, needsResolution: boolean, parentId?: string);
+    addNew(content: string, needsResolution: boolean);
+    addReply(parentId: string, content: string):void;
     resolve(commentId: string);
     unresolve(commentId: string);
 }
 
+interface Reply {
+    id: string;
+    parentId: string;
+    content: string;
+}
+
 interface CommentsProps {
     comments: Comment[];
+    unpublishedReplies: Reply[];
     actions: CommentsActions;
+    currentUser: UserState;
 }
 
 interface CommentsState {
@@ -75,7 +85,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const form = (
             <Form reply onSubmit={onSubmit}>
                 <Form.TextArea onChange={onChangeReply} value={this.state.replyText} />
-                <Button onClick={() => this.props.actions.add(this.state.replyText, false, this.props.id)} primary>Add Comment</Button>
+                <Button onClick={() => this.props.actions.addReply(this.props.id, this.state.replyText)} primary>Add Comment</Button> 
             </Form>
         );
 
@@ -110,7 +120,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     </UIComment.Metadata>
                     <UIComment.Text>{this.props.content}</UIComment.Text>
                     <UIComment.Actions>
-                        {this.state.replyVisible && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
+                        {true && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
                         {renderStatus()}
                     </UIComment.Actions>
                     {this.state.replyVisible ? form : null}
@@ -119,6 +129,35 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             </UIComment>
         )
     }
+}
+
+const mergeCommentsWithReplies = (
+    comments: Comment[],
+    replies:  Reply[],
+    currentUser: UserState
+): Comment[] => {
+    const result: Comment[] = [];
+
+    const replyToComment = (reply: Reply): Comment => ({
+        id: reply.id,
+        author: currentUser,
+        content: reply.content,
+        state: 'NoActionNeeded',
+        createdAt: '',
+        children: [] as Comment[]
+    });
+
+    for (let item of comments) {
+        result.push({
+            ...item,
+            children: mergeCommentsWithReplies([
+                ...item.children,
+                ...replies.filter(r => r.parentId == item.id).map(replyToComment)
+            ], replies, currentUser)
+        });
+    }
+
+    return result;
 }
 
 export default class CommentsComponent extends React.Component<CommentsProps, CommentsState> {
@@ -132,7 +171,8 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
     }
 
     render(): JSX.Element {
-        const comments = mapComments(this.props.comments, this.props.actions);
+        const commentsWithReplies = mergeCommentsWithReplies(this.props.comments, this.props.unpublishedReplies, this.props.currentUser);
+        const comments = mapComments(commentsWithReplies, this.props.actions);
 
         const onSubmit = () => {
             this.setState({ commentText: '' });
@@ -154,7 +194,7 @@ export default class CommentsComponent extends React.Component<CommentsProps, Co
                 {comments}
                 <Form reply onSubmit={onSubmit}>
                     <Form.TextArea onChange={onChangeReply} value={this.state.commentText} />
-                    <Button onClick={() => this.props.actions.add(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
+                    <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
                     <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                 </Form>
             </UIComment.Group>

@@ -1,4 +1,5 @@
 import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
+
 import {
     RevisionRangeInfo,
     FileDiff,
@@ -9,7 +10,8 @@ import {
     Comment,
     FileDiscussion,
     ReviewDiscussion,
-    ReviewAuthor
+    ReviewAuthor,
+    CommentReply,
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
@@ -29,6 +31,9 @@ export interface ReviewState {
     unpublishedFileDiscussions: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[]; // root comment id
+    unpublishedReplies: CommentReply[];
+    nextReplyId: number;
+    nextDiscussionCommentId: number;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -81,6 +86,7 @@ export const startReviewDiscussion = createAction<{ content: string; needsResolu
 
 export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
 export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
+export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 
 const initial: ReviewState = {
     range: {
@@ -105,7 +111,10 @@ const initial: ReviewState = {
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
-    unpublishedResolvedDiscussions: []
+    nextDiscussionCommentId: 0,
+    unpublishedResolvedDiscussions: [],
+    unpublishedReplies: [],
+    nextReplyId: 0,
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
@@ -153,7 +162,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             currentReview: action.payload,
             unpublishedFileDiscussions: [],
             unpublishedReviewDiscussions: [],
-            unpublishedResolvedDiscussions: []
+            unpublishedResolvedDiscussions: [],
+            unpublishedReplies: []
         };
     }
 
@@ -200,6 +210,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (startFileDiscussion.match(action)) {
         return {
             ...state,
+            nextDiscussionCommentId: state.nextDiscussionCommentId + 1,
             unpublishedFileDiscussions: [
                 ...state.unpublishedFileDiscussions,
                 {
@@ -212,7 +223,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
-                        id: (Math.max(0, ...state.unpublishedFileDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                        id: `FILE-${state.nextDiscussionCommentId}`
                     }
                 }
             ]
@@ -222,6 +233,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (startReviewDiscussion.match(action)) {
         return {
             ...state,
+            nextDiscussionCommentId: state.nextDiscussionCommentId + 1,
             unpublishedReviewDiscussions: [
                 ...state.unpublishedReviewDiscussions,
                 {
@@ -232,7 +244,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
-                        id: (Math.max(0, ...state.unpublishedReviewDiscussions.map(x => Number.parseInt(x.comment.id))) + 1).toString()
+                        id: `REVIEW-${state.nextDiscussionCommentId}`
                     }
                 }
             ]
@@ -256,6 +268,21 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedResolvedDiscussions: [
                 ...state.unpublishedResolvedDiscussions,
                 action.payload.rootCommentId
+            ]
+        };
+    }
+
+    if (replyToComment.match(action)) {
+        return {
+            ...state,
+            nextReplyId: state.nextReplyId + 1,
+            unpublishedReplies: [
+                ...state.unpublishedReplies,
+                {
+                    id: 'REPLY-' + state.nextReplyId,
+                    parentId: action.payload.parentId,
+                    content: action.payload.content
+                }
             ]
         };
     }
