@@ -34,6 +34,8 @@ namespace Web
             return -1;
         }
 
+        public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind) => @this.IndexOf(valueToFind, EqualityComparer<T>.Default);
+
         public static void EnsureKeys<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<TKey> keys, TValue emptyValue)
         {
             foreach (var key in keys)

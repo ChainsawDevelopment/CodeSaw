@@ -26,6 +26,7 @@ using NHibernate.Mapping.ByCode;
 using RepositoryApi;
 using Web.Auth;
 using Web.Cqrs;
+using Web.Modules.Api.Commands.PublishElements;
 
 namespace Web
 {
@@ -85,6 +86,8 @@ namespace Web
 
             builder.RegisterType<SignInManager<ReviewUser>>().AsSelf();
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
+
+            builder.RegisterType<RevisionFactory>().AsSelf();
 
             builder.Register(ctx => Configuration.GetValue<string>("HookSiteBase", null) ?? ctx.ResolveKeyed<string>("SiteBase")).Keyed<string>("HookSiteBase");
 
@@ -148,7 +151,7 @@ namespace Web
             modelMapper.AddMappings(typeof(Startup).Assembly.GetExportedTypes());
 
             var hbm = modelMapper.CompileMappingForAllExplicitlyAddedEntities();
-
+            hbm.DumpHbmXml(@"D:\tmp\hbm.xml");
             configuration.AddMapping(hbm);
 
             return configuration.BuildSessionFactory();

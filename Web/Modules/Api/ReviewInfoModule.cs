@@ -49,6 +49,8 @@ namespace Web.Modules.Api
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
 
             Get("/files", async _ => await query.Query(new GetFilesToReview(ReviewId, false)));
+
+            Get("/matrix", async _ => await query.Query(new GetFileMatrix(ReviewId)));
         }
     }
 }

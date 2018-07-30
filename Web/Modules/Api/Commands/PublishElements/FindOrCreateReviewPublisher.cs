@@ -15,12 +15,14 @@ namespace Web.Modules.Api.Commands.PublishElements
         private readonly ISession _session;
         private readonly IRepository _api;
         private readonly ReviewUser _user;
+        private readonly RevisionFactory _factory;
 
-        public FindOrCreateReviewPublisher(ISession session, IRepository api, [CurrentUser]ReviewUser user)
+        public FindOrCreateReviewPublisher(ISession session, IRepository api, [CurrentUser]ReviewUser user, RevisionFactory factory)
         {
             _session = session;
             _api = api;
             _user = user;
+            _factory = factory;
         }
         
         public async Task<Review> FindOrCreateReview(PublishReview command, ReviewIdentifier reviewId)
@@ -85,17 +87,11 @@ namespace Web.Modules.Api.Commands.PublishElements
                     Console.WriteLine(unexpectedException.ToString());
                 }
 
-                var revisionId = GuidComb.Generate();
-                await _session.SaveAsync(new ReviewRevision
-                {
-                    Id = revisionId,
-                    ReviewId = reviewId,
-                    RevisionNumber = nextNumber,
-                    BaseCommit = commits.Base,
-                    HeadCommit = commits.Head
-                });
+                var revision = await _factory.Create(reviewId, nextNumber, commits.Base, commits.Head);
 
-                return revisionId;
+                await _session.SaveAsync(revision);
+
+                return revision.Id;
             }
 
             private int GetNextRevisionNumber(ReviewIdentifier reviewId)

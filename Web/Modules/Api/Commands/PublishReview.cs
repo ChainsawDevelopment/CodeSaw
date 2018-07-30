@@ -32,20 +32,22 @@ namespace Web.Modules.Api.Commands
             private readonly IRepository _api;
             private readonly ReviewUser _user;
             private readonly IEventBus _eventBus;
+            private readonly RevisionFactory _revisionFactory;
 
-            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus)
+            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory)
             {
                 _session = session;
                 _api = api;
                 _user = user;
                 _eventBus = eventBus;
+                _revisionFactory = revisionFactory;
             }
 
             public override async Task Handle(PublishReview command)
             {
                 var reviewId = new ReviewIdentifier(command.ProjectId, command.ReviewId);
 
-                var review = await new FindOrCreateReviewPublisher(_session, _api, _user).FindOrCreateReview(command, reviewId);
+                var review = await new FindOrCreateReviewPublisher(_session, _api, _user, _revisionFactory).FindOrCreateReview(command, reviewId);
 
                 var newCommentsMap = new Dictionary<string, Guid>();
 
