@@ -31,6 +31,7 @@ namespace Web.Modules.Api.Queries
             public object[] FileDiscussions { get; set; }
             public object[] ReviewDiscussions { get; set; }
             public List<GetFilesToReview.FileToReview> FilesToReview { get; set; }
+            public object FileMatrix { get; set; }
         }
 
         public class Revision
@@ -133,7 +134,8 @@ namespace Web.Modules.Api.Queries
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
                     FilesToReview = filesToReview.FilesToReview,
-                    Files = filesSummary
+                    Files = filesSummary,
+                    FileMatrix = await _query.Query(new GetFileMatrix(query._reviewId))
                 };
             }
 

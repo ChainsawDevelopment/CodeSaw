@@ -36,6 +36,7 @@ import * as PathPairs from "../../pathPair";
 import ReviewSummary from './reviewSummary';
 import CommentsView, { CommentsActions } from './commentsView';
 import FilesToReview from './filesToReview';
+import FileMatrix from './fileMatrix';
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
 import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
@@ -151,6 +152,11 @@ class reviewPage extends React.Component<Props> {
                             <Divider />
 
                             <Grid columns={1}>
+                                <Grid.Row>
+                                    <Grid.Column>
+                                        <FileMatrix />
+                                    </Grid.Column>
+                                </Grid.Row>
                                 <Grid.Row>
                                     <Grid.Column>
                                         <ReviewSummary

@@ -111,6 +111,7 @@ export interface ReviewInfo {
     fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
     files: ReviewFiles;
+    fileMatrix: any;
 }
 
 export interface ReviewFiles {
