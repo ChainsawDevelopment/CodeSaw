@@ -259,9 +259,6 @@ namespace Web.Modules.Api.Queries
             throw new NotImplementedException();
         }
 
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(SortedDictionary<RevisionId, FileMatrix.Status>);
-        }
+        public override bool CanConvert(Type objectType) => true;
     }
 }
