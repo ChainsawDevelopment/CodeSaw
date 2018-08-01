@@ -110,6 +110,7 @@ export interface ReviewInfo {
     reviewDiscussions: ReviewDiscussion[];
     files: ReviewFiles;
     fileMatrix: any;
+    filesToReview2: any;
 }
 
 export interface ReviewFiles {

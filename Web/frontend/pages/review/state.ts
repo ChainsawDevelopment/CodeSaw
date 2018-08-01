@@ -99,7 +99,8 @@ const initial: ReviewState = {
         fileDiscussions: [],
         reviewDiscussions: [],
         files: {},
-        fileMatrix: []
+        fileMatrix: [],
+        filesToReview2: []
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],

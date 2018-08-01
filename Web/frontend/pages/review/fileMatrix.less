@@ -1,5 +1,7 @@
-.file-matrix {
+div.file-matrix table.ui.compact.table {
     .file-revision {
+        padding: 0;
+
         &.changed {
             background-color: bisque;
         }
@@ -10,6 +12,31 @@
         
         &.new {
             background-color: fadeout(lightgreen, 50%);
+        }
+
+        .review-mark {
+            height: 2em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+
+            &.review-inside {
+                border-top: solid black thin;
+                border-bottom: solid black thin;
+            }
+
+            &.review-current {
+                border-right: solid black thin;
+                margin-right: 0.5em;
+                border-top-right-radius: 0.5em;
+                border-bottom-right-radius: 0.5em;
+            }
+
+            &.review-previous {
+                border-left: solid black thin;
+                margin-left: 0.5em;
+                border-top-left-radius: 0.5em;
+                border-bottom-left-radius: 0.5em;
+            }
         }
     }
 }
