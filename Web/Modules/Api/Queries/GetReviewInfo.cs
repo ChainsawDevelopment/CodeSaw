@@ -7,6 +7,7 @@ using RepositoryApi;
 using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Model;
+using Web.Modules.Api.Model.FileMatrixOperations;
 
 namespace Web.Modules.Api.Queries
 {
@@ -16,6 +17,7 @@ namespace Web.Modules.Api.Queries
 
         public class Result
         {
+            public object FilesToReview2 { get; set; }
             public Dictionary<PathPair, File> Files { get; set; }
             public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
@@ -118,8 +120,11 @@ namespace Web.Modules.Api.Queries
                     }
                 }
 
+                var fileMatrix = await _query.Query(new GetFileMatrix(query._reviewId));
                 return new Result
                 {
+                    FilesToReview2 = fileMatrix.FindFilesToReview("mnowak"),
+
                     ReviewId = query._reviewId,
                     Title = reviewStatus.Title,
                     PastRevisions = pastRevisions,
@@ -135,7 +140,7 @@ namespace Web.Modules.Api.Queries
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
                     FilesToReview = filesToReview.FilesToReview,
                     Files = filesSummary,
-                    FileMatrix = await _query.Query(new GetFileMatrix(query._reviewId))
+                    FileMatrix = fileMatrix
                 };
             }
 
