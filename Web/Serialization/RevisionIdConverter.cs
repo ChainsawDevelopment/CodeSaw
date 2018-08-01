@@ -22,7 +22,7 @@ namespace Web.Serialization
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            return RevisionId.Parse(reader.Value.ToString());
         }
 
         public override bool CanConvert(Type objectType) => typeof(RevisionId).IsAssignableFrom(objectType);

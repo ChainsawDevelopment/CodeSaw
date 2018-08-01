@@ -16,14 +16,13 @@ import {
     replyToComment
 } from "./state";
 import {
-    RevisionRangeInfo,
     ReviewInfo,
     ReviewId,
     Comment,
     FileDiscussion,
     ReviewDiscussion,
     CommentReply,
-    FileToReview
+    FileToReview,
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -33,9 +32,7 @@ import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeI
 import MergeApprover from './mergeApprover';
 import "./review.less";
 import * as PathPairs from "../../pathPair";
-import ReviewSummary from './reviewSummary';
 import CommentsView, { CommentsActions } from './commentsView';
-import FilesToReview from './filesToReview';
 import FileMatrix from './fileMatrix';
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
@@ -62,7 +59,6 @@ interface DispatchProps {
 interface StateProps {
     currentUser: UserState;
     currentReview: ReviewInfo;
-    filesToReview: FileToReview[];
     selectedFile: FileInfo;
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussion: FileDiscussion[];
@@ -111,9 +107,9 @@ class reviewPage extends React.Component<Props> {
         };
 
         const selectFileForView = () => {
-            const file = props.currentReview.files[props.fileName];
+            const file = props.currentReview.filesToReview.find(f => f.reviewFile.newPath == props.fileName);
             if (file != null) {
-                props.selectFileForView(file.review.path);
+                props.selectFileForView(file.reviewFile);
                 this.onShowFile();
             }
         };
@@ -158,14 +154,9 @@ class reviewPage extends React.Component<Props> {
                                 </Grid.Row>
                                 <Grid.Row>
                                     <Grid.Column>
-                                        <ReviewSummary
+                                        {/* <ReviewSummary
                                             reviewId={props.reviewId}
-                                        />
-                                    </Grid.Column>
-                                </Grid.Row>
-                                <Grid.Row>
-                                    <Grid.Column>
-                                        <FilesToReview />
+                                        /> */}
                                     </Grid.Column>
                                 </Grid.Row>
                             </Grid>
@@ -184,7 +175,7 @@ class reviewPage extends React.Component<Props> {
                 <Divider />
 
                 <RangeInfo
-                    filesToReview={props.filesToReview}
+                    filesToReview={props.currentReview.filesToReview}
                     selectedFile={selectedFile}
                     onSelectFileForView={props.selectFileForView}
                     reviewFile={props.reviewFile}
@@ -208,7 +199,6 @@ class reviewPage extends React.Component<Props> {
 const mapStateToProps = (state: RootState): StateProps => ({
     currentUser: state.currentUser,
     currentReview: state.review.currentReview,
-    filesToReview: state.review.reviewableFiles.map(f => f.review),
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,

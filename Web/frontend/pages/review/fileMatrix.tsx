@@ -8,8 +8,7 @@ import * as PathPairs from "../../pathPair";
 import * as classNames from "classnames";
 
 import "./fileMatrix.less";
-import { RevisionId } from "../../api/reviewer";
-import reviewMark from "./reviewMark";
+import { FileToReview } from "../../api/reviewer";
 
 interface FileMatrixRevision {
     revision: {
@@ -29,14 +28,7 @@ interface FileMatrixEntry {
 
 type FileMatrix = FileMatrixEntry[];
 
-interface FileToReview2 {
-    reviewFile: PathPair;
-    diffFile: PathPair;
-    previous: RevisionId;
-    current: RevisionId;
-}
-
-type ReviewMark = 'outside' | 'previous' | 'inside' | 'current';
+type ReviewMark = 'outside' | 'previous' | 'inside' | 'current' | 'single';
 
 const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMark }): JSX.Element => {
     const { revision, reviewMark } = props;
@@ -52,9 +44,9 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
 
     const reviewClasses = classNames({
         'review-mark': true,
-        'review-previous': reviewMark == 'previous',
+        'review-previous': reviewMark == 'previous' || reviewMark == 'single',
         'review-inside': reviewMark != 'outside',
-        'review-current': reviewMark == 'current',
+        'review-current': reviewMark == 'current' || reviewMark == 'single',
     });
 
     return (
@@ -64,9 +56,11 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
     )
 };
 
-const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview2 }): JSX.Element => {
-    const { file, revisions } = props.file;
+const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview }): JSX.Element => {
+    const { file } = props.file;
     const { review } = props;
+
+    const revisions = props.file.revisions.concat([]);
 
     const revisionCells = [];
 
@@ -88,7 +82,14 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview2 }): JSX
             reviewMark = 'inside';
         } else if (reviewMark == 'current') {
             reviewMark = 'outside';
-        } else if (r.revision.value == review.previous) {
+        } else if (reviewMark == 'single') {
+            reviewMark = 'outside';
+        }
+        
+        if (r.revision.value == review.previous && r.revision.value == review.current) {
+            reviewMark = 'single';
+        }
+        else if (r.revision.value == review.previous) {
             reviewMark = 'previous';
         } else if (r.revision.value == review.current) {
             reviewMark = 'current';
@@ -113,7 +114,7 @@ interface StateProps {
     matrix: FileMatrix;
     revisions: number[];
     hasProvisional: boolean;
-    filesToReview: FileToReview2[];
+    filesToReview: FileToReview[];
 }
 
 type Props = StateProps;
@@ -155,7 +156,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     matrix: state.review.currentReview.fileMatrix || [],
     revisions: state.review.currentReview.pastRevisions.map(r => r.number),
     hasProvisional: state.review.currentReview.hasProvisionalRevision,
-    filesToReview: state.review.currentReview.filesToReview2 || [],
+    filesToReview: state.review.currentReview.filesToReview || [],
 });
 
 export default connect(mapStateToProps)(fileMatrixComponent);

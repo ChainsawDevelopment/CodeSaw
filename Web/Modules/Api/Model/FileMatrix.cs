@@ -53,7 +53,7 @@ namespace Web.Modules.Api.Model
 
         private Entry FindOrCreateEntry(RevisionFile file)
         {
-            var entry = Find(f => f.File == file.File);
+            var entry = Find(f => f.File.NewPath == file.File.OldPath);
 
             if (entry == null)
             {
@@ -98,6 +98,7 @@ namespace Web.Modules.Api.Model
             public bool IsRenamed { get; set; }
             public bool IsDeleted { get; set; }
             public bool IsUnchanged { get; set; }
+            public HashSet<string> Reviewers { get; } = new HashSet<string>();
 
             public static Status From(RevisionFile file) => new Status
             {

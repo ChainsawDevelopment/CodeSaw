@@ -41,6 +41,7 @@ namespace Web.Modules.Api.Commands.PublishElements
                         parentId = Guid.Parse(item.ParentId);
                     }
 
+
                     await _session.SaveAsync(new Comment
                     {
                         Id = id,

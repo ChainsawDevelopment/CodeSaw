@@ -14,3 +14,5 @@ export const contains = (list: List, path: PathPair) => {
 
     return idx >= 0;
 }
+
+export const make = (path: string):PathPair => ( {oldPath: path, newPath: path} );

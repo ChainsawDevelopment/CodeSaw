@@ -17,8 +17,7 @@ namespace Web.Modules.Api.Queries
 
         public class Result
         {
-            public object FilesToReview2 { get; set; }
-            public Dictionary<PathPair, File> Files { get; set; }
+            public object FilesToReview { get; set; }
             public ReviewIdentifier ReviewId { get; set; }
             public string Title { get; set; }
             public Revision[] PastRevisions { get; set; }
@@ -26,12 +25,10 @@ namespace Web.Modules.Api.Queries
             public string HeadCommit { get; set; }
             public RevisionId HeadRevision { get; set; }
             public string BaseCommit { get; set; }
-            public object ReviewSummary { get; set; }
             public MergeStatus MergeStatus { get; set; }
             public MergeRequestState State { get; set; }
             public object[] FileDiscussions { get; set; }
             public object[] ReviewDiscussions { get; set; }
-            public List<GetFilesToReview.FileToReview> FilesToReview { get; set; }
             public object FileMatrix { get; set; }
         }
 
@@ -52,12 +49,6 @@ namespace Web.Modules.Api.Queries
             public List<CommentItem> Children { get; set; } = new List<CommentItem>();
         }
 
-        public class File
-        {
-            public FileReviewSummary.File Summary { get; set; }
-            public GetFilesToReview.FileToReview Review { get; set; }
-        }
-
         public GetReviewInfo(int projectId, int reviewId)
         {
             _reviewId = new ReviewIdentifier(projectId, reviewId);
@@ -67,11 +58,13 @@ namespace Web.Modules.Api.Queries
         {
             private readonly ISession _session;
             private readonly IQueryRunner _query;
+            private readonly ReviewUser _currentUser;
 
-            public Handler(ISession session, IQueryRunner query)
+            public Handler(ISession session, IQueryRunner query, [CurrentUser]ReviewUser currentUser)
             {
                 _session = session;
                 _query = query;
+                _currentUser = currentUser;
             }
 
             public async Task<Result> Execute(GetReviewInfo query)
@@ -85,44 +78,13 @@ namespace Web.Modules.Api.Queries
 
                 var commentsTree = GetCommentsTree(query);
 
-                var (reviewStatus, filesToReview) = await TaskHelper.WhenAll(
-                    _query.Query(new GetReviewStatus(query._reviewId)),
-                    _query.Query(new GetFilesToReview(query._reviewId, true))
-                );
+                var reviewStatus = await _query.Query(new GetReviewStatus(query._reviewId));
 
-                var filesSummary = new Dictionary<PathPair, File>();
-
-                foreach (var file in filesToReview.FilesToReview)
-                {
-                    filesSummary.Add(file.Path, new File
-                    {
-                        Review = file,
-                        Summary = new FileReviewSummary.File()
-                    });
-                }
-
-                foreach (var (path, summary) in reviewStatus.FileReviewSummary)
-                {
-                    var matching = filesSummary.Select(x => x.WrapAsNullable()).SingleOrDefault(x => x.Value.Key == path || x.Value.Key.OldPath == path.NewPath);
-
-                    if (matching.HasValue)
-                    {
-                        filesSummary[matching.Value.Key].Summary = summary;
-                    }
-                    else
-                    {
-                        //filesSummary[path] = new File
-                        //{
-                        //    Summary = summary,
-                        //    Review = null
-                        //};
-                    }
-                }
 
                 var fileMatrix = await _query.Query(new GetFileMatrix(query._reviewId));
                 return new Result
                 {
-                    FilesToReview2 = fileMatrix.FindFilesToReview("mnowak"),
+                    FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName),
 
                     ReviewId = query._reviewId,
                     Title = reviewStatus.Title,
@@ -133,11 +95,8 @@ namespace Web.Modules.Api.Queries
                     HeadRevision = reviewStatus.RevisionForCurrentHead ? new RevisionId.Selected(pastRevisions.Last().Number) : (RevisionId)new RevisionId.Hash(reviewStatus.CurrentHead),
                     State = reviewStatus.MergeRequestState,
                     MergeStatus = reviewStatus.MergeStatus,
-                    ReviewSummary = reviewStatus.FileReviewSummary,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
-                    FilesToReview = filesToReview.FilesToReview,
-                    Files = filesSummary,
                     FileMatrix = fileMatrix
                 };
             }

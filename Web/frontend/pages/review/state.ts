@@ -1,20 +1,15 @@
-import { actionCreatorFactory, AnyAction, isType } from 'typescript-fsa';
+import { actionCreatorFactory, AnyAction } from 'typescript-fsa';
 
 import {
-    RevisionRangeInfo,
     FileDiff,
     ReviewInfo,
-    RevisionRange,
     ReviewId,
-    ChangedFile,
     Comment,
     FileDiscussion,
     ReviewDiscussion,
-    ReviewAuthor,
     CommentReply,
     FileToReview,
-    FilesToReview,
-    ReviewFile,
+    RevisionId
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
@@ -25,18 +20,22 @@ export interface FileInfo {
     fileToReview: FileToReview;
 }
 
+export interface FileReviewStatusChange {
+    [revision: string]: PathPairs.List;
+}
+
 export interface ReviewState {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
     reviewedFiles: PathPairs.List;
-    unpublishedFileDiscussions: FileDiscussion[];
-    unpublishedReviewDiscussions: ReviewDiscussion[];
+    unpublishedFileDiscussions: (FileDiscussion)[];
+    unpublishedReviewDiscussions: (ReviewDiscussion)[];
     unpublishedResolvedDiscussions: string[]; // root comment id
     unpublishedReplies: CommentReply[];
+    unpublishedReviewedFiles: FileReviewStatusChange;
+    unpublishedUnreviewedFiles: FileReviewStatusChange;
     nextReplyId: number;
     nextDiscussionCommentId: number;
-    filesReviewedByUser: PathPairs.List;
-    reviewableFiles: ReviewFile[];
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -98,9 +97,8 @@ const initial: ReviewState = {
         mergeStatus: 'unchecked',
         fileDiscussions: [],
         reviewDiscussions: [],
-        files: {},
         fileMatrix: [],
-        filesToReview2: []
+        filesToReview: []
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
@@ -109,14 +107,14 @@ const initial: ReviewState = {
     unpublishedResolvedDiscussions: [],
     unpublishedReplies: [],
     nextReplyId: 0,
-    filesReviewedByUser: [],
-    reviewableFiles: [],
+    unpublishedReviewedFiles: {},
+    unpublishedUnreviewedFiles: {},
 };
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
     if (selectFileForView.match(action)) {
-        const { files } = state.currentReview;
-        const file = Object.keys(files).map(x => files[x].review).find(x => PathPairs.equal(x.path, action.payload.path));
+        const file = state.currentReview.filesToReview.find(f => PathPairs.equal(f.reviewFile, action.payload.path));
+
         return {
             ...state,
             selectedFile: {
@@ -138,45 +136,95 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (loadedReviewInfo.match(action)) {
-        const files = Object.keys(action.payload.files).map(f => action.payload.files[f])
+        const reviewedFiles = action.payload.filesToReview.filter(f => f.current == f.previous);
 
-        const fileInCurrentRevision = files.filter(f => f.review.current == action.payload.headCommit || f.review.current == action.payload.headRevision);
-        const reviewedFiles = fileInCurrentRevision.filter(f => !f.review.hasChanges).map(f => f.review.path)
-        
         return {
             ...state,
             currentReview: action.payload,
-            reviewedFiles: reviewedFiles,
-            reviewableFiles: fileInCurrentRevision,
+            reviewedFiles: reviewedFiles.map(f => f.reviewFile),
             unpublishedFileDiscussions: [],
             unpublishedReviewDiscussions: [],
             unpublishedResolvedDiscussions: [],
             unpublishedReplies: [],
+            unpublishedReviewedFiles: {},
+            unpublishedUnreviewedFiles: {},
         };
     }
 
     if (reviewFile.match(action)) {
-        if (PathPairs.contains(state.reviewedFiles, action.payload.path)) {
+        const file = state.currentReview.filesToReview.find(f => f.reviewFile == action.payload.path);
+
+        if (PathPairs.contains(state.reviewedFiles, file.reviewFile)) {
             return state;
+        }
+
+        let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
+        let unreviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
+
+        const fileId = PathPairs.make(file.diffFile.newPath);
+
+        const idxInReviewed = reviewList.findIndex(f => PathPairs.equal(f, fileId));
+        const idxInUnreviewed = unreviewList.findIndex(f => PathPairs.equal(f, fileId));
+
+        if (idxInUnreviewed >= 0 && idxInReviewed == -1) {
+            unreviewList.splice(idxInUnreviewed, 1);
+        } else if (idxInUnreviewed == -1 && idxInReviewed == -1) {
+            reviewList = [...reviewList, fileId];
+        } else {
+            throw new Error('Holy crap...');
         }
 
         return {
             ...state,
             reviewedFiles: [
                 ...state.reviewedFiles,
-                action.payload.path
-            ]
+                file.reviewFile
+            ],
+            unpublishedReviewedFiles: {
+                ...state.unpublishedReviewedFiles,
+                [file.current]: reviewList
+            },
+            unpublishedUnreviewedFiles: {
+                ...state.unpublishedUnreviewedFiles,
+                [file.current]: unreviewList
+            },
         };
     }
 
     if (unreviewFile.match(action)) {
-        if (!PathPairs.contains(state.reviewedFiles, action.payload.path)) {
+        const file = state.currentReview.filesToReview.find(f => f.reviewFile == action.payload.path);
+
+        if (!PathPairs.contains(state.reviewedFiles, file.reviewFile)) {
             return state;
+        }
+
+        let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
+        let unreviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
+
+        const fileId = PathPairs.make(file.diffFile.newPath);
+
+        const idxInReviewed = reviewList.findIndex(f => PathPairs.equal(f, fileId));
+        const idxInUnreviewed = unreviewList.findIndex(f => PathPairs.equal(f, fileId));
+
+        if (idxInUnreviewed == -1 && idxInReviewed >= 0) {
+            reviewList.splice(idxInReviewed, 1);
+        } else if (idxInUnreviewed == -1 && idxInReviewed == -1) {
+            unreviewList = [...unreviewList, fileId];
+        } else {
+            throw new Error('Holy crap...');
         }
 
         return {
             ...state,
-            reviewedFiles: state.reviewedFiles.filter(v => v.newPath != action.payload.path.newPath)
+            reviewedFiles: state.reviewedFiles.filter(v => !PathPairs.equal(v, file.reviewFile)),
+            unpublishedReviewedFiles: {
+                ...state.unpublishedReviewedFiles,
+                [file.current]: reviewList
+            },
+            unpublishedUnreviewedFiles: {
+                ...state.unpublishedUnreviewedFiles,
+                [file.current]: unreviewList
+            },
         };
     }
 
@@ -202,7 +250,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedFileDiscussions: [
                 ...state.unpublishedFileDiscussions,
                 {
-                    revision: state.currentReview.headRevision,
+                    revision: state.selectedFile.fileToReview.current,
                     filePath: action.payload.path,
                     lineNumber: action.payload.lineNumber,
                     comment: {

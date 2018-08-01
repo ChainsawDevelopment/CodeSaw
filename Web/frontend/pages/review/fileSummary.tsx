@@ -4,19 +4,19 @@ import * as React from "react";
 import Message from '@ui/collections/Message';
 
 const describeFileOperations = (treeEntry: FileToReview): JSX.Element => {
-    const { path } = treeEntry;
+    const { changeType, diffFile:path } = treeEntry;
 
-    if (treeEntry.isRenamedFile) {
+    if (changeType == 'renamed') {
         return (
             <div key="renamed" className="file-operations">File renamed: <pre>{path.oldPath}</pre> &rarr; <pre>{path.newPath}</pre></div>
         );
     }
-    else if (treeEntry.isDeletedFile) {
+    else if (changeType == 'deleted') {
         return (
             <div key="deleted" className="file-operations">File deleted: <pre>{path.oldPath}</pre></div>
         );
     }
-    else if (treeEntry.isNewFile) {
+    else if (changeType == 'created') {
         return (
             <div key="created" className="file-operations">File created: <pre>{path.newPath}</pre></div>
         );
@@ -44,7 +44,7 @@ export default (props: {file: FileInfo}): JSX.Element => {
                 <div>Show diff 
                     <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.previous}</pre> </strong>
                     to <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.current}</pre> </strong>
-                    changes: <strong>{props.file.fileToReview.hasChanges ? "YES" : "NO"}</strong> 
+                    {/* changes: <strong>{props.file.fileToReview.hasChanges ? "YES" : "NO"}</strong>  */}
                 </div>
                 {items}
             </Message.Content>

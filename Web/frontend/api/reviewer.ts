@@ -92,6 +92,14 @@ export interface ReviewDiscussion
     comment: Comment;
 }
 
+export interface FileToReview {
+    reviewFile: PathPairs.PathPair;
+    diffFile: PathPairs.PathPair;
+    previous: RevisionId;
+    current: RevisionId;
+    changeType: 'modified' | 'renamed' | 'created' | 'deleted';
+}
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -108,22 +116,8 @@ export interface ReviewInfo {
     mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
     fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
-    files: ReviewFiles;
     fileMatrix: any;
-    filesToReview2: any;
-}
-
-export interface ReviewFiles {
-    [file: string]: ReviewFile;
-}
-
-export interface ReviewFile {
-    summary: {
-        revisionReviewers: {
-            [revision: number]: string[];
-        }
-    };
-    review: FileToReview;
+    filesToReview: FileToReview[];
 }
 
 export interface CommentReply {
@@ -138,8 +132,8 @@ export interface ReviewSnapshot {
         head: string,
         base: string
     };
-    reviewedFiles: PathPairs.PathPair[];
     startedFileDiscussions: {
+        targetRevisionId: RevisionId;
         temporaryId: string;
         file: PathPairs.PathPair;
         lineNumber: number;
@@ -147,12 +141,19 @@ export interface ReviewSnapshot {
         needsResolution: boolean;
     }[];
     startedReviewDiscussions: {
+        targetRevisionId: RevisionId;
         temporaryId: string;
         needsResolution: boolean;
         content: string;
     }[];
     resolvedDiscussions: string[]; // root comment ids
     replies: CommentReply[];
+    reviewedFiles: {
+        [revision: string]: PathPairs.List;
+    };
+    unreviewedFiles: {
+        [revision: string]: PathPairs.List;
+    };
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';
@@ -171,20 +172,6 @@ export interface ProjectInfo {
     namespace: string;
     name: string;
     canConfigureHooks: boolean;
-}
-
-export interface FileToReview {
-    path: PathPairs.PathPair;
-    previous: RevisionId;
-    current: RevisionId;
-    hasChanges: boolean;
-    isRenamedFile: boolean;
-    isNewFile: boolean;
-    isDeletedFile: boolean;
-}
-
-export interface FilesToReview {
-    filesToReview: FileToReview[];
 }
 
 const acceptJson = {
@@ -218,19 +205,6 @@ export class ReviewerApi {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(r => r.json())
             .then(r => r as ReviewInfo);
-            // .then(ri => {
-            //     for (let item of ri.reviewSummary) {
-            //         const converted = {};
-
-            //         for (let rev of Object.keys(item.revisions)) {
-            //             converted[parseInt(rev)] = item.revisions[rev];
-            //         }
-
-            //         item.revisions = converted;
-            //     }
-
-            //     return ri;
-            // });
     }
 
     public createGitLabLink = (reviewId: ReviewId) => {
@@ -297,11 +271,5 @@ export class ReviewerApi {
         return fetch(`/api/user/current`, acceptJson)
             .then(r => r.json())
             .then(r => r as UserState);
-    }
-
-    public getFilesToReview = (reviewId: ReviewId): Promise<FilesToReview> => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/files`, acceptJson)
-            .then(r => r.json())
-            .then(r => r as FilesToReview);
     }
 }

@@ -17,24 +17,29 @@ namespace Web.Modules.Api.Commands.PublishElements
         public bool NeedsResolution { get; set; }
         public string Content { get; set; }
         public string TemporaryId { get; set; }
+        public RevisionId TargetRevisionId { get; set; }
     }
 
     public class FileDiscussionsPublisher
     {
         private readonly ISession _session;
+        private readonly FindReviewDelegate _reviewForRevision;
 
-        public FileDiscussionsPublisher(ISession session)
+        public FileDiscussionsPublisher(ISession session, FindReviewDelegate reviewForRevision)
         {
             _session = session;
+            _reviewForRevision = reviewForRevision;
         }
 
-        public async Task Publish(NewFileDiscussion[] discussions, Review review, Dictionary<string, Guid> newCommentsMap)
+        public async Task Publish(NewFileDiscussion[] discussions, Dictionary<string, Guid> newCommentsMap)
         {
             foreach (var discussion in discussions)
             {
                 var commentId = GuidComb.Generate();
 
                 newCommentsMap[discussion.TemporaryId] = commentId;
+
+                var review = _reviewForRevision(discussion.TargetRevisionId);
 
                 await _session.SaveAsync(new FileDiscussion
                 {

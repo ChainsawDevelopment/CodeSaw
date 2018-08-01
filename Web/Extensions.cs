@@ -59,5 +59,18 @@ namespace Web
 
         public static T? WrapAsNullable<T>(this T value)
             where T : struct => value;
+
+        public static void AddRange<T>(this IList<T> source, IEnumerable<T> toAdd)
+        {
+            foreach (var item in toAdd)
+            {
+                source.Add(item);
+            }
+        }
+
+        public static (int Index, T Value) LastWithIndex<T>(this IEnumerable<T> @this, Func<T, bool> predicate)
+        {
+            return @this.Select((x, i) => (Index: i, Value: x)).Last(x => predicate(x.Value));
+        }
     }
 }

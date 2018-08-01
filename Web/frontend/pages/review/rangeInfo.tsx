@@ -10,7 +10,7 @@ import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
 import * as PathPairs from "../../pathPair";
-import { RevisionRangeInfo, ReviewId, FileDiscussion, RevisionRange, CommentReply, FileToReview } from "../../api/reviewer";
+import { ReviewId, FileDiscussion, CommentReply, FileToReview } from "../../api/reviewer";
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
@@ -60,7 +60,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         const fileDiscussions = this.props.comments
             .filter(f =>
                 PathPairs.equal(f.filePath, file.path)
-                && (f.revision == file.fileToReview.current || f.revision == file.fileToReview.previous))
+                && (f.revision == file.fileToReview.current || f.revision == file.fileToReview.previous || (f.revision as number) + 1 == file.fileToReview.previous))
             ;
 
         const unpublishedDiscussion = this.props.unpublishedFileDiscussions
@@ -148,8 +148,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
     }
 
     private _findNextUnreviewedFile = (current: PathPairs.PathPair, direction: 1 | -1): PathPairs.PathPair => {
-        const changes = this.props.filesToReview.filter(f => f.hasChanges);
-        const currentIndex = changes.findIndex(p => PathPairs.equal(p.path, this.props.selectedFile.path));
+        const changes = this.props.filesToReview.filter(f => f.current != f.previous);
+        const currentIndex = changes.findIndex(p => PathPairs.equal(p.reviewFile, this.props.selectedFile.path));
 
         if (currentIndex == -1) {
             return null;
@@ -172,7 +172,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 return current;
             }
 
-            const candidate = changes[index].path;
+            const candidate = changes[index].reviewFile;
 
             if (!PathPairs.contains(filesReviewedByUser, candidate)) {
                 return candidate;
@@ -222,7 +222,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             </Menu.Item>);
         }
 
-        const selectableFiles = this.props.filesToReview.map(i => i.path);
+        const selectableFiles = this.props.filesToReview.map(i => i.reviewFile);
 
         return (
             <div ref={this._handleRef}>
