@@ -13,30 +13,16 @@ namespace Web.Modules.Api.Commands.PublishElements
     public class FindOrCreateReviewPublisher
     {
         private readonly ISession _session;
-        private readonly IRepository _api;
         private readonly ReviewUser _user;
-        private readonly RevisionFactory _factory;
 
-        public FindOrCreateReviewPublisher(ISession session, IRepository api, [CurrentUser]ReviewUser user, RevisionFactory factory)
+        public FindOrCreateReviewPublisher(ISession session, [CurrentUser] ReviewUser user)
         {
             _session = session;
-            _api = api;
             _user = user;
-            _factory = factory;
         }
-        
-        public async Task<Review> FindOrCreateReview(PublishReview command, ReviewIdentifier reviewId)
-        {
-            Guid revisionId;
-            try
-            {
-                revisionId = await FindOrCreateRevision(reviewId, command.Revision);
-            }
-            catch (Exception e)
-            {
-                throw new ReviewConcurrencyException(e);
-            }
 
+        public async Task<Review> FindOrCreateReview(PublishReview command, ReviewIdentifier reviewId, Guid revisionId)
+        {
             var review = await _session.Query<Review>()
                 .Where(x => x.RevisionId == revisionId && x.UserId == _user.Id)
                 .SingleOrDefaultAsync();
@@ -53,61 +39,73 @@ namespace Web.Modules.Api.Commands.PublishElements
 
             review.ReviewedAt = DateTimeOffset.Now;
 
-            review.ReviewFiles(command.ReviewedFiles);
-
             await _session.SaveAsync(review);
             return review;
         }
+    }
 
-        private async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
+    public class FindOrCreateRevisionPublisher
+    {
+        private readonly ISession _session;
+        private readonly RevisionFactory _factory;
+        private readonly IRepository _api;
+
+        public FindOrCreateRevisionPublisher(ISession session, RevisionFactory factory, IRepository api)
+        {
+            _session = session;
+            _factory = factory;
+            _api = api;
+        }
+
+        public async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
+        {
+            var existingRevision = await _session.Query<ReviewRevision>()
+                .Where(x => x.ReviewId == reviewId)
+                .Where(x => x.BaseCommit == commits.Base && x.HeadCommit == commits.Head)
+                .SingleOrDefaultAsync();
+
+            if (existingRevision != null)
             {
-                var existingRevision = await _session.Query<ReviewRevision>()
-                    .Where(x => x.ReviewId == reviewId)
-                    .Where(x => x.BaseCommit == commits.Base && x.HeadCommit == commits.Head)
-                    .SingleOrDefaultAsync();
-
-                if (existingRevision != null)
-                {
-                    return existingRevision.Id;
-                }
-
-                // create revision
-                var nextNumber = GetNextRevisionNumber(reviewId);
-
-                await CreateRef(reviewId, nextNumber, commits.Base, "base");
-
-                try
-                {
-                    await CreateRef(reviewId, nextNumber, commits.Head, "head");
-                }
-                catch (Exception unexpectedException)
-                {
-                    // The base ref is already created, we must add the record to database no matter what
-                    Console.WriteLine("Failed to create ref for head commit - ignoring");
-                    Console.WriteLine(unexpectedException.ToString());
-                }
-
-                var revision = await _factory.Create(reviewId, nextNumber, commits.Base, commits.Head);
-
-                await _session.SaveAsync(revision);
-
-                return revision.Id;
+                return existingRevision.Id;
             }
 
-            private int GetNextRevisionNumber(ReviewIdentifier reviewId)
+            // create revision
+            var nextNumber = GetNextRevisionNumber(reviewId, _session);
+
+            await CreateRef(reviewId, nextNumber, commits.Base, "base", _api);
+
+            try
             {
-                return 1 + (_session.QueryOver<ReviewRevision>()
-                                .Where(x => x.ReviewId == reviewId)
-                                .Select(Projections.Max<ReviewRevision>(x => x.RevisionNumber))
-                                .SingleOrDefault<int?>() ?? 0);
+                await CreateRef(reviewId, nextNumber, commits.Head, "head", _api);
+            }
+            catch (Exception unexpectedException)
+            {
+                // The base ref is already created, we must add the record to database no matter what
+                Console.WriteLine("Failed to create ref for head commit - ignoring");
+                Console.WriteLine(unexpectedException.ToString());
             }
 
-            private async Task CreateRef(ReviewIdentifier reviewId, int revision, string commitRef, string refType)
-            {
-                await _api.CreateRef(
-                    projectId: reviewId.ProjectId,
-                    name: $"reviewer/{reviewId.ReviewId}/r{revision}/{refType}",
-                    commit: commitRef);
-            }
+            var revision = await _factory.Create(reviewId, nextNumber, commits.Base, commits.Head);
+
+            await _session.SaveAsync(revision);
+
+            return revision.Id;
+        }
+
+        public static int GetNextRevisionNumber(ReviewIdentifier reviewId, ISession session)
+        {
+            return 1 + (session.QueryOver<ReviewRevision>()
+                            .Where(x => x.ReviewId == reviewId)
+                            .Select(Projections.Max<ReviewRevision>(x => x.RevisionNumber))
+                            .SingleOrDefault<int?>() ?? 0);
+        }
+
+        public static async Task CreateRef(ReviewIdentifier reviewId, int revision, string commitRef, string refType, IRepository api)
+        {
+            await api.CreateRef(
+                projectId: reviewId.ProjectId,
+                name: $"reviewer/{reviewId.ReviewId}/r{revision}/{refType}",
+                commit: commitRef);
+        }
     }
 }

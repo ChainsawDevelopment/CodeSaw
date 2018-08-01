@@ -1,4 +1,4 @@
-import { takeEvery, call, take, actionChannel, put, select } from "redux-saga/effects";
+import { take, put, select } from "redux-saga/effects";
 import {
     selectFileForView,
     loadedFileDiff,
@@ -12,7 +12,7 @@ import {
     PublishReviewArgs,
 } from './state';
 import { Action } from "typescript-fsa";
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, Comment, RevisionRangeInfo, FilesToReview } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
@@ -35,10 +35,11 @@ function* loadFileDiffSaga() {
                 previous: state.review.selectedFile.fileToReview.previous,
                 current: state.review.selectedFile.fileToReview.current,
             },
-            headCommit: state.review.currentReview.headCommit
+            headCommit: state.review.currentReview.headCommit,
+            path: state.review.selectedFile.fileToReview.diffFile
         }));
 
-        const diff = yield api.getDiff(currentRange.reviewId, resolveProvisional(currentRange.range, currentRange.headCommit), action.payload.path);
+        const diff = yield api.getDiff(currentRange.reviewId, resolveProvisional(currentRange.range, currentRange.headCommit), currentRange.path);
 
         yield put(loadedFileDiff(diff));
     }
@@ -61,15 +62,15 @@ function* loadReviewInfoSaga() {
         }
 
         if (currentReview && action.payload.reviewId.projectId == currentReview.projectId && action.payload.reviewId.reviewId == currentReview.reviewId) {
-            if(newRange.current == 'provisional' && !info.hasProvisionalRevision) {
+            if (newRange.current == 'provisional' && !info.hasProvisionalRevision) {
                 newRange.current = info.pastRevisions[info.pastRevisions.length - 1].number;
             }
         }
 
         if (action.payload.fileToPreload) {
-            const file = info.files[action.payload.fileToPreload];
-            if(file != null) {
-                yield put(selectFileForView({path: file.review.path}));
+            const file = info.filesToReview.find(f => f.reviewFile.newPath == action.payload.fileToPreload)
+            if (file != null) {
+                yield put(selectFileForView({ path: file.reviewFile }));
             }
         }
     }
@@ -95,8 +96,8 @@ function* publishReviewSaga() {
                 base: s.review.currentReview.baseCommit,
                 head: s.review.currentReview.headCommit
             },
-            reviewedFiles: s.review.reviewedFiles,
             startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
+                targetRevisionId: d.revision,
                 temporaryId: d.comment.id,
                 file: d.filePath,
                 lineNumber: d.lineNumber,
@@ -104,20 +105,23 @@ function* publishReviewSaga() {
                 content: d.comment.content
             })),
             startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
+                targetRevisionId: d.revision,
                 temporaryId: d.comment.id,
                 content: d.comment.content,
                 needsResolution: d.comment.state == 'NeedsResolution'
             })),
             resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
-            replies: s.review.unpublishedReplies
+            replies: s.review.unpublishedReplies,
+            reviewedFiles: s.review.unpublishedReviewedFiles,
+            unreviewedFiles: s.review.unpublishedUnreviewedFiles
         }));
 
         for (let i = 0; i < 100; i++) {
             try {
                 yield api.publishReview(reviewSnapshot);
                 break;
-            } catch(e) {
-                if(!(e instanceof ReviewConcurrencyError)) {
+            } catch (e) {
+                if (!(e instanceof ReviewConcurrencyError)) {
                     throw e;
                 }
             }

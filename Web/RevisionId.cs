@@ -1,8 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Web
 {
+    [TypeConverter(typeof(StringToRevisionIdConverter))]
     public abstract class RevisionId
     {
         public class Base : RevisionId, IEquatable<Base>
@@ -158,5 +161,11 @@ namespace Web
 
             return false;
         }
+    }
+
+    public class StringToRevisionIdConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) => RevisionId.Parse(value.ToString());
     }
 }

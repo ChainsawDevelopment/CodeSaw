@@ -11,10 +11,12 @@ namespace Web.Modules.Api.Commands.PublishElements
     public class ResolveDiscussions
     {
         private readonly ISession _session;
+        private readonly FindReviewDelegate _reviewForRevision;
 
-        public ResolveDiscussions(ISession session)
+        public ResolveDiscussions(ISession session, FindReviewDelegate reviewForRevision)
         {
             _session = session;
+            _reviewForRevision = reviewForRevision;
         }
 
         public async Task Publish(List<Guid> resolvedDiscussions)

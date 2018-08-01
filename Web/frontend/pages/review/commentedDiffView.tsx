@@ -40,7 +40,7 @@ const buildLineWidgets = (props: Props) => {
     }
     
     for (let fileComment of props.comments) {
-        let side = fileComment.revision == props.leftSideRevision ? 'left' : 'right';
+        let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
         lineComments[side].set(fileComment.lineNumber, [
             ...(lineComments[side].get(fileComment.lineNumber) || []),
             {

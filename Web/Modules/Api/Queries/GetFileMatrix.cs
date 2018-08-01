@@ -33,18 +33,24 @@ namespace Web.Modules.Api.Queries
             {
                 var matrix = await BuildMatrix(query);
 
-                //var q = from review in _session.Query<Review>()
-                //    join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
-                //    where revision.ReviewId == query.ReviewId
-                //    join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
-                //    from file in review.Files
-                //    where file.Status == FileReviewStatus.Reviewed
-                //    select new
-                //    {
-                //        Revision = new RevisionId.Selected(revision.RevisionNumber),
-                //        File = file.File,
-                //        Reviewer = user.UserName
-                //    };
+                var q = from review in _session.Query<Review>()
+                        join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                        where revision.ReviewId == query.ReviewId
+                        join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
+                        from file in review.Files
+                        where file.Status == FileReviewStatus.Reviewed
+                        select new
+                        {
+                            Revision = new RevisionId.Selected(revision.RevisionNumber),
+                            File = file.File,
+                            Reviewer = user.UserName
+                        };
+
+                foreach (var reviewedFile in q)
+                {
+                    var entry = matrix.Single(x => x.Revisions[reviewedFile.Revision].File.NewPath == reviewedFile.File.NewPath);
+                    entry.Revisions[reviewedFile.Revision].Reviewers.Add(reviewedFile.Reviewer);
+                }
 
 
                 return matrix;
