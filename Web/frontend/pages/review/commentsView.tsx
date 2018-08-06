@@ -85,7 +85,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const form = (
             <Form reply onSubmit={onSubmit}>
                 <Form.TextArea onChange={onChangeReply} value={this.state.replyText} />
-                <Button onClick={() => this.props.actions.addReply(this.props.id, this.state.replyText)} primary>Add Comment</Button> 
+                <Button onClick={() => this.props.actions.addReply(this.props.id, this.state.replyText)} primary>Add Comment</Button>
             </Form>
         );
 
@@ -120,7 +120,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     </UIComment.Metadata>
                     <UIComment.Text>{this.props.content}</UIComment.Text>
                     <UIComment.Actions>
-                        {true && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
+                        <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
                         {renderStatus()}
                     </UIComment.Actions>
                     {this.state.replyVisible ? form : null}

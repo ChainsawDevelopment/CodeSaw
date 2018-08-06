@@ -1,13 +1,13 @@
-﻿namespace RepositoryApi
+﻿using RepositoryApi;
+
+namespace GitLab
 {
-    public class MergeRequest
+    public class GitLabMergeRequest
     {
-        public int Id { get; set; }
+        public int Iid { get; set; }
         public int ProjectId { get; set; }
         public string Title { get; set; }
-        public UserInfo Author { get; set; }
-        public string BaseCommit { get; set; }
-        public string HeadCommit { get; set; }
+        public GitLabUserInfo Author { get; set; }
         public string Description { get; set; }
         public string WebUrl { get; set; }
         public MergeRequestState State { get; set; }

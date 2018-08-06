@@ -102,6 +102,7 @@ const initial: ReviewState = {
         title: '',
         headCommit: '',
         baseCommit: '',
+        webUrl: '',
         state: 'opened',
         mergeStatus: 'unchecked',
         reviewSummary: [],
