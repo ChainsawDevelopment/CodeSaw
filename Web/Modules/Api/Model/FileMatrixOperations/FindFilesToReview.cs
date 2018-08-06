@@ -4,7 +4,7 @@ using RepositoryApi;
 
 namespace Web.Modules.Api.Model.FileMatrixOperations
 {
-    public static class FindFilesToReviewOp
+    public static class FindFilesToReviewOperation
     {
         public static IEnumerable<FileRange> FindFilesToReview(this FileMatrix matrix, string reviewerUserName)
         {

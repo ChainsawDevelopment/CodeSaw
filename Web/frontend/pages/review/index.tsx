@@ -153,13 +153,6 @@ class reviewPage extends React.Component<Props> {
                                         <FileMatrix />
                                     </Grid.Column>
                                 </Grid.Row>
-                                <Grid.Row>
-                                    <Grid.Column>
-                                        {/* <ReviewSummary
-                                            reviewId={props.reviewId}
-                                        /> */}
-                                    </Grid.Column>
-                                </Grid.Row>
                             </Grid>
 
                             <CommentsView

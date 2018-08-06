@@ -24,8 +24,6 @@ namespace Tests
                 var constraintResult = _inner.ApplyTo(actual);
                 return constraintResult;
             }
-
-            //public override string Description { get; protected set; }
         }
     }
 }

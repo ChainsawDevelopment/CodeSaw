@@ -151,7 +151,7 @@ namespace Web
             modelMapper.AddMappings(typeof(Startup).Assembly.GetExportedTypes());
 
             var hbm = modelMapper.CompileMappingForAllExplicitlyAddedEntities();
-            hbm.DumpHbmXml(@"D:\tmp\hbm.xml");
+            
             configuration.AddMapping(hbm);
 
             return configuration.BuildSessionFactory();

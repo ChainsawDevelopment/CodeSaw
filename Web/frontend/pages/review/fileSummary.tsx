@@ -44,7 +44,6 @@ export default (props: {file: FileInfo}): JSX.Element => {
                 <div>Show diff 
                     <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.previous}</pre> </strong>
                     to <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.current}</pre> </strong>
-                    {/* changes: <strong>{props.file.fileToReview.hasChanges ? "YES" : "NO"}</strong>  */}
                 </div>
                 {items}
             </Message.Content>

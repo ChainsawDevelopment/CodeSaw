@@ -23,7 +23,7 @@ namespace Web
                 return Equals((Base) obj);
             }
 
-            public override int GetHashCode() => 1;
+            public override int GetHashCode() => -1;
 
             public static bool operator ==(Base left, Base right)
             {
