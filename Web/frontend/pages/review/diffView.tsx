@@ -150,9 +150,12 @@ export interface LineWidget {
     widget: JSX.Element;
 }
 
+export type DiffType = 'modify' | 'add' | 'delete';
+
 export interface Props {
     diffInfo: FileDiff;
     lineWidgets: LineWidget[];
+    type: DiffType;
     onLineClick?: (side: DiffSide, line: number) => void;
     contents: {
         previous: string;
@@ -228,7 +231,7 @@ const diffView = (props: Props) => {
     return (
         <Diff
             viewType="split"
-            diffType="modify"
+            diffType={props.type}
             hunks={viewHunks}
             customEvents={events}
             markEdits={markEdits}
