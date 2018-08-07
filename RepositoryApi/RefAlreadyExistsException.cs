@@ -1,14 +1,14 @@
 ﻿using System;
 
-namespace GitLab
+namespace RepositoryApi
 {
-    public class GitLabRefAlreadyExistsException : GitLabApiFailedException
+    public class RefAlreadyExistsException : Exception
     {
         public int ProjectId { get; }
         public string RefName { get; }
         public string Commit { get; }
 
-        public GitLabRefAlreadyExistsException(int projectId, string refName, string commit)
+        public RefAlreadyExistsException(int projectId, string refName, string commit)
             :base ($"Tried to create ref {refName} for project {projectId} and commit {commit}, but such ref already exists.")
         {
             ProjectId = projectId;

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace Web
 {
@@ -11,30 +9,6 @@ namespace Web
         {
             return await Task.WhenAll(source);
         }
-
-        public static async Task<IDictionary<TKey, TValue>> ToDictionaryAsync<T, TKey, TValue>(this Task<IEnumerable<T>> source, Func<T, TKey> keySelector, Func<T, TValue> valueSelector)
-        {
-            return (await source).ToDictionary(keySelector, valueSelector);
-        }
-
-        public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind, IEqualityComparer<T> comparer)
-        {
-            int index = -1;
-
-            foreach (var item in @this)
-            {
-                index++;
-
-                if (comparer.Equals(item, valueToFind))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
-        public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind) => @this.IndexOf(valueToFind, EqualityComparer<T>.Default);
 
         public static void EnsureKeys<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<TKey> keys, TValue emptyValue)
         {
@@ -47,8 +21,6 @@ namespace Web
             }
         }
 
-        public static IEnumerable<T> Union<T>(this IEnumerable<T> source, params T[] elements) => source.Union<T>((IEnumerable<T>) elements);
-
         public static void RemoveRange<T>(this IList<T> list, IEnumerable<T> items)
         {
             foreach (var item in items)
@@ -59,18 +31,5 @@ namespace Web
 
         public static T? WrapAsNullable<T>(this T value)
             where T : struct => value;
-
-        public static void AddRange<T>(this IList<T> source, IEnumerable<T> toAdd)
-        {
-            foreach (var item in toAdd)
-            {
-                source.Add(item);
-            }
-        }
-
-        public static (int Index, T Value) LastWithIndex<T>(this IEnumerable<T> @this, Func<T, bool> predicate)
-        {
-            return @this.Select((x, i) => (Index: i, Value: x)).Last(x => predicate(x.Value));
-        }
     }
 }

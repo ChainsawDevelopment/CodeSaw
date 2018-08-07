@@ -30,17 +30,7 @@ namespace Web.Modules.Api.Commands.PublishElements
                 HeadCommit = headCommit
             };
 
-            string previousHead;
-
-            if (number > 1)
-            {
-                var previousRevision = FindPreviousRevision(reviewId, number);
-                previousHead = previousRevision.HeadCommit;
-            }
-            else
-            {
-                previousHead = baseCommit;
-            }
+            var previousHead = FindPreviousRevision(reviewId, number, baseCommit);
 
             var diff = await _api.GetDiff(reviewId.ProjectId, previousHead, headCommit);
 
@@ -52,9 +42,15 @@ namespace Web.Modules.Api.Commands.PublishElements
             return revision;
         }
 
-        private ReviewRevision FindPreviousRevision(ReviewIdentifier reviewId, int number)
+        private string FindPreviousRevision(ReviewIdentifier reviewId, int number, string baseCommit)
         {
-            return _session.Query<ReviewRevision>().Single(x => x.ReviewId == reviewId && x.RevisionNumber == number - 1);
+            if (number <= 1)
+            {
+                return baseCommit;
+            }
+
+            var previousRevision = _session.Query<ReviewRevision>().Single(x => x.ReviewId == reviewId && x.RevisionNumber == number - 1);
+            return previousRevision.HeadCommit;
         }
     }
 }

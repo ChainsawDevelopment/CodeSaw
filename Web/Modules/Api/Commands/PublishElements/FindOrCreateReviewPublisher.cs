@@ -78,7 +78,7 @@ namespace Web.Modules.Api.Commands.PublishElements
             {
                 await CreateRef(reviewId, nextNumber, commits.Head, "head", _api);
             }
-            catch (Exception unexpectedException)
+            catch (RefAlreadyExistsException unexpectedException)
             {
                 // The base ref is already created, we must add the record to database no matter what
                 Console.WriteLine("Failed to create ref for head commit - ignoring");
