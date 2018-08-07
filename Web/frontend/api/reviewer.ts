@@ -59,6 +59,16 @@ export interface FileDiff {
     isBinaryFile: boolean;
     areBinaryEqual: boolean;
     binarySizes: BinaryFileSizes;
+    contents: {
+        base: {
+            previous: string;
+            current: string;
+        };
+        review: {
+            previous: string;
+            current: string;
+        };
+    };
 }
 
 export interface ReviewId {

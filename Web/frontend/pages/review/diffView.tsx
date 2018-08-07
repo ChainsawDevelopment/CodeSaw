@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, getChangeKey, markWordEdits } from 'react-diff-view';
+import { Diff, getChangeKey, expandCollapsedBlockBy } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 import 'react-diff-view/index.css';
 import './diffView.less';
@@ -154,6 +154,10 @@ export interface Props {
     diffInfo: FileDiff;
     lineWidgets: LineWidget[];
     onLineClick?: (side: DiffSide, line: number) => void;
+    contents: {
+        previous: string;
+        current: string;
+    };
 }
 
 const leftSideMatch = (change: Change, lineNumber: number) => {
@@ -186,7 +190,9 @@ const diffView = (props: Props) => {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
 
-    const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
+    let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
+
+    viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => true);
 
     const events = {
         gutter: {
