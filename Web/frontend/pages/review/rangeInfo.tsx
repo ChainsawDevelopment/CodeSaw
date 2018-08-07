@@ -89,6 +89,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         pendingResolved={this.props.pendingResolved}
                         unpublishedReplies={this.props.unpublishedReplies}
                         currentUser={this.props.currentUser}
+                        contents={this.props.file.diff.contents.review}
                     /> 
                     : null}
             </span>
