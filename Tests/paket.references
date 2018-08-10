@@ -3,3 +3,4 @@ NUnit3TestAdapter
 Microsoft.NET.Test.Sdk
 LibGit2Sharp
 Diff.Match.Patch
+Moq

@@ -41,6 +41,11 @@ namespace RepositoryApi
         {
             return !Equals(left, right);
         }
+
+        public static PathPair Make(string path) => new PathPair {NewPath = path, OldPath = path};
+        public static PathPair Make(string oldPath, string newPath) => new PathPair {NewPath = newPath, OldPath = oldPath};
+
+        public PathPair WithNewName(string newPath) => Make(OldPath, newPath);
     }
 
     public class FileDiff

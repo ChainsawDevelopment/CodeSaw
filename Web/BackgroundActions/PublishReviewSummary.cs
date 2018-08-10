@@ -25,10 +25,22 @@ namespace Web.BackgroundActions
         {
             var summary = await _query.Query(new GetReviewStatus(@event.ReviewId));
 
-            var latestRevisionPerFile = summary.FileStatuses.GroupBy(x => x.Path).ToDictionary(x => x.Key, x => x.Max(f => f.RevisionNumber));
+            var fileMatrix = await _query.Query(new GetFileMatrix(@event.ReviewId));
 
-            var reviewedAtLatestRevision = summary.FileStatuses.Count(x => x.RevisionNumber == latestRevisionPerFile[x.Path] && x.Status == FileReviewStatus.Reviewed);
-            var unreviewedAtLatestRevision = summary.FileStatuses.Count(x => x.RevisionNumber == latestRevisionPerFile[x.Path] && x.Status == FileReviewStatus.Unreviewed);
+            int reviewedAtLatestRevision = 0;
+            int unreviewedAtLatestRevision = 0;
+
+            foreach (var entry in fileMatrix)
+            {
+                if (entry.Revisions.Last(x => !x.Value.IsUnchanged).Value.Reviewers.Any())
+                {
+                    reviewedAtLatestRevision++;
+                }
+                else
+                {
+                    unreviewedAtLatestRevision++;
+                }
+            }
 
             var body = $"I've posted review on this merge request.\n\n{reviewedAtLatestRevision} files reviewed in latest version, {unreviewedAtLatestRevision} yet to review.\n\n{summary.UnresolvedDiscussions} unresolved discussions\n\nSee full review [here]({_siteBase}/project/{@event.ReviewId.ProjectId}/review/{@event.ReviewId.ReviewId})";
 

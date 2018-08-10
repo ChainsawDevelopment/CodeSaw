@@ -22,9 +22,11 @@ namespace Web.Modules.Api.Model
             Files = new List<FileReview>();
         }
 
-        public virtual void ReviewFiles(IReadOnlyList<PathPair> allFiles, IReadOnlyList<PathPair> reviewedFiles)
+        public virtual void ReviewFiles(IReadOnlyList<PathPair> reviewedFiles)
         {
-            var unreviewed = allFiles.Except(reviewedFiles);
+            var wasReviewedNowNot = Files.Where(x => !reviewedFiles.Contains(x.File)).ToList();
+
+            Files.RemoveRange(wasReviewedNowNot);
 
             foreach (var file in reviewedFiles)
             {
@@ -37,19 +39,6 @@ namespace Web.Modules.Api.Model
                 }
 
                 status.Status = FileReviewStatus.Reviewed;
-            }
-
-            foreach (var file in unreviewed)
-            {
-                var status = Files.SingleOrDefault(x => x.File == file);
-
-                if (status == null)
-                {
-                    status = new FileReview(file);
-                    Files.Add(status);
-                }
-
-                status.Status = FileReviewStatus.Unreviewed;
             }
         }
     }
@@ -72,7 +61,6 @@ namespace Web.Modules.Api.Model
 
     public enum FileReviewStatus
     {
-        Reviewed = 1,
-        Unreviewed = 2
+        Reviewed = 1
     }
 }

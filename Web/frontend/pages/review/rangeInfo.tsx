@@ -10,7 +10,7 @@ import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
 import * as PathPairs from "../../pathPair";
-import { RevisionRangeInfo, ReviewId, FileDiscussion, RevisionRange, CommentReply } from "../../api/reviewer";
+import { ReviewId, FileDiscussion, CommentReply, FileToReview } from "../../api/reviewer";
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
@@ -27,7 +27,6 @@ interface FileViewProps {
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
     commentActions: CommentsActions;
-    revisionRange: RevisionRange;
     currentUser: UserState;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
@@ -56,17 +55,17 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
     }
 
     render(): JSX.Element {
-        const { file, commentActions, revisionRange } = this.props;
+        const { file, commentActions } = this.props;
 
         const fileDiscussions = this.props.comments
-            .filter(f => 
-                PathPairs.equal(f.filePath, file.path) 
-                && (f.revision == revisionRange.current || f.revision == revisionRange.previous))
-           ;
+            .filter(f =>
+                PathPairs.equal(f.filePath, file.path)
+                && (f.revision == file.fileToReview.current || f.revision == file.fileToReview.previous || (f.revision as number) + 1 == file.fileToReview.previous))
+            ;
 
         const unpublishedDiscussion = this.props.unpublishedFileDiscussions
-                .filter(f => PathPairs.equal(f.filePath, file.path));
-            
+            .filter(f => PathPairs.equal(f.filePath, file.path));
+
         const lineCommentsActions: LineCommentsActions = {
             hideCommentsForLine: l => this.hideLine(l),
             showCommentsForLine: l => this.showLine(l),
@@ -78,13 +77,13 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         return (
             <span ref={span => this.renderedRef = span}>
                 <FileSummary file={file} />
-                {file.diff ? 
-                    <CommentedDiffView 
-                        diffInfo={file.diff} 
+                {file.diff ?
+                    <CommentedDiffView
+                        diffInfo={file.diff}
                         comments={fileDiscussions.concat(unpublishedDiscussion)}
                         commentActions={commentActions}
-                        leftSideRevision={revisionRange.previous}
-                        rightSideRevision={revisionRange.current}
+                        leftSideRevision={file.fileToReview.previous}
+                        rightSideRevision={file.fileToReview.current}
                         visibleCommentLines={this.state.visibleCommentLines}
                         lineCommentsActions={lineCommentsActions}
                         pendingResolved={this.props.pendingResolved}
@@ -112,12 +111,11 @@ export interface ReviewFileActions {
 }
 
 export interface Props {
-    revisionRange: RevisionRange;
-    info: RevisionRangeInfo;
+    filesToReview: FileToReview[];
     selectedFile: FileInfo & { isReviewed: boolean };
     onSelectFileForView: SelectFileForViewHandler;
     reviewFile: ReviewFileActions;
-    reviewedFiles: PathPairs.PathPair[];
+    reviewedFiles: PathPairs.List;
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
     reviewId: ReviewId;
@@ -138,7 +136,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
     private _handleRef = el => {
         this.setState({ stickyContainer: el });
-        this.props.onShowFileHandlerAvailable(() => scrollToComponent(el, {offset: 0, align: 'top', duration: 100, ease:'linear'}));
+        this.props.onShowFileHandlerAvailable(() => scrollToComponent(el, { offset: 0, align: 'top', duration: 100, ease: 'linear' }));
     }
 
     private _changeFileReviewState = (newState: boolean) => {
@@ -150,13 +148,13 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
     }
 
     private _findNextUnreviewedFile = (current: PathPairs.PathPair, direction: 1 | -1): PathPairs.PathPair => {
-        const currentIndex = this.props.info.changes.findIndex(p => PathPairs.equal(p.path, this.props.selectedFile.path));
+        const changes = this.props.filesToReview.filter(f => f.current != f.previous);
+        const currentIndex = changes.findIndex(p => PathPairs.equal(p.reviewFile, this.props.selectedFile.path));
 
         if (currentIndex == -1) {
             return null;
         }
 
-        const {changes}= this.props.info;
         const filesReviewedByUser = this.props.reviewedFiles;
 
         let index = currentIndex;
@@ -164,9 +162,9 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         while (true) {
             index += direction;
 
-            if(index == -1) {
+            if (index == -1) {
                 index = changes.length - 1;
-            } else if(index == changes.length) {
+            } else if (index == changes.length) {
                 index = 0;
             }
 
@@ -174,7 +172,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 return current;
             }
 
-            const candidate = changes[index].path;
+            const candidate = changes[index].reviewFile;
 
             if (!PathPairs.contains(filesReviewedByUser, candidate)) {
                 return candidate;
@@ -183,7 +181,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
     }
 
     render() {
-        const { info, selectedFile, onSelectFileForView } = this.props;
+        const { selectedFile, onSelectFileForView } = this.props;
 
         const menuItems = [];
 
@@ -193,10 +191,10 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
             menuItems.push(<Menu.Item fitted key="review-mark">
                 <Popup
-                    trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState}/>}
+                    trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
                     content="Toggle review status"
                 />
-                
+
             </Menu.Item>);
             menuItems.push(<Menu.Item fitted key="refresh-diff">
                 <Popup
@@ -205,24 +203,26 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 />
             </Menu.Item>);
             menuItems.push(<Menu.Item fitted key="file-navigation">
-                {prevFile && 
-                <Popup
-                    trigger={<FileLink reviewId={this.props.reviewId} path={prevFile} >
-                        <Icon name="step backward" circular link /></FileLink>}
-                    content="Previous unreviewed file"
-                />}
-                {nextFile && 
-                <Popup
-                
-                    trigger={<FileLink reviewId={this.props.reviewId} path={nextFile} >
-                        <Icon name="step forward" circular link /></FileLink>}
-                    content="Next unreviewed file"
-                />}
+                {prevFile &&
+                    <Popup
+                        trigger={<FileLink reviewId={this.props.reviewId} path={prevFile} >
+                            <Icon name="step backward" circular link /></FileLink>}
+                        content="Previous unreviewed file"
+                    />}
+                {nextFile &&
+                    <Popup
+
+                        trigger={<FileLink reviewId={this.props.reviewId} path={nextFile} >
+                            <Icon name="step forward" circular link /></FileLink>}
+                        content="Next unreviewed file"
+                    />}
             </Menu.Item>);
             menuItems.push(<Menu.Item fitted key="file-path">
                 <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
         }
+
+        const selectableFiles = this.props.filesToReview.map(i => i.reviewFile);
 
         return (
             <div ref={this._handleRef}>
@@ -235,7 +235,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                     <Button positive onClick={this.props.publishReview}>Publish Changes</Button>
                                     &nbsp;
                                     <ChangedFileTreePopup
-                                        paths={info.changes.map(i => i.path)}
+                                        paths={selectableFiles}
                                         selected={selectedFile ? selectedFile.path : PathPairs.emptyPathPair}
                                         reviewedFiles={this.props.reviewedFiles}
                                         onSelect={onSelectFileForView}
@@ -247,11 +247,10 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                     </Sticky>
                     <div>
                         {selectedFile ?
-                            <FileView 
-                                file={selectedFile} 
-                                commentActions={this.props.commentActions} 
+                            <FileView
+                                file={selectedFile}
+                                commentActions={this.props.commentActions}
                                 comments={this.props.fileComments}
-                                revisionRange={this.props.revisionRange}
                                 startFileDiscussion={this.props.startFileDiscussion}
                                 unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
                                 pendingResolved={this.props.pendingResolved}

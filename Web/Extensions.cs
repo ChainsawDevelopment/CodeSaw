@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Web
@@ -9,24 +8,6 @@ namespace Web
         public static async Task<IEnumerable<T>> WhenAll<T>(this IEnumerable<Task<T>> source)
         {
             return await Task.WhenAll(source);
-        }
-
-        
-        public static int IndexOf<T>(this IEnumerable<T> @this, T valueToFind, IEqualityComparer<T> comparer)
-        {
-            int index = -1;
-
-            foreach (var item in @this)
-            {
-                index++;
-
-                if (comparer.Equals(item, valueToFind))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
         }
 
         public static void EnsureKeys<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<TKey> keys, TValue emptyValue)
@@ -39,5 +20,16 @@ namespace Web
                 }
             }
         }
+
+        public static void RemoveRange<T>(this IList<T> list, IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                list.Remove(item);
+            }
+        }
+
+        public static T? WrapAsNullable<T>(this T value)
+            where T : struct => value;
     }
 }

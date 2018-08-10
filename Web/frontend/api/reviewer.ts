@@ -93,6 +93,14 @@ export interface ReviewDiscussion
     comment: Comment;
 }
 
+export interface FileToReview {
+    reviewFile: PathPairs.PathPair;
+    diffFile: PathPairs.PathPair;
+    previous: RevisionId;
+    current: RevisionId;
+    changeType: 'modified' | 'renamed' | 'created' | 'deleted';
+}
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -105,17 +113,13 @@ export interface ReviewInfo {
     headCommit: string;
     baseCommit: string;
     webUrl: string;
+    headRevision: RevisionId;
     state: ReviewInfoState;
     mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
-    reviewSummary: {
-        file: string;
-        revisions: {
-            [revision: number]: string[];
-        }
-    }[];
-
     fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
+    fileMatrix: any;
+    filesToReview: FileToReview[];
 }
 
 export interface CommentReply {
@@ -130,12 +134,8 @@ export interface ReviewSnapshot {
         head: string,
         base: string
     };
-    previous: {
-        head: string;
-        base: string;
-    }
-    reviewedFiles: PathPairs.PathPair[];
     startedFileDiscussions: {
+        targetRevisionId: RevisionId;
         temporaryId: string;
         file: PathPairs.PathPair;
         lineNumber: number;
@@ -143,12 +143,19 @@ export interface ReviewSnapshot {
         needsResolution: boolean;
     }[];
     startedReviewDiscussions: {
+        targetRevisionId: RevisionId;
         temporaryId: string;
         needsResolution: boolean;
         content: string;
     }[];
     resolvedDiscussions: string[]; // root comment ids
     replies: CommentReply[];
+    reviewedFiles: {
+        [revision: string]: PathPairs.List;
+    };
+    unreviewedFiles: {
+        [revision: string]: PathPairs.List;
+    };
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';
@@ -183,15 +190,6 @@ export class ReviewConcurrencyError extends Error {
 }
 
 export class ReviewerApi {
-    public getRevisionRangeInfo = (reviewId: ReviewId, range: RevisionRange): Promise<RevisionRangeInfo> => {
-        return fetch(
-            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/revisions/${range.previous}/${range.current}`,
-            acceptJson
-        )
-            .then(r => r.json())
-            .then(r => r as RevisionRangeInfo);
-    }
-
     public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
@@ -208,20 +206,7 @@ export class ReviewerApi {
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(r => r.json())
-            .then(r => r as ReviewInfo)
-            .then(ri => {
-                for (let item of ri.reviewSummary) {
-                    const converted = {};
-
-                    for (let rev of Object.keys(item.revisions)) {
-                        converted[parseInt(rev)] = item.revisions[rev];
-                    }
-
-                    item.revisions = converted;
-                }
-
-                return ri;
-            });
+            .then(r => r as ReviewInfo);
     }
 
     public createGitLabLink = (reviewId: ReviewId) => {

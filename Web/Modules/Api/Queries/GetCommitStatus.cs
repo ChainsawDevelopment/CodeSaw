@@ -34,11 +34,22 @@ namespace Web.Modules.Api.Queries
                 var items = new List<string>();
                 var reviewPassed = true;
 
-                var latestRevisionPerFile = summary.FileStatuses.GroupBy(x => x.Path).ToDictionary(x => x.Key, x => x.Max(f => f.RevisionNumber));
+                var fileMatrix = await _queryRunner.Query(new GetFileMatrix(query.ReviewId));
 
-                var reviewedAtLatestRevision = summary.FileStatuses.Count(x => x.RevisionNumber == latestRevisionPerFile[x.Path] && x.Status == FileReviewStatus.Reviewed);
-                var unreviewedAtLatestRevision = summary.FileStatuses.Count(x => x.RevisionNumber == latestRevisionPerFile[x.Path] && x.Status == FileReviewStatus.Unreviewed);
+                int reviewedAtLatestRevision = 0;
+                int unreviewedAtLatestRevision = 0;
 
+                foreach (var entry in fileMatrix)
+                {
+                    if (entry.Revisions.Last(x => !x.Value.IsUnchanged).Value.Reviewers.Any())
+                    {
+                        reviewedAtLatestRevision++;
+                    }
+                    else
+                    {
+                        unreviewedAtLatestRevision++;
+                    }
+                }
                 items.Add($"{reviewedAtLatestRevision} file(s) reviewed");
 
                 if (unreviewedAtLatestRevision > 0)

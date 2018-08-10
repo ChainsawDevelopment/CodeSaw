@@ -1,34 +1,37 @@
 import { FileInfo } from "./state";
-import { ChangedFile } from "../../api/reviewer"
+import { FileToReview } from "../../api/reviewer"
 import * as React from "react";
 import Message from '@ui/collections/Message';
 
-const describeFileOperations = (treeEntry: ChangedFile): JSX.Element => {
-    const { path } = treeEntry;
+const describeFileOperations = (treeEntry: FileToReview): JSX.Element => {
+    const { changeType, diffFile:path } = treeEntry;
 
-    if (treeEntry.renamedFile) {
+    if (changeType == 'renamed') {
         return (
             <div key="renamed" className="file-operations">File renamed: <pre>{path.oldPath}</pre> &rarr; <pre>{path.newPath}</pre></div>
         );
     }
-    else if (treeEntry.deletedFile) {
+    else if (changeType == 'deleted') {
         return (
             <div key="deleted" className="file-operations">File deleted: <pre>{path.oldPath}</pre></div>
         );
     }
-    else if (treeEntry.newFile) {
+    else if (changeType == 'created') {
         return (
             <div key="created" className="file-operations">File created: <pre>{path.newPath}</pre></div>
         );
+    } else {
+        return null;
     }
 }
 
 export default (props: {file: FileInfo}): JSX.Element => {
     const items: JSX.Element[] = [];
 
-    if (props.file.treeEntry)
     {
-        items.push(describeFileOperations(props.file.treeEntry));
+        const item = describeFileOperations(props.file.fileToReview)
+        if(item != null)
+            items.push(item);
     } 
 
     if(items.length == 0) {
@@ -38,6 +41,10 @@ export default (props: {file: FileInfo}): JSX.Element => {
     return (
         <Message className="file-summary">
             <Message.Content>
+                <div>Show diff 
+                    <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.previous}</pre> </strong>
+                    to <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.current}</pre> </strong>
+                </div>
                 {items}
             </Message.Content>
         </Message>

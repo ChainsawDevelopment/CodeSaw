@@ -156,7 +156,7 @@ namespace GitLab
             if (RrefAlreadyExists(createTagResponse))
             {
                 // This may happen if there are concurrent requests to remeber the same revision
-                throw new GitLabRefAlreadyExistsException(projectId, name, commit);
+                throw new RefAlreadyExistsException(projectId, name, commit);
             }
             if (createTagResponse.StatusCode != HttpStatusCode.Created)
             {

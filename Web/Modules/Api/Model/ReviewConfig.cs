@@ -19,6 +19,7 @@ namespace Web.Modules.Api.Model
             {
                 coll.Table("ReviewFiles");
                 coll.Key(key => key.Column("ReviewId"));
+                coll.Cascade(Cascade.All.Include(Cascade.DeleteOrphans));
             });
         }
     }
