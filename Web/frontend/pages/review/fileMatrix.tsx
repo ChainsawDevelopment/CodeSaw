@@ -8,7 +8,9 @@ import * as PathPairs from "../../pathPair";
 import * as classNames from "classnames";
 
 import "./fileMatrix.less";
-import { FileToReview } from "../../api/reviewer";
+import { FileToReview, ReviewId } from "../../api/reviewer";
+
+import { FileLink } from './FileLink';
 
 interface FileMatrixRevision {
     revision: {
@@ -56,9 +58,9 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
     )
 };
 
-const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview }): JSX.Element => {
+const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewId: ReviewId }): JSX.Element => {
     const { file } = props.file;
-    const { review } = props;
+    const { review, reviewId } = props;
 
     const revisions = props.file.revisions.concat([]);
 
@@ -104,7 +106,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview }): JSX.
 
     return (
         <Table.Row>
-            <Table.Cell key='file'>{file.newPath}</Table.Cell>
+            <Table.Cell key='file'><FileLink reviewId={reviewId} path={review.reviewFile}>{file.newPath}</FileLink> </Table.Cell>
             {revisionCells}
         </Table.Row>
     );
@@ -115,6 +117,7 @@ interface StateProps {
     revisions: number[];
     hasProvisional: boolean;
     filesToReview: FileToReview[];
+    reviewId: ReviewId;
 }
 
 type Props = StateProps;
@@ -132,7 +135,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
 
-        rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} />);
+        rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId}/>);
     }
 
     return (
@@ -157,6 +160,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     revisions: state.review.currentReview.pastRevisions.map(r => r.number),
     hasProvisional: state.review.currentReview.hasProvisionalRevision,
     filesToReview: state.review.currentReview.filesToReview || [],
+    reviewId: state.review.currentReview.reviewId,
 });
 
 export default connect(mapStateToProps)(fileMatrixComponent);
