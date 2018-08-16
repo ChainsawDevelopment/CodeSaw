@@ -160,7 +160,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         }
 
         let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
-        let unreviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
+        let unreviewList = (state.unpublishedUnreviewedFiles[file.current] || []).concat([]);
 
         const fileId = PathPairs.make(file.diffFile.newPath);
 
@@ -200,7 +200,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         }
 
         let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
-        let unreviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
+        let unreviewList = (state.unpublishedUnreviewedFiles[file.current] || []).concat([]);
 
         const fileId = PathPairs.make(file.diffFile.newPath);
 
