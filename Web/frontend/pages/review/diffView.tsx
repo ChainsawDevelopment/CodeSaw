@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, getChangeKey, expandCollapsedBlockBy } from 'react-diff-view';
+import { Diff, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 import 'react-diff-view/index.css';
 import './diffView.less';
@@ -195,7 +195,26 @@ const diffView = (props: Props) => {
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
-    viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => true);
+    viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+
+    for (let widget of props.lineWidgets) {
+        const matchingHunk = viewHunks.findIndex(i =>
+            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber <= i.oldStart + i.oldLines)
+            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber <= i.newStart + i.newLines)
+        );
+
+        if (matchingHunk >= 0) {
+            continue;
+        }
+
+        let lineNumber = widget.lineNumber;
+
+        if (widget.side == 'right') {
+            lineNumber = getCorrespondingOldLineNumber(viewHunks, lineNumber);
+        }
+
+        viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
+    }
 
     const events = {
         gutter: {
