@@ -91,6 +91,7 @@ namespace GitLab
             return await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
                 .AddQueryParameter("from", prevSha)
                 .AddQueryParameter("to", currentSha)
+                .AddQueryParameter("straight", "true")
                 .Execute<GitLabTreeDiff>(_client)
                 .ContinueWith(x => x.Result.Diffs);
         }

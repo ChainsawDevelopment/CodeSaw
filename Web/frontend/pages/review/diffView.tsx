@@ -195,7 +195,12 @@ const diffView = (props: Props) => {
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
-    viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+    if(viewHunks.length > 0) {
+        // expands all hunks that matches condition
+        // however condition is just `false` so nothing will be expanded
+        // once we start working on expanding/collapsing hunks this will be useful
+        viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+    }
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
