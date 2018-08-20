@@ -36,20 +36,8 @@ namespace Web.Modules.Api.Queries
 
                 var fileMatrix = await _queryRunner.Query(new GetFileMatrix(query.ReviewId));
 
-                int reviewedAtLatestRevision = 0;
-                int unreviewedAtLatestRevision = 0;
+                (int reviewedAtLatestRevision, int unreviewedAtLatestRevision) = fileMatrix.CalculateStatistics();
 
-                foreach (var entry in fileMatrix)
-                {
-                    if (entry.Revisions.Last(x => !x.Value.IsUnchanged).Value.Reviewers.Any())
-                    {
-                        reviewedAtLatestRevision++;
-                    }
-                    else
-                    {
-                        unreviewedAtLatestRevision++;
-                    }
-                }
                 items.Add($"{reviewedAtLatestRevision} file(s) reviewed");
 
                 if (unreviewedAtLatestRevision > 0)

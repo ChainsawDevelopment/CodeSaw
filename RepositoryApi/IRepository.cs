@@ -19,5 +19,10 @@ namespace RepositoryApi
         Task SetCommitStatus(int projectId, string commit, CommitStatus status);
         Task<List<ProjectInfo>> GetProjects();
         Task AddProjectHook(int projectId, string url, HookEvents hookEvents);
+        Task UnapproveMergeRequest(int projectId, int mergeRequestIid);
+        Task ApproveMergeRequest(int projectId, int mergeRequestIid);
+        Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid);
+        Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType);
+        Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId);
     }
 }
