@@ -222,6 +222,60 @@ namespace GitLab
                 .Execute(_client);
         }
 
+        public async Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType)
+        {
+            var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji", Method.POST)
+                .AddQueryParameter("name", emojiType.ToString().ToLower());
+
+            var restResponse = await createNoteRequest.Execute(_client);
+
+            if (!restResponse.IsSuccessful)
+            {
+                throw new GitLabApiFailedException(createNoteRequest, restResponse);
+            }
+        }
+
+        public async Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId)
+        {
+            var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji/{awardEmojiId}", Method.DELETE);
+
+            var restResponse = await createNoteRequest.Execute(_client);
+
+            if (!restResponse.IsSuccessful)
+            {
+                throw new GitLabApiFailedException(createNoteRequest, restResponse);
+            }
+        }
+
+        public async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)
+        {
+            return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji").Execute<List<AwardEmoji>>(_client);
+        }
+
+        public async Task ApproveMergeRequest(int projectId, int mergeRequestIid)
+        {
+            var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/approve ", Method.POST);
+
+            var restResponse = await createNoteRequest.Execute(_client);
+
+            if (!restResponse.IsSuccessful)
+            {
+                throw new GitLabApiFailedException(createNoteRequest, restResponse);
+            }
+        }
+
+        public async Task UnapproveMergeRequest(int projectId, int mergeRequestIid)
+        {
+            var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/unapprove ", Method.POST);
+
+            var restResponse = await createNoteRequest.Execute(_client);
+
+            if (!restResponse.IsSuccessful)
+            {
+                throw new GitLabApiFailedException(createNoteRequest, restResponse);
+            }
+        }
+
         public async Task<List<T>> Paged<T>(RestRequest request)
         {
             var result = new List<T>();
