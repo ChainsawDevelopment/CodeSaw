@@ -20,6 +20,7 @@ import ChangedFileTreePopup from "./fileTreePopup";
 import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
 import { DiffType } from "./diffView";
+import { registerHotKey } from "../../lib/hotkeys";
 
 interface FileViewProps {
     file: FileInfo;
@@ -198,6 +199,11 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         if (selectedFile) {
             const nextFile = this._findNextUnreviewedFile(selectedFile.path, 1);
             const prevFile = this._findNextUnreviewedFile(selectedFile.path, -1);
+
+            registerHotKey('[', () => prevFile && onSelectFileForView(prevFile));
+            registerHotKey(']', () => nextFile && onSelectFileForView(nextFile));
+            registerHotKey('y', () => this._changeFileReviewState(!this.props.selectedFile.isReviewed));
+            registerHotKey('ctrl+Enter', this.props.publishReview);
 
             menuItems.push(<Menu.Item fitted key="review-mark">
                 <Popup
