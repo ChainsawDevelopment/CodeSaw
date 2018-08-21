@@ -20,7 +20,7 @@ import ChangedFileTreePopup from "./fileTreePopup";
 import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
 import { DiffType } from "./diffView";
-import { registerHotKey } from "../../lib/hotkeys";
+import { HotKeys } from "../../components/HotKeys";
 
 interface FileViewProps {
     file: FileInfo;
@@ -195,16 +195,19 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         const { selectedFile, onSelectFileForView } = this.props;
 
         const menuItems = [];
+        let reviewHotKeys = {}
 
         if (selectedFile) {
             const nextFile = this._findNextUnreviewedFile(selectedFile.path, 1);
             const prevFile = this._findNextUnreviewedFile(selectedFile.path, -1);
 
-            registerHotKey('[', () => prevFile && onSelectFileForView(prevFile));
-            registerHotKey(']', () => nextFile && onSelectFileForView(nextFile));
-            registerHotKey('y', () => this._changeFileReviewState(!this.props.selectedFile.isReviewed));
-            registerHotKey('ctrl+Enter', this.props.publishReview);
-
+            reviewHotKeys = {
+                '[': () => prevFile && onSelectFileForView(prevFile),
+                ']': () => nextFile && onSelectFileForView(nextFile),
+                'y': () => this._changeFileReviewState(!this.props.selectedFile.isReviewed),
+                'ctrl+Enter': this.props.publishReview
+            };
+            
             menuItems.push(<Menu.Item fitted key="review-mark">
                 <Popup
                     trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
@@ -242,6 +245,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
         return (
             <div ref={this._handleRef}>
+                <HotKeys config={reviewHotKeys} />
                 <Segment>
                     <Sticky context={this.state.stickyContainer} id="file-sticky">
                         <Menu secondary id="file-menu">

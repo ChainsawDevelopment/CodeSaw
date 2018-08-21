@@ -19,7 +19,6 @@ import { usersReducer } from './pages/user/state';
 
 import { adminReducer } from './pages/admin/state';
 import adminSagas from './pages/admin/sagas';
-import { globalHotKeyHandler } from './lib/hotkeys';
 
 interface State {
     router: RouterState
@@ -69,7 +68,5 @@ const Root = () => (
         </ConnectedRouter>
     </Provider>
 );
-
-document.addEventListener('keydown', globalHotKeyHandler);
 
 ReactDOM.render((<Root />), document.getElementById('content'));
