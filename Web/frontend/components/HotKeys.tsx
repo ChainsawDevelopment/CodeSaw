@@ -18,12 +18,10 @@ export class HotKeys extends React.Component<Props> {
         }
 
         document.addEventListener('keydown', this.keyDownListener);
-        console.log("HotKeys handler mounted", this.props.config);
     }
 
     public componentWillUnmount(): void {
         document.removeEventListener('keydown', this.keyDownListener);
-        console.log("HotKeys handler unmounted", this.props.config);
     }
 
     private getHotKeyName(event) {
