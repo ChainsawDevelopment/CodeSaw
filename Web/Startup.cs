@@ -79,7 +79,7 @@ namespace Web
 
             builder.RegisterModule<Cqrs.CqrsModule>();
 
-            builder.Register(BuildGitLabApi).As<IRepository>().InstancePerRequest(); ;
+            builder.Register(BuildGitLabApi).As<IRepository>().InstancePerLifetimeScope();
 
             builder.RegisterType<GitLab.Hooks.HookHandler>().Named<RepositoryApi.Hooks.IHookHandler>("gitlab");
             builder.RegisterType<Modules.Hooks.ReactToHook>().AsImplementedInterfaces();

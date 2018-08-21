@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Autofac;
+using Autofac.Core;
 using GitLab;
 using RepositoryApi;
 using Web.Cqrs;
@@ -12,13 +14,11 @@ namespace Web.BackgroundActions
     public class UpdateCommitStatus : IHandle<ReviewPublishedEvent>, IHandle<ReviewChangedExternallyEvent>
     {
         private readonly IQueryRunner _query;
-        private readonly IRepository _api;
         private readonly ILifetimeScope _scope;
 
-        public UpdateCommitStatus(IQueryRunner query, IRepository api, ILifetimeScope scope)
+        public UpdateCommitStatus(IQueryRunner query, ILifetimeScope scope)
         {
             _query = query;
-            _api = api;
             _scope = scope;
         }
 
@@ -36,15 +36,19 @@ namespace Web.BackgroundActions
         {
             var commitStatus = await _query.Query(new GetCommitStatus(reviewId));
 
-            var globalToken = _scope.ResolveNamed<IGitAccessTokenSource>("global_token");
-
-            using (var innerScope = _scope.BeginLifetimeScope(cb=>cb.RegisterInstance(globalToken).As<IGitAccessTokenSource>()))
+            using (var innerScope = _scope.BeginLifetimeScope(UseGlobalAccessToken))
             {
                 var api = innerScope.Resolve<IRepository>();
                 var mergeRequest = await api.GetMergeRequestInfo(reviewId.ProjectId, reviewId.ReviewId);
 
                 await api.SetCommitStatus(reviewId.ProjectId, mergeRequest.HeadCommit, commitStatus);
             }
+        }
+
+        private void UseGlobalAccessToken(ContainerBuilder cb)
+        {
+            var globalToken = _scope.ResolveNamed<IGitAccessTokenSource>("global_token");
+            cb.RegisterInstance(globalToken).As<IGitAccessTokenSource>().SingleInstance();
         }
     }
 }

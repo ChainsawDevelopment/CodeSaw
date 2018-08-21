@@ -25,6 +25,7 @@ namespace GitLab
         {
             _accessTokenSource = accessTokenSource;
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
+
             if (accessTokenSource.Type == TokenType.OAuth)
             {
                 _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");
@@ -33,8 +34,6 @@ namespace GitLab
             {
                 _client.AddDefaultHeader("Private-Token", accessTokenSource.AccessToken);
             }
-
-            
 
             //_client.ConfigureWebRequest(wr =>
             //{
@@ -196,8 +195,6 @@ namespace GitLab
 
         public async Task SetCommitStatus(int projectId, string commit, CommitStatus status)
         {
-            Console.WriteLine($"Commit status {_accessTokenSource.Type} {_accessTokenSource.AccessToken}");
-
             await new RestRequest($"/projects/{projectId}/statuses/{commit}", Method.POST)
                 .AddJsonBody(new
                 {
