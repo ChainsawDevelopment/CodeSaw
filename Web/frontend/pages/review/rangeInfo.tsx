@@ -19,6 +19,7 @@ import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
 import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
+import { DiffType } from "./diffView";
 
 interface FileViewProps {
     file: FileInfo;
@@ -74,6 +75,13 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
             }
         }
 
+        const diffTypes = {
+            'modified': 'modify' as DiffType,
+            'created': 'add' as DiffType,
+            'deleted': 'delete' as DiffType,
+            'renamed': 'modify' as DiffType
+        };
+
         return (
             <span ref={span => this.renderedRef = span}>
                 <FileSummary file={file} />
@@ -89,6 +97,8 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         pendingResolved={this.props.pendingResolved}
                         unpublishedReplies={this.props.unpublishedReplies}
                         currentUser={this.props.currentUser}
+                        contents={this.props.file.diff.contents.review}
+                        type={diffTypes[this.props.file.fileToReview.changeType]}
                     /> 
                     : null}
             </span>

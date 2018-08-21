@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, getChangeKey, markWordEdits } from 'react-diff-view';
+import { Diff, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 import 'react-diff-view/index.css';
 import './diffView.less';
@@ -150,10 +150,17 @@ export interface LineWidget {
     widget: JSX.Element;
 }
 
+export type DiffType = 'modify' | 'add' | 'delete';
+
 export interface Props {
     diffInfo: FileDiff;
     lineWidgets: LineWidget[];
+    type: DiffType;
     onLineClick?: (side: DiffSide, line: number) => void;
+    contents: {
+        previous: string;
+        current: string;
+    };
 }
 
 const leftSideMatch = (change: Change, lineNumber: number) => {
@@ -186,7 +193,33 @@ const diffView = (props: Props) => {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
 
-    const viewHunks = props.diffInfo.hunks.map(mapHunkToView);
+    let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
+
+    if(viewHunks.length > 0) {
+        // expands all hunks that matches condition
+        // however condition is just `false` so nothing will be expanded
+        // once we start working on expanding/collapsing hunks this will be useful
+        viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+    }
+
+    for (let widget of props.lineWidgets) {
+        const matchingHunk = viewHunks.findIndex(i =>
+            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber <= i.oldStart + i.oldLines)
+            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber <= i.newStart + i.newLines)
+        );
+
+        if (matchingHunk >= 0) {
+            continue;
+        }
+
+        let lineNumber = widget.lineNumber;
+
+        if (widget.side == 'right') {
+            lineNumber = getCorrespondingOldLineNumber(viewHunks, lineNumber);
+        }
+
+        viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
+    }
 
     const events = {
         gutter: {
@@ -222,7 +255,7 @@ const diffView = (props: Props) => {
     return (
         <Diff
             viewType="split"
-            diffType="modify"
+            diffType={props.type}
             hunks={viewHunks}
             customEvents={events}
             markEdits={markEdits}
