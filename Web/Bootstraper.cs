@@ -83,7 +83,8 @@ namespace Web
 
                 if (context.CurrentUser!=null)
                 {
-                    builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().SingleInstance().WithAttributeFiltering();    
+                    builder.RegisterType<CachedGitAccessTokenSource>().AsImplementedInterfaces().SingleInstance().WithAttributeFiltering();
+                    builder.RegisterInstance(new CustomToken(_globalToken)).Named<IGitAccessTokenSource>("global_token");
                 }
                 else
                 {
