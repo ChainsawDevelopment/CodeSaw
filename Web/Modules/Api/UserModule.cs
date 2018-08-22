@@ -8,7 +8,7 @@ namespace Web.Modules.Api
     {
         public UserModule(IQueryRunner query) : base("/api/user")
         {
-            Get("/current", async _ => await query.Query(new GetCurrentUserQuery()));
+            Get("/current", async _ => await query.Query(new GetCurrentUser()));
         }
     }
 }

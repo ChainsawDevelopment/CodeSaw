@@ -2,7 +2,6 @@
 using Nancy.Security;
 using Web.Cqrs;
 using Web.Modules.Api.Queries;
-using Web.Modules.Db;
 
 namespace Web.Modules.Api
 {
