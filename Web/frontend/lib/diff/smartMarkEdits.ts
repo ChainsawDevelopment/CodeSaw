@@ -1,4 +1,4 @@
-import { markWordEdits } from 'react-diff-view';
+import { markWordEdits } from 'react-diff-view/utils';
 import { EINTR } from 'constants';
 
 interface Change {
