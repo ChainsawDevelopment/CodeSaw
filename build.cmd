@@ -13,7 +13,7 @@ rem dotnet restore %BASE%\dotnet-fake.csproj
 
 set DOTNET=dotnet
 
-if not ("%DOTNETCORE_SDK_PATH%" == "") (
+if not "%DOTNETCORE_SDK_PATH%" == "" (
     set DOTNET=%DOTNETCORE_SDK_PATH%\%DOTNET%
     set DOTNET_ROOT=%DOTNETCORE_SDK_PATH%
 )
