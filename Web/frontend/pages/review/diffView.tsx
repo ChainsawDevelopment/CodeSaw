@@ -1,12 +1,11 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
+import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
-import 'react-diff-view/index.css';
+import 'react-diff-view/style/index.css';
 import './diffView.less';
 import * as classNames from "classnames";
-import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
 interface Change {
     oldLineNumber: number;
@@ -222,7 +221,7 @@ const diffView = (props: Props) => {
     }
 
     const events = {
-        gutter: {
+        gutterEvents: {
             onClick: change => {
                 if(props.onLineClick) {
                     const lineNumber = change.newLineNumber;
@@ -250,17 +249,22 @@ const diffView = (props: Props) => {
         }
     }
 
-    const markEdits = smartMarkEdits();
+    const tokens = tokenize(viewHunks, {
+        oldSource: props.contents.previous,
+        enhancers: [
+            markEdits(viewHunks)
+        ]
+    });
 
     return (
         <Diff
             viewType="split"
             diffType={props.type}
-            hunks={viewHunks}
-            customEvents={events}
-            markEdits={markEdits}
             widgets={widgets}
-        />
+            tokens={tokens}
+        >
+        {viewHunks.map((h, i) => <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents}/>)}
+        </Diff>
     );
 };
 

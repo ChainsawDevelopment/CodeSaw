@@ -21,7 +21,7 @@
     "less": "^3.0.4",
     "less-loader": "^4.1.0",
     "react": "^16.3.2",
-    "react-diff-view": "https://git.kplabs.pl/mnowak/react-diff-view.git#git-reviewer",
+    "react-diff-view": "https://git.kplabs.pl/mnowak/react-diff-view.git#575b113",
     "react-dom": "^16.3.2",
     "react-redux": "^5.0.7",
     "react-router": "^4.2.0",
