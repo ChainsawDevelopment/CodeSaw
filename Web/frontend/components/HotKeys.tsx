@@ -8,9 +8,16 @@ export class HotKeys extends React.Component<Props> {
     keyDownListener: (event: any) => void;
 
     public componentDidMount(): void {
-        this.keyDownListener = (event: any) : void =>  {
+        this.keyDownListener = (event: any): void => {
+            var inputTags = ['input', 'textarea'];
+
+            const activeElement = document.activeElement;
+            if (activeElement && inputTags.indexOf(activeElement.tagName.toLowerCase()) !== -1) {
+                return;
+            }
+
             const hotKeyName = this.getHotKeyName(event);
-    
+
             if (this.props.config[hotKeyName]) {
                 this.props.config[hotKeyName](event);
                 event.preventDefault();
@@ -18,19 +25,17 @@ export class HotKeys extends React.Component<Props> {
         }
 
         document.addEventListener('keydown', this.keyDownListener);
-        console.log("HotKeys handler mounted", this.props.config);
     }
 
     public componentWillUnmount(): void {
         document.removeEventListener('keydown', this.keyDownListener);
-        console.log("HotKeys handler unmounted", this.props.config);
     }
 
     private getHotKeyName(event) {
         if (event.ctrlKey) {
             return "ctrl+"+event.key;
         }
-    
+
         return event.key;
     }
 
