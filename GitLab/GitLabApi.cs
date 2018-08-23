@@ -18,11 +18,14 @@ namespace GitLab
 {
     public class GitLabApi : IRepository
     {
+        private readonly IGitAccessTokenSource _accessTokenSource;
         private readonly RestClient _client;
 
         public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource)
         {
+            _accessTokenSource = accessTokenSource;
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
+
             if (accessTokenSource.Type == TokenType.OAuth)
             {
                 _client.AddDefaultHeader("Authorization", $"Bearer {accessTokenSource.AccessToken}");

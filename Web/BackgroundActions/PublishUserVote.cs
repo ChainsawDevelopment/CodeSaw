@@ -22,7 +22,14 @@ namespace Web.BackgroundActions
         }
 
         public async Task Handle(ReviewPublishedEvent @event)
-        {   
+        {
+            var mergeRequest = await _api.GetMergeRequestInfo(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId);
+
+            if (mergeRequest.Author.Username == _user.UserName)
+            {
+                return;
+            }
+
             var commitStatus = await _query.Query(new GetCommitStatus(@event.ReviewId));
 
             if (commitStatus.State == CommitStatusState.Success)
