@@ -213,12 +213,21 @@ const diffView = (props: Props) => {
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
-    if(viewHunks.length > 0) {
-        // expands all hunks that matches condition
-        // however condition is just `false` so nothing will be expanded
-        // once we start working on expanding/collapsing hunks this will be useful
-        viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+    if (viewHunks.length == 0) {
+        viewHunks.push({
+            oldStart: 1,
+            oldLines: 0,
+            newStart: 1,
+            newLines: 1,
+            content: '',
+            changes: []
+        });
     }
+
+    // expands all hunks that matches condition
+    // however condition is just `false` so nothing will be expanded
+    // once we start working on expanding/collapsing hunks this will be useful
+    viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
@@ -233,7 +242,7 @@ const diffView = (props: Props) => {
         let lineNumber = widget.lineNumber;
 
         if (widget.side == 'right') {
-            lineNumber = viewHunks.length > 0 ? getCorrespondingOldLineNumber(viewHunks, lineNumber) : widget.lineNumber;
+            lineNumber = getCorrespondingOldLineNumber(viewHunks, lineNumber);
         }
 
         viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
