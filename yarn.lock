@@ -4984,9 +4984,9 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.1.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-"react-diff-view@https://git.kplabs.pl/mnowak/react-diff-view.git#575b113":
+"react-diff-view@https://git.kplabs.pl/mnowak/react-diff-view.git#dec3abd":
   version "1.6.2"
-  resolved "https://git.kplabs.pl/mnowak/react-diff-view.git#575b113180952e6e80bec716d9aa26dd8908e0b2"
+  resolved "https://git.kplabs.pl/mnowak/react-diff-view.git#dec3abdc9e7eca3e6e870a1bf246aa68414d0486"
   dependencies:
     classnames "^2.2.6"
     diff-match-patch "^1.0.1"

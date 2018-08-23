@@ -186,6 +186,25 @@ const rightSideMatch = (change: Change, lineNumber: number) => {
     return true;
 }
 
+const getFullChangeKey = change => {
+    if (!change) {
+        throw new Error('change is not provided');
+    }
+
+    const {isNormal, isInsert, oldLineNumber, newLineNumber} = change;
+
+    let prefix = '';
+
+    if (isNormal) {
+        prefix = 'N';
+    } else if (isInsert) {
+        prefix = 'I';
+    } else {
+        prefix = 'D';
+    }
+
+    return prefix + oldLineNumber + '_' + newLineNumber;
+};
 
 const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
@@ -214,7 +233,7 @@ const diffView = (props: Props) => {
         let lineNumber = widget.lineNumber;
 
         if (widget.side == 'right') {
-            lineNumber = getCorrespondingOldLineNumber(viewHunks, lineNumber);
+            lineNumber = viewHunks.length > 0 ? getCorrespondingOldLineNumber(viewHunks, lineNumber) : widget.lineNumber;
         }
 
         viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
@@ -223,6 +242,7 @@ const diffView = (props: Props) => {
     const events = {
         gutterEvents: {
             onClick: change => {
+                console.log('click', change);
                 if(props.onLineClick) {
                     const lineNumber = change.newLineNumber;
                     props.onLineClick('right', lineNumber); // TODO: detect side
@@ -242,7 +262,7 @@ const diffView = (props: Props) => {
                     continue;
                 }
 
-                widgets[getChangeKey(change)] = item.widget;
+                widgets[getFullChangeKey(change) + '_' + item.side[0].toUpperCase()] = item.widget;
 
                 break;
             }
