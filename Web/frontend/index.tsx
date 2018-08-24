@@ -21,6 +21,7 @@ import { loadingReducer } from './loading/state';
 
 import { adminReducer } from './pages/admin/state';
 import adminSagas from './pages/admin/sagas';
+import notify from './notify';
 
 interface State {
     router: RouterState
@@ -31,7 +32,7 @@ const history = createHistory();
 const historyMiddleware = routerMiddleware(history);
 
 const sagaMiddleware = sagaMiddlewareFactory({
-    onError: e => console.log('saga error', e)
+    onError: e => notify.error('Error occured. CodeSaw might be no longer working properly!')
 });
 
 const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
