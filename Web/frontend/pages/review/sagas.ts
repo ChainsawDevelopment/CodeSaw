@@ -147,7 +147,7 @@ function* publishReviewSaga() {
 
         yield stopOperation();
 
-        yield notify.success('Your review has been published');
+        notify.success('Your review has been published');
     }
 }
 

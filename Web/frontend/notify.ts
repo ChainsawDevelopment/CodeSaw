@@ -1,8 +1,10 @@
 import { toast } from 'react-toastify';
-import { call } from 'redux-saga/effects';
 
 export default {
-    success: (message: string) => call(() => toast(message, { 
+    success: (message: string) => toast(message, { 
         type: 'success'
-    }))
+    }),
+    error: (message: string) => toast(message, {
+        type: 'error'
+    })
 }
