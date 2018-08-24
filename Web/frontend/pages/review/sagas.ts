@@ -12,6 +12,7 @@ import {
     PublishReviewArgs,
 } from './state';
 import { Action } from "typescript-fsa";
+import notify from '../../notify';
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
@@ -145,6 +146,8 @@ function* publishReviewSaga() {
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId, fileToPreload: action.payload.fileToLoad }));
 
         yield stopOperation();
+
+        yield notify.success('Your review has been published');
     }
 }
 

@@ -9,6 +9,9 @@ import Dimmer from '@ui/modules/Dimmer';
 import Loader from '@ui/elements/Loader';
 import { Link, Route, withRouter, RouteComponentProps } from "react-router-dom";
 import { connect } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
+
 import ConnectedSwitch from './routing/ConnectedSwitch';
 
 import ReviewPage from './pages/review';
@@ -64,6 +67,7 @@ const Layout = (props: StateProps) => (
                 </Menu.Menu>
             </Container>
         </Menu>
+        <ToastContainer />
         <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
