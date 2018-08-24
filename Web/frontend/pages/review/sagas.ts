@@ -16,6 +16,7 @@ import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, Revie
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
+import { startOperation, stopOperation } from "../../loading/saga";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
     return {
@@ -29,6 +30,9 @@ function* loadFileDiffSaga() {
 
     for (; ;) {
         const action: Action<{ path: PathPairs.PathPair }> = yield take(selectFileForView);
+
+        yield startOperation();
+
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: {
@@ -42,6 +46,8 @@ function* loadFileDiffSaga() {
         const diff = yield api.getDiff(currentRange.reviewId, resolveProvisional(currentRange.range, currentRange.headCommit), currentRange.path);
 
         yield put(loadedFileDiff(diff));
+
+        yield stopOperation();
     }
 }
 
@@ -50,6 +56,8 @@ function* loadReviewInfoSaga() {
 
     for (; ;) {
         const action: Action<{ reviewId: ReviewId, fileToPreload?: string }> = yield take(loadReviewInfo);
+        yield startOperation();
+
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
@@ -73,6 +81,8 @@ function* loadReviewInfoSaga() {
                 yield put(selectFileForView({ path: file.reviewFile }));
             }
         }
+
+        yield stopOperation();
     }
 }
 
@@ -90,6 +100,9 @@ function* publishReviewSaga() {
     const api = new ReviewerApi();
     for (; ;) {
         const action: Action<PublishReviewArgs> = yield take(publishReview);
+
+        yield startOperation();
+
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
             revision: {
@@ -130,6 +143,8 @@ function* publishReviewSaga() {
         }
 
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId, fileToPreload: action.payload.fileToLoad }));
+
+        yield stopOperation();
     }
 }
 
@@ -139,9 +154,13 @@ function* mergePullRequestSaga() {
     for (; ;) {
         const action: Action<MergePullRequestArgs> = yield take(mergePullRequest);
 
+        yield startOperation();
+
         yield api.mergePullRequest(action.payload.reviewId, action.payload.shouldRemoveBranch, action.payload.commitMessage);
 
         yield put(loadReviewInfo({ reviewId: action.payload.reviewId }));
+
+        yield stopOperation();
     }
 }
 
