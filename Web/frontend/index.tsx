@@ -17,6 +17,8 @@ import { reviewsReducer } from './pages/reviews/state';
 import reviewsSagas from './pages/reviews/sagas';
 import { usersReducer } from './pages/user/state';
 
+import { loadingReducer } from './loading/state';
+
 import { adminReducer } from './pages/admin/state';
 import adminSagas from './pages/admin/sagas';
 
@@ -38,7 +40,8 @@ const store = createStore(
         review: reviewReducer,
         reviews: reviewsReducer,
         admin: adminReducer,
-        currentUser: usersReducer
+        currentUser: usersReducer,
+        loading: loadingReducer
     }),
     composeEnhancers(
         applyMiddleware(historyMiddleware, sagaMiddleware)

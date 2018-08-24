@@ -5,7 +5,10 @@ import * as React from "react";
 import Menu from '@ui/collections/Menu';
 import Container from '@ui/elements/Container';
 import Icon from '@ui/elements/Icon';
+import Dimmer from '@ui/modules/Dimmer';
+import Loader from '@ui/elements/Loader';
 import { Link, Route, withRouter, RouteComponentProps } from "react-router-dom";
+import { connect } from 'react-redux';
 import ConnectedSwitch from './routing/ConnectedSwitch';
 
 import ReviewPage from './pages/review';
@@ -17,6 +20,7 @@ import AdminPage from './pages/admin';
 import "./layout.less";
 import { ReviewId } from "./api/reviewer";
 import CurrentUser from './pages/user/User';
+import { RootState } from './rootState';
 
 const Home = () => (
     <span>
@@ -35,16 +39,12 @@ const Review = withRouter((props: RouteComponentProps<{projectId: string; id: st
     />)
 });
 
-const Layout = () => {
-    return (
-        <div className="test-div">
-            test
-        </div>
-    );
-};
+interface StateProps {
+    inProgressOperationsCount: number;
+}
 
-export default () => (
-    <>
+const Layout = (props: StateProps) => (
+    <Dimmer.Dimmable as='div' dimmed={props.inProgressOperationsCount > 0}>
         <Menu inverted>
             <Container fluid>
                 <Menu.Item as={(props) => (<Link to='/' {...props} />)}>
@@ -69,10 +69,19 @@ export default () => (
                 <Route exact path="/" component={Home} />
                 <Route path="/project/:projectId/review/:id/:fileName?" component={Review} />
                 <Route exact path="/admin" component={AdminPage} />
-                <Route path="/layout" component={Layout} />
             </ConnectedSwitch>
         </Container>
 
+        <Dimmer active={props.inProgressOperationsCount > 0}>
+            <Loader size='large' />
+        </Dimmer>
+
         <div className="footer">This is the bottom <i aria-hidden="true" className="pointing down icon"></i></div>
-    </>
+    </Dimmer.Dimmable>
 );
+
+export default connect(
+    (state: RootState):StateProps => ({
+        inProgressOperationsCount: state.loading.inProgressOperationsCount
+    })
+)(Layout);
