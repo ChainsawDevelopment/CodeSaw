@@ -193,6 +193,19 @@ const acceptJson = {
     credentials: 'include' as RequestCredentials
 };
 
+export class ReviewerApiError extends Error {
+    constructor(statusCode: number, url: string) {
+        super(`Reviewer API error: HTTP ${statusCode} at '${url}'`);
+    }
+}
+
+const mustBeOk = (value: Response): Response => {
+    if (!value.ok) {
+        throw new ReviewerApiError(value.status, value.url);
+    }
+    return value;
+}
+
 export class ReviewConcurrencyError extends Error {
     constructor() {
         super('Publish review concurrency issue');
@@ -204,17 +217,19 @@ export class ReviewerApi {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
             acceptJson
-        ).then(r => r.json());
+        ).then(mustBeOk).then(r => r.json());
     };
 
     public getReviews = (): Promise<Review[]> => {
         return fetch('/api/reviews', acceptJson)
+            .then(mustBeOk)
             .then(r => r.json())
             .then(r => r as Review[]);
     };
 
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
+            .then(mustBeOk)
             .then(r => r.json())
             .then(r => r as ReviewInfo);
     }
@@ -247,6 +262,8 @@ export class ReviewerApi {
         ).then(r => {
             if (r.status == 409) {
                 throw new ReviewConcurrencyError()
+            } else {
+                mustBeOk(r);
             }
         });
     }
@@ -263,11 +280,12 @@ export class ReviewerApi {
                 shouldRemoveBranch,
                 commitMessage
             })
-        });
+        }).then(mustBeOk);
     }
 
     public getProjects = (): Promise<ProjectInfo[]> => {
         return fetch('/api/admin/projects', acceptJson)
+            .then(mustBeOk)
             .then(r => r.json())
             .then(r => r as ProjectInfo[]);
     }
@@ -276,11 +294,12 @@ export class ReviewerApi {
         return fetch(`/api/admin/project/${projectId}/setup_hooks`, {
             ...acceptJson,
             method: 'POST'
-        });
+        }).then(mustBeOk);
     }
 
     public getCurrentUser = (): Promise<UserState> => {
         return fetch(`/api/user/current`, acceptJson)
+            .then(mustBeOk)
             .then(r => r.json())
             .then(r => r as UserState);
     }

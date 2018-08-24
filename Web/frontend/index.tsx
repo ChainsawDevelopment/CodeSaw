@@ -30,7 +30,9 @@ const history = createHistory();
 
 const historyMiddleware = routerMiddleware(history);
 
-const sagaMiddleware = sagaMiddlewareFactory();
+const sagaMiddleware = sagaMiddlewareFactory({
+    onError: e => console.log('saga error', e)
+});
 
 const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
