@@ -24,5 +24,23 @@ namespace RepositoryApi
         Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid);
         Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType);
         Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId);
+        Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha);
+    }
+
+    public class BuildStatus
+    {
+        public Status State { get; set; }
+        public string Name { get; set; }
+        public string TargetUrl { get; set; }
+        public string Description { get; set; }
+
+        public enum Status
+        {
+            Success,
+            Pending,
+            Running,
+            Failed,
+            Canceled
+        }
     }
 }

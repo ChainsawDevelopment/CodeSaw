@@ -34,6 +34,7 @@ import "./review.less";
 import * as PathPairs from "../../pathPair";
 import CommentsView, { CommentsActions } from './commentsView';
 import FileMatrix from './fileMatrix';
+import ReviewInfoView from './reviewInfoView';
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
 import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
@@ -138,7 +139,7 @@ class reviewPage extends React.Component<Props> {
                             <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
 
                             <h1>Review {props.currentReview.title}</h1>
-                            <a href={props.currentReview.webUrl}>{props.currentReview.webUrl}</a>
+                            <ReviewInfoView />
 
                             <MergeApprover
                                 reviewId={props.reviewId}

@@ -114,6 +114,7 @@ export interface FileToReview {
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
+    description: string;
     pastRevisions: {
         number: number;
         head: string;

@@ -251,6 +251,12 @@ namespace GitLab
             }
         }
 
+        public async Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha)
+        {
+            return await new RestRequest($"/projects/{projectId}/repository/commits/{commitSha}/statuses")
+                .Execute<List<BuildStatus>>(_client);
+        }
+
         public async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)
         {
             return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji").Execute<List<AwardEmoji>>(_client);
