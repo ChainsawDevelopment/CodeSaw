@@ -34,7 +34,7 @@ namespace Web.Modules.Api
                         ok = true
                     };
                 }
-                catch (ReviewConcurrencyException )
+                catch (ReviewConcurrencyException)
                 {
                     return Response.AsJson(new {error = "review_concurrency"}, HttpStatusCode.Conflict);
                 }
@@ -42,8 +42,15 @@ namespace Web.Modules.Api
 
             Post("/merge_request/merge", async _ =>
             {
-                await command.Execute(this.Bind<MergePullRequest>());
-                return new { };
+                try
+                {
+                    await command.Execute(this.Bind<MergePullRequest>());
+                    return new { };
+                }
+                catch (MergeFailedException)
+                {
+                    return Response.AsJson(new {error = "merge_failed"}, HttpStatusCode.ImATeapot);
+                }
             });
 
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));

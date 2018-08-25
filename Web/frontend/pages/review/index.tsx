@@ -144,6 +144,7 @@ class reviewPage extends React.Component<Props> {
                             <MergeApprover
                                 reviewId={props.reviewId}
                                 reviewState={props.currentReview.state}
+                                mergeStatus={props.currentReview.mergeStatus}
                                 mergePullRequest={props.mergePullRequest}
                             />
                         </Grid.Column>

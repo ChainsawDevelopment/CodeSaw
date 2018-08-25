@@ -3,7 +3,8 @@ import * as React from "react";
 import "./mergeApprover.less";
 import Button from 'semantic-ui-react/dist/commonjs/elements/Button';
 import Checkbox, { CheckboxProps } from 'semantic-ui-react/dist/commonjs/modules/Checkbox';
-import { ReviewId, ReviewInfoState } from "../../api/reviewer";
+import { ReviewId, ReviewInfoState, ReviewMergeStatus } from "../../api/reviewer";
+import Icon from "@ui/elements/Icon";
 
 interface StatelessProps {
     reviewId: ReviewId,
@@ -40,6 +41,7 @@ const OpenedMergeRequestStateless = (props: StatelessProps): JSX.Element => {
 interface Props {
     reviewId: ReviewId,
     reviewState: ReviewInfoState,
+    mergeStatus: ReviewMergeStatus;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
 }
 
@@ -64,10 +66,10 @@ class OpenedMergeRequest extends React.Component<Props, { removeSourceBranch: bo
 }
 
 const NotMergableRequest = (props: Props): JSX.Element => 
-     (<div>Review is <span className="review-state">{props.reviewState}</span></div>)
+     (<div><Icon color='red' name='times circle' /> Review is <span className="review-state">{props.reviewState}</span> but cannot be merged</div>)
 
 const mergeApprover = (props: Props): JSX.Element => {
-    if (props.reviewState == "opened") {
+    if (props.reviewState == "opened" && props.mergeStatus == 'can_be_merged') {
         return (<OpenedMergeRequest {...props}/>)
     } else {
         return (<NotMergableRequest {...props} />)

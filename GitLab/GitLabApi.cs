@@ -133,6 +133,11 @@ namespace GitLab
                     $"Request {request.Method} {request.Resource} failed with {(int) response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
             }
 
+            if (response.StatusCode == HttpStatusCode.MethodNotAllowed)
+            {
+                throw new MergeFailedException();
+            }
+
             if (shouldRemoveBranch)
             {
                 // So, GitLab is ignoring our request to delete source branch so we try to delete branch manually.
