@@ -3,7 +3,7 @@ import { Hunk, FileDiff } from "../../api/reviewer";
 
 import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
-import 'react-diff-view/style/index.css';
+const style = require('react-diff-view/style/index.css');
 import './diffView.less';
 import * as classNames from "classnames";
 

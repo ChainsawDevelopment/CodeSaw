@@ -1,5 +1,10 @@
 import * as React from "react";
-import { Button, Checkbox, CheckboxProps, Comment as UIComment, Form, Header, TextAreaProps } from "semantic-ui-react"
+import Button from '@ui/elements/Button';
+import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
+import UIComment from '@ui/views/Comment';
+import Form from '@ui/collections/Form';
+import Header from '@ui/elements/Header';
+import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment } from "../../api/reviewer";
 
 import "./commentsView.less";
