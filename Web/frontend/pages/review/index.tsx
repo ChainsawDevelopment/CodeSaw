@@ -131,38 +131,41 @@ class reviewPage extends React.Component<Props> {
 
         return (
             <div id="review-page">
-                <Grid centered columns={2}>
+                <OnMount onMount={load} />
+                <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
+                
+                <Grid>
                     <Grid.Row>
-                        <Grid.Column>
-
-                            <OnMount onMount={load} />
-                            <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
-
+                        <Grid.Column width={8}>
                             <h1>Review {props.currentReview.title}</h1>
-                            <ReviewInfoView />
-
+                        </Grid.Column>
+                        <Grid.Column width={4}>
                             <MergeApprover
                                 reviewId={props.reviewId}
                                 reviewState={props.currentReview.state}
                                 mergePullRequest={props.mergePullRequest}
                             />
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Grid.Column>
+                            <ReviewInfoView />
                             <Divider />
-
-                            <Grid columns={1}>
-                                <Grid.Row>
-                                    <Grid.Column>
-                                        <FileMatrix />
-                                    </Grid.Column>
-                                </Grid.Row>
-                            </Grid>
-
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row centered columns={1}>
+                        <Grid.Column>
+                            <FileMatrix />
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Grid.Column>
                             <CommentsView
                                 comments={comments}
                                 actions={commentActions}
                                 unpublishedReplies={props.unpublishedReplies}
                                 currentUser={props.currentUser}
                             />
-
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

@@ -189,7 +189,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
 
     return (
         <div className='file-matrix'>
-            <Table definition celled compact striped textAlign='center'>
+            <Table definition celled compact striped collapsing textAlign='center'>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell />
