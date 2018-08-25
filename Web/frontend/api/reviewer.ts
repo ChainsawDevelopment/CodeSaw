@@ -199,6 +199,14 @@ export interface ProjectInfo {
     canConfigureHooks: boolean;
 }
 
+export interface Paged<T> {
+    items: T[];
+    perPage: number;
+    page: number;
+    totalPages: number;
+    totalItems: number;
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -239,11 +247,17 @@ export class ReviewerApi {
         ).then(mustBeOk).then(r => r.json());
     };
 
-    public getReviews = (): Promise<Review[]> => {
+    public getReviews = (): Promise<Paged<Review>> => {
         return fetch('/api/reviews', acceptJson)
             .then(mustBeOk)
             .then(r => r.json())
-            .then(r => r as Review[]);
+            .then(r => ({
+                items: r as Review[],
+                perPage: 20,
+                page: 1,
+                totalPages: 2,
+                totalItems: 28
+            }));
     };
 
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {

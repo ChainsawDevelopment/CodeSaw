@@ -84,7 +84,7 @@ const Reviews = (props: Props) => (
 
 export default connect(
     (state: RootState): StateProps => ({
-        list: state.reviews.reviews
+        list: state.reviews.reviews.items
     }),
     (dispatch: Dispatch): DispatchProps => ({
         loadReviews: () => dispatch(loadReviews())

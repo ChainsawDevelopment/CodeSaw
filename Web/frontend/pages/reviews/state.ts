@@ -1,16 +1,22 @@
 import actionCreatorFactory, { AnyAction } from "typescript-fsa";
-import { Review } from "../../api/reviewer";
+import { Review, Paged } from "../../api/reviewer";
 
 export interface ReviewsState {
-    reviews: Review[];
+    reviews: Paged<Review>;
 }
 
 const createAction = actionCreatorFactory('REVIEWS');
 export const loadReviews = createAction('LOAD_REVIEWS');
-export const reviewsLoaded = createAction<{reviews: Review[]}>('REVIEWS_LOADED');
+export const reviewsLoaded = createAction<{reviews: Paged<Review>}>('REVIEWS_LOADED');
 
 const initial: ReviewsState = {
-    reviews: []
+    reviews: {
+        items: [],
+        page: 1,
+        perPage: 20,
+        totalItems: 0,
+        totalPages: 1
+    }
 }
 
 export const reviewsReducer = (state: ReviewsState = initial, action: AnyAction): ReviewsState => {

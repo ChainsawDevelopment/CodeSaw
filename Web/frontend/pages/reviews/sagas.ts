@@ -1,6 +1,6 @@
 import { take, put } from "redux-saga/effects";
 import { Action } from "typescript-fsa";
-import { ReviewerApi, Review } from '../../api/reviewer';
+import { ReviewerApi, Review, Paged } from '../../api/reviewer';
 import { loadReviews, reviewsLoaded } from "./state";
 import { startOperation, stopOperation } from "../../loading/saga";
 
@@ -12,7 +12,7 @@ function* loadReviewsSaga() {
 
         yield startOperation();
 
-        const reviews: Review[] = yield api.getReviews();
+        const reviews: Paged<Review> = yield api.getReviews();
         yield put(reviewsLoaded({ reviews }));
         
         yield stopOperation();
