@@ -38,6 +38,7 @@ import ReviewInfoView from './reviewInfoView';
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
 import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+import Icon from '@ui/elements/Icon';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -137,7 +138,7 @@ class reviewPage extends React.Component<Props> {
                 <Grid>
                     <Grid.Row>
                         <Grid.Column width={8}>
-                            <h1>Review {props.currentReview.title}</h1>
+                            <h1>Review {props.currentReview.title} <a href={props.currentReview.webUrl} target="_blank"><Icon name='external alternate' size='tiny'/></a></h1>
                         </Grid.Column>
                         <Grid.Column width={4}>
                             <MergeApprover

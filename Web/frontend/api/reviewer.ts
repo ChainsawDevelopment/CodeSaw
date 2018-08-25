@@ -139,6 +139,8 @@ export interface ReviewInfo {
     fileMatrix: any;
     filesToReview: FileToReview[];
     buildStatuses: BuildStatus[];
+    sourceBranch: string;
+    targetBranch: string;
 }
 
 export interface CommentReply {

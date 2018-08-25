@@ -101,7 +101,9 @@ const initial: ReviewState = {
         reviewDiscussions: [],
         fileMatrix: [],
         filesToReview: [],
-        buildStatuses: []
+        buildStatuses: [],
+        sourceBranch: '',
+        targetBranch: ''
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],

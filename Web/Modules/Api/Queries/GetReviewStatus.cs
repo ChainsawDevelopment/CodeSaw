@@ -81,6 +81,8 @@ namespace Web.Modules.Api.Queries
                 {
                     Title = mergeRequest.Title,
                     Description = mergeRequest.Description,
+                    SourceBranch = mergeRequest.SourceBranch,
+                    TargetBranch = mergeRequest.TargetBranch,
                     WebUrl = mergeRequest.WebUrl,
                     MergeRequestState = mergeRequest.State,
                     MergeStatus = mergeRequest.MergeStatus,
@@ -118,6 +120,8 @@ namespace Web.Modules.Api.Queries
             public MergeStatus MergeStatus { get; set; }
             public string WebUrl { get; set; }
             public string Description { get; set; }
+            public string SourceBranch { get; set; }
+            public string TargetBranch { get; set; }
         }
 
         public class FileStatus

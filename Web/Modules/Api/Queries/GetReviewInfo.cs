@@ -33,6 +33,8 @@ namespace Web.Modules.Api.Queries
             public object FileMatrix { get; set; }
             public string Description { get; set; }
             public List<BuildStatus> BuildStatuses { get; set; }
+            public string SourceBranch { get; set; }
+            public string TargetBranch { get; set; }
         }
 
         public class Revision
@@ -92,10 +94,11 @@ namespace Web.Modules.Api.Queries
                 return new Result
                 {
                     FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName),
-
                     ReviewId = query._reviewId,
                     Title = reviewStatus.Title,
                     Description = reviewStatus.Description,
+                    SourceBranch = reviewStatus.SourceBranch,
+                    TargetBranch = reviewStatus.TargetBranch,
                     PastRevisions = pastRevisions,
                     HasProvisionalRevision = !reviewStatus.RevisionForCurrentHead,
                     HeadCommit = reviewStatus.CurrentHead,
