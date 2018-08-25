@@ -1,12 +1,12 @@
 import actionCreatorFactory, { AnyAction } from "typescript-fsa";
-import { Review, Paged } from "../../api/reviewer";
+import { Review, Paged, ReviewSearchArgs } from "../../api/reviewer";
 
 export interface ReviewsState {
     reviews: Paged<Review>;
 }
 
 const createAction = actionCreatorFactory('REVIEWS');
-export const loadReviews = createAction('LOAD_REVIEWS');
+export const loadReviews = createAction<ReviewSearchArgs>('LOAD_REVIEWS');
 export const reviewsLoaded = createAction<{reviews: Paged<Review>}>('REVIEWS_LOADED');
 
 const initial: ReviewsState = {

@@ -6,8 +6,15 @@ using Web.Cqrs;
 
 namespace Web.Modules.Api.Queries
 {
-    public class GetReviewList : IQuery<IEnumerable<GetReviewList.Item>>
+    public class GetReviewList : IQuery<Paged<GetReviewList.Item>>
     {
+        public MergeRequestSearchArgs Args { get; }
+
+        public GetReviewList(MergeRequestSearchArgs args)
+        {
+            Args = args;
+        }
+
         public class Item
         {
             public UserInfo Author { get; set; }
@@ -18,7 +25,7 @@ namespace Web.Modules.Api.Queries
             public int ChangesCount { get; set; }
         }
 
-        public class Handler : IQueryHandler<GetReviewList, IEnumerable<Item>>
+        public class Handler : IQueryHandler<GetReviewList, Paged<Item>>
         {
             private readonly IRepository _repository;
 
@@ -27,15 +34,15 @@ namespace Web.Modules.Api.Queries
                 _repository = repository;
             }
 
-            public async Task<IEnumerable<Item>> Execute(GetReviewList query)
+            public async Task<Paged<Item>> Execute(GetReviewList query)
             {
-                var activeMergeRequest = await _repository.MergeRequests("opened", "all");
+                var activeMergeRequest = await _repository.MergeRequests(query.Args);
 
-                var projects = await Task.WhenAll(activeMergeRequest.Select(x => x.ProjectId).Distinct().Select(async x => await _repository.Project(x)));
+                var projects = await Task.WhenAll(activeMergeRequest.Items.Select(x => x.ProjectId).Distinct().Select(async x => await _repository.Project(x)));
 
                 // todo: extend with reviewer-specific information
 
-                return (from mr in activeMergeRequest
+                var items = (from mr in activeMergeRequest.Items
                         join project in projects on mr.ProjectId equals project.Id
                         select new Item
                         {
@@ -47,6 +54,15 @@ namespace Web.Modules.Api.Queries
                             ChangesCount = 12
                         }
                     ).ToList();
+
+                return new Paged<Item>
+                {
+                    Items = items,
+                    TotalItems = activeMergeRequest.TotalItems,
+                    TotalPages = activeMergeRequest.TotalPages,
+                    PerPage = activeMergeRequest.PerPage,
+                    Page = activeMergeRequest.Page
+                };
             }
         }
     }

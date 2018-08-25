@@ -13,6 +13,7 @@ using Newtonsoft.Json.Serialization;
 using RepositoryApi;
 using RestSharp;
 using RestSharp.Deserializers;
+using RestSharp.Extensions;
 
 namespace GitLab
 {
@@ -50,31 +51,40 @@ namespace GitLab
             _client.AddHandler("application/json", new NewtonsoftDeserializer(serializer));
         }
 
-        public async Task<List<MergeRequest>> MergeRequests(string state = null, string scope = null)
+        public async Task<Paged<MergeRequest>> MergeRequests(MergeRequestSearchArgs args)
         {
-            return await new RestRequest("/merge_requests", Method.GET)
-                .AddQueryParameter("state", state)
-                .AddQueryParameter("scope", scope)
-                .Execute<List<GitLabMergeRequest>>(_client)
-                .ContinueWith(x =>
+            var request = new RestRequest("/merge_requests", Method.GET)
+                .AddQueryParameter("state", args.State)
+                .AddQueryParameter("scope", args.Scope)
+                .AddQueryParameter("page", args.Page.ToString());
+
+            var response = await _client.ExecuteTaskAsync<List<GitLabMergeRequest>>(request);
+
+            var items = response.Data.Select(mr => new MergeRequest
+            {
+                Author = new UserInfo
                 {
-                    return x.Result.Select(mr => new MergeRequest
-                    {
-                        Author = new UserInfo
-                        {
-                            Username = mr.Author.Username,
-                            GivenName = mr.Author.Name,
-                            AvatarUrl = mr.Author.AvatarUrl
-                        },
-                        Description = mr.Description,
-                        Id = mr.Iid,
-                        MergeStatus = mr.MergeStatus,
-                        ProjectId = mr.ProjectId,
-                        State = mr.State,
-                        Title = mr.Title,
-                        WebUrl = mr.WebUrl
-                    }).ToList();
-                });
+                    Username = mr.Author.Username,
+                    GivenName = mr.Author.Name,
+                    AvatarUrl = mr.Author.AvatarUrl
+                },
+                Description = mr.Description,
+                Id = mr.Iid,
+                MergeStatus = mr.MergeStatus,
+                ProjectId = mr.ProjectId,
+                State = mr.State,
+                Title = mr.Title,
+                WebUrl = mr.WebUrl
+            }).ToList();
+
+            return new Paged<MergeRequest>
+            {
+                Items = items,
+                Page = int.Parse(response.Headers.Single(x => x.Name == "X-Page").Value.ToString()),
+                PerPage = int.Parse(response.Headers.Single(x => x.Name == "X-Per-Page").Value.ToString()),
+                TotalPages = int.Parse(response.Headers.Single(x => x.Name == "X-Total-Pages").Value.ToString()),
+                TotalItems = int.Parse(response.Headers.Single(x => x.Name == "X-Total").Value.ToString()),
+            };
         }
 
         public async Task<ProjectInfo> Project(int projectId)

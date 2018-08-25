@@ -7,86 +7,51 @@ import { connect, Dispatch } from "react-redux";
 import { RootState } from "../../rootState";
 import { loadReviews } from "./state";
 import { OnMount } from "../../components/OnMount";
-import { Review } from "../../api/reviewer";
+import { Review, PageInfo, Paged, ReviewSearchArgs } from "../../api/reviewer";
 import "./reviews.less";
-
-const ReviewItem = (props: {review: Review}) => {
-    return (
-        <List.Item className="review-item">
-            <Image avatar src={props.review.author.avatarUrl} />
-            <List.Content>
-                <List.Header>
-                    <span className="project">{props.review.project}</span>
-                    <span className="review-title"><Link to={`/project/${props.review.reviewId.projectId}/review/${props.review.reviewId.reviewId}`}>{props.review.title}</Link></span>
-                </List.Header>
-                <List.Description>
-                    {props.review.changesCount} changes by {props.review.author.givenName}<br />
-                    Link: <a href={props.review.webUrl}>{props.review.webUrl}</a>
-                </List.Description>
-            </List.Content>
-        </List.Item>
-    );
-};
+import ProjectReviewsList from "./reviewList";
+import Pagination from "../../components/pagination";
+import SearchOptions from "./searchOptions";
 
 interface StateProps {
-    list: Review[];
+    page: Paged<Review>;
 }
 
 interface DispatchProps {
-    loadReviews: () => void;
+    loadReviews(args: ReviewSearchArgs): void;
 }
 
 type Props = StateProps & DispatchProps;
 
-const ReviewsList = (props: Props) => {
-    return (
-        <Segment>
-            <List divided relaxed>
-                {props.list.map(r => (<ReviewItem key={`${r.reviewId.projectId}/${r.reviewId.reviewId}`} review={r} />))}
-            </List>
-        </Segment>
-    );
-};
+const initialSearchArgs: ReviewSearchArgs = {
+    page: 1,
+    state: 'opened'
+}
 
-const ProjectReviewsList = (props: Props) => {
-    const grouped = props.list.reduce((map: Map<string, Review[]>, item: Review) => {
-        const group = map.get(item.project);
-        if (!group) {
-            map.set(item.project, [item]);
-        } else {
-            group.push(item);
-        }
-
-        return map;
-    }, new Map<string, Review[]>());
-
-    const reviewLists = [];
-    for (const key of grouped.keys()) {
-        const items = grouped.get(key);
-        reviewLists.push(<ReviewsList key={key} list={items} loadReviews={props.loadReviews} />);
-    }
+const Reviews = (props: Props) => {
+    const initialLoad = () => props.loadReviews(initialSearchArgs);
 
     return (
         <>
-            {reviewLists}
+            <h2>Reviews</h2>
+            <OnMount onMount={initialLoad} />
+            <SearchOptions 
+                initialArgs={initialSearchArgs}
+                loadResults={props.loadReviews} 
+                currentPage={props.page} 
+            />
+            
+            <ProjectReviewsList list={props.page.items} />
         </>
     );
-};
-
-const Reviews = (props: Props) => (
-    <>
-        <h2>Reviews</h2>
-        <OnMount onMount={props.loadReviews}/>
-        <ProjectReviewsList {...props} />
-    </>
-);
+}
 
 
 export default connect(
     (state: RootState): StateProps => ({
-        list: state.reviews.reviews.items
+        page: state.reviews.reviews
     }),
     (dispatch: Dispatch): DispatchProps => ({
-        loadReviews: () => dispatch(loadReviews())
+        loadReviews: (args) => dispatch(loadReviews(args))
     })
 )(Reviews);

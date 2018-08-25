@@ -199,12 +199,15 @@ export interface ProjectInfo {
     canConfigureHooks: boolean;
 }
 
-export interface Paged<T> {
-    items: T[];
+export interface PageInfo {
     perPage: number;
     page: number;
     totalPages: number;
     totalItems: number;
+}
+
+export interface Paged<T> extends PageInfo {
+    items: T[];
 }
 
 const acceptJson = {
@@ -239,6 +242,11 @@ export class MergeFailedError extends Error {
     }
 }
 
+export interface ReviewSearchArgs {
+    page: number;
+    state: string;
+}
+
 export class ReviewerApi {
     public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
@@ -247,17 +255,11 @@ export class ReviewerApi {
         ).then(mustBeOk).then(r => r.json());
     };
 
-    public getReviews = (): Promise<Paged<Review>> => {
-        return fetch('/api/reviews', acceptJson)
+    public getReviews = (args: ReviewSearchArgs): Promise<Paged<Review>> => {
+        return fetch(`/api/reviews?page=${args.page}&state=${args.state}`, acceptJson)
             .then(mustBeOk)
             .then(r => r.json())
-            .then(r => ({
-                items: r as Review[],
-                perPage: 20,
-                page: 1,
-                totalPages: 2,
-                totalItems: 28
-            }));
+            .then(r => r as Paged<Review>);
     };
 
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
