@@ -66,7 +66,7 @@ namespace Web.Auth
 
         public async Task<ReviewUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
-            return await _queries.Query(new FindUserByIdQuery(userId));
+            return await _queries.Query(new FindUserById(userId));
         }
 
         public async Task<ReviewUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)

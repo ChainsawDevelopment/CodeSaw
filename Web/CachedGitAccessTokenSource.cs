@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Web.Auth;
 using Web.Modules.Api.Commands;
-using Web.Modules.Db;
 
 namespace Web
 {

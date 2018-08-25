@@ -4,16 +4,16 @@ using Web.Cqrs;
 
 namespace Web.Auth
 {
-    public class FindUserByIdQuery : IQuery<ReviewUser>
+    public class FindUserById : IQuery<ReviewUser>
     {
         public string UserId { get; }
 
-        public FindUserByIdQuery(string userId)
+        public FindUserById(string userId)
         {
             UserId = userId;
         }
 
-        public class Handler : IQueryHandler<FindUserByIdQuery, ReviewUser>
+        public class Handler : IQueryHandler<FindUserById, ReviewUser>
         {
             private readonly ISession _session;
 
@@ -22,7 +22,7 @@ namespace Web.Auth
                 _session = session;
             }
 
-            public Task<ReviewUser> Execute(FindUserByIdQuery query)
+            public Task<ReviewUser> Execute(FindUserById query)
             {
                 return _session.GetAsync<ReviewUser>(query.UserId);
             }

@@ -4,9 +4,9 @@ using Web.Cqrs;
 
 namespace Web.Modules.Api.Queries
 {
-    public class GetCurrentUserQuery : IQuery<ReviewUser>
+    public class GetCurrentUser : IQuery<ReviewUser>
     {
-        public class Handler : IQueryHandler<GetCurrentUserQuery, ReviewUser>
+        public class Handler : IQueryHandler<GetCurrentUser, ReviewUser>
         {
             private readonly ReviewUser _currentUser;
 
@@ -14,7 +14,7 @@ namespace Web.Modules.Api.Queries
                 _currentUser = currentUser;
             }
 
-            public Task<ReviewUser> Execute(GetCurrentUserQuery query) {
+            public Task<ReviewUser> Execute(GetCurrentUser query) {
                 return Task.FromResult(_currentUser);
             }
         }
