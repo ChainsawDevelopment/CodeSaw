@@ -47,7 +47,10 @@ interface StateProps {
 }
 
 const Layout = (props: StateProps) => (
-    <Dimmer.Dimmable as='div' dimmed={props.inProgressOperationsCount > 0}>
+    <Dimmer.Dimmable as='div'>
+        <Dimmer active={props.inProgressOperationsCount > 0} page>
+            <Loader size='large' />
+        </Dimmer>
         <Menu inverted>
             <Container fluid>
                 <Menu.Item as={(props) => (<Link to='/' {...props} />)}>
@@ -76,9 +79,7 @@ const Layout = (props: StateProps) => (
             </ConnectedSwitch>
         </Container>
 
-        <Dimmer active={props.inProgressOperationsCount > 0}>
-            <Loader size='large' />
-        </Dimmer>
+       
 
         <div className="footer">This is the bottom <i aria-hidden="true" className="pointing down icon"></i></div>
     </Dimmer.Dimmable>
