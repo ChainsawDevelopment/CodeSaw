@@ -1,12 +1,11 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
+import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
-import 'react-diff-view/index.css';
+import 'react-diff-view/style/index.css';
 import './diffView.less';
 import * as classNames from "classnames";
-import smartMarkEdits from '../../lib/diff/smartMarkEdits';
 
 interface Change {
     oldLineNumber: number;
@@ -187,6 +186,25 @@ const rightSideMatch = (change: Change, lineNumber: number) => {
     return true;
 }
 
+const getFullChangeKey = change => {
+    if (!change) {
+        throw new Error('change is not provided');
+    }
+
+    const {isNormal, isInsert, oldLineNumber, newLineNumber} = change;
+
+    let prefix = '';
+
+    if (isNormal) {
+        prefix = 'N';
+    } else if (isInsert) {
+        prefix = 'I';
+    } else {
+        prefix = 'D';
+    }
+
+    return prefix + oldLineNumber + '_' + newLineNumber;
+};
 
 const diffView = (props: Props) => {
     if (props.diffInfo.isBinaryFile) {
@@ -195,12 +213,21 @@ const diffView = (props: Props) => {
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
-    if(viewHunks.length > 0) {
-        // expands all hunks that matches condition
-        // however condition is just `false` so nothing will be expanded
-        // once we start working on expanding/collapsing hunks this will be useful
-        viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+    if (viewHunks.length == 0) {
+        viewHunks.push({
+            oldStart: 1,
+            oldLines: 0,
+            newStart: 1,
+            newLines: 1,
+            content: '',
+            changes: []
+        });
     }
+
+    // expands all hunks that matches condition
+    // however condition is just `false` so nothing will be expanded
+    // once we start working on expanding/collapsing hunks this will be useful
+    viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
@@ -222,8 +249,9 @@ const diffView = (props: Props) => {
     }
 
     const events = {
-        gutter: {
+        gutterEvents: {
             onClick: change => {
+                console.log('click', change);
                 if(props.onLineClick) {
                     const lineNumber = change.newLineNumber;
                     props.onLineClick('right', lineNumber); // TODO: detect side
@@ -243,24 +271,29 @@ const diffView = (props: Props) => {
                     continue;
                 }
 
-                widgets[getChangeKey(change)] = item.widget;
+                widgets[getFullChangeKey(change) + '_' + item.side[0].toUpperCase()] = item.widget;
 
                 break;
             }
         }
     }
 
-    const markEdits = smartMarkEdits();
+    const tokens = tokenize(viewHunks, {
+        oldSource: props.contents.previous,
+        enhancers: [
+            markEdits(viewHunks)
+        ]
+    });
 
     return (
         <Diff
             viewType="split"
             diffType={props.type}
-            hunks={viewHunks}
-            customEvents={events}
-            markEdits={markEdits}
             widgets={widgets}
-        />
+            tokens={tokens}
+        >
+        {viewHunks.map((h, i) => <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents}/>)}
+        </Diff>
     );
 };
 
