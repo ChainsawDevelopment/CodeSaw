@@ -100,7 +100,8 @@ const initial: ReviewState = {
         fileDiscussions: [],
         reviewDiscussions: [],
         fileMatrix: [],
-        filesToReview: []
+        filesToReview: [],
+        buildStatuses: []
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],

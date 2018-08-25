@@ -111,6 +111,13 @@ export interface FileToReview {
     changeType: 'modified' | 'renamed' | 'created' | 'deleted';
 }
 
+export interface BuildStatus {
+    status: 'success' | 'pending' | 'running' | 'failed' | 'canceled';
+    name: string;
+    targetUrl: string;
+    description: string;
+}
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
@@ -131,6 +138,7 @@ export interface ReviewInfo {
     reviewDiscussions: ReviewDiscussion[];
     fileMatrix: any;
     filesToReview: FileToReview[];
+    buildStatuses: BuildStatus[];
 }
 
 export interface CommentReply {

@@ -253,8 +253,16 @@ namespace GitLab
 
         public async Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha)
         {
-            return await new RestRequest($"/projects/{projectId}/repository/commits/{commitSha}/statuses")
-                .Execute<List<BuildStatus>>(_client);
+            var statuses = await new RestRequest($"/projects/{projectId}/repository/commits/{commitSha}/statuses")
+                .Execute<List<GitlabBuildStatus>>(_client);
+
+            return statuses.GroupBy(x => x.Name).Select(x => x.OrderBy(s => s.Id).Last()).Select(x => new BuildStatus
+            {
+                Status = Enum.Parse<BuildStatus.Result>(x.Status, true),
+                Name = x.Name,
+                Description = x.Description,
+                TargetUrl = x.TargetUrl
+            }).ToList();
         }
 
         public async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)
