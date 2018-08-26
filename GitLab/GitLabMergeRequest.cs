@@ -13,5 +13,8 @@ namespace GitLab
         public MergeRequestState State { get; set; }
 
         public MergeStatus MergeStatus { get; set; }
+
+        public string SourceBranch { get; set; }
+        public string TargetBranch { get; set; }
     }
 }

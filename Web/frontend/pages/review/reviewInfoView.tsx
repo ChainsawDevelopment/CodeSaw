@@ -4,9 +4,7 @@ import Grid from '@ui/collections/Grid';
 import { RootState } from "../../rootState";
 import { BuildStatus } from "../../api/reviewer";
 import BuildStatusesList from "../../components/BuildStatusList";
-import "./reviewInfoView.less";
-
-const Branch = (props: { name:string }): JSX.Element => (<span className='branch-name'>{props.name}</span>);
+import Branch from "../../components/BranchName";
 
 interface StateProps {
     url: string;

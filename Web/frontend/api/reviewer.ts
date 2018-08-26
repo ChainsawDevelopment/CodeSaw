@@ -83,8 +83,11 @@ export interface Review {
     project: string;
     title: string;
     webUrl: string;
-    changesCount: number;
     author: ReviewAuthor;
+    sourceBranch: string;
+    targetBranch: string;
+    isCreatedByMe: boolean;
+    amIReviewer: boolean;
 }
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";

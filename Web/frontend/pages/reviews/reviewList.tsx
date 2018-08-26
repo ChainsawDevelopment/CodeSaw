@@ -3,7 +3,26 @@ import { Link } from 'react-router-dom';
 import List from '@ui/elements/List';
 import Image from '@ui/elements/Image';
 import Segment from '@ui/elements/Segment';
+import Label from '@ui/elements/Label';
 import { Review } from "../../api/reviewer";
+import Branch from "../../components/BranchName";
+import ExternalLink from "../../components/externalLink";
+
+const ReviewBadges = (props: {review:Review}) => {
+    const badges = [];
+
+    const { isCreatedByMe, amIReviewer } = props.review;
+
+    if (isCreatedByMe) {
+        badges.push(<Label key='creator' color='orange' content='Creator' size='mini' />);
+    }
+
+    if (!isCreatedByMe && amIReviewer) {
+        badges.push(<Label key='reviewer' color='red' content='Reviewer' size='mini' />);
+    }
+
+    return (<>{badges}</>);
+}
 
 const ReviewItem = (props: {review: Review}) => {
     return (
@@ -13,10 +32,12 @@ const ReviewItem = (props: {review: Review}) => {
                 <List.Header>
                     <span className="project">{props.review.project}</span>
                     <span className="review-title"><Link to={`/project/${props.review.reviewId.projectId}/review/${props.review.reviewId.reviewId}`}>{props.review.title}</Link></span>
+                    <ReviewBadges review={props.review} />
                 </List.Header>
                 <List.Description>
-                    {props.review.changesCount} changes by {props.review.author.givenName}<br />
-                    Link: <a href={props.review.webUrl}>{props.review.webUrl}</a>
+                    <ExternalLink url={props.review.webUrl} size='small' />
+                    Created by {props.review.author.givenName}. <br />
+                    <Branch name={props.review.sourceBranch}/> &rarr; <Branch name={props.review.targetBranch} /><br />
                 </List.Description>
             </List.Content>
         </List.Item>

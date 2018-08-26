@@ -74,7 +74,9 @@ namespace GitLab
                 ProjectId = mr.ProjectId,
                 State = mr.State,
                 Title = mr.Title,
-                WebUrl = mr.WebUrl
+                WebUrl = mr.WebUrl,
+                SourceBranch = mr.SourceBranch,
+                TargetBranch = mr.TargetBranch
             }).ToList();
 
             return new Paged<MergeRequest>
