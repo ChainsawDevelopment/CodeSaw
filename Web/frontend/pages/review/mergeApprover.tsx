@@ -68,9 +68,19 @@ class OpenedMergeRequest extends React.Component<Props, { removeSourceBranch: bo
 const NotMergableRequest = (props: Props): JSX.Element => 
      (<div><Icon color='red' name='times circle' /> Review is <span className="review-state">{props.reviewState}</span> but cannot be merged</div>)
 
+const AlreadyMerged = (): JSX.Element => 
+    (<div><Icon color='black' name='flag checkered' /> Review is already <span className="review-state">merged</span></div>);
+
+const Closed = (): JSX.Element => 
+    (<div><Icon color='black' name='trash alternate' /> Review is <span className="review-state">closed</span>. Changes were discarded.</div>);
+
 const mergeApprover = (props: Props): JSX.Element => {
     if (props.reviewState == "opened" && props.mergeStatus == 'can_be_merged') {
         return (<OpenedMergeRequest {...props}/>)
+    } else if (props.reviewState == "merged") {
+        return (<AlreadyMerged />)
+    } else if (props.reviewState == "closed") {
+        return (<Closed />)
     } else {
         return (<NotMergableRequest {...props} />)
     }
