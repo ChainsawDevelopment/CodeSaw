@@ -27,6 +27,7 @@ using RepositoryApi;
 using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Commands.PublishElements;
+using Web.NodeIntegration;
 
 namespace Web
 {
@@ -91,9 +92,23 @@ namespace Web
 
             builder.Register(ctx => Configuration.GetValue<string>("HookSiteBase", null) ?? ctx.ResolveKeyed<string>("SiteBase")).Keyed<string>("HookSiteBase");
 
+            ConfigureNodeIntegration(builder);
+
             _container = builder.Build();
 
             return new AutofacServiceProvider(_container);
+        }
+
+        private void ConfigureNodeIntegration(ContainerBuilder builder)
+        {
+            var nodeWorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "node-integration");
+            var cfg = Configuration.GetSection("Node");
+
+            var executor = new NodeExecutor(cfg["node"], cfg["npm"], nodeWorkingDirectory);
+
+            executor.Bootstrap();
+
+            builder.RegisterInstance(executor).SingleInstance();
         }
 
         private void ConfigureGitLabOAuth(OAuthOptions options)
