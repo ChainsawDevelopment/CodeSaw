@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -41,7 +42,7 @@ namespace Web.Modules.Api.Queries
 
                 var summary = await _queryRunner.Query(new GetReviewStatus(query.ReviewId));
 
-                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js");
+                var reviewFile = await GetReviewFile(query, summary);
 
                 var statusInput = new
                 {
@@ -87,6 +88,18 @@ namespace Web.Modules.Api.Queries
 
                     return commitStatus;
                 }
+            }
+
+            private async Task<string> GetReviewFile(GetCommitStatus query, GetReviewStatus.Result summary)
+            {
+                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js");
+
+                if (string.IsNullOrEmpty(reviewFile))
+                {
+                    reviewFile = File.ReadAllText("DefaultReviewfile.js");
+                }
+
+                return reviewFile;
             }
 
             public async Task<CommitStatus> Execute2(GetCommitStatus query)
