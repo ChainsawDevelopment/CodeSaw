@@ -39,9 +39,8 @@ namespace Web.BackgroundActions
             using (var innerScope = _scope.BeginLifetimeScope(UseGlobalAccessToken))
             {
                 var api = innerScope.Resolve<IRepository>();
-                var mergeRequest = await api.GetMergeRequestInfo(reviewId.ProjectId, reviewId.ReviewId);
 
-                await api.SetCommitStatus(reviewId.ProjectId, mergeRequest.HeadCommit, commitStatus);
+                await api.SetCommitStatus(reviewId.ProjectId, commitStatus);
             }
         }
 

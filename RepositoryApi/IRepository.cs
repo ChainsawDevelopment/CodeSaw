@@ -16,7 +16,7 @@ namespace RepositoryApi
         Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody);
         Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage);
         Task UpdateDescription(MergeRequest mergeRequest);
-        Task SetCommitStatus(int projectId, string commit, CommitStatus status);
+        Task SetCommitStatus(int projectId, CommitStatus status);
         Task<List<ProjectInfo>> GetProjects();
         Task AddProjectHook(int projectId, string url, HookEvents hookEvents);
         Task UnapproveMergeRequest(int projectId, int mergeRequestIid);

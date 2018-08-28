@@ -210,9 +210,9 @@ namespace GitLab
             }
         }
 
-        public async Task SetCommitStatus(int projectId, string commit, CommitStatus status)
+        public async Task SetCommitStatus(int projectId, CommitStatus status)
         {
-            await new RestRequest($"/projects/{projectId}/statuses/{commit}", Method.POST)
+            await new RestRequest($"/projects/{projectId}/statuses/{status.Commit}", Method.POST)
                 .AddJsonBody(new
                 {
                     state = status.State.ToString().ToLower(),
