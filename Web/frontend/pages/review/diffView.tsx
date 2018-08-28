@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber  } from 'react-diff-view';
+import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber, Decoration  } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 const style = require('react-diff-view/style/index.css');
 import './diffView.less';
 import * as classNames from "classnames";
+import {flatMap} from 'lodash';
 
 interface Change {
     oldLineNumber: number;
@@ -211,6 +212,12 @@ const diffView = (props: Props) => {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
 
+    if (props.diffInfo.hunks.length == 0) {
+        return (<div className='no-changes'>
+            No real changes in this file. Probably result of including changes from base branch.
+        </div>);
+    }
+
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
     if (viewHunks.length == 0) {
@@ -251,10 +258,9 @@ const diffView = (props: Props) => {
     const events = {
         gutterEvents: {
             onClick: change => {
-                console.log('click', change);
                 if(props.onLineClick) {
                     const lineNumber = change.newLineNumber;
-                    props.onLineClick('right', lineNumber); // TODO: detect side
+                    props.onLineClick('right', lineNumber);
                 }
             }
         }
@@ -292,7 +298,10 @@ const diffView = (props: Props) => {
             widgets={widgets}
             tokens={tokens}
         >
-        {viewHunks.map((h, i) => <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents}/>)}
+        {flatMap(viewHunks, (h, i) => [
+            <Decoration key={h.content}>{h.content}</Decoration>,
+            <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents}/>
+        ])}
         </Diff>
     );
 };
