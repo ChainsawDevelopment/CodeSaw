@@ -4,7 +4,6 @@ import Grid from '@ui/collections/Grid';
 import { RootState } from "../../rootState";
 import { BuildStatus, ReviewId, ReviewMergeStatus, ReviewInfoState } from "../../api/reviewer";
 import BuildStatusesList from "../../components/BuildStatusList";
-import Branch from "../../components/BranchName";
 import MergeApprover from './mergeApprover';
 import { Dispatch } from "../../../../node_modules/redux";
 import { mergePullRequest } from "./state";
@@ -39,7 +38,6 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
                         sourceBranch={props.branches.source}
                         targetBranch={props.branches.target}
                     />
-                    {/* Changes from <Branch name={props.branches.source}/> to <Branch name={props.branches.target} /> */}
                 </Grid.Column>
             </Grid.Row>
             <Grid.Row>

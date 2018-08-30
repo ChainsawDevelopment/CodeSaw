@@ -44,6 +44,12 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         };
     }
 
+    public componentDidUpdate(prevProps: FileViewProps, prevState: { visibleCommentLines: number[] }) {
+        if (!PathPairs.equal(prevProps.file.path, this.props.file.path)) {
+            this.setState({visibleCommentLines: []});
+        }
+    }
+
     private hideLine(line: number) {
         this.setState({
             visibleCommentLines: this.state.visibleCommentLines.filter(f => f != line)
