@@ -138,16 +138,8 @@ class reviewPage extends React.Component<Props> {
                 
                 <Grid>
                     <Grid.Row>
-                        <Grid.Column width={8}>
+                        <Grid.Column>
                             <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
-                        </Grid.Column>
-                        <Grid.Column width={4}>
-                            <MergeApprover
-                                reviewId={props.reviewId}
-                                reviewState={props.currentReview.state}
-                                mergeStatus={props.currentReview.mergeStatus}
-                                mergePullRequest={props.mergePullRequest}
-                            />
                         </Grid.Column>
                     </Grid.Row>
                     <Grid.Row>
