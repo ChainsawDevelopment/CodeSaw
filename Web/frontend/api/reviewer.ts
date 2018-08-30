@@ -83,8 +83,11 @@ export interface Review {
     project: string;
     title: string;
     webUrl: string;
-    changesCount: number;
     author: ReviewAuthor;
+    sourceBranch: string;
+    targetBranch: string;
+    isCreatedByMe: boolean;
+    amIReviewer: boolean;
 }
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
@@ -199,6 +202,17 @@ export interface ProjectInfo {
     canConfigureHooks: boolean;
 }
 
+export interface PageInfo {
+    perPage: number;
+    page: number;
+    totalPages: number;
+    totalItems: number;
+}
+
+export interface Paged<T> extends PageInfo {
+    items: T[];
+}
+
 const acceptJson = {
     headers: {
         'Accept': 'application/json'
@@ -231,6 +245,11 @@ export class MergeFailedError extends Error {
     }
 }
 
+export interface ReviewSearchArgs {
+    page: number;
+    state: string;
+}
+
 export class ReviewerApi {
     public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
@@ -239,11 +258,11 @@ export class ReviewerApi {
         ).then(mustBeOk).then(r => r.json());
     };
 
-    public getReviews = (): Promise<Review[]> => {
-        return fetch('/api/reviews', acceptJson)
+    public getReviews = (args: ReviewSearchArgs): Promise<Paged<Review>> => {
+        return fetch(`/api/reviews?page=${args.page}&state=${args.state}`, acceptJson)
             .then(mustBeOk)
             .then(r => r.json())
-            .then(r => r as Review[]);
+            .then(r => r as Paged<Review>);
     };
 
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {

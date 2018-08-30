@@ -6,7 +6,7 @@ namespace RepositoryApi
 {
     public interface IRepository
     {
-        Task<List<MergeRequest>> MergeRequests(string state = null, string scope = null);
+        Task<Paged<MergeRequest>> MergeRequests(MergeRequestSearchArgs args);
 
         Task<ProjectInfo> Project(int projectId);
         Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId);
@@ -27,20 +27,10 @@ namespace RepositoryApi
         Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha);
     }
 
-    public class BuildStatus
+    public class MergeRequestSearchArgs
     {
-        public Result Status { get; set; }
-        public string Name { get; set; }
-        public string TargetUrl { get; set; }
-        public string Description { get; set; }
-
-        public enum Result
-        {
-            Success,
-            Pending,
-            Running,
-            Failed,
-            Canceled
-        }
+        public int Page { get; set; }
+        public string State { get; set; }
+        public string Scope { get; set; }
     }
 }
