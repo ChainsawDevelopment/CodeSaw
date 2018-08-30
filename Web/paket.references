@@ -8,6 +8,7 @@ Microsoft.AspNetCore
 Microsoft.AspNetCore.Authentication.Cookies
 Microsoft.AspNetCore.Authentication.OAuth
 Microsoft.AspNetCore.Identity
+Microsoft.Extensions.Caching.Memory
 NHibernate
 Nancy.Bootstrappers.Autofac
 Nancy.Serialization.JsonNet

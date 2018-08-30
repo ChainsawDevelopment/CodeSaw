@@ -26,6 +26,7 @@ nuget Microsoft.AspNetCore.Authentication
 nuget Microsoft.AspNetCore.Authentication.Cookies
 nuget Microsoft.AspNetCore.Authentication.OAuth
 nuget Microsoft.AspNetCore.Identity
+nuget Microsoft.Extensions.Caching.Memory 
 
 nuget System.Data.SqlClient
 
