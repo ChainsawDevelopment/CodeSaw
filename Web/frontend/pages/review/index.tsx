@@ -34,9 +34,11 @@ import "./review.less";
 import * as PathPairs from "../../pathPair";
 import CommentsView, { CommentsActions } from './commentsView';
 import FileMatrix from './fileMatrix';
+import ReviewInfoView from './reviewInfoView';
 
 import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
 import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+import Icon from '@ui/elements/Icon';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -130,38 +132,42 @@ class reviewPage extends React.Component<Props> {
 
         return (
             <div id="review-page">
-                <Grid centered columns={2}>
+                <OnMount onMount={load} />
+                <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
+                
+                <Grid>
                     <Grid.Row>
-                        <Grid.Column>
-
-                            <OnMount onMount={load} />
-                            <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
-
-                            <h1>Review {props.currentReview.title}</h1>
-                            <a href={props.currentReview.webUrl}>{props.currentReview.webUrl}</a>
-
+                        <Grid.Column width={8}>
+                            <h1>Review {props.currentReview.title} <a href={props.currentReview.webUrl} target="_blank"><Icon name='external alternate' size='tiny'/></a></h1>
+                        </Grid.Column>
+                        <Grid.Column width={4}>
                             <MergeApprover
                                 reviewId={props.reviewId}
                                 reviewState={props.currentReview.state}
+                                mergeStatus={props.currentReview.mergeStatus}
                                 mergePullRequest={props.mergePullRequest}
                             />
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Grid.Column>
+                            <ReviewInfoView />
                             <Divider />
-
-                            <Grid columns={1}>
-                                <Grid.Row>
-                                    <Grid.Column>
-                                        <FileMatrix />
-                                    </Grid.Column>
-                                </Grid.Row>
-                            </Grid>
-
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row centered columns={1}>
+                        <Grid.Column>
+                            <FileMatrix />
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Grid.Column>
                             <CommentsView
                                 comments={comments}
                                 actions={commentActions}
                                 unpublishedReplies={props.unpublishedReplies}
                                 currentUser={props.currentUser}
                             />
-
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

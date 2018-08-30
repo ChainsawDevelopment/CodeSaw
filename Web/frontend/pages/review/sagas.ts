@@ -13,7 +13,7 @@ import {
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
@@ -159,7 +159,15 @@ function* mergePullRequestSaga() {
 
         yield startOperation();
 
-        yield api.mergePullRequest(action.payload.reviewId, action.payload.shouldRemoveBranch, action.payload.commitMessage);
+        try {
+            yield api.mergePullRequest(action.payload.reviewId, action.payload.shouldRemoveBranch, action.payload.commitMessage);
+        } catch (e) {
+            if (!(e instanceof MergeFailedError)) {
+                throw e;
+            }
+
+            notify.error('Merge failed. Check merge request page to see what\'s wrong');
+        }
 
         yield put(loadReviewInfo({ reviewId: action.payload.reviewId }));
 

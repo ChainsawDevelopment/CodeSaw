@@ -90,6 +90,7 @@ const initial: ReviewState = {
         pastRevisions: [],
         reviewId: null,
         title: '',
+        description: '',
         headCommit: '',
         baseCommit: '',
         webUrl: '',
@@ -99,7 +100,10 @@ const initial: ReviewState = {
         fileDiscussions: [],
         reviewDiscussions: [],
         fileMatrix: [],
-        filesToReview: []
+        filesToReview: [],
+        buildStatuses: [],
+        sourceBranch: '',
+        targetBranch: ''
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],

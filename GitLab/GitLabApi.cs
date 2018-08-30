@@ -133,6 +133,11 @@ namespace GitLab
                     $"Request {request.Method} {request.Resource} failed with {(int) response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
             }
 
+            if (response.StatusCode == HttpStatusCode.MethodNotAllowed)
+            {
+                throw new MergeFailedException();
+            }
+
             if (shouldRemoveBranch)
             {
                 // So, GitLab is ignoring our request to delete source branch so we try to delete branch manually.
@@ -249,6 +254,20 @@ namespace GitLab
             {
                 throw new GitLabApiFailedException(createNoteRequest, restResponse);
             }
+        }
+
+        public async Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha)
+        {
+            var statuses = await new RestRequest($"/projects/{projectId}/repository/commits/{commitSha}/statuses")
+                .Execute<List<GitlabBuildStatus>>(_client);
+
+            return statuses.GroupBy(x => x.Name).Select(x => x.OrderBy(s => s.Id).Last()).Select(x => new BuildStatus
+            {
+                Status = Enum.Parse<BuildStatus.Result>(x.Status, true),
+                Name = x.Name,
+                Description = x.Description,
+                TargetUrl = x.TargetUrl
+            }).ToList();
         }
 
         public async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)

@@ -111,9 +111,19 @@ export interface FileToReview {
     changeType: 'modified' | 'renamed' | 'created' | 'deleted';
 }
 
+export interface BuildStatus {
+    status: 'success' | 'pending' | 'running' | 'failed' | 'canceled';
+    name: string;
+    targetUrl: string;
+    description: string;
+}
+
+export type ReviewMergeStatus = 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
+
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
+    description: string;
     pastRevisions: {
         number: number;
         head: string;
@@ -125,11 +135,14 @@ export interface ReviewInfo {
     webUrl: string;
     headRevision: RevisionId;
     state: ReviewInfoState;
-    mergeStatus: 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
+    mergeStatus: ReviewMergeStatus;
     fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
     fileMatrix: any;
     filesToReview: FileToReview[];
+    buildStatuses: BuildStatus[];
+    sourceBranch: string;
+    targetBranch: string;
 }
 
 export interface CommentReply {
@@ -212,6 +225,12 @@ export class ReviewConcurrencyError extends Error {
     }
 }
 
+export class MergeFailedError extends Error {
+    constructor() {
+        super('Merge failed');
+    }
+}
+
 export class ReviewerApi {
     public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
@@ -280,7 +299,15 @@ export class ReviewerApi {
                 shouldRemoveBranch,
                 commitMessage
             })
-        }).then(mustBeOk);
+        })
+        .then(r => {
+            if (r.status == 418) {
+                throw new MergeFailedError();
+            }
+
+            return r;
+        })
+        .then(mustBeOk);
     }
 
     public getProjects = (): Promise<ProjectInfo[]> => {

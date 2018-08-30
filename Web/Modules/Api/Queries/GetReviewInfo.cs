@@ -31,6 +31,10 @@ namespace Web.Modules.Api.Queries
             public object[] FileDiscussions { get; set; }
             public object[] ReviewDiscussions { get; set; }
             public object FileMatrix { get; set; }
+            public string Description { get; set; }
+            public List<BuildStatus> BuildStatuses { get; set; }
+            public string SourceBranch { get; set; }
+            public string TargetBranch { get; set; }
         }
 
         public class Revision
@@ -59,12 +63,14 @@ namespace Web.Modules.Api.Queries
         {
             private readonly ISession _session;
             private readonly IQueryRunner _query;
+            private readonly IRepository _api;
             private readonly ReviewUser _currentUser;
 
-            public Handler(ISession session, IQueryRunner query, [CurrentUser]ReviewUser currentUser)
+            public Handler(ISession session, IQueryRunner query, IRepository api, [CurrentUser]ReviewUser currentUser)
             {
                 _session = session;
                 _query = query;
+                _api = api;
                 _currentUser = currentUser;
             }
 
@@ -81,14 +87,18 @@ namespace Web.Modules.Api.Queries
 
                 var reviewStatus = await _query.Query(new GetReviewStatus(query._reviewId));
 
-
                 var fileMatrix = await _query.Query(new GetFileMatrix(query._reviewId));
+
+                var buildStatuses = await _api.GetBuildStatuses(query._reviewId.ProjectId, reviewStatus.CurrentHead);
+
                 return new Result
                 {
                     FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName),
-
                     ReviewId = query._reviewId,
                     Title = reviewStatus.Title,
+                    Description = reviewStatus.Description,
+                    SourceBranch = reviewStatus.SourceBranch,
+                    TargetBranch = reviewStatus.TargetBranch,
                     PastRevisions = pastRevisions,
                     HasProvisionalRevision = !reviewStatus.RevisionForCurrentHead,
                     HeadCommit = reviewStatus.CurrentHead,
@@ -99,7 +109,8 @@ namespace Web.Modules.Api.Queries
                     WebUrl = reviewStatus.WebUrl,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
-                    FileMatrix = fileMatrix
+                    FileMatrix = fileMatrix,
+                    BuildStatuses = buildStatuses
                 };
             }
 

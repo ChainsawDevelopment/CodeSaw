@@ -153,7 +153,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
 
     return (
         <Table.Row>
-            <Table.Cell key='file'><FileLink reviewId={reviewId} path={review.reviewFile}>{file.newPath}</FileLink> ({props.discussions.length}) </Table.Cell>
+            <Table.Cell key='file' className='file'><FileLink reviewId={reviewId} path={review.reviewFile}>{file.newPath}</FileLink> ({props.discussions.length}) </Table.Cell>
             {revisionCells}
         </Table.Row>
     );
@@ -189,7 +189,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
 
     return (
         <div className='file-matrix'>
-            <Table definition celled compact striped textAlign='center'>
+            <Table definition celled compact striped collapsing textAlign='center'>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell />
