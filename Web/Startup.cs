@@ -71,6 +71,7 @@ namespace Web
                     };
                 });
 
+            services.AddMemoryCache();
 
             var builder = new ContainerBuilder();
 
