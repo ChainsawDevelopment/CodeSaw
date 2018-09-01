@@ -260,6 +260,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     filePath: action.payload.path,
                     lineNumber: action.payload.lineNumber,
                     state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                    canResolve: true,
                     comment: {
                         author: action.payload.currentUser,
                         content: action.payload.content,
@@ -282,6 +283,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     id: `REVIEW-${state.nextDiscussionCommentId}`,
                     revision: state.currentReview.headRevision,
                     state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                    canResolve: true,
                     comment: {
                         author: action.payload.currentUser,
                         content: action.payload.content,

@@ -116,8 +116,10 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
             status = null;
             break;
         case 'NeedsResolution':
-            const resolve = () => props.actions.resolve(props.discussion.id);
-            status =  <UIComment.Action onClick={resolve}>Resolve</UIComment.Action>;
+            if (props.discussion.canResolve) {
+                const resolve = () => props.actions.resolve(props.discussion.id);
+                status =  <UIComment.Action onClick={resolve}>Resolve</UIComment.Action>;
+            }
             break;
         case 'ResolvePending':
             const unresolve = () => props.actions.unresolve(props.discussion.id);

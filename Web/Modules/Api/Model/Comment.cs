@@ -1,10 +1,13 @@
 ﻿using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using NHibernate.Type;
 
 namespace Web.Modules.Api.Model
 {
+    [JsonConverter(typeof(StringEnumConverter), false)]
     public enum CommentState
     {
         NoActionNeeded,

@@ -28,8 +28,8 @@ namespace Web.Modules.Api.Queries
             public string WebUrl { get; set; }
             public MergeStatus MergeStatus { get; set; }
             public MergeRequestState State { get; set; }
-            public object[] FileDiscussions { get; set; }
-            public object[] ReviewDiscussions { get; set; }
+            public FileDiscussionInfo[] FileDiscussions { get; set; }
+            public ReviewDiscussionInfo[] ReviewDiscussions { get; set; }
             public object FileMatrix { get; set; }
             public string Description { get; set; }
             public List<BuildStatus> BuildStatuses { get; set; }
@@ -53,6 +53,26 @@ namespace Web.Modules.Api.Queries
             public List<CommentItem> Children { get; set; } = new List<CommentItem>();
         }
 
+        public class ReviewDiscussionInfo
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public CommentItem Comment { get; set; }
+            public CommentState State { get; set; }
+            public bool CanResolve { get; set; }
+        }
+
+        public class FileDiscussionInfo
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public PathPair FilePath { get; set; }
+            public int LineNumber { get; set; }
+            public CommentItem Comment { get; set; }
+            public CommentState State { get; set; }
+            public bool CanResolve { get; set; }
+        }
+
         public GetReviewInfo(int projectId, int reviewId)
         {
             _reviewId = new ReviewIdentifier(projectId, reviewId);
@@ -63,6 +83,7 @@ namespace Web.Modules.Api.Queries
             private readonly ISession _session;
             private readonly IQueryRunner _query;
             private readonly IRepository _api;
+
             private readonly ReviewUser _currentUser;
 
             public Handler(ISession session, IQueryRunner query, IRepository api, [CurrentUser]ReviewUser currentUser)
@@ -146,38 +167,52 @@ namespace Web.Modules.Api.Queries
                     .ToDictionary(x=>x.Value.comment.Id, x => x.Value.comment);
             }
 
-            private object[] GetReviewDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
+            private ReviewDiscussionInfo[] GetReviewDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
             {
                 var q = from discussion in _session.Query<ReviewDiscussion>()
                     join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
                     where revision.ReviewId == query._reviewId
-                    select new
+                    select new ReviewDiscussionInfo
                     {
-                        id = discussion.Id,
-                        revision = revision.RevisionNumber,
-                        comment = comments[discussion.RootComment.Id],
-                        state = discussion.State.ToString()
+                        Id = discussion.Id,
+                        Revision = revision.RevisionNumber,
+                        Comment = comments[discussion.RootComment.Id],
+                        State = discussion.State,
                     };
 
-                return q.ToArray();
+                var result = q.ToArray();
+
+                foreach (var item in result)
+                {
+                    item.CanResolve = item.State == CommentState.NeedsResolution && item.Comment.Author.Username == _currentUser.UserName;
+                }
+
+                return result;
             }
 
-            private object[] GetFileDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
+            private FileDiscussionInfo[] GetFileDiscussions(GetReviewInfo query, Dictionary<Guid, CommentItem> comments)
             {
                 var q = from discussion in _session.Query<FileDiscussion>()
                     join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id 
                     where revision.ReviewId == query._reviewId
-                    select new
+                    select new FileDiscussionInfo
                     {
-                        id = discussion.Id,
-                        revision = revision.RevisionNumber,
-                        filePath = discussion.File,
-                        lineNumber = discussion.LineNumber,
-                        comment = comments[discussion.RootComment.Id],
-                        state = discussion.State.ToString()
+                        Id = discussion.Id,
+                        Revision = revision.RevisionNumber,
+                        FilePath = discussion.File,
+                        LineNumber = discussion.LineNumber,
+                        Comment = comments[discussion.RootComment.Id],
+                        State = discussion.State,
                     };
 
-                return q.ToArray();
+                var result = q.ToArray();
+
+                foreach (var item in result)
+                {
+                    item.CanResolve = item.State == CommentState.NeedsResolution && item.Comment.Author.Username == _currentUser.UserName;
+                }
+
+                return result;
             }
         }
     }

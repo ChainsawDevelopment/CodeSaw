@@ -98,6 +98,7 @@ export interface Discussion
     revision: RevisionId;
     state: CommentState;
     comment: Comment;
+    canResolve: boolean;
 }
 
 export interface FileDiscussion extends Discussion
@@ -178,7 +179,7 @@ export interface ReviewSnapshot {
         needsResolution: boolean;
         content: string;
     }[];
-    resolvedDiscussions: string[]; // root comment ids
+    resolvedDiscussions: string[]; 
     replies: CommentReply[];
     reviewedFiles: {
         [revision: string]: PathPairs.List;
