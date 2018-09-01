@@ -44,7 +44,6 @@ namespace Web.Modules.Api.Commands.PublishElements
                     await _session.SaveAsync(new Comment
                     {
                         Id = id,
-                        State = CommentState.NoActionNeeded,
                         PostedInReviewId = review.Id,
                         Content = item.Content,
                         CreatedAt = DateTimeOffset.UtcNow,

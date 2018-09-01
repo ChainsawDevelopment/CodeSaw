@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffView';
-import { FileDiscussion, RevisionId, CommentReply } from '../../api/reviewer';
-import CommentsView, { CommentsActions } from './commentsView';
+import { FileDiscussion, RevisionId, CommentReply, Discussion } from '../../api/reviewer';
+import CommentsView, { DiscussionActions } from './commentsView';
 import { UserState } from '../../rootState';
 
 export interface LineCommentsActions {
@@ -13,7 +13,7 @@ export interface LineCommentsActions {
 
 interface CommentProps {
     comments: FileDiscussion[];
-    commentActions: CommentsActions;
+    commentActions: DiscussionActions;
     lineCommentsActions: LineCommentsActions;
     visibleCommentLines: number[];
     leftSideRevision: RevisionId;
@@ -35,8 +35,8 @@ type Props = PassthroughProps & CommentProps;
 
 const buildLineWidgets = (props: Props) => {
     const lineComments = {
-        left: new Map<number, Comment[]>(),
-        right: new Map<number, Comment[]>()
+        left: new Map<number, Discussion[]>(),
+        right: new Map<number, Discussion[]>()
     }
     
     for (let fileComment of props.comments) {
@@ -44,8 +44,8 @@ const buildLineWidgets = (props: Props) => {
         lineComments[side].set(fileComment.lineNumber, [
             ...(lineComments[side].get(fileComment.lineNumber) || []),
             {
-                ...fileComment.comment,
-                state: props.pendingResolved.indexOf(fileComment.comment.id) >= 0 ? 'ResolvePending' : fileComment.comment.state
+                ...fileComment,
+                state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state
             }
         ]);
     }
@@ -56,8 +56,8 @@ const buildLineWidgets = (props: Props) => {
 
     const lineWidgets: LineWidget[] = [];
     for(let side of ['left', 'right']) {
-        for (let [lineNumber, comments] of lineComments[side]) {
-            const commentActions: CommentsActions = {
+        for (let [lineNumber, discussions] of lineComments[side]) {
+            const commentActions: DiscussionActions = {
                 addNew: (content, needResolution) => {
                     props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
                 },
@@ -73,7 +73,7 @@ const buildLineWidgets = (props: Props) => {
                 side: side as DiffSide,
                 widget: (
                     <CommentsView
-                        comments={comments}
+                        discussions={discussions}
                         actions={commentActions}
                         unpublishedReplies={props.unpublishedReplies}
                         currentUser={props.currentUser}

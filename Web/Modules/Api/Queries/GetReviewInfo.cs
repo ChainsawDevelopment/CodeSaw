@@ -49,7 +49,6 @@ namespace Web.Modules.Api.Queries
             public Guid Id { get; set; }
             public UserInfo Author { get; set; }
             public string Content { get; set; }
-            public string State { get; set; }
             public DateTimeOffset CreatedAt { get; set; }
             public List<CommentItem> Children { get; set; } = new List<CommentItem>();
         }
@@ -128,7 +127,6 @@ namespace Web.Modules.Api.Queries
                                 Author = new UserInfo { GivenName = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
                                 Content = comment.Content,
                                 CreatedAt = comment.CreatedAt,
-                                State = comment.State.ToString(),
                                 Id = comment.Id
                             },
                             parentId = comment.ParentId
@@ -155,8 +153,10 @@ namespace Web.Modules.Api.Queries
                     where revision.ReviewId == query._reviewId
                     select new
                     {
+                        id = discussion.Id,
                         revision = revision.RevisionNumber,
-                        comment = comments[discussion.RootComment.Id]
+                        comment = comments[discussion.RootComment.Id],
+                        state = discussion.State.ToString()
                     };
 
                 return q.ToArray();
@@ -169,10 +169,12 @@ namespace Web.Modules.Api.Queries
                     where revision.ReviewId == query._reviewId
                     select new
                     {
+                        id = discussion.Id,
                         revision = revision.RevisionNumber,
                         filePath = discussion.File,
                         lineNumber = discussion.LineNumber,
-                        comment = comments[discussion.RootComment.Id]
+                        comment = comments[discussion.RootComment.Id],
+                        state = discussion.State.ToString()
                     };
 
                 return q.ToArray();

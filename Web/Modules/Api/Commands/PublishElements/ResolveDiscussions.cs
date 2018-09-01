@@ -21,9 +21,10 @@ namespace Web.Modules.Api.Commands.PublishElements
 
         public async Task Publish(List<Guid> resolvedDiscussions)
         {
-            var commentsToResolve = _session.Query<Comment>().Where(x => resolvedDiscussions.Contains(x.Id)).ToList();
+            var discussionsToResolve = 
+                _session.Query<Discussion>().Where(x => resolvedDiscussions.Contains(x.Id)).ToList();
 
-            foreach (var comment in commentsToResolve)
+            foreach (var comment in discussionsToResolve)
             {
                 comment.State = CommentState.Resolved;
 

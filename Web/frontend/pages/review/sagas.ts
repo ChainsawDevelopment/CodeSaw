@@ -115,14 +115,14 @@ function* publishReviewSaga() {
                 temporaryId: d.comment.id,
                 file: d.filePath,
                 lineNumber: d.lineNumber,
-                needsResolution: d.comment.state == 'NeedsResolution',
+                needsResolution: d.state == 'NeedsResolution',
                 content: d.comment.content
             })),
             startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
                 targetRevisionId: d.revision,
                 temporaryId: d.comment.id,
                 content: d.comment.content,
-                needsResolution: d.comment.state == 'NeedsResolution'
+                needsResolution: d.state == 'NeedsResolution'
             })),
             resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
             replies: s.review.unpublishedReplies,
