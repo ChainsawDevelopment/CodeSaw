@@ -178,7 +178,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
 
         this.state = {
             commentText: '',
-            needsResolution: false
+            needsResolution: true
         };
     }
 
