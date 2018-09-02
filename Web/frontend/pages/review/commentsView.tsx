@@ -79,7 +79,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
         const form = (
             <Form reply onSubmit={onSubmit}>
-                <Form.TextArea onChange={onChangeReply} value={this.state.replyText} />
+                <Form.TextArea onChange={onChangeReply} value={this.state.replyText} placeholder='Reply...' />
                 <Button onClick={() => this.props.actions.addReply(this.props.comment.id, this.state.replyText)} primary>Add Comment</Button>
             </Form>
         );
@@ -210,7 +210,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
                 </Header>
                 {discussions}
                 <Form reply onSubmit={onSubmit}>
-                    <Form.TextArea onChange={onChangeReply} value={this.state.commentText} />
+                    <Form.TextArea onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
                     <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
                     <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                 </Form>
