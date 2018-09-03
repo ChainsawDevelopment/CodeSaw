@@ -54,6 +54,17 @@ namespace Web.Modules.Api
             });
 
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
+
+            Get("/commit_status_base", async _ => await query.Query(new GetCommitStatusInput(ReviewId)));
+
+            Get("/call_node", async _ =>
+            {
+                var cmd = new RecalculateReviewStatus(ReviewId);
+
+                await command.Execute(cmd);
+
+                return cmd.Result;
+            });
         }
     }
 }

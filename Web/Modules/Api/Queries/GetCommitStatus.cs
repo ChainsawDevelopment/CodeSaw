@@ -1,9 +1,13 @@
-using System.Collections.Generic;
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json.Linq;
 using RepositoryApi;
 using Web.Cqrs;
 using Web.Modules.Api.Model;
+using Web.NodeIntegration;
 
 namespace Web.Modules.Api.Queries
 {
@@ -16,60 +20,95 @@ namespace Web.Modules.Api.Queries
             ReviewId = reviewId;
         }
 
+        public static string CacheKey(ReviewIdentifier id) => $"CommitStatus_{id.ProjectId}_{id.ReviewId}";
+
         public class Handler : IQueryHandler<GetCommitStatus, CommitStatus>
         {
             private readonly IQueryRunner _queryRunner;
             private readonly string _siteBase;
+            private readonly IRepository _api;
+            private readonly NodeExecutor _node;
+            private readonly IMemoryCache _cache;
 
-            public Handler(IQueryRunner queryRunner, [SiteBase]string siteBase)
+            public Handler(IQueryRunner queryRunner, [SiteBase]string siteBase, IRepository api, NodeExecutor node, IMemoryCache cache)
             {
                 _queryRunner = queryRunner;
                 _siteBase = siteBase;
+                _api = api;
+                _node = node;
+                _cache = cache;
             }
 
             public async Task<CommitStatus> Execute(GetCommitStatus query)
             {
+                var cacheKey = CacheKey(query.ReviewId);
+
                 var summary = await _queryRunner.Query(new GetReviewStatus(query.ReviewId));
 
-                var items = new List<string>();
-                var reviewPassed = true;
+                if (_cache.TryGetValue<CommitStatus>(cacheKey, out var cachedStatus) && cachedStatus.Commit == summary.CurrentHead)
+                {
+                    return cachedStatus;
+                }
 
                 var fileMatrix = await _queryRunner.Query(new GetFileMatrix(query.ReviewId));
 
-                (int reviewedAtLatestRevision, int unreviewedAtLatestRevision) = fileMatrix.CalculateStatistics();
+                var reviewFile = await GetReviewFile(query, summary);
 
-                items.Add($"{reviewedAtLatestRevision} file(s) reviewed");
-
-                if (unreviewedAtLatestRevision > 0)
+                var statusInput = new
                 {
-                    reviewPassed = false;
-                    items.Add($"{unreviewedAtLatestRevision} file(s) unreviewed");
-                }
+                    Matrix = fileMatrix,
+                    UnresolvedDiscussions = summary.UnresolvedDiscussions,
+                    ResolvedDiscussions = summary.ResolvedDiscussions
+                };
 
-                if (!summary.RevisionForCurrentHead)
+                var commitStatus = new CommitStatus
                 {
-                    reviewPassed = false;
-                    items.Add("provisional revision for new changes");
-                }
-
-                if (summary.UnresolvedDiscussions > 0)
-                {
-                    reviewPassed = false;
-                    items.Add($"{summary.UnresolvedDiscussions} unresolved discussion(s)");
-                }
-
-                if (summary.ResolvedDiscussions > 0)
-                {
-                    items.Add($"{summary.ResolvedDiscussions} resolved discussion(s)");
-                }
-
-                return new CommitStatus
-                {
+                    Commit = summary.CurrentHead,
                     Name = "Code review (CodeSaw)",
-                    State = reviewPassed ? CommitStatusState.Success : CommitStatusState.Pending,
-                    Description = string.Join(", ", items),
                     TargetUrl = $"{_siteBase}/project/{query.ReviewId.ProjectId}/review/{query.ReviewId.ReviewId}"
                 };
+
+                JToken result;
+                try
+                {
+                    result = _node.ExecuteScriptFunction(reviewFile, "status", statusInput);
+
+                    if (result is JObject obj && obj.Property("ok") != null && obj.Property("reasons") != null)
+                    {
+                        var isOk = obj.Property("ok").Value.Value<bool>();
+                        var reasons = obj.Property("reasons").Value.Values<string>();
+
+                        commitStatus.State = isOk ? CommitStatusState.Success : CommitStatusState.Pending;
+                        commitStatus.Description = string.Join(", ", reasons);
+                    }
+                    else
+                    {
+                        commitStatus.State = CommitStatusState.Failed;
+                        commitStatus.Description = "Invalid review script output";
+                    }
+                }
+                catch (NodeException)
+                {
+                    commitStatus.State = CommitStatusState.Failed;
+                    commitStatus.Description = "Review script failed";
+
+                }
+
+                _cache.Set(cacheKey, commitStatus);
+
+                return commitStatus;
+            }
+
+            private async Task<string> GetReviewFile(GetCommitStatus query, GetReviewStatus.Result summary)
+            {
+                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js");
+
+                if (string.IsNullOrEmpty(reviewFile))
+                {
+                    reviewFile = File.ReadAllText("DefaultReviewfile.js");
+                }
+
+                return reviewFile;
             }
         }
     }

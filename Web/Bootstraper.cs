@@ -89,6 +89,7 @@ namespace Web
                 else
                 {
                     builder.RegisterInstance(new CustomToken(_globalToken)).As<IGitAccessTokenSource>();
+                    builder.RegisterInstance(new CustomToken(_globalToken)).Named<IGitAccessTokenSource>("global_token");
                 }
             };
 

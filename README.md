@@ -43,5 +43,9 @@ When created, the application will have `Application Id` and `Secret` assigned. 
             "callbackPath": "<Relative Callback path here, i.e. /signin>",
             "globalToken": "<Personal access token>" 
         },
-         "HookSiteBase":  "<Hook adress>" 
+        "HookSiteBase":  "<Hook adress>",
+        "Node": {
+            "node":  "C:/Program Files/nodejs/node.exe",
+            "npm":  "C:/Program Files/nodejs/npm.cmd"
+        } 
     }

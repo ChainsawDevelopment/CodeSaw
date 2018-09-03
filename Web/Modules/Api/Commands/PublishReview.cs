@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using NHibernate;
 using NHibernate.Criterion;
 using RepositoryApi;
@@ -9,6 +10,7 @@ using Web.Auth;
 using Web.Cqrs;
 using Web.Modules.Api.Commands.PublishElements;
 using Web.Modules.Api.Model;
+using Web.Modules.Api.Queries;
 
 namespace Web.Modules.Api.Commands
 {
@@ -40,19 +42,22 @@ namespace Web.Modules.Api.Commands
             private readonly ReviewUser _user;
             private readonly IEventBus _eventBus;
             private readonly RevisionFactory _revisionFactory;
+            private readonly IMemoryCache _cache;
 
-            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory)
+            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory, IMemoryCache cache)
             {
                 _session = session;
                 _api = api;
                 _user = user;
                 _eventBus = eventBus;
                 _revisionFactory = revisionFactory;
+                _cache = cache;
             }
 
             public override async Task Handle(PublishReview command)
             {
                 var reviewId = new ReviewIdentifier(command.ProjectId, command.ReviewId);
+                _cache.Remove(GetCommitStatus.CacheKey(reviewId));
 
                 var revisionFactory = new FindOrCreateRevisionPublisher(_session, _revisionFactory, _api);
 
@@ -80,8 +85,6 @@ namespace Web.Modules.Api.Commands
 
                     return reviews[revId] = CreateReview(revId);
                 };
-
-              
 
                 var newCommentsMap = new Dictionary<string, Guid>();
 
