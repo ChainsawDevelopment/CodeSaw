@@ -35,6 +35,7 @@ namespace Web.Modules.Api.Queries
             public List<BuildStatus> BuildStatuses { get; set; }
             public string SourceBranch { get; set; }
             public string TargetBranch { get; set; }
+            public bool ReviewFinished { get; set; }
         }
 
         public class Revision
@@ -111,6 +112,8 @@ namespace Web.Modules.Api.Queries
 
                 var buildStatuses = await _api.GetBuildStatuses(query._reviewId.ProjectId, reviewStatus.CurrentHead);
 
+                var commitStatus = await _query.Query(new GetCommitStatus(query._reviewId));
+
                 return new Result
                 {
                     FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName),
@@ -126,6 +129,7 @@ namespace Web.Modules.Api.Queries
                     HeadRevision = reviewStatus.RevisionForCurrentHead ? new RevisionId.Selected(pastRevisions.Last().Number) : (RevisionId)new RevisionId.Hash(reviewStatus.CurrentHead),
                     State = reviewStatus.MergeRequestState,
                     MergeStatus = reviewStatus.MergeStatus,
+                    ReviewFinished = commitStatus.State == CommitStatusState.Success,
                     WebUrl = reviewStatus.WebUrl,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),

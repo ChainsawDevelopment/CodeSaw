@@ -103,7 +103,8 @@ const initial: ReviewState = {
         filesToReview: [],
         buildStatuses: [],
         sourceBranch: '',
-        targetBranch: ''
+        targetBranch: '',
+        reviewFinished: false
     },
     reviewedFiles: [],
     unpublishedFileDiscussions: [],
