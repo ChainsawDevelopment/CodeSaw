@@ -1,6 +1,0 @@
-block1
-line1.1
-line1.2
-
-
-block2

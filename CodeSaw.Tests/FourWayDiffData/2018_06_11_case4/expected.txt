@@ -1,0 +1,44 @@
+U using System;
+U using Nancy;
+U using Nancy.ModelBinding;
+U using RepositoryApi;
+U using Web.Cqrs;
+U using Web.Modules.Api.Commands;
+U using Web.Modules.Api.Queries;
+U 
+U namespace Web.Modules.Api
+U {
+U     public class ReviewInfoModule : NancyModule
+U     {
+U         public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
+U         {
+U             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId, api())));
+U 
+B             Get("/revisions/{previous:revId}/{current:revId}", async _ => await query.Query(new GetChangesOverview(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, api())));
+U 
+U             Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath, api())));
+U 
+R             Post("/registerlink", async _ =>
+R             {   
+R                 await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId, Context.Request.Url.SiteBase));
+R                 return new { success = true };
+R             });
+R             
+U             Post("/publish", async _ =>
+U             {
+U                 try
+U                 {
+U                     await command.Execute(this.Bind<PublishReview>());
+U                     return new
+U                     {
+U                         ok = true
+U                     };
+U                 }
+U                 catch (ReviewConcurrencyException )
+U                 {
+U                     return Response.AsJson(new {error = "review_concurrency"}, HttpStatusCode.Conflict);
+U                 }
+U             });
+U         }
+U     }
+U }

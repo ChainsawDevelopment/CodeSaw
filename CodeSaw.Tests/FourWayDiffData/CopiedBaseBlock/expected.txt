@@ -1,0 +1,20 @@
+U block1
+R line1.1
+R line1.2
+U 
+U 
+U middleBlock
+U line.middle.1
+U line.middle.2
+U 
+R 
+R line1.1
+R line1.2
+U block2
+U line2.1
+U line2.2
+R 
+R block3
+R line3.1
+R line3.2
+R 
