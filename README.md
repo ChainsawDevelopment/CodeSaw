@@ -1,6 +1,7 @@
 # Building
 ## Requirements
 * .NET Core SDK 2.1
+* SQL Server
 * ConEmu
 
 ## Building
@@ -25,7 +26,7 @@ During development it is useful to run in watch-mode:
 
 ## Running
 
-Application requires GitLab authentication to run. Go to https://git.kplabs.pl/profile/applications. Create new application:
+Application requires GitLab authentication to run. Go to https://<your git lab>/profile/applications. Create new application:
  - choose your own name
  - input any callback url, i.e. `/signin`
  - select only `api` scope
@@ -37,7 +38,7 @@ When created, the application will have `Application Id` and `Secret` assigned. 
             "Store": "Server=<Server name here>;Database=<Database name here>;Trusted_Connection=True"
         },
         "GitLab": {
-            "url": "https://git.kplabs.pl",
+            "url": "https://<your git lab>",
             "clientId": "<Application id here>",
             "clientSecret": "<Secret here>",
             "callbackPath": "<Relative Callback path here, i.e. /signin>",
