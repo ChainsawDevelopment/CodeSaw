@@ -3,10 +3,10 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = {
     entry: [
-        './Web/frontend/index.tsx'
+        './CodeSaw.Web/frontend/index.tsx'
     ],
     output: {
-        path: path.resolve(__dirname, 'Web/wwwroot'),
+        path: path.resolve(__dirname, 'CodeSaw.Web/wwwroot'),
         filename: 'dist.js',
         publicPath: 'http://localhost:8080/'
     },

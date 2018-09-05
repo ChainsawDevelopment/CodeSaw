@@ -1,0 +1,22 @@
+namespace reviewer
+{
+    void func1()
+    {
+
+    }
+
+    void func2()
+    {
+
+    }
+
+    void func3()
+    {
+        printf("base1 - before");
+        printf("base2 - before");
+        printf("base3 - before");
+        printf("base4 - before");
+        printf("base5 - before");
+        printf("base6 - before");
+    }
+}

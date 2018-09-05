@@ -1,0 +1,37 @@
+U namespace reviewer
+U {
+U     void func1()
+U     {
+U
+U     }
+U 
+U     void func2()
+U     {
+U       printf("line1");
+U       printf("line2");
+U       printf("line3");
+U       printf("line4");
+U       printf("line5");
+U       printf("line6");
+R       printf("line7");
+R       printf("line8");
+R       printf("line9");
+R       printf("line10");
+R       printf("line11");
+R       printf("line12");
+U     }
+U 
+U     void func3()
+U     {
+B       printf("base1");
+B       printf("base2");
+B       printf("base3");
+B       printf("base4");
+B       printf("base5");
+B       printf("base6");
+B       printf("base7");
+B       printf("base8");
+B       printf("base9");
+B       printf("base10");
+U     }
+U }

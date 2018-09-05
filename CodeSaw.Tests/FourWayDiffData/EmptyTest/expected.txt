@@ -1,0 +1,17 @@
+U namespace reviewer
+U {
+U     void func1()
+U     {
+U
+U     }
+U 
+U     void func2()
+U     {
+U
+U     }
+U 
+U     void func3()
+U     {
+U
+U     }
+U }

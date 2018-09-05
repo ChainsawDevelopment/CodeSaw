@@ -1,0 +1,52 @@
+#review-page {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-left: 25px;
+    padding-right: 30px;
+}
+
+.file-summary {
+    .file-operations {
+        pre {
+            display: inline;
+        }
+    }
+}
+
+#file-sticky > div {
+    z-index: 999;
+}
+
+#file-menu {
+    background-color: lightsteelblue;
+    border-radius: 5px;
+    margin-right: 0.2em;
+    margin-left: 0.2em;
+
+    .file-path {
+        font-family: monospace;
+        margin-right: 0.5em;
+        user-select: text;
+    }
+}
+
+.no-file-selected {
+    font-style: italic;
+    display: block;
+    width: 100%;
+    text-align: center;
+    line-height: 6em;
+}
+
+.file-tree-popup {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 5em;
+    
+}
+
+.page-menu.publish {
+    background-color: #21ba45 !important;
+}

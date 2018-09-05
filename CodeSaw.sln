@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2043
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2C0C0CBE-71FB-4F44-8303-85CCE7B697E0}"
+	ProjectSection(SolutionItems) = preProject
+		build.fsx = build.fsx
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Api", "Api", "{502D19CC-FF21-4407-8464-58F384F30A62}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.Db.Migrations", "CodeSaw.Db.Migrations\CodeSaw.Db.Migrations.csproj", "{97F6499E-C7AE-441B-B2C8-A645C9E33C04}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.Db.Migrator", "CodeSaw.Db.Migrator\CodeSaw.Db.Migrator.csproj", "{B30CA27F-F120-4ADF-ABFA-8BC3EA68055A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.GitLab", "CodeSaw.GitLab\CodeSaw.GitLab.csproj", "{9BD81EF7-865E-4606-AE4C-4786C0DC19CD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.RepositoryApi", "CodeSaw.RepositoryApi\CodeSaw.RepositoryApi.csproj", "{3829ADB9-BA23-4D78-9A70-E574E2A3B482}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.Tests", "CodeSaw.Tests\CodeSaw.Tests.csproj", "{83DA1529-35F4-4268-9962-E7DEA7AB4429}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.Web", "CodeSaw.Web\CodeSaw.Web.csproj", "{A10999A6-4718-423C-B93D-BCF54C908E7F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{97F6499E-C7AE-441B-B2C8-A645C9E33C04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97F6499E-C7AE-441B-B2C8-A645C9E33C04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97F6499E-C7AE-441B-B2C8-A645C9E33C04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97F6499E-C7AE-441B-B2C8-A645C9E33C04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B30CA27F-F120-4ADF-ABFA-8BC3EA68055A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B30CA27F-F120-4ADF-ABFA-8BC3EA68055A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B30CA27F-F120-4ADF-ABFA-8BC3EA68055A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B30CA27F-F120-4ADF-ABFA-8BC3EA68055A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BD81EF7-865E-4606-AE4C-4786C0DC19CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BD81EF7-865E-4606-AE4C-4786C0DC19CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BD81EF7-865E-4606-AE4C-4786C0DC19CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BD81EF7-865E-4606-AE4C-4786C0DC19CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3829ADB9-BA23-4D78-9A70-E574E2A3B482}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3829ADB9-BA23-4D78-9A70-E574E2A3B482}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3829ADB9-BA23-4D78-9A70-E574E2A3B482}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3829ADB9-BA23-4D78-9A70-E574E2A3B482}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83DA1529-35F4-4268-9962-E7DEA7AB4429}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83DA1529-35F4-4268-9962-E7DEA7AB4429}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83DA1529-35F4-4268-9962-E7DEA7AB4429}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83DA1529-35F4-4268-9962-E7DEA7AB4429}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FBDA9FB7-1E3E-448A-A0A6-91DF8F783C1A}
+	EndGlobalSection
+EndGlobal

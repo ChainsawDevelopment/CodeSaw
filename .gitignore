@@ -6,11 +6,11 @@ obj
 paket-files
 node_modules
 fake
-Web/wwwroot/
+CodeSaw.Web/wwwroot/
 .fake
 .fake-tools
 artifacts
 yarn-error.log
 
-Web/appsettings.local.json
+CodeSaw.Web/appsettings.local.json
 Web/node-integration
