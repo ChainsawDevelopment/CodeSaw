@@ -41,7 +41,7 @@ Target.create "_BackendBuild" (fun _ ->
         }
         |> DotNet.Options.withDotNetCliPath dotNetExe
 
-    DotNet.build buildOpts (root </> "GitReviewer.sln")
+    DotNet.build buildOpts (root </> "CodeSaw.sln")
 
 )
 
@@ -79,7 +79,7 @@ Target.create "Watch" (fun _ ->
             {proc with
                 FileName = "dotnet"
                 Arguments = "watch run -new_console:t:\"Web (watch)\""
-                WorkingDirectory = root </> "Web"
+                WorkingDirectory = root </> "CodeSaw.Web"
             } 
             |> Process.setEnvironmentVariable "ASPNETCORE_ENVIRONMENT" "development"
             |> Process.setEnvironmentVariable "REVIEWER_ASSET_SERVER" "http://localhost:8080/"
@@ -103,25 +103,25 @@ Target.create "Package" (fun _ ->
             Runtime = Some "win10-x64"
         } 
         |> DotNet.Options.withDotNetCliPath dotNetExe
-        |> DotNet.Options.withWorkingDirectory (root </> "Web")
+        |> DotNet.Options.withWorkingDirectory (root </> "CodeSaw.Web")
 
-    DotNet.publish publishOpts ("Web.csproj")
+    DotNet.publish publishOpts ("CodeSaw.Web.csproj")
 )
 
 Target.create "CreateDB" (fun _ -> 
     let setOpts (opts: DotNet.Options) = 
         { opts with
-            WorkingDirectory = root </> "Db.Migrator"
+            WorkingDirectory = root </> "CodeSaw.Db.Migrator"
             CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
         } 
         |> DotNet.Options.withDotNetCliPath dotNetExe
-        |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
+        |> DotNet.Options.withWorkingDirectory (root </> "CodeSaw.Db.Migrator")
     
 
     let args = 
         [
             "CreateDB"
-            root </> "Web" </> "appsettings.local.json"
+            root </> "CodeSaw.Web" </> "appsettings.local.json"
         ] |> Seq.map Process.quoteIfNeeded |> FSharp.Core.String.concat " "
 
     let r = DotNet.exec setOpts "run" args
@@ -133,16 +133,16 @@ Target.create "CreateDB" (fun _ ->
 Target.create "UpdateDB" (fun _ -> 
     let setOpts (opts: DotNet.Options) = 
         { opts with
-            WorkingDirectory = root </> "Db.Migrator"
+            WorkingDirectory = root </> "CodeSaw.Db.Migrator"
             CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
         } 
         |> DotNet.Options.withDotNetCliPath dotNetExe
-        |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
+        |> DotNet.Options.withWorkingDirectory (root </> "CodeSaw.Db.Migrator")
  
     let args = 
         [
             "UpdateDB"
-            (root </> "Web" </> "appsettings.local.json")
+            (root </> "CodeSaw.Web" </> "appsettings.local.json")
             (if isProduction 
                 then "/ConnectionStrings:Store"
                 else "")  
@@ -160,17 +160,17 @@ Target.create "UpdateDB" (fun _ ->
 Target.create "RedoLast" (fun _ -> 
     let setOpts (opts: DotNet.Options) = 
         { opts with
-            WorkingDirectory = root </> "Db.Migrator"
+            WorkingDirectory = root </> "CodeSaw.Db.Migrator"
             CustomParams = Some(sprintf "--configuration=%s"  (if isProduction then "Release" else "Debug"))
         } 
         |> DotNet.Options.withDotNetCliPath dotNetExe
-        |> DotNet.Options.withWorkingDirectory (root </> "Db.Migrator")
+        |> DotNet.Options.withWorkingDirectory (root </> "CodeSaw.Db.Migrator")
     
 
     let args = 
         [
             "RedoLast"
-            root </> "Web" </> "appsettings.local.json"
+            root </> "CodeSaw.Web" </> "appsettings.local.json"
         ] |> Seq.map Process.quoteIfNeeded |> FSharp.Core.String.concat " "
 
     let r = DotNet.exec setOpts "run" args

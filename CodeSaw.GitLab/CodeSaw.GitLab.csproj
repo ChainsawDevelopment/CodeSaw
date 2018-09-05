@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssemblyName>CodeSaw.GitLab</AssemblyName>
+    <RootNamespace>CodeSaw.GitLab</RootNamespace>
+  </PropertyGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\CodeSaw.RepositoryApi\CodeSaw.RepositoryApi.csproj" />
+  </ItemGroup>
+</Project>
