@@ -1,0 +1,14 @@
+void function1()
+{
+	printf("func1\n");
+}
+
+void function2() 
+{
+
+}
+
+void function3()
+{
+
+}

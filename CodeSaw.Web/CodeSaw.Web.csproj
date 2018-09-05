@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <AssemblyName>CodeSaw.Web</AssemblyName>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>CodeSaw.Web</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot/**" />
+    <Content Remove="frontend/**/*.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Modules\Home\Views\Index.sshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Modules\Home\Views\Index.sshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Watch Include="Modules/**/*.sshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="wwwroot/**" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CodeSaw.GitLab\CodeSaw.GitLab.csproj" />
+    <ProjectReference Include="..\CodeSaw.RepositoryApi\CodeSaw.RepositoryApi.csproj" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

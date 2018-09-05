@@ -1,0 +1,27 @@
+U namespace reviewer
+U {
+U     void func1()
+U     {
+U
+U     }
+U 
+U     void func2()
+U     {
+U       printf("line1 - before and this line is very very very long. one...two...three...four...five");
+U       printf("line2 - before and this line is very very very long. one...two...three...four...five");
+R       printf("line3 - after and this line is very very very long. one...two...three...four...five");
+R       printf("line4 - after and this line is very very very long. one...two...three...four...five");
+U       printf("line5 - before and this line is very very very long. one...two...three...four...five");
+U       printf("line6 - before and this line is very very very long. one...two...three...four...five");
+U     }
+U 
+U     void func3()
+U     {
+B       printf("base1 - after");
+B       printf("base2 - after");
+B       printf("base3 - after");
+B       printf("base4 - after");
+B       printf("base5 - after");
+B       printf("base6 - after");
+U     }
+U }

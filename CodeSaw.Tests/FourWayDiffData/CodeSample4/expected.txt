@@ -1,0 +1,21 @@
+U namespace reviewer
+U {
+U     void func1()
+U     {
+U         std::cout << "Hello World" << std::endl;
+U     }
+U 
+U     void func2()
+U     {
+R         std::cout << "function 2" << std::endl;
+R 
+R         std::cout << "function 2 (next)" << std::endl;
+R 
+R         std::cout << "function 2 (next 2)" << std::endl;
+U     }
+U 
+U     void func3()
+U     {
+B         std::cout << "Base change 1" << std::endl;
+U     }
+U }
