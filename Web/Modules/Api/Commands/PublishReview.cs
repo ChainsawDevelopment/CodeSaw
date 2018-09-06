@@ -83,7 +83,7 @@ namespace Web.Modules.Api.Commands
                         return review;
                     }
 
-                    return reviews[revId] = CreateReview(revId);
+                    return reviews[revId] = CreateReview(reviewId, revId);
                 };
 
                 var newCommentsMap = new Dictionary<string, Guid>();
@@ -97,9 +97,12 @@ namespace Web.Modules.Api.Commands
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }
 
-            private Review CreateReview(RevisionId revisionId)
+            private Review CreateReview(ReviewIdentifier reviewId, RevisionId revisionId)
             {
-                var revision = _session.Query<ReviewRevision>().Single(x => x.RevisionNumber == ((RevisionId.Selected) revisionId).Revision);
+                var revision = _session.Query<ReviewRevision>().Single(x => 
+                    x.ReviewId == reviewId &&
+                    x.RevisionNumber == ((RevisionId.Selected) revisionId).Revision
+                );
 
                 var review = new Review
                 {
