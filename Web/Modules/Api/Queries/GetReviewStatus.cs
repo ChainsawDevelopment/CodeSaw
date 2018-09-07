@@ -61,20 +61,19 @@ namespace Web.Modules.Api.Queries
                         .ListAsync<FileStatus>();
                 }
 
-                Dictionary<CommentState, int> commentStates;
+                Dictionary<CommentState, int> discussionStates;
                 {
-                    commentStates = (
-                            from comment in _session.Query<Comment>()
-                            join review in _session.Query<Review>() on comment.PostedInReviewId equals review.Id
-                            join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                    discussionStates = (
+                            from discussion in _session.Query<Discussion>()
+                            join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id
                             where revision.ReviewId == query.ReviewId
-                            group comment by comment.State into g
+                            group discussion by discussion.State into g
                             select new { State = g.Key, Count = g.Count() }
                         )
                         .ToDictionary(x => x.State, x => x.Count);
 
                     var allStates = Enum.GetValues(typeof(CommentState)).Cast<CommentState>();
-                    commentStates.EnsureKeys(allStates, 0);
+                    discussionStates.EnsureKeys(allStates, 0);
                 }
 
                 return new Result
@@ -99,8 +98,8 @@ namespace Web.Modules.Api.Queries
                             ReviewedAt = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.RevisionNumber),
                             ReviewedBy = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.ReviewedBy)
                         }),
-                    UnresolvedDiscussions = commentStates[CommentState.NeedsResolution],
-                    ResolvedDiscussions = commentStates[CommentState.Resolved]
+                    UnresolvedDiscussions = discussionStates[CommentState.NeedsResolution],
+                    ResolvedDiscussions = discussionStates[CommentState.Resolved]
                 };
             }
         }

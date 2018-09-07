@@ -39,11 +39,11 @@ namespace Web.Modules.Api.Commands.PublishElements
                 {
                     Id = GuidComb.Generate(),
                     RevisionId = review.RevisionId,
+                    State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
                     RootComment = new Comment
                     {
                         Id = commentId,
                         Content = discussion.Content,
-                        State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
                         PostedInReviewId = review.Id,
                         CreatedAt = DateTimeOffset.UtcNow
                     }

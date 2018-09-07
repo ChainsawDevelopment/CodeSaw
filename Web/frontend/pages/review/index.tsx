@@ -23,6 +23,7 @@ import {
     ReviewDiscussion,
     CommentReply,
     FileToReview,
+    Discussion,
 } from '../../api/reviewer';
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
@@ -32,7 +33,7 @@ import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeI
 import MergeApprover from './mergeApprover';
 import "./review.less";
 import * as PathPairs from "../../pathPair";
-import CommentsView, { CommentsActions } from './commentsView';
+import CommentsView, { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 
@@ -117,18 +118,18 @@ class reviewPage extends React.Component<Props> {
             }
         };
 
-        const commentActions: CommentsActions = {
+        const commentActions: DiscussionActions = {
             addNew: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
             addReply: props.addReply,
             resolve: props.resolveDiscussion,
             unresolve: props.unresolveDiscussion
         }
 
-        const comments: Comment[] = props.currentReview.reviewDiscussions
+        const discussions: Discussion[] = props.currentReview.reviewDiscussions
             .concat(props.unpublishedReviewDiscussions)
             .map(d => ({
-                ...d.comment,
-                state: props.unpublishedResolvedDiscussions.indexOf(d.comment.id) >= 0 ? 'ResolvePending' : d.comment.state
+                ...d,
+                state: props.unpublishedResolvedDiscussions.indexOf(d.id) >= 0 ? 'ResolvePending' : d.state
             }));
 
         return (
@@ -156,7 +157,7 @@ class reviewPage extends React.Component<Props> {
                     <Grid.Row>
                         <Grid.Column>
                             <CommentsView
-                                comments={comments}
+                                discussions={discussions}
                                 actions={commentActions}
                                 unpublishedReplies={props.unpublishedReplies}
                                 currentUser={props.currentUser}
@@ -211,8 +212,8 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
     publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileName })),
     startFileDiscussion: (path, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution, currentUser })),
     startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
-    resolveDiscussion: (rootCommentId) => dispatch(resolveDiscussion({ rootCommentId })),
-    unresolveDiscussion: (rootCommentId) => dispatch(unresolveDiscussion({ rootCommentId })),
+    resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
+    unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),
     addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
 });
 

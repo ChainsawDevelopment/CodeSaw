@@ -47,11 +47,11 @@ namespace Web.Modules.Api.Commands.PublishElements
                     Id = GuidComb.Generate(),
                     File = discussion.File,
                     LineNumber = discussion.LineNumber,
+                    State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
                     RootComment = new Comment
                     {
                         Id = commentId,
                         PostedInReviewId = review.Id,
-                        State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
                         Content = discussion.Content,
                         CreatedAt = DateTimeOffset.UtcNow
                     }

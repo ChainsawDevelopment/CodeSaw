@@ -30,7 +30,7 @@ export interface ReviewState {
     reviewedFiles: PathPairs.List;
     unpublishedFileDiscussions: (FileDiscussion)[];
     unpublishedReviewDiscussions: (ReviewDiscussion)[];
-    unpublishedResolvedDiscussions: string[]; // root comment id
+    unpublishedResolvedDiscussions: string[]; 
     unpublishedReplies: CommentReply[];
     unpublishedReviewedFiles: FileReviewStatusChange;
     unpublishedUnreviewedFiles: FileReviewStatusChange;
@@ -79,8 +79,8 @@ export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_R
 export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean, currentUser: UserState }>('START_FILE_DISCUSSION');
 export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean, currentUser: UserState }>('START_REVIEW_DISCUSSION');
 
-export const unresolveDiscussion = createAction<{ rootCommentId: string }>('UNRESOLVE_DISCUSSION');
-export const resolveDiscussion = createAction<{ rootCommentId: string }>('RESOLVE_DISCUSSION');
+export const unresolveDiscussion = createAction<{ discussionId: string }>('UNRESOLVE_DISCUSSION');
+export const resolveDiscussion = createAction<{ discussionId: string }>('RESOLVE_DISCUSSION');
 export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 
 const initial: ReviewState = {
@@ -255,11 +255,13 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedFileDiscussions: [
                 ...state.unpublishedFileDiscussions,
                 {
+                    id: `FILE-${state.nextDiscussionCommentId}`,
                     revision: state.selectedFile.fileToReview.current,
                     filePath: action.payload.path,
                     lineNumber: action.payload.lineNumber,
+                    state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                    canResolve: true,
                     comment: {
-                        state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
                         author: action.payload.currentUser,
                         content: action.payload.content,
                         children: [],
@@ -278,9 +280,11 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedReviewDiscussions: [
                 ...state.unpublishedReviewDiscussions,
                 {
+                    id: `REVIEW-${state.nextDiscussionCommentId}`,
                     revision: state.currentReview.headRevision,
+                    state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                    canResolve: true,
                     comment: {
-                        state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
                         author: action.payload.currentUser,
                         content: action.payload.content,
                         children: [],
@@ -295,12 +299,12 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (unresolveDiscussion.match(action)) {
         return {
             ...state,
-            unpublishedResolvedDiscussions: state.unpublishedResolvedDiscussions.filter(id => id != action.payload.rootCommentId)
+            unpublishedResolvedDiscussions: state.unpublishedResolvedDiscussions.filter(id => id != action.payload.discussionId)
         };
     }
 
     if (resolveDiscussion.match(action)) {
-        if (state.unpublishedResolvedDiscussions.indexOf(action.payload.rootCommentId) >= 0) {
+        if (state.unpublishedResolvedDiscussions.indexOf(action.payload.discussionId) >= 0) {
             return state;
         }
 
@@ -308,7 +312,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             unpublishedResolvedDiscussions: [
                 ...state.unpublishedResolvedDiscussions,
-                action.payload.rootCommentId
+                action.payload.discussionId
             ]
         };
     }

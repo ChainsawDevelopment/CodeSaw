@@ -92,18 +92,23 @@ export interface Review {
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
 
-export interface FileDiscussion
+export interface Discussion 
 {
+    id: string;
     revision: RevisionId;
-    filePath: PathPairs.PathPair;
-    lineNumber: number;
+    state: CommentState;
     comment: Comment;
+    canResolve: boolean;
 }
 
-export interface ReviewDiscussion
+export interface FileDiscussion extends Discussion
 {
-    revision: RevisionId;
-    comment: Comment;
+    filePath: PathPairs.PathPair;
+    lineNumber: number;
+}
+
+export interface ReviewDiscussion extends Discussion
+{
 }
 
 export interface FileToReview {
@@ -174,7 +179,7 @@ export interface ReviewSnapshot {
         needsResolution: boolean;
         content: string;
     }[];
-    resolvedDiscussions: string[]; // root comment ids
+    resolvedDiscussions: string[]; 
     replies: CommentReply[];
     reviewedFiles: {
         [revision: string]: PathPairs.List;
@@ -190,7 +195,6 @@ export interface Comment {
     id: string;
     author: UserState;
     content: string;
-    state: CommentState,
     createdAt: string;
     children: Comment[];
 }

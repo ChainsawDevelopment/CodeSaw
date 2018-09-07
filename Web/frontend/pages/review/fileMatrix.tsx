@@ -37,7 +37,7 @@ type ReviewMark = 'outside' | 'previous' | 'inside' | 'current' | 'single';
 const FileDiscussionSummary = (props: {discussions:  FileDiscussion[]}): JSX.Element => {
     const { discussions } = props;
 
-    const unresolved = discussions.filter(f=>f.comment.state == 'NeedsResolution');
+    const unresolved = discussions.filter(f=>f.state == 'NeedsResolution');
 
     const label = <Label>{unresolved.length}/{discussions.length}</Label>;
 

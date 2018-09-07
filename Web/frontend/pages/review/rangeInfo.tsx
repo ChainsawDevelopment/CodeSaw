@@ -14,7 +14,7 @@ import { ReviewId, FileDiscussion, CommentReply, FileToReview } from "../../api/
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
-import { CommentsActions } from "./commentsView";
+import { DiscussionActions } from "./commentsView";
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
 import ReviewMark from "./reviewMark";
@@ -28,7 +28,7 @@ interface FileViewProps {
     unpublishedFileDiscussions: FileDiscussion[];
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
-    commentActions: CommentsActions;
+    commentActions: DiscussionActions;
     currentUser: UserState;
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
 }
@@ -139,7 +139,7 @@ export interface Props {
     fileComments: FileDiscussion[];
     unpublishedFileDiscussion: FileDiscussion[];
     startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
-    commentActions: CommentsActions;
+    commentActions: DiscussionActions;
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
