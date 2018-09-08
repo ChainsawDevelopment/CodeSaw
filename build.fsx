@@ -25,7 +25,7 @@ let private defaultYarnFileName =
             | Some yarn when System.IO.File.Exists yarn -> yarn
             | _ -> "./packages/Yarnpkg.js/tools/yarn.cmd"
 
-let dotNetExe = ((Environment.environVarOrDefault "DOTNETCORE_SDK_PATH" "") </> "dotnet.exe")
+let dotNetExe = ((Environment.environVarOrDefault "DOTNETCORE_SDK_PATH" "") </> "dotnet")
 let yarnExe = (Environment.environVarOrDefault "YARN_PATH" defaultYarnFileName)
 
 let isProduction = (Fake.Core.Context.forceFakeContext()).Arguments |> List.contains "--production"

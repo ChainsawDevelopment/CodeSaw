@@ -1,4 +1,4 @@
-﻿function status(review) {
+function status(review) {
     const byStatus = _(review.matrix)
         .countBy(file => _(file.revisions).filter(r => !r.isUnchanged).last().reviewers.length > 0)
         .value();
