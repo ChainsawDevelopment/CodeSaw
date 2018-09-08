@@ -30,6 +30,17 @@ export interface RevisionRangeInfo {
     filesReviewedByUser: PathPairs.List
 }
 
+export interface FileDiffRange {
+    previous: {
+        base: string;
+        head: string;
+    };
+    current: {
+        base: string;
+        head: string;
+    }
+}
+
 export interface HunkLine {
     operation: 'Equal' | 'Insert' | 'Delete';
     classification: 'Unchanged' | 'BaseChange' | 'ReviewChange';
@@ -256,9 +267,9 @@ export interface ReviewSearchArgs {
 }
 
 export class ReviewerApi {
-    public getDiff = (reviewId: ReviewId, range: RevisionRange, path: PathPairs.PathPair): Promise<FileDiff> => {
+    public getDiff = (reviewId: ReviewId, range: FileDiffRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
-            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous}/${range.current}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
+            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous.base}/${range.previous.head}/${range.current.base}/${range.current.head}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
             acceptJson
         ).then(mustBeOk).then(r => r.json());
     };
