@@ -18,6 +18,16 @@ export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
     fileToReview: FileToReview;
+    range: {
+        previous: {
+            base: string;
+            head: string;
+        };
+        current: {
+            base: string;
+            head: string
+        };
+    }
 }
 
 export interface FileReviewStatusChange {
@@ -117,6 +127,25 @@ const initial: ReviewState = {
     unpublishedUnreviewedFiles: {},
 };
 
+const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
+    if (revision == 'base') {
+        return { base: state.baseCommit, head: state.baseCommit };
+    };
+
+    if (revision == state.headCommit) {
+        return { base: state.baseCommit, head: state.headCommit };
+    }
+
+    const r = parseInt(revision.toString());
+
+    const pastRevision = state.pastRevisions.find(x => x.number == r);
+
+    return {
+        base: pastRevision.base,
+        head: pastRevision.head
+    };
+}
+
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
     if (selectFileForView.match(action)) {
         const file = state.currentReview.filesToReview.find(f => PathPairs.equal(f.reviewFile, action.payload.path));
@@ -127,6 +156,10 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 ...state.selectedFile,
                 path: action.payload.path,
                 fileToReview: file,
+                range: {
+                    previous: resolveRevision(state.currentReview, file.previous),
+                    current: resolveRevision(state.currentReview, file.current)
+                }
             }
         };
     }
