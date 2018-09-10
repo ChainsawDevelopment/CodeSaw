@@ -1,4 +1,3 @@
-using System;
 using Nancy;
 using Nancy.ModelBinding;
 using RepositoryApi;
@@ -12,11 +11,22 @@ namespace Web.Modules.Api
     {
         protected ReviewIdentifier ReviewId => new ReviewIdentifier(Context.Parameters.projectId, Context.Parameters.reviewId);
 
-        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, Func<IRepository> api) : base("/api/project/{projectId}/review/{reviewId}")
+        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
         {
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId)));
 
-            Get("/diff/{previous:revId}/{current:revId}", async _ => await query.Query(new GetFileDiff(_.projectId, _.reviewId, (RevisionId)_.previous, (RevisionId)_.current, Request.Query.oldPath, Request.Query.newPath)));
+            Get("/diff/{previous_base}/{previous_head}/{current_base}/{current_head}",
+                async _ => await query.Query(new GetFileDiff(
+                    ReviewId, 
+                    new GetFileDiff.HashSet
+                    {
+                        PreviousBase = (string)_.previous_base,
+                        PreviousHead = (string)_.previous_head,
+                        CurrentBase = (string)_.current_base,
+                        CurrentHead = (string)_.current_head,
+                    },
+                    Request.Query.oldPath, Request.Query.newPath
+                )));
 
             Post("/registerlink", async _ =>
             {   

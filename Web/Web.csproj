@@ -9,6 +9,7 @@
     <Content Remove="frontend/**/*.*" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="DefaultReviewFile.js" />
     <None Remove="Modules\Home\Views\Index.sshtml" />
   </ItemGroup>
   <ItemGroup>
@@ -24,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot/**" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="DefaultReviewfile.js" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GitLab\GitLab.csproj" />

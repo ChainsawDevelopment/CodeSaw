@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DiffMatchPatch;
-using NHibernate;
 using RepositoryApi;
 using Web.Cqrs;
 using Web.Diff;
@@ -13,19 +12,25 @@ namespace Web.Modules.Api.Queries
 {
     public class GetFileDiff : IQuery<GetFileDiff.Result>
     {
-        public RevisionId Previous { get; }
-        public RevisionId Current { get; }
+        public class HashSet
+        {
+            public string PreviousBase { get; set; }
+            public string PreviousHead { get; set; }
+            public string CurrentHead { get; set; }
+            public string CurrentBase { get; set; }
+        }
+
         public string OldPath { get; }
         public string NewPath { get; }
         public ReviewIdentifier ReviewId { get; }
+        public HashSet Hashes { get; }
 
-        public GetFileDiff(int projectId, int reviewId, RevisionId previous, RevisionId current, string oldPath, string newPath)
+        public GetFileDiff(ReviewIdentifier reviewId, HashSet hashes, string oldPath, string newPath)
         {
-            Previous = previous;
-            Current = current;
             OldPath = oldPath;
             NewPath = newPath;
-            ReviewId = new ReviewIdentifier(projectId, reviewId);
+            ReviewId = reviewId;
+            Hashes = hashes;
         }
 
         public class Result
@@ -80,27 +85,20 @@ namespace Web.Modules.Api.Queries
 
         public class Handler : IQueryHandler<GetFileDiff, Result>
         {
-            private readonly ISession _session;
             private readonly IRepository _api;
 
-            public Handler(ISession session, IRepository api)
+            public Handler(IRepository api)
             {
-                _session = session;
                 _api = api;
             }
 
             public async Task<Result> Execute(GetFileDiff query)
             {
-                var mergeRequest = await _api.GetMergeRequestInfo(query.ReviewId.ProjectId, query.ReviewId.ReviewId);
+                var previousCommit = query.Hashes.PreviousHead;
+                var currentCommit = query.Hashes.CurrentHead;
 
-                var commits = _session.Query<ReviewRevision>().Where(x => x.ReviewId == query.ReviewId)
-                    .ToDictionary(x => x.RevisionNumber, x => new {Head = x.HeadCommit, Base = x.BaseCommit});
-
-                var previousCommit = ResolveCommitHash(query.Previous, mergeRequest, r => commits[r].Head);
-                var currentCommit = ResolveCommitHash(query.Current, mergeRequest, r => commits[r].Head);
-
-                var previousBaseCommit = ResolveBaseCommitHash(query.Previous, mergeRequest, r => commits[r].Base);
-                var currentBaseCommit = ResolveBaseCommitHash(query.Current, mergeRequest, r => commits[r].Base);
+                var previousBaseCommit = query.Hashes.PreviousBase;
+                var currentBaseCommit = query.Hashes.CurrentBase;
 
                 var contents = (await new[]
                         {
@@ -279,24 +277,6 @@ namespace Web.Modules.Api.Queries
                 }
 
                 return result;
-            }
-
-            private string ResolveCommitHash(RevisionId revisionId, MergeRequest mergeRequest, Func<int, string> selectCommit)
-            {
-                return revisionId.Resolve(
-                    () => mergeRequest.BaseCommit,
-                    s => selectCommit(s.Revision),
-                    h => h.CommitHash
-                );
-            }
-
-            private string ResolveBaseCommitHash(RevisionId revisionId, MergeRequest mergeRequest, Func<int, string> selectCommit)
-            {
-                return revisionId.Resolve(
-                    () => mergeRequest.BaseCommit,
-                    s => selectCommit(s.Revision),
-                    h => h.CommitHash == mergeRequest.HeadCommit ? mergeRequest.BaseCommit : h.CommitHash
-                );
             }
 
             private bool IsBinaryFile(string content)
