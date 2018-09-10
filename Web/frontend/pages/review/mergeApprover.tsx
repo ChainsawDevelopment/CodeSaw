@@ -46,6 +46,7 @@ interface Props {
     reviewId: ReviewId,
     reviewState: ReviewInfoState,
     mergeStatus: ReviewMergeStatus;
+    reviewFinished: boolean;
     sourceBranch: string;
     targetBranch: string;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
@@ -80,8 +81,15 @@ const AlreadyMerged = (props: Props): JSX.Element =>
 const Closed = (props: Props): JSX.Element => 
     (<div><Icon color='black' name='trash alternate' /> Review for changes from <Branch name={props.sourceBranch} /> to <Branch name={props.targetBranch} /> is <span className="review-state">closed</span>. Changes were discarded.</div>);
 
+const ReviewNotFinished = (props: Props): JSX.Element => 
+    (<div><Icon color='black' name='hourglass half' /> Review for changes from <Branch name={props.sourceBranch} /> to <Branch name={props.targetBranch} /> is <span className="review-state">in progress</span>.</div>);
+
+
+
 const mergeApprover = (props: Props): JSX.Element => {
-    if (props.reviewState == "opened" && props.mergeStatus == 'can_be_merged') {
+    if (!props.reviewFinished) {
+        return <ReviewNotFinished  {...props} />;
+    } else if (props.reviewState == "opened" && props.mergeStatus == 'can_be_merged') {
         return (<OpenedMergeRequest {...props}/>)
     } else if (props.reviewState == "merged") {
         return (<AlreadyMerged {...props}/>)

@@ -151,6 +151,7 @@ export interface ReviewInfo {
     buildStatuses: BuildStatus[];
     sourceBranch: string;
     targetBranch: string;
+    reviewFinished: boolean;
 }
 
 export interface CommentReply {

@@ -12,6 +12,7 @@ interface StateProps {
     reviewId: ReviewId;
     mergeStatus: ReviewMergeStatus;
     reviewState: ReviewInfoState;
+    reviewFinished: boolean;
     url: string;
     description: string;
     buildStatuses: BuildStatus[];
@@ -37,6 +38,7 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
                         mergePullRequest={props.mergePullRequest}
                         sourceBranch={props.branches.source}
                         targetBranch={props.branches.target}
+                        reviewFinished={props.reviewFinished}
                     />
                 </Grid.Column>
             </Grid.Row>
@@ -62,7 +64,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     branches: {
         source: state.review.currentReview.sourceBranch,
         target: state.review.currentReview.targetBranch,
-    }
+    },
+    reviewFinished: state.review.currentReview.reviewFinished
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
