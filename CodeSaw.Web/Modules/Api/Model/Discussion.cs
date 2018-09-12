@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Web.Modules.Api.Model
+namespace CodeSaw.Web.Modules.Api.Model
 {
     public abstract class Discussion
     {
