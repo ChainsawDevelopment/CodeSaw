@@ -28,7 +28,7 @@ using Newtonsoft.Json.Linq;
 using NHibernate;
 using NHibernate.Dialect;
 using NHibernate.Mapping.ByCode;
-using Web.NodeIntegration;
+using CodeSaw.Web.NodeIntegration;
 
 namespace CodeSaw.Web
 {

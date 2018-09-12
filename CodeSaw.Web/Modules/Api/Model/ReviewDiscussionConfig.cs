@@ -2,7 +2,7 @@
 using NHibernate.Mapping.ByCode.Conformist;
 using NHibernate.Type;
 
-namespace Web.Modules.Api.Model
+namespace CodeSaw.Web.Modules.Api.Model
 {
     public class ReviewDiscussionConfig : UnionSubclassMapping<ReviewDiscussion>
     {

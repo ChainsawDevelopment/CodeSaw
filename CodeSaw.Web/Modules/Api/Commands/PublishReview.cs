@@ -9,7 +9,7 @@ using CodeSaw.Web.Cqrs;
 using CodeSaw.Web.Modules.Api.Commands.PublishElements;
 using CodeSaw.Web.Modules.Api.Model;
 using NHibernate;
-using Web.Modules.Api.Queries;
+using CodeSaw.Web.Modules.Api.Queries;
 
 namespace CodeSaw.Web.Modules.Api.Commands
 {
