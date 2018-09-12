@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using RepositoryApi;
-using Web.Cqrs;
-using Web.Modules.Api.Queries;
-using Web.NodeIntegration;
+using CodeSaw.RepositoryApi;
+using CodeSaw.Web.Cqrs;
+using CodeSaw.Web.Modules.Api.Queries;
+using CodeSaw.Web.NodeIntegration;
 
-namespace Web.Modules.Api.Commands
+namespace CodeSaw.Web.Modules.Api.Commands
 {
     public class RecalculateReviewStatus : ICommand
     {

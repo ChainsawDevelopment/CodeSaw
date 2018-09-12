@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
-using RepositoryApi;
-using Web.Cqrs;
+using CodeSaw.RepositoryApi;
+using CodeSaw.Web.Cqrs;
 
-namespace Web.Modules.Api.Queries
+namespace CodeSaw.Web.Modules.Api.Queries
 {
     public class GetCommitStatusInput : IQuery<object>
     {
