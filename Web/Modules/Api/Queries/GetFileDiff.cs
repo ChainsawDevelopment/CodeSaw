@@ -105,7 +105,7 @@ namespace Web.Modules.Api.Queries
                             new {Commit = previousCommit, Path = query.OldPath},
                             new {Commit = currentCommit, Path = query.NewPath},
                             new {Commit = previousBaseCommit, Path = query.OldPath},
-                            new {Commit = currentBaseCommit, Path = query.NewPath}
+                            new {Commit = currentBaseCommit, Path = query.OldPath}
                         }
                         .DistinctBy(x => x.Commit)
                         .Select(async c => new {File = c, content = await _api.GetFileContent(query.ReviewId.ProjectId, c.Commit, c.Path)})
