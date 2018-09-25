@@ -32,6 +32,7 @@ interface CommentProps {
     comment: Comment;
     actions: DiscussionActions;
     statusComponent?: JSX.Element;
+    note?: JSX.Element;
 }
 
 interface CommentState {
@@ -91,6 +92,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     <UIComment.Author>{this.props.comment.author.givenName}</UIComment.Author>
                     <UIComment.Metadata>
                         <div>{this.props.comment.createdAt}</div>
+                        {this.props.note}
                     </UIComment.Metadata>
                     <UIComment.Text>{this.props.comment.content}</UIComment.Text>
                     <UIComment.Actions>
@@ -108,6 +110,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 interface DiscussionComponentProps {
     discussion: Discussion;
     actions: DiscussionActions;
+    note?(discussion: Discussion): JSX.Element;
 }
 const DiscussionComponent = (props: DiscussionComponentProps) => {
     let status: JSX.Element = null;
@@ -134,6 +137,7 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
         comment={props.discussion.comment}
         statusComponent={status}
         actions={props.actions}
+        note={props.note ? props.note(props.discussion): null}
     />);
 };
 
@@ -170,6 +174,9 @@ interface DiscussionsProps {
     unpublishedReplies: Reply[];
     actions: DiscussionActions;
     currentUser: UserState;
+    title?: string;
+    replyOnly?: boolean;
+    note?(discussion: Discussion): JSX.Element;
 }
 
 export default class CommentsComponent extends React.Component<DiscussionsProps, CommentsState> {
@@ -189,7 +196,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
                 comment: mergeCommentsWithReplies([d.comment], this.props.unpublishedReplies, this.props.currentUser)[0]
             }))
 
-        const discussions = discussionsWithReplies.map(d => <DiscussionComponent key={d.id} discussion={d} actions={this.props.actions}/>)
+        const discussions = discussionsWithReplies.map(d => <DiscussionComponent key={d.id} discussion={d} actions={this.props.actions} note={this.props.note}/>)
 
         const onSubmit = () => {
             this.setState({ commentText: '' });
@@ -206,14 +213,16 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
         return (
             <UIComment.Group>
                 <Header as='h3' dividing>
-                    Comments
+                    {this.props.title || 'Comments'}
                 </Header>
                 {discussions}
-                <Form reply onSubmit={onSubmit}>
-                    <Form.TextArea onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
-                    <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
-                    <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
-                </Form>
+                {!this.props.replyOnly ? 
+                    <Form reply onSubmit={onSubmit}>
+                        <Form.TextArea onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
+                        <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
+                        <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
+                    </Form>
+                : null}
             </UIComment.Group>
         );
     }
