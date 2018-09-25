@@ -36,26 +36,37 @@ type Props = PassthroughProps & CommentProps;
 const buildLineWidgets = (props: Props) => {
     const lineComments = {
         left: new Map<number, Discussion[]>(),
-        right: new Map<number, Discussion[]>()
+        right: new Map<number, Discussion[]>(),
+        unmatched: [] as Discussion[]
     }
-    
+
     for (let fileComment of props.comments) {
-        let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
-        lineComments[side].set(fileComment.lineNumber, [
-            ...(lineComments[side].get(fileComment.lineNumber) || []),
-            {
-                ...fileComment,
+        if (fileComment.revision == props.rightSideRevision || fileComment.revision == props.leftSideRevision) {
+            let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
+            lineComments[side].set(fileComment.lineNumber, [
+                ...(lineComments[side].get(fileComment.lineNumber) || []),
+                {
+                    ...fileComment,
+                    state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state
+                }
+            ]);
+        } else {
+            lineComments.unmatched.push({
+                canResolve: fileComment.canResolve,
+                comment: fileComment.comment,
+                id: fileComment.id,
+                revision: fileComment.revision,
                 state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state
-            }
-        ]);
+            })
+        }
     }
-    
+
     for (let lineNumber of props.visibleCommentLines) {
         lineComments.right.set(lineNumber, lineComments.right.get(lineNumber) || []);
     }
 
     const lineWidgets: LineWidget[] = [];
-    for(let side of ['left', 'right']) {
+    for (let side of ['left', 'right']) {
         for (let [lineNumber, discussions] of lineComments[side]) {
             const commentActions: DiscussionActions = {
                 addNew: (content, needResolution) => {
@@ -87,14 +98,14 @@ const buildLineWidgets = (props: Props) => {
 }
 
 export default (props: Props) => {
-    const { 
-        comments, 
+    const {
+        comments,
         commentActions,
-        leftSideRevision, 
+        leftSideRevision,
         rightSideRevision,
         pendingResolved,
         unpublishedReplies,
-        ...diffViewProps 
+        ...diffViewProps
     } = props;
 
     const lineWidgets = buildLineWidgets(props);
@@ -107,8 +118,8 @@ export default (props: Props) => {
         }
     };
 
-    return <DiffView 
-        {...diffViewProps} 
+    return <DiffView
+        {...diffViewProps}
         lineWidgets={lineWidgets}
         onLineClick={toggleChangeComment}
     />
