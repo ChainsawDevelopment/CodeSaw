@@ -55,6 +55,9 @@ namespace CodeSaw.GitLab
         {
             var request = new RestRequest("/merge_requests", Method.GET)
                 .AddQueryParameter("state", args.State)
+                .AddQueryParameter("order_by", args.OrderBy)
+                .AddQueryParameter("sort", args.Sort)
+                .AddQueryParameter("search", args.Search)
                 .AddQueryParameter("scope", args.Scope)
                 .AddQueryParameter("page", args.Page.ToString());
 
