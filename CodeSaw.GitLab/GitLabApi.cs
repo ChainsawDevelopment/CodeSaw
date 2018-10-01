@@ -18,12 +18,10 @@ namespace CodeSaw.GitLab
 {
     public class GitLabApi : IRepository
     {
-        private readonly IGitAccessTokenSource _accessTokenSource;
         private readonly RestClient _client;
 
-        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource)
+        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl)
         {
-            _accessTokenSource = accessTokenSource;
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
 
             if (accessTokenSource.Type == TokenType.OAuth)
@@ -35,13 +33,16 @@ namespace CodeSaw.GitLab
                 _client.AddDefaultHeader("Private-Token", accessTokenSource.AccessToken);
             }
 
-            //_client.ConfigureWebRequest(wr =>
-            //{
-            //    wr.Proxy = new WebProxy("127.0.0.1", 8888)
-            //    {
-            //        BypassProxyOnLocal = false
-            //    };
-            //});
+            if (!string.IsNullOrWhiteSpace(proxyUrl))
+            {
+                _client.ConfigureWebRequest(wr =>
+                {
+                    wr.Proxy = new WebProxy(proxyUrl)
+                    {
+                        BypassProxyOnLocal = false
+                    };
+                });
+            }
 
             var serializer = new JsonSerializer();
             serializer.ContractResolver = new GitLabContractResolver();

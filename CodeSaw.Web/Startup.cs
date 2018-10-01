@@ -154,7 +154,7 @@ namespace CodeSaw.Web
         {
             var cfg = Configuration.GetSection("GitLab");
 
-            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>());
+            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>(), cfg["Proxy"]);
         }
 
         private ISessionFactory BuildSessionFactory()
