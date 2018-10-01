@@ -187,6 +187,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedReplies: [],
             unpublishedReviewedFiles: {},
             unpublishedUnreviewedFiles: {},
+            selectedFile: null
         };
     }
 
