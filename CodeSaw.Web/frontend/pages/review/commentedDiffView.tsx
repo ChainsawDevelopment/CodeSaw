@@ -46,10 +46,12 @@ const splitComments = (props: Props): LineComments => {
         right: new Map<number, FileDiscussion[]>(),
         unmatched: []
     }
+    
+    const allCommentsUnmatched = props.leftSideRevision == props.rightSideRevision;
 
     for (let fileComment of props.comments) {
 
-        if (fileComment.revision == props.rightSideRevision || fileComment.revision == props.leftSideRevision) {
+        if (!allCommentsUnmatched && (fileComment.revision == props.rightSideRevision || fileComment.revision == props.leftSideRevision)) {
             let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
             lineComments[side].set(fileComment.lineNumber, [
                 ...(lineComments[side].get(fileComment.lineNumber) || []),
