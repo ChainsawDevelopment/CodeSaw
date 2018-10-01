@@ -24,6 +24,7 @@ import "./layout.less";
 import { ReviewId } from "./api/reviewer";
 import CurrentUser from './pages/user/User';
 import { RootState } from './rootState';
+import EnvMessages from './components/EnvMesssages';
 
 const Home = () => (
     <span>
@@ -71,6 +72,7 @@ const Layout = (props: StateProps) => (
             </Container>
         </Menu>
         <ToastContainer />
+        <EnvMessages />
         <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
