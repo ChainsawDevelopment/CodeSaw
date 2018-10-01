@@ -12,6 +12,9 @@ namespace CodeSaw.Web.Modules.Api
             Get("/", async _ => await query.Query(new GetReviewList(new MergeRequestSearchArgs
             {
                 State = Request.Query.state,
+                OrderBy = Request.Query.orderBy,
+                Sort = Request.Query.sort,
+                Search = Request.Query.search,
                 Scope = "all",
                 Page = Request.Query.page
             })));

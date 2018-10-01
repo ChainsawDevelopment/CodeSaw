@@ -31,5 +31,8 @@ namespace CodeSaw.RepositoryApi
         public int Page { get; set; }
         public string State { get; set; }
         public string Scope { get; set; }
+        public string OrderBy { get; set; }
+        public string Sort { get; set; }
+        public string Search { get; set; }
     }
 }
