@@ -11,7 +11,12 @@
 <div id="content">
 </div>
 
-<!--<script src="http://localhost:8080/dist.js"></script>-->
+<script type="text/javascript">
+    window.env = {
+        local: @Model.IsLocal,
+        debug: @Model.IsDebug
+    };
+</script>
 <script src="@Model.AssetBase/dist.js"></script>
 </body>
 </html>
