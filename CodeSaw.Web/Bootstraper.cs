@@ -81,7 +81,7 @@ namespace CodeSaw.Web
 
                 builder.RegisterInstance(context.Request.Url.SiteBase).Keyed<string>("SiteBase");
 
-                if (context.CurrentUser!=null)
+                if (context.CurrentUser != null)
                 {
                     builder.RegisterType<CachedGitAccessTokenSource>().As<IGitAccessTokenSource>().SingleInstance().WithAttributeFiltering();
                     builder.RegisterInstance(new CustomToken(_globalToken)).Named<IGitAccessTokenSource>("global_token");

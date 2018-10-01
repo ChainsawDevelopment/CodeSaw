@@ -126,14 +126,16 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     HasProvisionalRevision = !reviewStatus.RevisionForCurrentHead,
                     HeadCommit = reviewStatus.CurrentHead,
                     BaseCommit = reviewStatus.CurrentBase,
-                    HeadRevision = reviewStatus.RevisionForCurrentHead ? new RevisionId.Selected(pastRevisions.Last().Number) : (RevisionId)new RevisionId.Hash(reviewStatus.CurrentHead),
+                    HeadRevision = reviewStatus.RevisionForCurrentHead
+                        ? new RevisionId.Selected(pastRevisions.Last().Number)
+                        : (RevisionId) new RevisionId.Hash(reviewStatus.CurrentHead),
                     State = reviewStatus.MergeRequestState,
                     MergeStatus = reviewStatus.MergeStatus,
                     ReviewFinished = commitStatus.State == CommitStatusState.Success,
                     WebUrl = reviewStatus.WebUrl,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
-                    FileMatrix = fileMatrix,
+                    FileMatrix = fileMatrix.OrderBy(x => x.File.NewPath),
                     BuildStatuses = buildStatuses
                 };
             }

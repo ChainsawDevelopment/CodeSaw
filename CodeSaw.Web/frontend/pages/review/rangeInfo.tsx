@@ -66,10 +66,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         const { file, commentActions } = this.props;
 
         const fileDiscussions = this.props.comments
-            .filter(f =>
-                PathPairs.equal(f.filePath, file.path)
-                && (f.revision == file.fileToReview.current || f.revision == file.fileToReview.previous || (f.revision as number) + 1 == file.fileToReview.previous))
-            ;
+            .filter(f => PathPairs.equal(f.filePath, file.path));
 
         const unpublishedDiscussion = this.props.unpublishedFileDiscussions
             .filter(f => PathPairs.equal(f.filePath, file.path));
