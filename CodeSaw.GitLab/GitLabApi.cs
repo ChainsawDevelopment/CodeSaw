@@ -161,6 +161,11 @@ namespace CodeSaw.GitLab
             }
         }
 
+        public async Task<Tag> GetRef(int projectId, string tagName)
+        {
+            return await new RestRequest($"/projects/{projectId}/repository/tags/{Uri.EscapeDataString(tagName)}", Method.GET).Execute<Tag>(_client);
+        }
+
         public async Task CreateRef(int projectId, string name, string commit)
         {
             var createTagRequest = new RestRequest($"/projects/{projectId}/repository/tags", Method.POST)
@@ -172,13 +177,16 @@ namespace CodeSaw.GitLab
 
             var createTagResponse = await _client.ExecuteTaskAsync(createTagRequest);
 
-
             if (RrefAlreadyExists(createTagResponse))
             {
-                // This may happen if there are concurrent requests to remeber the same revision
-                throw new RefAlreadyExistsException(projectId, name, commit);
+                var existingTag = await GetRef(projectId, name);
+                if (existingTag.Target != commit) 
+                {
+                    // This may happen if there are concurrent requests to remeber the same revision
+                    throw new ExistingRefConflictException(projectId, name, commit);
+                }
             }
-            if (createTagResponse.StatusCode != HttpStatusCode.Created)
+            else if (createTagResponse.StatusCode != HttpStatusCode.Created)
             {
                 throw new GitLabApiFailedException(createTagRequest, createTagResponse);
             }
