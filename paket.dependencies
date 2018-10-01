@@ -21,6 +21,7 @@ nuget Autofac.Extensions.DependencyInjection
 nuget FluentMigrator.Runner
 nuget RestSharp
 nuget Moq
+nuget NLog
 
 nuget Microsoft.AspNetCore.Authentication
 nuget Microsoft.AspNetCore.Authentication.Cookies

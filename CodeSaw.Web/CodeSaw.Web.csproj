@@ -32,5 +32,10 @@
     <ProjectReference Include="..\CodeSaw.GitLab\CodeSaw.GitLab.csproj" />
     <ProjectReference Include="..\CodeSaw.RepositoryApi\CodeSaw.RepositoryApi.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
