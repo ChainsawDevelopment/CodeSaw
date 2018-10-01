@@ -9,7 +9,7 @@ namespace CodeSaw.RepositoryApi
         public string Commit { get; }
 
         public ExistingRefConflictException(int projectId, string refName, string commit)
-            :base ($"Tried to create ref {refName} for project {projectId} and commit {commit}, but such ref already exists.")
+            :base ($"Tried to create ref {refName} for project {projectId} and commit {commit}. Such ref already exists, but has different value.")
         {
             ProjectId = projectId;
             RefName = refName;

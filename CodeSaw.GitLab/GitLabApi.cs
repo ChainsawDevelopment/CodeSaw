@@ -161,9 +161,9 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task<Tag> GetRef(int projectId, string tag_name)
+        public async Task<Tag> GetRef(int projectId, string tagName)
         {
-            return await new RestRequest($"/projects/{projectId}/repository/tags/{Uri.EscapeDataString(tag_name)}", Method.GET).Execute<Tag>(_client);
+            return await new RestRequest($"/projects/{projectId}/repository/tags/{Uri.EscapeDataString(tagName)}", Method.GET).Execute<Tag>(_client);
         }
 
         public async Task CreateRef(int projectId, string name, string commit)
