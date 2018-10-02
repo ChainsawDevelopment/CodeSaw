@@ -470,6 +470,7 @@ NUGET
       System.Configuration.ConfigurationManager (>= 4.4.1)
       System.Security.Permissions (>= 4.4.1)
       System.ServiceModel.Primitives (>= 4.4)
+    NLog (4.5.10)
     NUnit (3.10.1)
       NETStandard.Library (>= 2.0)
     NUnit3TestAdapter (3.10)
