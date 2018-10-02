@@ -2,14 +2,24 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using NLog;
 
 namespace CodeSaw.Web
 {
     public class Program
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            try
+            {
+                BuildWebHost(args).Run();
+            }
+            catch (System.Exception ex)
+            {
+                Logger.Error(ex, "Unhandled exception in Main CodeSaw");
+            }
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
