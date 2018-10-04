@@ -19,6 +19,7 @@ interface FileMatrixRevision {
         type: string;
         value: number | string;
     };
+    file: PathPair;
     isNew: boolean;
     isRenamed: boolean;
     isDeleted: boolean;
@@ -118,7 +119,8 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
         revision: {
             type: 'base',
             value: 'base'
-        }
+        },
+        file: PathPairs.make(props.file.file.oldPath)
     });
 
     let reviewMark: ReviewMark = 'outside';
@@ -141,7 +143,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
             reviewMark = 'current';
         }  
 
-        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value);
+        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value && f.filePath.newPath == r.file.oldPath);
 
         revisionCells.push(<MatrixCell
             key={r.revision.value}
@@ -182,9 +184,8 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        const discussions = props.fileDiscussions.filter(f => PathPairs.equal(f.filePath, entry.file));
 
-        rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={discussions}/>);
+        rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={props.fileDiscussions}/>);
     }
 
     return (

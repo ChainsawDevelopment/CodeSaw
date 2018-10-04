@@ -212,7 +212,7 @@ const diffView = (props: Props) => {
         return (<BinaryDiffView diffInfo={props.diffInfo} />)
     }
 
-    if (props.diffInfo.hunks.length == 0) {
+    if (props.diffInfo.hunks.length == 0 && props.lineWidgets.length == 0) {
         return (<div className='no-changes'>
             No real changes in this file. Probably result of including changes from base branch.
         </div>);
