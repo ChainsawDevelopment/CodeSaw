@@ -1,4 +1,5 @@
 #r "paket: 
+open Fake.IO
 nuget Fake.Core.Target prerelease
 nuget Fake.DotNet.Cli prerelease
 nuget Fake.DotNet.Paket prerelease
@@ -69,6 +70,11 @@ Target.create "_FrontendBuild" (fun _ ->
        { o with
            YarnFilePath = yarnExe  
        })
+
+    (root </> "node_modules/semantic-ui-css/semantic.min.css")
+    |> Fake.IO.Shell.copyFile  (root </> "CodeSaw.Web" </> "wwwroot")
+
+    Fake.IO.Shell.copyRecursive (root </> "node_modules/semantic-ui-css/themes") (root </> "CodeSaw.Web" </> "wwwroot" </> "themes") true |> ignore
 )
 
 Target.create "Build" ignore

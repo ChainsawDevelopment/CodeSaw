@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>CodeSaw</title>
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.min.css"></link>
+    <link rel="stylesheet" href="/dist/semantic.min.css">
     <link rel="icon" href="/dist/favicon.png">
 </head>
 <body>
@@ -11,7 +11,6 @@
 <div id="content">
 </div>
 
-<!--<script src="http://localhost:8080/dist.js"></script>-->
 <script src="@Model.AssetBase/dist.js"></script>
 </body>
 </html>
