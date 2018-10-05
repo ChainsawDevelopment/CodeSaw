@@ -66,8 +66,9 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 var statusInput = new
                 {
                     Matrix = fileMatrix,
-                    UnresolvedDiscussions = summary.UnresolvedDiscussions,
-                    ResolvedDiscussions = summary.ResolvedDiscussions
+                    summary.UnresolvedDiscussions,
+                    summary.ResolvedDiscussions,
+                    summary.Discussions
                 };
 
                 try
