@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
+using CodeSaw.Web.Auth;
 using CodeSaw.Web.Cqrs;
 using CodeSaw.Web.Modules.Api.Model;
 using NHibernate;
@@ -61,19 +62,20 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         .ListAsync<FileStatus>();
                 }
 
-                Dictionary<CommentState, int> discussionStates;
+                List<DiscussionItem> discussions;
                 {
-                    discussionStates = (
-                            from discussion in _session.Query<Discussion>()
-                            join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id
-                            where revision.ReviewId == query.ReviewId
-                            group discussion by discussion.State into g
-                            select new { State = g.Key, Count = g.Count() }
-                        )
-                        .ToDictionary(x => x.State, x => x.Count);
+                    var q = from discussion in _session.Query<Discussion>()
+                        join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id
+                        where revision.ReviewId == query.ReviewId
+                        join review in _session.Query<Review>() on discussion.RootComment.PostedInReviewId equals review.Id
+                        join author in _session.Query<ReviewUser>() on review.UserId equals author.Id
+                        select new DiscussionItem()
+                        {
+                            Author = author.UserName,
+                            State = discussion.State
+                        };
 
-                    var allStates = Enum.GetValues(typeof(CommentState)).Cast<CommentState>();
-                    discussionStates.EnsureKeys(allStates, 0);
+                    discussions = await q.ToListAsync();
                 }
 
                 return new Result
@@ -98,8 +100,9 @@ namespace CodeSaw.Web.Modules.Api.Queries
                             ReviewedAt = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.RevisionNumber),
                             ReviewedBy = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.ReviewedBy)
                         }),
-                    UnresolvedDiscussions = discussionStates[CommentState.NeedsResolution],
-                    ResolvedDiscussions = discussionStates[CommentState.Resolved]
+                    UnresolvedDiscussions = discussions.Count(x => x.State == CommentState.NeedsResolution),
+                    ResolvedDiscussions = discussions.Count(x => x.State == CommentState.Resolved),
+                    Discussions = discussions
                 };
             }
         }
@@ -121,6 +124,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public string Description { get; set; }
             public string SourceBranch { get; set; }
             public string TargetBranch { get; set; }
+            public List<DiscussionItem> Discussions { get; set; }
         }
 
         public class FileStatus
@@ -129,6 +133,12 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public int ReviewedBy { get; set; }
             public string Path { get; set; }
             public FileReviewStatus Status { get; set; }
+        }
+
+        public class DiscussionItem
+        {
+            public string Author { get; set; }
+            public CommentState State { get; set; }
         }
     }
 }
