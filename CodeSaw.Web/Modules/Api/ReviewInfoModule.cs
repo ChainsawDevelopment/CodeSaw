@@ -66,6 +66,8 @@ namespace CodeSaw.Web.Modules.Api
             Get("/status", async _ => await query.Query(new GetReviewStatus(ReviewId)));
 
             Get("/commit_status_base", async _ => await query.Query(new GetCommitStatusInput(ReviewId)));
+
+            Get("/emoji", async _ => await query.Query(new GetReviewEmoji(ReviewId)));
         }
     }
 }

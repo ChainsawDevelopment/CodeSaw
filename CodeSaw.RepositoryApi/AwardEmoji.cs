@@ -1,4 +1,6 @@
-﻿namespace CodeSaw.RepositoryApi
+﻿using System.Linq;
+
+namespace CodeSaw.RepositoryApi
 {
     public class AwardEmoji
     {
@@ -7,5 +9,6 @@
         public UserInfo User { get; set; }
 
         public bool Is(EmojiType emojiTypeType) => Name == emojiTypeType.ToString().ToLower();
+        public bool IsIn(EmojiType[] emojis) => emojis.Any(Is);
     }
 }

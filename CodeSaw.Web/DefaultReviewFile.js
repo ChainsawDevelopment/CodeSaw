@@ -29,3 +29,19 @@ function status(review) {
 
     return state;
 }
+
+function thumb(review, user) {
+    const byStatus = _(review.matrix)
+        .countBy(file => _(file.revisions).filter(r => !r.isUnchanged).last().reviewers.indexOf(user) >= 0)
+        .value();
+
+    const nothingReviewed = (byStatus[true] || 0) === 0;
+
+    if (nothingReviewed) {
+        return 0;
+    }
+
+    const allReviewed = (byStatus[false] || 0) === 0;
+
+    return allReviewed ? 1 : -1;
+}
