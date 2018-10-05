@@ -263,11 +263,6 @@ namespace CodeSaw.Tests
 
         public static IEnumerable<TestCaseData> TestCases()
         {
-            foreach (var name in typeof(FourWayDiffTest).Assembly.GetManifestResourceNames())
-            {
-                Console.WriteLine(name);
-            }
-
             var cases = typeof(FourWayDiffTest).Assembly.GetManifestResourceNames()
                 .Where(x => x.StartsWith("CodeSaw.Tests.FourWayDiffData"))
                 .Select(x => x.Substring("CodeSaw.Tests.FourWayDiffData.".Length))
