@@ -67,6 +67,11 @@
     <None Remove="FourWayDiffData\CopiedBaseBlock\base2.txt" />
     <None Remove="FourWayDiffData\CopiedBaseBlock\review1.txt" />
     <None Remove="FourWayDiffData\CopiedBaseBlock\review2.txt" />
+    <None Remove="FourWayDiffData\TMCase1\base1.txt" />
+    <None Remove="FourWayDiffData\TMCase1\base2.txt" />
+    <None Remove="FourWayDiffData\TMCase1\expected.txt" />
+    <None Remove="FourWayDiffData\TMCase1\review1.txt" />
+    <None Remove="FourWayDiffData\TMCase1\review2.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="FourWayDiffData\**\*.txt">
