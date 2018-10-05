@@ -66,7 +66,7 @@ namespace CodeSaw.Web.NodeIntegration
             }
         }
 
-        public JToken ExecuteScriptFunction(string script, string functionName, params object[] args)
+        public JToken ExecuteScriptFunction(IEnumerable<string> scripts, string functionName, params object[] args)
         {
             var psi = new ProcessStartInfo(_nodePath)
             {
@@ -82,7 +82,10 @@ namespace CodeSaw.Web.NodeIntegration
             var process = Process.Start(psi);
 
             process.StandardInput.WriteLine("const _ = require('lodash');");
-            process.StandardInput.WriteLine(script);
+            foreach (var script in scripts)
+            {
+                process.StandardInput.WriteLine(script);
+            }
             process.StandardInput.Write("const __inputs = ");
             _serializer.Serialize(process.StandardInput, args);
             process.StandardInput.WriteLine($";const __result = {functionName}(...__inputs);");
