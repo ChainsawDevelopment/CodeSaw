@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DiffMatchPatch;
 
 namespace CodeSaw.Web.Diff
@@ -73,29 +74,71 @@ namespace CodeSaw.Web.Diff
             var baseTextFromDiffs = DiffMatchPatchModule.Default.DiffText2(basePatch.Diffs);
             var reviewTextFromDiffs = DiffMatchPatchModule.Default.DiffText2(reviewPatch.Diffs);
 
-            var reviewInBase = baseTextFromDiffs.IndexOf(reviewTextFromDiffs, StringComparison.InvariantCulture);
-
-            if (reviewInBase >= 0 && reviewPatch.Start2 - reviewInBase >= 0)
             {
-                // extend review to match base
-                var prefix = reviewText.Substring(reviewPatch.Start2 - reviewInBase, reviewInBase);
-                var suffix = reviewText.Substring(reviewPatch.Start2 + reviewPatch.Length2, baseTextFromDiffs.Length - reviewPatch.Length2 - reviewInBase);
+                var reviewInBase = baseTextFromDiffs.IndexOf(reviewTextFromDiffs, StringComparison.InvariantCulture);
 
-                var extended = prefix + reviewTextFromDiffs + suffix;
-
-                if (extended == baseTextFromDiffs)
+                if (reviewInBase >= 0 && reviewPatch.Start2 - reviewInBase >= 0)
                 {
+                    // extend review to match base
+                    var prefix = reviewText.Substring(reviewPatch.Start2 - reviewInBase, reviewInBase);
+                    var suffix = reviewText.Substring(reviewPatch.Start2 + reviewPatch.Length2, baseTextFromDiffs.Length - reviewPatch.Length2 - reviewInBase);
+
+                    var extended = prefix + reviewTextFromDiffs + suffix;
+
+                    if (extended == baseTextFromDiffs)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            {
+                var baseInReview = reviewTextFromDiffs.IndexOf(baseTextFromDiffs, StringComparison.InvariantCulture);
+
+                if (baseInReview >= 0)
+                {
+                    Console.WriteLine("!!!!Base in review expand");
+                    // TODO
                     return true;
                 }
             }
 
-            var baseInReview = reviewTextFromDiffs.IndexOf(baseTextFromDiffs, StringComparison.InvariantCulture);
-
-            if (baseInReview >= 0)
             {
-                Console.WriteLine("!!!!Base in review expand");
-                // TODO
-                return true;
+                var baseChangeNoContextDiffs = basePatch.Diffs.Where(x=>!x.Operation.IsDelete).SkipWhile(x => x.Operation.IsEqual).TakeWhile(x => x.Operation.IsInsert).ToList();
+                var baseChangeNoContext = DiffMatchPatchModule.Default.DiffText2(baseChangeNoContextDiffs).Trim();
+
+                var reviewChangeNoContextDiffs = reviewPatch.Diffs.Where(x=>!x.Operation.IsDelete).SkipWhile(x => x.Operation.IsEqual).TakeWhile(x => x.Operation.IsInsert).ToList();
+                var reviewChangeNoContext = DiffMatchPatchModule.Default.DiffText2(reviewChangeNoContextDiffs).Trim();
+
+                var reviewInBaseNoContext = baseChangeNoContext.IndexOf(reviewChangeNoContext, StringComparison.InvariantCulture);
+
+                if (reviewInBaseNoContext >= 0)
+                {
+                    var baseContextPrefixDiffs = basePatch.Diffs.Where(x => !x.Operation.IsDelete).TakeWhile(x => x.Operation.IsEqual).ToList();
+                    var baseContextPrefixLength = baseContextPrefixDiffs.Sum(x => x.Text.Length);
+
+                    var reviewContextPrefixDiffs = reviewPatch.Diffs.Where(x => !x.Operation.IsDelete).TakeWhile(x => x.Operation.IsEqual).ToList();
+                    var reviewContextPrefixLength = reviewContextPrefixDiffs.Sum(x => x.Text.Length);
+
+                    var reviewDiffNoContextStart = reviewPatch.Start2 + reviewContextPrefixLength;
+                    var reviewDiffNoContextEnd = reviewDiffNoContextStart + reviewChangeNoContextDiffs.Sum(x => x.Text.Length);
+
+                    var contextPrefixLength = baseContextPrefixLength + reviewInBaseNoContext;
+                    var contextSuffixLength = baseTextFromDiffs.Length - baseContextPrefixLength - baseChangeNoContextDiffs.Sum(x => x.Text.Length);
+
+                    if (reviewDiffNoContextStart >= contextPrefixLength)
+                    {
+                        var prefix = reviewText.Substring(reviewDiffNoContextStart - contextPrefixLength, contextPrefixLength);
+                        var suffix = reviewText.Substring(reviewDiffNoContextEnd, contextSuffixLength);
+
+                        var reviewTextReconstructedContext = prefix + reviewChangeNoContext + suffix;
+
+                        if (reviewTextReconstructedContext == baseTextFromDiffs)
+                        {
+                            return true;
+                        }
+                    }
+                }
             }
 
             return false;
