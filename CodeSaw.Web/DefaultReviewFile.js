@@ -43,5 +43,11 @@ function thumb(review, user) {
 
     const allReviewed = (byStatus[false] || 0) === 0;
 
-    return allReviewed ? 1 : -1;
+    const myUnresolvedDiscussions = review.discussions.filter(d => d.author === user && d.state === 'NeedsResolution');
+
+    const allMyDiscussionsResolved = myUnresolvedDiscussions.length === 0;
+
+    const allGood = allReviewed && allMyDiscussionsResolved;
+
+    return allGood ? 1 : -1;
 }
