@@ -16,7 +16,7 @@ interface DispatchProps {
 export const User = (props: UserProps) => {
     return (
         <>
-            <span className="user">{props.user.givenName || "Unknown"}</span>
+            <span className="user">{props.user.name || "Unknown"}</span>
         </>
     );
 }

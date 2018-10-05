@@ -48,7 +48,7 @@ const FileDiscussionSummary = (props: {discussions:  FileDiscussion[]}): JSX.Ele
             ...content, 
             <span key='unresolved-title'>Discussions that needs resolution:</span>,
             <ul key='unresolved-list'>
-                {unresolved.map(d => <li key={d.lineNumber}>line {d.lineNumber} from {d.comment.author.givenName}</li>)}
+                {unresolved.map(d => <li key={d.lineNumber}>line {d.lineNumber} from {d.comment.author.name}</li>)}
             </ul>
             
         ];

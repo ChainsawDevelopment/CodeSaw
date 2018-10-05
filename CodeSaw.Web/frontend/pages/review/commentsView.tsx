@@ -88,7 +88,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             <UIComment>
                 <UIComment.Avatar src={this.props.comment.author.avatarUrl} />
                 <UIComment.Content>
-                    <UIComment.Author>{this.props.comment.author.givenName}</UIComment.Author>
+                    <UIComment.Author>{this.props.comment.author.name}</UIComment.Author>
                     <UIComment.Metadata>
                         <div>{this.props.comment.createdAt}</div>
                     </UIComment.Metadata>
