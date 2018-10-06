@@ -39,5 +39,10 @@ namespace CodeSaw.Web.Diff
 
             return _map[key];
         }
+
+        public int GetLineStartPosition(int line)
+        {
+            return _map.First(x => x.Value == line - 1).Key;
+        }
     }
 }

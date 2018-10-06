@@ -3,7 +3,7 @@
     "right": 3,
     "comment": {
         "version": 2,
-        "line": 4,
-        "expected": 6
+        "line": 11,
+        "expected": 17
     }
 }

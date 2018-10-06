@@ -1,0 +1,21 @@
+void function1()
+{
+    std::cout << "func1 mark 1" << std::endl;
+    std::cout << "func1 mark 2" << std::endl;
+    std::cout << "func1 mark 3" << std::endl;
+}
+
+void function2()
+{
+    std::cout << "func2 mark 1" << std::endl;
+    std::cout << "func2 mark 2" << std::endl;
+    std::cout << "func2 mark 3 - before" << std::endl;
+    std::cout << "func2 mark 3 - change" << std::endl;
+    std::cout << "func2 mark 3 - after" << std::endl;
+}
+
+void function3()
+{
+    std::cout << "func3 mark 1" << std::endl;
+    std::cout << "func3 mark 2" << std::endl;
+}
