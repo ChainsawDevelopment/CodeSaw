@@ -125,7 +125,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 var basePatch = FourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
                 var reviewPatch = FourWayDiff.MakePatch(contents[previousCommit], contents[currentCommit]);
 
-                UnrollContext(reviewPatch);
+                DiffUtils.UnrollContext(reviewPatch);
 
                 var classifiedPatches = FourWayDiff.ClassifyPatches(
                     contents[currentBaseCommit], basePatch,
@@ -221,17 +221,6 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                     Hunks = hunks
                 };
-            }
-
-            private void UnrollContext(List<Patch> patches)
-            {
-                int totalDiff = 0;
-
-                foreach (var patch in patches)
-                {
-                    patch.Start1 -= totalDiff;
-                    totalDiff += patch.Length2 - patch.Length1;
-                }
             }
 
             private IEnumerable<HunkInfo> MergeAdjacentHunks(IEnumerable<HunkInfo> hunks)

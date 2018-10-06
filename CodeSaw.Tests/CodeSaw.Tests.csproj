@@ -87,9 +87,15 @@
     <EmbeddedResource Include="FourWayDiffData\**\*.txt">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommentTrackingData\**\*.*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CodeSaw.Web\CodeSaw.Web.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="CommentTrackingData\NothingChanged\" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
