@@ -1,0 +1,7 @@
+source https://api.nuget.org/v3/index.json
+
+framework: netcoreapp21
+
+nuget Microsoft.AspNetCore
+nuget Microsoft.AspNetCore.StaticFiles
+nuget Microsoft.AspNetCore.SpaServices

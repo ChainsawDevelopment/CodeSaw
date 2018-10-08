@@ -264,8 +264,8 @@ namespace CodeSaw.Tests
         public static IEnumerable<TestCaseData> TestCases()
         {
             var cases = typeof(FourWayDiffTest).Assembly.GetManifestResourceNames()
-                .Where(x => x.StartsWith("Tests.FourWayDiffData"))
-                .Select(x => x.Substring("Tests.FourWayDiffData.".Length))
+                .Where(x => x.StartsWith("CodeSaw.Tests.FourWayDiffData"))
+                .Select(x => x.Substring("CodeSaw.Tests.FourWayDiffData.".Length))
                 .Select(x => x.Substring(0, x.IndexOf(".")))
                 .Distinct();
 
@@ -301,7 +301,7 @@ namespace CodeSaw.Tests
 
             private string ReadCaseFile(string fileName)
             {
-                var resourceName = $"Tests.FourWayDiffData.{CaseName}.{fileName}";
+                var resourceName = $"CodeSaw.Tests.FourWayDiffData.{CaseName}.{fileName}";
 
                 var resourceStream = typeof(FileSet).Assembly.GetManifestResourceStream(resourceName);
                 using (var streamReader = new StreamReader(resourceStream))
