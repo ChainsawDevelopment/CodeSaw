@@ -9,7 +9,7 @@ function status(review) {
         unresolved: review.unresolvedDiscussions,
     };
 
-    let state = {
+    const state = {
         ok: true,
         reasons: []
     };
