@@ -8,7 +8,8 @@
         "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
-            "@ui/*": [ "./node_modules/semantic-ui-react/dist/commonjs/*" ]
+            "@ui/*": [ "./node_modules/semantic-ui-react/dist/commonjs/*" ],
+            "@api/*": ["./CodeSaw.Web/frontend/api/*"]
         }
     }
 }

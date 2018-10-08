@@ -34,16 +34,19 @@ export interface FileReviewStatusChange {
     [revision: string]: PathPairs.List;
 }
 
-export interface ReviewState {
-    selectedFile: FileInfo;
-    currentReview: ReviewInfo;
-    reviewedFiles: PathPairs.List;
+export interface UnpublishedReview {
     unpublishedFileDiscussions: (FileDiscussion)[];
     unpublishedReviewDiscussions: (ReviewDiscussion)[];
     unpublishedResolvedDiscussions: string[]; 
     unpublishedReplies: CommentReply[];
     unpublishedReviewedFiles: FileReviewStatusChange;
-    unpublishedUnreviewedFiles: FileReviewStatusChange;
+    unpublishedUnreviewedFiles: FileReviewStatusChange;    
+}
+
+export interface ReviewState extends UnpublishedReview {
+    selectedFile: FileInfo;
+    currentReview: ReviewInfo;
+    reviewedFiles: PathPairs.List;
     nextReplyId: number;
     nextDiscussionCommentId: number;
 }
@@ -55,7 +58,9 @@ export const selectFileForView = createAction<{ path: PathPairs.PathPair }>('SEL
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
-export const loadedReviewInfo = createAction<ReviewInfo>('LOADED_REVIEW_INFO');
+export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview}>('LOADED_REVIEW_INFO');
+
+export const clearUnpublishedReviewInfo = createAction<{reviewId: ReviewId}>("CLEAR_UNPUBLISHED_REVIEW");
 
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
@@ -175,18 +180,25 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (loadedReviewInfo.match(action)) {
-        const reviewedFiles = action.payload.filesToReview.filter(f => f.current == f.previous);
+        const reviewedFiles = action.payload.info.filesToReview.filter(f => f.current == f.previous);
+
+        const getChangedFilesPaths = (changeStatus: FileReviewStatusChange) => Object.keys(changeStatus)
+            .map(key => changeStatus[key])
+            .reduce((a,b) => a.concat(b), []);
+
+        const unpublishedReviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedReviewedFiles);
+        const unpublishedUnreviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedUnreviewedFiles);
+
+        const reviewedFileFinal = reviewedFiles.map(f => f.reviewFile)
+            .filter(reviewedPathPair => 
+                unpublishedUnreviewedFiles.filter(unreviewedPathPair => PathPairs.equal(reviewedPathPair, unreviewedPathPair)).length == 0)
+            .concat(unpublishedReviewedFiles);
 
         return {
             ...state,
-            currentReview: action.payload,
-            reviewedFiles: reviewedFiles.map(f => f.reviewFile),
-            unpublishedFileDiscussions: [],
-            unpublishedReviewDiscussions: [],
-            unpublishedResolvedDiscussions: [],
-            unpublishedReplies: [],
-            unpublishedReviewedFiles: {},
-            unpublishedUnreviewedFiles: {},
+            currentReview: action.payload.info,
+            reviewedFiles: reviewedFileFinal,
+            ...action.payload.unpublishedInfo
         };
     }
 
@@ -265,6 +277,18 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 [file.current]: unreviewList
             },
         };
+    }
+
+    if (clearUnpublishedReviewInfo.match(action)) {
+        return {
+            ...state,
+            unpublishedFileDiscussions: [],
+            unpublishedReviewDiscussions: [],
+            unpublishedResolvedDiscussions: [],
+            unpublishedReplies: [],
+            unpublishedReviewedFiles: {},
+            unpublishedUnreviewedFiles: {}
+        }
     }
 
     const findCommentById = (id: string, comments: Comment[]): Comment => {
