@@ -1,5 +1,4 @@
 #r "paket: 
-open Fake.IO
 nuget Fake.Core.Target prerelease
 nuget Fake.DotNet.Cli prerelease
 nuget Fake.DotNet.Paket prerelease
@@ -11,6 +10,7 @@ nuget Fake.Runtime prerelease"
   #r "./packages/NETStandard.Library/build/netstandard2.0/ref/netstandard.dll"
 #endif
 
+open Fake.IO
 open Fake.Runtime
 open Fake.Core
 open Fake.DotNet
