@@ -2,6 +2,8 @@ import actionCreatorFactory, { AnyAction } from "typescript-fsa";
 import { Review, Paged, ReviewSearchArgs } from "../../api/reviewer";
 
 export interface ReviewsState {
+    orderBy: 'created_at' | 'updated_at';
+    sort: 'asc' | 'desc';
     reviews: Paged<Review>;
 }
 
@@ -10,6 +12,8 @@ export const loadReviews = createAction<ReviewSearchArgs>('LOAD_REVIEWS');
 export const reviewsLoaded = createAction<{reviews: Paged<Review>}>('REVIEWS_LOADED');
 
 const initial: ReviewsState = {
+    orderBy: 'updated_at',
+    sort: 'desc',
     reviews: {
         items: [],
         page: 1,
