@@ -1,6 +1,11 @@
 import * as React from "react";
-
 import { Dispatch } from "redux";
+import { connect } from "react-redux";
+import { History } from "history";
+
+import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
+import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+
 import {
     selectFileForView,
     loadReviewInfo,
@@ -18,31 +23,24 @@ import {
 import {
     ReviewInfo,
     ReviewId,
-    Comment,
     FileDiscussion,
     ReviewDiscussion,
     CommentReply,
-    FileToReview,
     Discussion,
 } from '../../api/reviewer';
+
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
-import { connect } from "react-redux";
 import { UserState, RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
-import MergeApprover from './mergeApprover';
 import "./review.less";
 import * as PathPairs from "../../pathPair";
 import CommentsView, { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 
-import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
-import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
-import Icon from '@ui/elements/Icon';
 import ExternalLink from "../../components/externalLink";
-
-import {History} from "history";
+import { createLinkToFile } from "./FileLink";
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -113,11 +111,23 @@ class reviewPage extends React.Component<Props> {
             }
         };
 
+        const selectNewFileForView = (newFile: PathPairs.PathPair) => {
+            if (newFile != null) {
+                props.selectFileForView(newFile);
+                
+                const fileLink = createLinkToFile(props.reviewId, newFile);
+                if (fileLink != window.location.pathname) {
+                    props.history.push(fileLink);
+                }
+
+                this.onShowFile();
+            }
+        };
+
         const selectFileForView = () => {
             const file = props.currentReview.filesToReview.find(f => f.reviewFile.newPath == props.fileName);
             if (file != null) {
-                props.selectFileForView(file.reviewFile);
-                this.onShowFile();
+                selectNewFileForView(file.reviewFile);
             }
         };
 
@@ -174,7 +184,7 @@ class reviewPage extends React.Component<Props> {
                 <RangeInfo
                     filesToReview={props.currentReview.filesToReview}
                     selectedFile={selectedFile}
-                    onSelectFileForView={props.selectFileForView}
+                    onSelectFileForView={selectNewFileForView}
                     reviewFile={props.reviewFile}
                     reviewedFiles={props.reviewedFiles}
                     publishReview={props.publishReview}
@@ -206,10 +216,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectFileForView: (path) => {
-        ownProps.history.push(`/project/${ownProps.reviewId.projectId}/review/${ownProps.reviewId.reviewId}/${path.newPath}`);
-        dispatch(selectFileForView({ path }));
-    },
+    selectFileForView: (path) => dispatch(selectFileForView({ path })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),
@@ -226,7 +233,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
 export default connect(
     mapStateToProps,
     mapDispatchToProps,
-    (stateProps, dispatchProps, ownProps) => ({
+    (stateProps: StateProps, dispatchProps: DispatchProps, ownProps: OwnProps) : Props => ({
         ...ownProps,
         ...stateProps,
         ...dispatchProps,
