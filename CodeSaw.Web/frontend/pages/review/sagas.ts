@@ -19,7 +19,7 @@ import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
 import { startOperation, stopOperation } from "../../loading/saga";
-import { getUnpublishedReview, clearUnpublishedReview } from "./storage";
+import { getUnpublishedReview } from "./storage";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
     return {
@@ -61,9 +61,7 @@ function* loadReviewInfoSaga() {
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const unpublishedInfo = getUnpublishedReview(action.payload.reviewId);
-        // TODO:
-        // const unpublishedInfo = yield storage.getLocalUnpublishedChanges(action.payload.reviewId)
-
+     
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
         console.log({unpublishedInfo});
@@ -151,7 +149,6 @@ function* publishReviewSaga() {
 
         if (successfulPublish) {
             yield put(clearUnpublishedReviewInfo({ reviewId: reviewSnapshot.reviewId}));
-            //clearUnpublishedReview(reviewSnapshot.reviewId);
         }
 
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId, fileToPreload: action.payload.fileToLoad }));
@@ -185,9 +182,6 @@ function* mergePullRequestSaga() {
         yield stopOperation();
     }
 }
-
-// TODO:
-// Zapisuj jak Dan Abramov
 
 export default [
     loadFileDiffSaga,
