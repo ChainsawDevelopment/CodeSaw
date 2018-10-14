@@ -98,6 +98,15 @@ export const unresolveDiscussion = createAction<{ discussionId: string }>('UNRES
 export const resolveDiscussion = createAction<{ discussionId: string }>('RESOLVE_DISCUSSION');
 export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 
+export const emptyUnpublishedReview : UnpublishedReview = {
+    unpublishedFileDiscussions: [],
+    unpublishedReviewDiscussions: [],
+    unpublishedResolvedDiscussions: [],
+    unpublishedReplies: [],
+    unpublishedReviewedFiles: {},
+    unpublishedUnreviewedFiles: {},
+}
+
 const initial: ReviewState = {
     selectedFile: null,
     currentReview: {
@@ -122,14 +131,9 @@ const initial: ReviewState = {
         reviewFinished: false
     },
     reviewedFiles: [],
-    unpublishedFileDiscussions: [],
-    unpublishedReviewDiscussions: [],
     nextDiscussionCommentId: 0,
-    unpublishedResolvedDiscussions: [],
-    unpublishedReplies: [],
     nextReplyId: 0,
-    unpublishedReviewedFiles: {},
-    unpublishedUnreviewedFiles: {},
+    ...emptyUnpublishedReview,
 };
 
 const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
@@ -189,16 +193,18 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         const unpublishedReviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedReviewedFiles);
         const unpublishedUnreviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedUnreviewedFiles);
 
-        const reviewedFileFinal = reviewedFiles.map(f => f.reviewFile)
-            .filter(reviewedPathPair => 
-                unpublishedUnreviewedFiles.filter(unreviewedPathPair => PathPairs.equal(reviewedPathPair, unreviewedPathPair)).length == 0)
+        const reviewedFileFinal = 
+            PathPairs.subtract(
+                reviewedFiles.map(f => f.reviewFile),
+                unpublishedUnreviewedFiles
+            )
             .concat(unpublishedReviewedFiles);
 
         return {
             ...state,
             currentReview: action.payload.info,
             reviewedFiles: reviewedFileFinal,
-            ...action.payload.unpublishedInfo
+            ...action.payload.unpublishedInfo,
             selectedFile: null
         };
     }
@@ -283,12 +289,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (clearUnpublishedReviewInfo.match(action)) {
         return {
             ...state,
-            unpublishedFileDiscussions: [],
-            unpublishedReviewDiscussions: [],
-            unpublishedResolvedDiscussions: [],
-            unpublishedReplies: [],
-            unpublishedReviewedFiles: {},
-            unpublishedUnreviewedFiles: {}
+            ...emptyUnpublishedReview
         }
     }
 

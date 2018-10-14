@@ -1,18 +1,9 @@
-import { ReviewState, UnpublishedReview } from './state'
+import { ReviewState, UnpublishedReview, emptyUnpublishedReview } from './state'
 import { ReviewId } from '@api/reviewer'
 
 const createReviewKey = (reviewId: ReviewId): string => {
     return `unpublished_${reviewId.projectId}_${reviewId.reviewId}`;
 }
-
-const emptyUnpublishedReview: UnpublishedReview = {
-    unpublishedFileDiscussions: [],
-    unpublishedReplies: [],
-    unpublishedResolvedDiscussions: [],
-    unpublishedReviewDiscussions: [],
-    unpublishedReviewedFiles: {},
-    unpublishedUnreviewedFiles: {}
-};
 
 export const saveUnpublishedReview = (review: ReviewState): void => {
     const reviewKey = createReviewKey(review.currentReview.reviewId);
@@ -29,16 +20,6 @@ export const saveUnpublishedReview = (review: ReviewState): void => {
         console.warn({msg: "Error when writing to local storage", err});
     }
     
-}
-
-export const clearUnpublishedReview = (reviewId: ReviewId): void => {
-    const reviewKey = createReviewKey(reviewId);
-    try {
-        localStorage.setItem(reviewKey, JSON.stringify({}));
-    }
-    catch (err) {
-        console.warn({msg: "Error when clearing local storage", err});
-    }
 }
 
 export const getUnpublishedReview = (reviewId: ReviewId): UnpublishedReview => {
