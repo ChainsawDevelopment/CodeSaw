@@ -42,9 +42,12 @@ import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
 import Icon from '@ui/elements/Icon';
 import ExternalLink from "../../components/externalLink";
 
+import {History} from "history";
+
 interface OwnProps {
     reviewId: ReviewId;
     fileName?: string;
+    history: History;
 }
 
 interface DispatchProps {
@@ -203,7 +206,10 @@ const mapStateToProps = (state: RootState): StateProps => ({
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectFileForView: (path) => dispatch(selectFileForView({ path })),
+    selectFileForView: (path) => {
+        ownProps.history.push(`/project/${ownProps.reviewId.projectId}/review/${ownProps.reviewId.reviewId}/${path.newPath}`);
+        dispatch(selectFileForView({ path }));
+    },
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),

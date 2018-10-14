@@ -242,6 +242,14 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             menuItems.push(<Menu.Item fitted key="file-path">
                 <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
+        } else if (this.props.filesToReview.length > 0) {
+            const firstFile = this.props.filesToReview[0].reviewFile;
+            const lastFile = this.props.filesToReview[this.props.filesToReview.length-1].reviewFile;
+            
+            reviewHotKeys = {
+                '[': () => lastFile && onSelectFileForView(lastFile),
+                ']': () => firstFile && onSelectFileForView(firstFile)
+            };
         }
 
         const selectableFiles = this.props.filesToReview.map(i => i.reviewFile);
