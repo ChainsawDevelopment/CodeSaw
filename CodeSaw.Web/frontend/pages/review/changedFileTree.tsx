@@ -1,5 +1,7 @@
 import * as React from "react";
 import List from '@ui/elements/List';
+import Input from '@ui/elements/Input';
+
 import ReviewMark from './reviewMark';
 import * as PathPairs from "../../pathPair";
 import { FileLink } from "./FileLink";
@@ -17,30 +19,76 @@ const FileItem = (props: { path: PathPairs.PathPair, reviewId: ReviewId, isSelec
     return (
         <List.Item className="file-tree-item">
             <List.Content>
-                <ReviewMark reviewed={props.isReviewed} size='small'/>
+                <ReviewMark reviewed={props.isReviewed} size='small' />
                 <span>{header}</span>
             </List.Content>
         </List.Item>
     );
 }
 
-const changedFileTree = (props: { paths: PathPairs.List, reviewedFiles: PathPairs.List; selected:PathPairs.PathPair, onSelect: (path: PathPairs.PathPair) => void, reviewId: ReviewId }) => {
-    const items = props.paths.map(p => (
-        <FileItem 
-            key={p.newPath} 
-            path={p} 
-            isSelected={p.newPath == props.selected.newPath}
-            isReviewed={PathPairs.contains(props.reviewedFiles, p)}
-            onclick={() => props.onSelect(p)}
-            reviewId={props.reviewId}
-        />
-    ));
+namespace ChangedFileTree {
+    export interface Props {  
+        paths: PathPairs.List;
+        reviewedFiles: PathPairs.List; 
+        selected: PathPairs.PathPair, 
+        onSelect: (path: PathPairs.PathPair) => void;
+        reviewId: ReviewId 
+    }
 
-    return (
-        <List className="file-tree">
-            {items}
-        </List>
-    );
-};
+    export interface State {
+        searchValue: string
+    }
+}
 
-export default changedFileTree;
+export default class ChangeFileTree extends React.Component<ChangedFileTree.Props, ChangedFileTree.State> {
+    searchFieldRef: React.RefObject<Input>;
+    
+    constructor(props) {
+        super(props);
+
+        this.searchFieldRef = React.createRef();
+
+        this.state = {
+            searchValue: ""
+        }
+    }
+
+    componentDidMount() {
+        setTimeout(() => this.searchFieldRef.current.focus(), 0);
+    }
+
+    render() { 
+        const props = this.props;
+
+        const filteredPaths = props.paths
+            .filter(p => this.state.searchValue == "" || p.newPath.indexOf(this.state.searchValue) != -1);
+
+        const items = filteredPaths
+            .map(p => (
+                <FileItem
+                    key={p.newPath}
+                    path={p}
+                    isSelected={p.newPath == props.selected.newPath}
+                    isReviewed={PathPairs.contains(props.reviewedFiles, p)}
+                    onclick={() => props.onSelect(p)}
+                    reviewId={props.reviewId}
+                />
+        ));
+
+        const openFirst = () => props.onSelect(filteredPaths[0]);
+    
+        return (
+            <div>
+                <Input 
+                    placeholder="Search..."
+                    icon='search'
+                    ref={this.searchFieldRef}
+                    onChange={(e, data) => this.setState({searchValue: data.value})}
+                    onKeyPress={e => (e.key == "Enter") && openFirst()} />
+                <List className="file-tree">
+                    {items}
+                </List>
+            </div>
+        );
+    }
+}

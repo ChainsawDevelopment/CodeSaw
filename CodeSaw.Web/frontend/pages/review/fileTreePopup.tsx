@@ -5,6 +5,7 @@ import * as React from "react";
 import { ReviewId } from "../../api/reviewer";
 import ChangedFileTree from './changedFileTree';
 import { PathPair } from '../../pathPair';
+import { HotKeys } from 'CodeSaw.Web/frontend/components/HotKeys';
 
 interface State {
     opened: boolean;
@@ -12,7 +13,7 @@ interface State {
 
 export interface Props {
     paths: PathPair[];
-    selected:PathPair;
+    selected: PathPair;
     reviewedFiles: PathPair[];
     onSelect(path: PathPair): void;
     reviewId: ReviewId;
@@ -37,7 +38,7 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
 
     private _onSelect = (p: PathPair) => {
         this.props.onSelect(p);
-        this.setState({opened: false});
+        this._onClose();
     }
 
     render() {
@@ -53,18 +54,26 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
             </div>
         );
 
+        const fileSearchHotKeys = {
+            'ctrl+p': this._onOpen
+        };
+
         return (
-            <Popup
-                open={this.state.opened}
-                trigger={<Button secondary content='Choose File...' />}
-                content={filesSelector}
-                onOpen={this._onOpen}
-                onClose={this._onClose}
-                hideOnScroll={true}
-                on='click'
-                position='bottom left'
-                wide='very'
-            />
+            <span>
+                <HotKeys config={fileSearchHotKeys} />
+
+                <Popup
+                    open={this.state.opened}
+                    trigger={<Button secondary content='Choose File...' />}
+                    content={filesSelector}
+                    onOpen={this._onOpen}
+                    onClose={this._onClose}
+                    hideOnScroll={true}
+                    on='click'
+                    position='bottom left'
+                    wide='very'
+                />
+            </span>
         );
     }
 }
