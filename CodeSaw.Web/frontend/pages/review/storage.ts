@@ -31,16 +31,6 @@ export const saveUnpublishedReview = (review: ReviewState): void => {
     
 }
 
-export const clearUnpublishedReview = (reviewId: ReviewId): void => {
-    const reviewKey = createReviewKey(reviewId);
-    try {
-        localStorage.setItem(reviewKey, JSON.stringify({}));
-    }
-    catch (err) {
-        console.warn({msg: "Error when clearing local storage", err});
-    }
-}
-
 export const getUnpublishedReview = (reviewId: ReviewId): UnpublishedReview => {
     const reviewKey = createReviewKey(reviewId);
 
