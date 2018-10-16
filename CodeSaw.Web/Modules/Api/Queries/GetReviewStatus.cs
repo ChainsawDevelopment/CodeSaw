@@ -99,7 +99,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
                             ReviewedBy = x.Where(r => r.Status == FileReviewStatus.Reviewed).Select(r => r.ReviewedBy)
                         }),
                     UnresolvedDiscussions = discussionStates[CommentState.NeedsResolution],
-                    ResolvedDiscussions = discussionStates[CommentState.Resolved]
+                    ResolvedDiscussions = discussionStates[CommentState.Resolved],
+                    Author = mergeRequest.Author
                 };
             }
         }
@@ -121,6 +122,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public string Description { get; set; }
             public string SourceBranch { get; set; }
             public string TargetBranch { get; set; }
+            public UserInfo Author { get; set; }
         }
 
         public class FileStatus

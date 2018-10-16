@@ -70,6 +70,7 @@ interface StateProps {
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
+    reviewMode: 'reviewer' | 'author';
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -135,7 +136,7 @@ class reviewPage extends React.Component<Props> {
 
         return (
             <div id="review-page">
-                <CurrentReviewMode.Provider value='reviewer'>
+                <CurrentReviewMode.Provider value={props.reviewMode}>
                     <OnMount onMount={load} />
                     <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
 
@@ -201,7 +202,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
-    unpublishedReplies: state.review.unpublishedReplies
+    unpublishedReplies: state.review.unpublishedReplies,
+    reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer'
 });
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
