@@ -102,7 +102,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         }),
                     UnresolvedDiscussions = discussions.Count(x => x.State == CommentState.NeedsResolution),
                     ResolvedDiscussions = discussions.Count(x => x.State == CommentState.Resolved),
-                    Discussions = discussions
+                    Discussions = discussions,
+                    Author = mergeRequest.Author,
                 };
             }
         }
@@ -125,6 +126,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public string SourceBranch { get; set; }
             public string TargetBranch { get; set; }
             public List<DiscussionItem> Discussions { get; set; }
+            public UserInfo Author { get; set; }
         }
 
         public class FileStatus
