@@ -21,6 +21,7 @@ import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
 import { DiffType } from "./diffView";
 import { HotKeys } from "../../components/HotKeys";
+import ReviewMode from "./reviewMode";
 
 interface FileViewProps {
     file: FileInfo;
@@ -211,13 +212,22 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 'ctrl+Enter': this.props.publishReview
             };
             
-            menuItems.push(<Menu.Item fitted key="review-mark">
-                <Popup
-                    trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
-                    content="Toggle review status"
-                />
-
-            </Menu.Item>);
+            menuItems.push(
+                <ReviewMode key="review-mark">
+                    <ReviewMode.Reviewer>
+                        <Menu.Item fitted>
+                            <Popup
+                                trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
+                                content="Toggle review status"
+                            />
+                        </Menu.Item>
+                    </ReviewMode.Reviewer>
+                    <ReviewMode.Author>
+                        <Menu.Item fitted>
+                            <Icon circular inverted name='eye' color='grey' />
+                        </Menu.Item>
+                    </ReviewMode.Author>
+                </ReviewMode>);
             menuItems.push(<Menu.Item fitted key="refresh-diff">
                 <Popup
                     trigger={<Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>}

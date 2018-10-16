@@ -36,6 +36,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public string SourceBranch { get; set; }
             public string TargetBranch { get; set; }
             public bool ReviewFinished { get; set; }
+            public bool IsAuthor { get; set; }
         }
 
         public class Revision
@@ -136,7 +137,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
                     FileMatrix = fileMatrix.OrderBy(x => x.File.NewPath),
-                    BuildStatuses = buildStatuses
+                    BuildStatuses = buildStatuses,
+                    IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
                 };
             }
 
