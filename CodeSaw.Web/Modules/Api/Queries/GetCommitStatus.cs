@@ -105,11 +105,9 @@ namespace CodeSaw.Web.Modules.Api.Queries
             private async Task<List<string>> GetReviewFiles(GetCommitStatus query, GetReviewStatus.Result summary)
             {
                 var result = new List<string>();
-
                 result.Add(File.ReadAllText("DefaultReviewfile.js"));
 
-                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js");
-
+                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js").Then(x => x.DecodeString());
                 if (!string.IsNullOrEmpty(reviewFile))
                 {
                     result.Add(reviewFile);

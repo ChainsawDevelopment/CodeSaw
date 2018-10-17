@@ -114,7 +114,7 @@ namespace CodeSaw.GitLab
                 .ContinueWith(x => x.Result.Diffs);
         }
 
-        public async Task<string> GetFileContent(int projectId, string commitHash, string file)
+        public async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
         {
             var request = new RestRequest($"/projects/{projectId}/repository/files/{Uri.EscapeDataString(file)}/raw", Method.GET)
                 .AddQueryParameter("ref", commitHash);
@@ -124,9 +124,9 @@ namespace CodeSaw.GitLab
             switch (response.StatusCode)
             {
                 case HttpStatusCode.OK:
-                    return response.Content;
+                    return response.RawBytes;
                 case HttpStatusCode.NotFound:
-                    return string.Empty;
+                    return new byte[0];
                 default:
                     throw new GitLabApiFailedException(request, response);
             }

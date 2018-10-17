@@ -107,7 +107,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 result.Add(File.ReadAllText("DefaultReviewfile.js"));
 
-                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js");
+                var reviewFile = await _api.GetFileContent(query.ReviewId.ProjectId, summary.CurrentHead, "Reviewfile.js").Then(x => x.DecodeString());
 
                 if (!string.IsNullOrEmpty(reviewFile))
                 {
