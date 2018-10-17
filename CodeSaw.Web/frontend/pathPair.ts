@@ -16,3 +16,7 @@ export const contains = (list: List, path: PathPair) => {
 }
 
 export const make = (path: string):PathPair => ( {oldPath: path, newPath: path} );
+
+export const subtract = (a: PathPair[], b: PathPair[]) : PathPair[] => {
+    return a.filter(itemA => b.filter(itemB => equal(itemA, itemB)).length == 0);
+}

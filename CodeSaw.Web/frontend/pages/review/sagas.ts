@@ -1,4 +1,4 @@
-import { take, put, select } from "redux-saga/effects";
+import { take, put, select, call } from "redux-saga/effects";
 import {
     selectFileForView,
     loadedFileDiff,
@@ -10,6 +10,7 @@ import {
     mergePullRequest,
     MergePullRequestArgs,
     PublishReviewArgs,
+    clearUnpublishedReviewInfo,
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
@@ -18,6 +19,7 @@ import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
 import { startOperation, stopOperation } from "../../loading/saga";
+import { getUnpublishedReview } from "./storage";
 
 const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
     return {
@@ -55,12 +57,14 @@ function* loadReviewInfoSaga() {
     for (; ;) {
         const action: Action<{ reviewId: ReviewId, fileToPreload?: string }> = yield take(loadReviewInfo);
         yield startOperation();
-
+        
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
+        const unpublishedInfo = getUnpublishedReview(action.payload.reviewId);
+     
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
-        yield put(loadedReviewInfo(info));
+        yield put(loadedReviewInfo({ info, unpublishedInfo }));
 
         let newRange: RevisionRange = {
             previous: 'base',
@@ -127,9 +131,11 @@ function* publishReviewSaga() {
             unreviewedFiles: s.review.unpublishedUnreviewedFiles
         }));
 
+        let successfulPublish = false;
         for (let i = 0; i < 100; i++) {
             try {
                 yield api.publishReview(reviewSnapshot);
+                successfulPublish = true;
                 break;
             } catch (e) {
                 if (!(e instanceof ReviewConcurrencyError)) {
@@ -138,6 +144,10 @@ function* publishReviewSaga() {
             }
             console.log('Review publish failed due to concurrency issue. Retrying attempt ', i);
             yield delay(5000);
+        }
+
+        if (successfulPublish) {
+            yield put(clearUnpublishedReviewInfo({ reviewId: reviewSnapshot.reviewId}));
         }
 
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId, fileToPreload: action.payload.fileToLoad }));

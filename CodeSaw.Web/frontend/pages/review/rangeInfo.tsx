@@ -21,6 +21,7 @@ import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
 import { DiffType } from "./diffView";
 import { HotKeys } from "../../components/HotKeys";
+import { PublishButton } from "./PublishButton";
 
 interface FileViewProps {
     file: FileInfo;
@@ -263,7 +264,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                             {menuItems}
                             <Menu.Menu position='right'>
                                 <Menu.Item>
-                                    <Button positive onClick={this.props.publishReview}>Publish Changes</Button>
+                                    <PublishButton />
                                     &nbsp;
                                     <ChangedFileTreePopup
                                         paths={selectableFiles}
