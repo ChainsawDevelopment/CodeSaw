@@ -128,7 +128,8 @@ const initial: ReviewState = {
         buildStatuses: [],
         sourceBranch: '',
         targetBranch: '',
-        reviewFinished: false
+        reviewFinished: false,
+        isAuthor: false
     },
     reviewedFiles: [],
     nextDiscussionCommentId: 0,

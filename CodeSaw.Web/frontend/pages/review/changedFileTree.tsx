@@ -1,11 +1,13 @@
 import * as React from "react";
 import List from '@ui/elements/List';
 import Input from '@ui/elements/Input';
+import Icon from '@ui/elements/Icon';
 
 import ReviewMark from './reviewMark';
 import * as PathPairs from "../../pathPair";
 import { FileLink } from "./FileLink";
 import { ReviewId } from "../../api/reviewer";
+import ReviewMode from "./reviewMode";
 
 const FileItem = (props: { path: PathPairs.PathPair, reviewId: ReviewId, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
@@ -19,7 +21,14 @@ const FileItem = (props: { path: PathPairs.PathPair, reviewId: ReviewId, isSelec
     return (
         <List.Item className="file-tree-item">
             <List.Content>
-                <ReviewMark reviewed={props.isReviewed} size='small' />
+                <ReviewMode>
+                    <ReviewMode.Reviewer>
+                        <ReviewMark reviewed={props.isReviewed} size='small' />
+                    </ReviewMode.Reviewer>
+                    <ReviewMode.Author>
+                        <Icon circular inverted name='eye' color='grey' />
+                    </ReviewMode.Author>
+                </ReviewMode>
                 <span>{header}</span>
             </List.Content>
         </List.Item>

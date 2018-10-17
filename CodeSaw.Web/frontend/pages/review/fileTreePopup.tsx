@@ -6,6 +6,7 @@ import { ReviewId } from "../../api/reviewer";
 import ChangedFileTree from './changedFileTree';
 import { PathPair } from '../../pathPair';
 import { HotKeys } from 'CodeSaw.Web/frontend/components/HotKeys';
+import CurrentReviewMode from './currentReviewMode';
 
 interface State {
     opened: boolean;
@@ -59,21 +60,25 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
         };
 
         return (
-            <span>
-                <HotKeys config={fileSearchHotKeys} />
+            <CurrentReviewMode.Consumer>
+                {mode => 
+                <span>
+                    <HotKeys config={fileSearchHotKeys} />
 
-                <Popup
-                    open={this.state.opened}
-                    trigger={<Button secondary content='Choose File...' />}
-                    content={filesSelector}
-                    onOpen={this._onOpen}
-                    onClose={this._onClose}
-                    hideOnScroll={true}
-                    on='click'
-                    position='bottom left'
-                    wide='very'
-                />
-            </span>
+                    <Popup
+                        open={this.state.opened}
+                        trigger={<Button secondary content='Choose File...' />}
+                        content={<CurrentReviewMode.Provider value={mode}>{filesSelector}</CurrentReviewMode.Provider>}
+                        onOpen={this._onOpen}
+                        onClose={this._onClose}
+                        hideOnScroll={true}
+                        on='click'
+                        position='bottom left'
+                        wide='very'
+                    />
+                </span>
+                }
+            </CurrentReviewMode.Consumer>
         );
     }
 }
