@@ -71,15 +71,9 @@ export interface RememberRevisionArgs {
     base: string;
 }
 
-export interface CreateGitLabLinkArgs {
-    reviewId: ReviewId;
-}
-
 export interface PublishReviewArgs {
     fileToLoad: FileId;
 }
-
-export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
 
 export const publishReview = createAction<PublishReviewArgs>('PUBLISH_REVIEW');
 

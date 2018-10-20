@@ -293,17 +293,6 @@ export class ReviewerApi {
             .then(r => r as ReviewInfo);
     }
 
-    public createGitLabLink = (reviewId: ReviewId) => {
-        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/registerlink`, {
-            ...acceptJson,
-            headers: {
-                ...acceptJson.headers,
-                'Content-Type': 'application/json'
-            },
-            method: 'POST'
-        });
-    }
-
     public publishReview = (review: ReviewSnapshot): Promise<void> => {
         const { reviewId, ...snapshot } = review;
 

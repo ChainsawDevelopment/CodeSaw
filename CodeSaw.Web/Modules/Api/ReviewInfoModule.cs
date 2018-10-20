@@ -29,12 +29,6 @@ namespace CodeSaw.Web.Modules.Api
                     Request.Query.oldPath, Request.Query.newPath
                 )));
 
-            Post("/registerlink", async _ =>
-            {   
-                await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId));
-                return new { success = true };
-            });
-            
             Post("/publish", async _ =>
             {
                 try

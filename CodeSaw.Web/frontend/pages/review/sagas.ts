@@ -5,8 +5,6 @@ import {
     loadReviewInfo,
     loadedReviewInfo,
     publishReview,
-    createGitLabLink,
-    CreateGitLabLinkArgs,
     mergePullRequest,
     MergePullRequestArgs,
     PublishReviewArgs,
@@ -78,16 +76,6 @@ function* loadReviewInfoSaga() {
         }
 
         yield stopOperation();
-    }
-}
-
-function* createGitLabLinkSaga() {
-    const api = new ReviewerApi();
-
-    for (; ;) {
-        const action: Action<CreateGitLabLinkArgs> = yield take(createGitLabLink);
-
-        yield api.createGitLabLink(action.payload.reviewId);
     }
 }
 
@@ -178,7 +166,6 @@ function* mergePullRequestSaga() {
 export default [
     loadFileDiffSaga,
     loadReviewInfoSaga,
-    createGitLabLinkSaga,
     publishReviewSaga,
     mergePullRequestSaga,
 ];
