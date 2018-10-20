@@ -271,10 +271,27 @@ export interface ReviewSearchArgs {
     state: string;
 }
 
+export interface RemappedDiffDiscussion {
+    discussionId: string;
+    lineNumber: number;
+    side: 'left' | 'right';
+}
+
+export interface DiffDiscussions {
+    remapped: RemappedDiffDiscussion[];
+}
+
 export class ReviewerApi {
     public getDiff = (reviewId: ReviewId, range: FileDiffRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous.base}/${range.previous.head}/${range.current.base}/${range.current.head}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
+            acceptJson
+        ).then(mustBeOk).then(r => r.json());
+    };
+
+    public getDiffDiscussions = (reviewId: ReviewId, range: FileDiffRange, fileId: FileId, rightFileName: string): Promise<DiffDiscussions> => {
+        return fetch(
+            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/discussions/${range.previous.base}/${range.previous.head}/${range.current.base}/${range.current.head}/${fileId}?fileName=${rightFileName}`,
             acceptJson
         ).then(mustBeOk).then(r => r.json());
     };

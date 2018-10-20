@@ -340,7 +340,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                             <FileView
                                 file={selectedFile}
                                 commentActions={this.props.commentActions}
-                                comments={this.props.fileComments}
+                                comments={this.props.selectedFile.discussions}
                                 startFileDiscussion={this.props.startFileDiscussion}
                                 unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
                                 pendingResolved={this.props.pendingResolved}

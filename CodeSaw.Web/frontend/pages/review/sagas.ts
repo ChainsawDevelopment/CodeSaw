@@ -15,7 +15,6 @@ import notify from '../../notify';
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
-import * as PathPairs from '../../pathPair';
 import { startOperation, stopOperation } from "../../loading/saga";
 import { getUnpublishedReview } from "./storage";
 
@@ -31,12 +30,17 @@ function* loadFileDiffSaga() {
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: state.review.selectedFile.range,
-            path: state.review.selectedFile.fileToReview.diffFile
+            path: state.review.selectedFile.fileToReview.diffFile,
+            fileId: state.review.selectedFile.fileId
         }));
 
         const diff = yield api.getDiff(currentRange.reviewId, currentRange.range, currentRange.path);
+        const remappedDiscussions = yield api.getDiffDiscussions(currentRange.reviewId, currentRange.range, currentRange.fileId, currentRange.path.newPath);
 
-        yield put(loadedFileDiff(diff));
+        yield put(loadedFileDiff({
+            diff: diff,
+            remappedDiscussions: remappedDiscussions
+        }));
 
         yield stopOperation();
     }

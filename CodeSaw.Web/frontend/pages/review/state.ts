@@ -10,7 +10,8 @@ import {
     CommentReply,
     FileToReview,
     RevisionId,
-    FileId
+    FileId,
+    DiffDiscussions,
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
@@ -30,7 +31,8 @@ export interface FileInfo {
             base: string;
             head: string
         };
-    }
+    };
+    discussions: FileDiscussion[];
 }
 
 export interface FileReviewStatusChange {
@@ -58,7 +60,7 @@ const createAction = actionCreatorFactory('REVIEW');
 
 export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
 
-export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
+export const loadedFileDiff = createAction<{diff: FileDiff; remappedDiscussions: DiffDiscussions}>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
 export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview}>('LOADED_REVIEW_INFO');
@@ -168,18 +170,31 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 range: {
                     previous: resolveRevision(state.currentReview, file.previous),
                     current: resolveRevision(state.currentReview, file.current)
-                }
+                },
+                discussions: []
             }
         };
     }
 
     if (loadedFileDiff.match(action)) {
+        const remappedDiscussions: FileDiscussion[] = [];
+
+        for (let discussionRef of action.payload.remappedDiscussions.remapped) {
+            const discussion = state.currentReview.fileDiscussions.find(d => d.id == discussionRef.discussionId);
+            remappedDiscussions.push({
+                ...discussion,
+                lineNumber: discussionRef.lineNumber,
+                revision: discussionRef.side == 'left' ? state.selectedFile.fileToReview.previous : state.selectedFile.fileToReview.current
+            });
+        }
+
         return {
             ...state,
             selectedFile: {
                 ...state.selectedFile,
-                diff: action.payload
-            }
+                diff: action.payload.diff,
+                discussions: remappedDiscussions
+            },
         };
     }
 

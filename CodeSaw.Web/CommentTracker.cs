@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CodeSaw.Web;
 using CodeSaw.Web.Diff;
 using DiffMatchPatch;
 
-namespace CodeSaw.Tests
+namespace CodeSaw.Web
 {
-    public class CommentTracker
+    public static class CommentTracker
     {
         public static int Track(string commentVersion, string newVersion, int line)
         {
@@ -21,18 +20,6 @@ namespace CodeSaw.Tests
             }
 
             patches = DiffUtils.MergeAdjacentPatches(patches);
-
-            foreach (var patch in patches)
-            {
-                Console.WriteLine($"@@ Prev: {patch.Start1}, {patch.Length1} Cur: {patch.Start2}, {patch.Length2}");
-
-                foreach (var diff in patch.Diffs)
-                {
-                    Console.Write($"{diff.Operation.ToString()[0]}({diff.Text})");
-                }
-
-                Console.WriteLine("\n");
-            }
 
             var commentLinesMap = new PositionToLine(commentVersion);
             var newVersionLinesMap = new PositionToLine(newVersion);

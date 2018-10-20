@@ -13,6 +13,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
     {
         public Guid PersistentId { get; set; }
         public PathPair ProvisionalPathPair { get; set; }
+        public bool IsProvisional => ProvisionalPathPair != null;
 
         public static ClientFileId Persistent(Guid id) => new ClientFileId {PersistentId = id};
         public static ClientFileId Provisional(PathPair path) => new ClientFileId {PersistentId = Guid.Empty, ProvisionalPathPair = path};
@@ -37,23 +38,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 var s = (string)reader.Value;
-                if (s.StartsWith("PROV_"))
-                {
-                    var bytes = Convert.FromBase64String(s.Substring(5));
-                    var decoded = Encoding.UTF8.GetString(bytes);
-                    var parts = decoded.Split('\0', 2);
-                    return new ClientFileId()
-                    {
-                        ProvisionalPathPair = PathPair.Make(parts[0], parts[1])
-                    };
-                }
-                else
-                {
-                    return new ClientFileId()
-                    {
-                        PersistentId = Guid.Parse(s)
-                    };
-                }
+                return Parse(s);
             }
 
             public override bool CanConvert(Type objectType) => typeof(ClientFileId) == objectType;
@@ -90,6 +75,22 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public static bool operator !=(ClientFileId left, ClientFileId right)
         {
             return !Equals(left, right);
+        }
+
+        public static ClientFileId Parse(string s)
+        {
+            if (s.StartsWith("PROV_"))
+            {
+                var bytes = Convert.FromBase64String(s.Substring(5));
+                var decoded = Encoding.UTF8.GetString(bytes);
+                var parts = decoded.Split('\0', 2);
+
+                return ClientFileId.Provisional(PathPair.Make(parts[0], parts[1]));
+            }
+            else
+            {
+                return ClientFileId.Persistent(Guid.Parse(s));
+            }
         }
     }
 }
