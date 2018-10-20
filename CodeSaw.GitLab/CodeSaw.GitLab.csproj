@@ -5,8 +5,8 @@
     <AssemblyName>CodeSaw.GitLab</AssemblyName>
     <RootNamespace>CodeSaw.GitLab</RootNamespace>
   </PropertyGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
   <ItemGroup>
     <ProjectReference Include="..\CodeSaw.RepositoryApi\CodeSaw.RepositoryApi.csproj" />
   </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

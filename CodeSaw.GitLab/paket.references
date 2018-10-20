@@ -1,2 +1,3 @@
 RestSharp
 Newtonsoft.JSON
+Microsoft.Extensions.Caching.Memory 
