@@ -108,14 +108,18 @@ namespace CodeSaw.Web.Modules.Api.Queries
                             new {Commit = currentBaseCommit, Path = query.OldPath}
                         }
                         .DistinctBy(x => x.Commit)
-                        .Select(async c => new {File = c, content = await _api.GetFileContent(query.ReviewId.ProjectId, c.Commit, c.Path)})
+                        .Select(async c => new
+                        {
+                            File = c,
+                            Content = (await _api.GetFileContent(query.ReviewId.ProjectId, c.Commit, c.Path)).DecodeString()
+                        })
                         .WhenAll())
-                    .ToDictionary(x => x.File.Commit, x => x.content);
+                    .ToDictionary(x => x.File.Commit, x => x.Content);
 
                 foreach (var content in contents)
                 {
                     if (IsBinaryFile(content.Value))
-                        return HandleBinaryFile(contents, previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
+                        return HandleBinaryFile(contents[previousCommit], contents[currentCommit], previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
                 }
 
                 var basePatch = FourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
@@ -281,16 +285,10 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
             private bool IsBinaryFile(string content)
             {
-                var bytes = System.Text.Encoding.ASCII.GetBytes(content);
-                var length = Math.Min(8000, bytes.Length);
-                for (var i = 0; i < length; ++i)
-                    if (bytes[i] == 0)
-                        return true;
-
-                return false;
+                return content.Take(8000).Contains((char)0);
             }
 
-            private Result HandleBinaryFile(IDictionary<string, string> contents, string previousBaseCommit, string currentBaseCommit, string previousCommit,
+            private Result HandleBinaryFile(string previous, string current, string previousBaseCommit, string currentBaseCommit, string previousCommit,
                 string currentCommit)
             {
                 return new Result
@@ -313,22 +311,22 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     {
                         Review = new RevisionDebugInfo
                         {
-                            Previous = contents[previousCommit],
-                            Current = contents[currentCommit]
+                            Previous = "",
+                            Current = ""
                         },
                         Base = new RevisionDebugInfo
                         {
-                            Previous = contents[previousBaseCommit],
-                            Current = contents[currentBaseCommit]
+                            Previous = "",
+                            Current = ""
                         }
                     },
 
                     IsBinaryFile = true,
-                    AreBinaryEqual = contents[previousCommit] == contents[currentCommit],
+                    AreBinaryEqual = previous == current,
                     BinarySizes = new BinaryFileSizesInfo
                     {
-                        PreviousSize = contents[previousCommit].Length,
-                        CurrentSize = contents[currentCommit].Length
+                        PreviousSize = previous.Length,
+                        CurrentSize = current.Length
                     }
                 };
             }

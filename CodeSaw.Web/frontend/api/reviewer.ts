@@ -103,8 +103,7 @@ export interface Review {
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
 
-export interface Discussion 
-{
+export interface Discussion {
     id: string;
     revision: RevisionId;
     state: CommentState;
@@ -112,14 +111,12 @@ export interface Discussion
     canResolve: boolean;
 }
 
-export interface FileDiscussion extends Discussion
-{
+export interface FileDiscussion extends Discussion {
     filePath: PathPairs.PathPair;
     lineNumber: number;
 }
 
-export interface ReviewDiscussion extends Discussion
-{
+export interface ReviewDiscussion extends Discussion {
 }
 
 export interface FileToReview {
@@ -164,6 +161,7 @@ export interface ReviewInfo {
     targetBranch: string;
     reviewFinished: boolean;
     author: UserState, 
+    isAuthor: boolean;
 }
 
 export interface CommentReply {
@@ -192,7 +190,7 @@ export interface ReviewSnapshot {
         needsResolution: boolean;
         content: string;
     }[];
-    resolvedDiscussions: string[]; 
+    resolvedDiscussions: string[];
     replies: CommentReply[];
     reviewedFiles: {
         [revision: string]: PathPairs.List;
@@ -263,6 +261,9 @@ export class MergeFailedError extends Error {
 }
 
 export interface ReviewSearchArgs {
+    orderBy: 'created_at' | 'updated_at';
+    sort: 'asc' | 'desc';
+    nameFilter: string;
     page: number;
     state: string;
 }
@@ -276,7 +277,7 @@ export class ReviewerApi {
     };
 
     public getReviews = (args: ReviewSearchArgs): Promise<Paged<Review>> => {
-        return fetch(`/api/reviews?page=${args.page}&state=${args.state}`, acceptJson)
+        return fetch(`/api/reviews?orderBy=${args.orderBy}&sort=${args.sort}&search=${args.nameFilter}&page=${args.page}&state=${args.state}`, acceptJson)
             .then(mustBeOk)
             .then(r => r.json())
             .then(r => r as Paged<Review>);

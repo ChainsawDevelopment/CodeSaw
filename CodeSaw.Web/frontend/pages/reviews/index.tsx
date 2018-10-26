@@ -14,6 +14,8 @@ import Pagination from "../../components/pagination";
 import SearchOptions from "./searchOptions";
 
 interface StateProps {
+    orderBy: 'created_at' | 'updated_at';
+    sort: 'asc' | 'desc';
     page: Paged<Review>;
 }
 
@@ -24,6 +26,9 @@ interface DispatchProps {
 type Props = StateProps & DispatchProps;
 
 const initialSearchArgs: ReviewSearchArgs = {
+    orderBy: 'updated_at',
+    sort: 'desc',
+    nameFilter: '',
     page: 1,
     state: 'opened'
 }
@@ -35,12 +40,12 @@ const Reviews = (props: Props) => {
         <>
             <h2>Reviews</h2>
             <OnMount onMount={initialLoad} />
-            <SearchOptions 
+            <SearchOptions
                 initialArgs={initialSearchArgs}
-                loadResults={props.loadReviews} 
-                currentPage={props.page} 
+                loadResults={props.loadReviews}
+                currentPage={props.page}
             />
-            
+
             <ProjectReviewsList list={props.page.items} />
         </>
     );
@@ -49,6 +54,8 @@ const Reviews = (props: Props) => {
 
 export default connect(
     (state: RootState): StateProps => ({
+        orderBy: state.reviews.orderBy,
+        sort: state.reviews.sort,
         page: state.reviews.reviews
     }),
     (dispatch: Dispatch): DispatchProps => ({

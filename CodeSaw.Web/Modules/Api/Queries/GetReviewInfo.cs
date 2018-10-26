@@ -37,6 +37,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public string TargetBranch { get; set; }
             public bool ReviewFinished { get; set; }
             public UserInfo Author { get; set; } 
+            public bool IsAuthor { get; set; }
         }
 
         public class Revision
@@ -129,16 +130,19 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     HasProvisionalRevision = !reviewStatus.RevisionForCurrentHead,
                     HeadCommit = reviewStatus.CurrentHead,
                     BaseCommit = reviewStatus.CurrentBase,
-                    HeadRevision = reviewStatus.RevisionForCurrentHead ? new RevisionId.Selected(pastRevisions.Last().Number) : (RevisionId)new RevisionId.Hash(reviewStatus.CurrentHead),
+                    HeadRevision = reviewStatus.RevisionForCurrentHead
+                        ? new RevisionId.Selected(pastRevisions.Last().Number)
+                        : (RevisionId) new RevisionId.Hash(reviewStatus.CurrentHead),
                     State = reviewStatus.MergeRequestState,
                     MergeStatus = reviewStatus.MergeStatus,
                     ReviewFinished = commitStatus.State == CommitStatusState.Success,
                     WebUrl = reviewStatus.WebUrl,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
-                    FileMatrix = fileMatrix,
-                    BuildStatuses = buildStatuses,
                     Author = author,
+                    FileMatrix = fileMatrix.OrderBy(x => x.File.NewPath),
+                    BuildStatuses = buildStatuses,
+                    IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
                 };
             }
 

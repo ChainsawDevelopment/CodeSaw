@@ -15,3 +15,4 @@ Nancy.Serialization.JsonNet
 Autofac.Extensions.DependencyInjection
 System.Data.SqlClient
 Diff.Match.Patch
+NLog

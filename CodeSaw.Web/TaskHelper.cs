@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Antlr.Runtime.Misc;
 
 namespace CodeSaw.Web
 {
@@ -12,6 +13,12 @@ namespace CodeSaw.Web
                 task1.Result,
                 task2.Result
             );
+        }
+
+        public static async Task<TResult> Then<T, TResult>(this Task<T> task, Func<T, TResult> project)
+        {
+            var v = await task;
+            return project(v);
         }
     }
 }

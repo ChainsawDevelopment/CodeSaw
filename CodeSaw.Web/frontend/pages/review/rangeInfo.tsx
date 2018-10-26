@@ -21,6 +21,8 @@ import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
 import { DiffType } from "./diffView";
 import { HotKeys } from "../../components/HotKeys";
+import { PublishButton } from "./PublishButton";
+import ReviewMode from "./reviewMode";
 
 interface FileViewProps {
     file: FileInfo;
@@ -66,13 +68,10 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         const { file, commentActions } = this.props;
 
         const fileDiscussions = this.props.comments
-            .filter(f =>
-                PathPairs.equal(f.filePath, file.path)
-                && (f.revision == file.fileToReview.current || f.revision == file.fileToReview.previous || (f.revision as number) + 1 == file.fileToReview.previous))
-            ;
+            .filter(f => f.filePath.newPath == file.path.oldPath);
 
         const unpublishedDiscussion = this.props.unpublishedFileDiscussions
-            .filter(f => PathPairs.equal(f.filePath, file.path));
+            .filter(f => f.filePath.newPath == file.path.oldPath);
 
         const lineCommentsActions: LineCommentsActions = {
             hideCommentsForLine: l => this.hideLine(l),
@@ -214,13 +213,22 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 'ctrl+Enter': this.props.publishReview
             };
             
-            menuItems.push(<Menu.Item fitted key="review-mark">
-                <Popup
-                    trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
-                    content="Toggle review status"
-                />
-
-            </Menu.Item>);
+            menuItems.push(
+                <ReviewMode key="review-mark">
+                    <ReviewMode.Reviewer>
+                        <Menu.Item fitted>
+                            <Popup
+                                trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
+                                content="Toggle review status"
+                            />
+                        </Menu.Item>
+                    </ReviewMode.Reviewer>
+                    <ReviewMode.Author>
+                        <Menu.Item fitted>
+                            <Icon circular inverted name='eye' color='grey' />
+                        </Menu.Item>
+                    </ReviewMode.Author>
+                </ReviewMode>);
             menuItems.push(<Menu.Item fitted key="refresh-diff">
                 <Popup
                     trigger={<Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>}
@@ -245,6 +253,14 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             menuItems.push(<Menu.Item fitted key="file-path">
                 <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
+        } else if (this.props.filesToReview.length > 0) {
+            const firstFile = this.props.filesToReview[0].reviewFile;
+            const lastFile = this.props.filesToReview[this.props.filesToReview.length-1].reviewFile;
+            
+            reviewHotKeys = {
+                '[': () => lastFile && onSelectFileForView(lastFile),
+                ']': () => firstFile && onSelectFileForView(firstFile)
+            };
         }
 
         const selectableFiles = this.props.filesToReview.map(i => i.reviewFile);
@@ -258,7 +274,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                             {menuItems}
                             <Menu.Menu position='right'>
                                 <Menu.Item>
-                                    <Button positive onClick={this.props.publishReview}>Publish Changes</Button>
+                                    <PublishButton />
                                     &nbsp;
                                     <ChangedFileTreePopup
                                         paths={selectableFiles}

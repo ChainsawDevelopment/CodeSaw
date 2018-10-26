@@ -3,6 +3,7 @@ import { RootState } from "../../rootState";
 import * as React from "react";
 import Label from '@ui/elements/Label';
 import Popup from '@ui/modules/Popup';
+import Icon from '@ui/elements/Icon';
 
 import Table from '@ui/collections/Table';
 import { PathPair } from "../../pathPair";
@@ -19,10 +20,12 @@ interface FileMatrixRevision {
         type: string;
         value: number | string;
     };
+    file: PathPair;
     isNew: boolean;
     isRenamed: boolean;
     isDeleted: boolean;
     isUnchanged: boolean;
+    reviewers: string[];
 }
 
 interface FileMatrixEntry {
@@ -39,7 +42,7 @@ const FileDiscussionSummary = (props: {discussions:  FileDiscussion[]}): JSX.Ele
 
     const unresolved = discussions.filter(f=>f.state == 'NeedsResolution');
 
-    const label = <Label>{unresolved.length}/{discussions.length}</Label>;
+    const label = <Label as='span'>{unresolved.length}/{discussions.length}</Label>;
 
     let content: JSX.Element[] = [];
 
@@ -65,8 +68,27 @@ const FileDiscussionSummary = (props: {discussions:  FileDiscussion[]}): JSX.Ele
     );
 }
 
-const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMark; discussions: FileDiscussion[] }): JSX.Element => {
-    const { revision, reviewMark } = props;
+const ReviewersSummary = (props: {reviewers: string[]}): JSX.Element => {
+    const {reviewers} = props;
+
+    if (reviewers.length == 0) {
+        return null;
+    }
+
+    const label = <Icon name='user' as='i' />;
+
+    return (
+        <Popup trigger={label}>
+            {reviewers.length} reviewers seen this version
+            <ul>
+                {reviewers.map(r => <li key={r}>{r}</li>)}
+            </ul>
+        </Popup>
+    );
+}
+
+const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMark; discussions: FileDiscussion[]; reviewers: string[] }): JSX.Element => {
+    const { revision, reviewMark, reviewers } = props;
 
     const classes = classNames({
         'file-revision': true,
@@ -97,6 +119,7 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
         <Table.Cell className={classes}>
             <div className={reviewClasses}>
             {discussions}
+            <ReviewersSummary reviewers={reviewers} />
             </div>
         </Table.Cell>
     )
@@ -118,7 +141,9 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
         revision: {
             type: 'base',
             value: 'base'
-        }
+        },
+        file: PathPairs.make(props.file.file.oldPath),
+        reviewers: []
     });
 
     let reviewMark: ReviewMark = 'outside';
@@ -141,13 +166,14 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
             reviewMark = 'current';
         }  
 
-        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value);
+        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value && f.filePath.newPath == r.file.oldPath);
 
         revisionCells.push(<MatrixCell
             key={r.revision.value}
             revision={r}
             reviewMark={reviewMark}
             discussions={revisionDiscussions}
+            reviewers={r.reviewers}
         />);
     }
 
@@ -182,9 +208,8 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        const discussions = props.fileDiscussions.filter(f => PathPairs.equal(f.filePath, entry.file));
 
-        rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={discussions}/>);
+        rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={props.fileDiscussions}/>);
     }
 
     return (

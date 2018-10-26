@@ -1,6 +1,11 @@
 import * as React from "react";
-
 import { Dispatch } from "redux";
+import { connect } from "react-redux";
+import { History } from "history";
+
+import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
+import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+
 import {
     selectFileForView,
     loadReviewInfo,
@@ -18,19 +23,16 @@ import {
 import {
     ReviewInfo,
     ReviewId,
-    Comment,
     FileDiscussion,
     ReviewDiscussion,
     CommentReply,
-    FileToReview,
     Discussion,
 } from '../../api/reviewer';
+
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
-import { connect } from "react-redux";
 import { UserState, RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
-import MergeApprover from './mergeApprover';
 import "./review.less";
 import * as PathPairs from "../../pathPair";
 import CommentsView, { DiscussionActions } from './commentsView';
@@ -38,14 +40,14 @@ import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 import UserInfo from "../../components/UserInfo";
 
-import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
-import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
-import Icon from '@ui/elements/Icon';
 import ExternalLink from "../../components/externalLink";
+import { createLinkToFile } from "./FileLink";
+import CurrentReviewMode from './currentReviewMode';
 
 interface OwnProps {
     reviewId: ReviewId;
     fileName?: string;
+    history: History;
 }
 
 interface DispatchProps {
@@ -71,6 +73,7 @@ interface StateProps {
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
     author: UserState,
+    reviewMode: 'reviewer' | 'author';
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -112,11 +115,23 @@ class reviewPage extends React.Component<Props> {
             }
         };
 
+        const selectNewFileForView = (newFile: PathPairs.PathPair) => {
+            if (newFile != null) {
+                props.selectFileForView(newFile);
+                
+                const fileLink = createLinkToFile(props.reviewId, newFile);
+                if (fileLink != window.location.pathname) {
+                    props.history.push(fileLink);
+                }
+
+                this.onShowFile();
+            }
+        };
+
         const selectFileForView = () => {
             const file = props.currentReview.filesToReview.find(f => f.reviewFile.newPath == props.fileName);
             if (file != null) {
-                props.selectFileForView(file.reviewFile);
-                this.onShowFile();
+                selectNewFileForView(file.reviewFile);
             }
         };
 
@@ -136,66 +151,68 @@ class reviewPage extends React.Component<Props> {
 
         return (
             <div id="review-page">
-                <OnMount onMount={load} />
-                <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
-                
-                <Grid>
-                    <Grid.Row>
-                        <Grid.Column>
-                            <Grid.Row>
-                                <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
-                            </Grid.Row>
-                            <Grid.Row>
-                                <UserInfo
-                                    username={props.author.username}
-                                    name={props.author.name}
-                                    avatarUrl={props.author.avatarUrl}
+                <CurrentReviewMode.Provider value={props.reviewMode}>
+                    <OnMount onMount={load} />
+                    <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
+
+                    <Grid>
+                        <Grid.Row>
+                            <Grid.Column>
+                                <Grid.Row>
+                                    <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
+                                </Grid.Row>
+                                <Grid.Row>
+                                    <UserInfo
+                                        username={props.author.username}
+                                        name={props.author.name}
+                                        avatarUrl={props.author.avatarUrl}
+                                    />
+                                </Grid.Row>
+                            </Grid.Column>
+                        </Grid.Row>
+                        <Grid.Row>
+                            <Grid.Column>
+                                <ReviewInfoView />
+                                <Divider />
+                            </Grid.Column>
+                        </Grid.Row>
+                        <Grid.Row centered columns={1}>
+                            <Grid.Column>
+                                <FileMatrix />
+                            </Grid.Column>
+                        </Grid.Row>
+                        <Grid.Row>
+                            <Grid.Column>
+                                <CommentsView
+                                    discussions={discussions}
+                                    actions={commentActions}
+                                    unpublishedReplies={props.unpublishedReplies}
+                                    currentUser={props.currentUser}
                                 />
-                            </Grid.Row>
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row>
-                        <Grid.Column>
-                            <ReviewInfoView />
-                            <Divider />
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row centered columns={1}>
-                        <Grid.Column>
-                            <FileMatrix />
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row>
-                        <Grid.Column>
-                            <CommentsView
-                                discussions={discussions}
-                                actions={commentActions}
-                                unpublishedReplies={props.unpublishedReplies}
-                                currentUser={props.currentUser}
-                            />
-                        </Grid.Column>
-                    </Grid.Row>
-                </Grid>
+                            </Grid.Column>
+                        </Grid.Row>
+                    </Grid>
 
-                <Divider />
+                    <Divider />
 
-                <RangeInfo
-                    filesToReview={props.currentReview.filesToReview}
-                    selectedFile={selectedFile}
-                    onSelectFileForView={props.selectFileForView}
-                    reviewFile={props.reviewFile}
-                    reviewedFiles={props.reviewedFiles}
-                    publishReview={props.publishReview}
-                    onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
-                    reviewId={props.reviewId}
-                    fileComments={props.currentReview.fileDiscussions}
-                    startFileDiscussion={props.startFileDiscussion}
-                    unpublishedFileDiscussion={props.unpublishedFileDiscussion}
-                    commentActions={commentActions}
-                    pendingResolved={props.unpublishedResolvedDiscussions}
-                    unpublishedReplies={props.unpublishedReplies}
-                    currentUser={props.currentUser}
-                />
+                    <RangeInfo
+                        filesToReview={props.currentReview.filesToReview}
+                        selectedFile={selectedFile}
+                        onSelectFileForView={selectNewFileForView}
+                        reviewFile={props.reviewFile}
+                        reviewedFiles={props.reviewedFiles}
+                        publishReview={props.publishReview}
+                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
+                        reviewId={props.reviewId}
+                        fileComments={props.currentReview.fileDiscussions}
+                        startFileDiscussion={props.startFileDiscussion}
+                        unpublishedFileDiscussion={props.unpublishedFileDiscussion}
+                        commentActions={commentActions}
+                        pendingResolved={props.unpublishedResolvedDiscussions}
+                        unpublishedReplies={props.unpublishedReplies}
+                        currentUser={props.currentUser}
+                    />
+                </CurrentReviewMode.Provider>
             </div>
         );
     }
@@ -209,8 +226,9 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
-    unpublishedReplies: state.review.unpublishedReplies,
     author: state.review.currentReview.author,
+    unpublishedReplies: state.review.unpublishedReplies,
+    reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer'
 });
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
@@ -232,7 +250,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
 export default connect(
     mapStateToProps,
     mapDispatchToProps,
-    (stateProps, dispatchProps, ownProps) => ({
+    (stateProps: StateProps, dispatchProps: DispatchProps, ownProps: OwnProps) : Props => ({
         ...ownProps,
         ...stateProps,
         ...dispatchProps,

@@ -1,0 +1,11 @@
+source https://api.nuget.org/v3/index.json
+
+framework: netcoreapp21
+
+nuget Microsoft.AspNetCore
+nuget Microsoft.AspNetCore.StaticFiles
+nuget Microsoft.AspNetCore.SpaServices
+nuget Microsoft.Extensions.Configuration.Json
+nuget Microsoft.Extensions.Configuration.EnvironmentVariables
+nuget Microsoft.Extensions.Configuration.CommandLine
+nuget Microsoft.Extensions.Configuration.Binder

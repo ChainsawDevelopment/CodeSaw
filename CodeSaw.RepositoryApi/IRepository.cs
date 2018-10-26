@@ -10,7 +10,7 @@ namespace CodeSaw.RepositoryApi
         Task<ProjectInfo> Project(int projectId);
         Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId);
         Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha);
-        Task<string> GetFileContent(int projectId, string commitHash, string file);
+        Task<byte[]> GetFileContent(int projectId, string commitHash, string file);
         Task CreateRef(int projectId, string name, string commit);
         Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody);
         Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage);
@@ -31,5 +31,8 @@ namespace CodeSaw.RepositoryApi
         public int Page { get; set; }
         public string State { get; set; }
         public string Scope { get; set; }
+        public string OrderBy { get; set; }
+        public string Sort { get; set; }
+        public string Search { get; set; }
     }
 }

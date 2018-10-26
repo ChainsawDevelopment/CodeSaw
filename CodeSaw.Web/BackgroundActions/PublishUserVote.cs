@@ -30,33 +30,28 @@ namespace CodeSaw.Web.BackgroundActions
                 return;
             }
 
-            var commitStatus = await _query.Query(new GetCommitStatus(@event.ReviewId));
+            var emoji = await _query.Query(new GetReviewEmoji(@event.ReviewId));
 
-            if (commitStatus.State == CommitStatusState.Success)
-            {
-                await SetEmojiAward(@event, toAdd: EmojiType.ThumbsUp, toRemove: EmojiType.ThumbsDown);
-            }
-            else
-            {
-                await SetEmojiAward(@event, toAdd: EmojiType.ThumbsDown, toRemove: EmojiType.ThumbsUp);
-            }
+            await SetEmojiAward(@event, emoji.ToAdd, emoji.ToRemove);
         }
 
-        private async Task SetEmojiAward(ReviewPublishedEvent @event, EmojiType toAdd, EmojiType toRemove)
+        private async Task SetEmojiAward(ReviewPublishedEvent @event, EmojiType[] toAdd, EmojiType[] toRemove)
         {
             var awards = (await _api.GetAwardEmojis(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId))
                 .Where(award => award.User.Username == _user.UserName)
                 .ToList();
 
-            var existingToRemove = awards.FirstOrDefault(award => award.Is(toRemove));
-            if (existingToRemove != null)
+            var existingToRemove = awards.Where(award => award.IsIn(toRemove));
+            foreach (var emoji in existingToRemove)
             {
-                await _api.RemoveAwardEmoji(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId, existingToRemove.Id);
+                await _api.RemoveAwardEmoji(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId, emoji.Id);
             }
 
-            if (awards.All(award => !award.Is(toAdd)))
+            var missing = toAdd.Where(x => !awards.Any(a => a.Is(x)));
+
+            foreach (var emoji in missing)
             {
-                await _api.AddAwardEmoji(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId, toAdd);
+                await _api.AddAwardEmoji(@event.ReviewId.ProjectId, @event.ReviewId.ReviewId, emoji);
             }
         }
     }

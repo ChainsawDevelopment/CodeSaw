@@ -22,6 +22,7 @@ import { loadingReducer } from './loading/state';
 import { adminReducer } from './pages/admin/state';
 import adminSagas from './pages/admin/sagas';
 import notify from './notify';
+import { saveUnpublishedReview } from './pages/review/storage';
 
 interface State {
     router: RouterState
@@ -50,6 +51,15 @@ const store = createStore(
         applyMiddleware(historyMiddleware, sagaMiddleware)
     )
 );
+
+store.subscribe(() => {
+    const state = store.getState();
+    if (!state.review.currentReview.reviewId) {
+        return;
+    }
+
+    saveUnpublishedReview(state.review);
+})
 
 for (const saga of reviewSagas) {
     sagaMiddleware.run(saga);

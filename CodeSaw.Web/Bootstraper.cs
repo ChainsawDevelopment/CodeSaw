@@ -8,17 +8,21 @@ using CodeSaw.Web.Auth;
 using CodeSaw.Web.Serialization;
 using Microsoft.AspNetCore.Http;
 using Nancy;
+using Nancy.Bootstrapper;
 using Nancy.Bootstrappers.Autofac;
 using Nancy.Configuration;
 using Nancy.Conventions;
 using Newtonsoft.Json;
 using NHibernate;
 using ISession = NHibernate.ISession;
+using NLog;
 
 namespace CodeSaw.Web
 {
     public class Bootstraper : AutofacNancyBootstrapper
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly string assetServer;
         private readonly ILifetimeScope _rootContext;
         private readonly string _globalToken;
@@ -81,7 +85,7 @@ namespace CodeSaw.Web
 
                 builder.RegisterInstance(context.Request.Url.SiteBase).Keyed<string>("SiteBase");
 
-                if (context.CurrentUser!=null)
+                if (context.CurrentUser != null)
                 {
                     builder.RegisterType<CachedGitAccessTokenSource>().As<IGitAccessTokenSource>().SingleInstance().WithAttributeFiltering();
                     builder.RegisterInstance(new CustomToken(_globalToken)).Named<IGitAccessTokenSource>("global_token");
@@ -94,6 +98,15 @@ namespace CodeSaw.Web
             };
 
             return GetApplicationContainer().BeginLifetimeScope(MatchingScopeLifetimeTags.RequestLifetimeScopeTag, register);
+        }
+
+        protected override void ApplicationStartup(ILifetimeScope container, IPipelines pipelines)
+        {
+            base.ApplicationStartup(container, pipelines);
+            pipelines.OnError.AddItemToEndOfPipeline((ctx, ex) => {
+                Logger.Error(ex, "Unhandled Exception in CodeSaw.Web");
+                return ctx.Response;
+            });
         }
     }
 

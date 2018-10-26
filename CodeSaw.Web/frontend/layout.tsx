@@ -24,6 +24,7 @@ import "./layout.less";
 import { ReviewId } from "./api/reviewer";
 import CurrentUser from './pages/user/User';
 import { RootState } from './rootState';
+import EnvMessages from './components/EnvMesssages';
 
 const Home = () => (
     <span>
@@ -35,10 +36,11 @@ const Home = () => (
 const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string, fileName: string}>) => {
     const { projectId, id, fileName } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
-
+    
     return (<ReviewPage
         reviewId={reviewId}
         fileName={decodeURIComponent(fileName || '')}
+        history={props.history}
     />)
 });
 
@@ -71,6 +73,7 @@ const Layout = (props: StateProps) => (
             </Container>
         </Menu>
         <ToastContainer />
+        <EnvMessages />
         <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />

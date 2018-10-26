@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CodeSaw.Web
@@ -31,5 +34,26 @@ namespace CodeSaw.Web
 
         public static T? WrapAsNullable<T>(this T value)
             where T : struct => value;
+
+        public static string DecodeString(this byte[] bytes)
+        {
+            Encoding encoding = Encoding.UTF8;
+
+            {
+                if (HasUTF16Preamble(bytes))
+                {
+                    encoding = Encoding.Unicode;
+                }
+            }
+
+            return encoding.GetString(bytes);
+        }
+
+        public static bool HasUTF16Preamble(this byte[] bytes)
+        {
+            var preamble = Encoding.Unicode.GetPreamble();
+
+            return bytes.Length >= preamble.Length && bytes.Take(preamble.Length).SequenceEqual(preamble);
+        }
     }
 }

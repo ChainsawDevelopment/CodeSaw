@@ -29,3 +29,25 @@ function status(review) {
 
     return state;
 }
+
+function thumb(review, user) {
+    const byStatus = _(review.matrix)
+        .countBy(file => _(file.revisions).filter(r => !r.isUnchanged).last().reviewers.indexOf(user) >= 0)
+        .value();
+
+    const nothingReviewed = (byStatus[true] || 0) === 0;
+
+    if (nothingReviewed) {
+        return 0;
+    }
+
+    const allReviewed = (byStatus[false] || 0) === 0;
+
+    const myUnresolvedDiscussions = review.discussions.filter(d => d.author === user && d.state === 'NeedsResolution');
+
+    const allMyDiscussionsResolved = myUnresolvedDiscussions.length === 0;
+
+    const allGood = allReviewed && allMyDiscussionsResolved;
+
+    return allGood ? 1 : -1;
+}

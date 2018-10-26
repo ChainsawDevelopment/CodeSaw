@@ -10,6 +10,7 @@ nuget Fake.Runtime prerelease"
   #r "./packages/NETStandard.Library/build/netstandard2.0/ref/netstandard.dll"
 #endif
 
+open Fake.IO
 open Fake.Runtime
 open Fake.Core
 open Fake.DotNet
@@ -69,6 +70,11 @@ Target.create "_FrontendBuild" (fun _ ->
        { o with
            YarnFilePath = yarnExe  
        })
+
+    (root </> "node_modules/semantic-ui-css/semantic.min.css")
+    |> Fake.IO.Shell.copyFile  (root </> "CodeSaw.Web" </> "wwwroot")
+
+    Fake.IO.Shell.copyRecursive (root </> "node_modules/semantic-ui-css/themes") (root </> "CodeSaw.Web" </> "wwwroot" </> "themes") true |> ignore
 )
 
 Target.create "Build" ignore

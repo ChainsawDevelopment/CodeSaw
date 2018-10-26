@@ -18,12 +18,10 @@ namespace CodeSaw.GitLab
 {
     public class GitLabApi : IRepository
     {
-        private readonly IGitAccessTokenSource _accessTokenSource;
         private readonly RestClient _client;
 
-        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource)
+        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl)
         {
-            _accessTokenSource = accessTokenSource;
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
 
             if (accessTokenSource.Type == TokenType.OAuth)
@@ -35,13 +33,16 @@ namespace CodeSaw.GitLab
                 _client.AddDefaultHeader("Private-Token", accessTokenSource.AccessToken);
             }
 
-            //_client.ConfigureWebRequest(wr =>
-            //{
-            //    wr.Proxy = new WebProxy("127.0.0.1", 8888)
-            //    {
-            //        BypassProxyOnLocal = false
-            //    };
-            //});
+            if (!string.IsNullOrWhiteSpace(proxyUrl))
+            {
+                _client.ConfigureWebRequest(wr =>
+                {
+                    wr.Proxy = new WebProxy(proxyUrl)
+                    {
+                        BypassProxyOnLocal = false
+                    };
+                });
+            }
 
             var serializer = new JsonSerializer();
             serializer.ContractResolver = new GitLabContractResolver();
@@ -54,6 +55,9 @@ namespace CodeSaw.GitLab
         {
             var request = new RestRequest("/merge_requests", Method.GET)
                 .AddQueryParameter("state", args.State)
+                .AddQueryParameter("order_by", args.OrderBy)
+                .AddQueryParameter("sort", args.Sort)
+                .AddQueryParameter("search", args.Search)
                 .AddQueryParameter("scope", args.Scope)
                 .AddQueryParameter("page", args.Page.ToString());
 
@@ -110,7 +114,7 @@ namespace CodeSaw.GitLab
                 .ContinueWith(x => x.Result.Diffs);
         }
 
-        public async Task<string> GetFileContent(int projectId, string commitHash, string file)
+        public async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
         {
             var request = new RestRequest($"/projects/{projectId}/repository/files/{Uri.EscapeDataString(file)}/raw", Method.GET)
                 .AddQueryParameter("ref", commitHash);
@@ -120,9 +124,9 @@ namespace CodeSaw.GitLab
             switch (response.StatusCode)
             {
                 case HttpStatusCode.OK:
-                    return response.Content;
+                    return response.RawBytes;
                 case HttpStatusCode.NotFound:
-                    return string.Empty;
+                    return new byte[0];
                 default:
                     throw new GitLabApiFailedException(request, response);
             }
@@ -161,6 +165,11 @@ namespace CodeSaw.GitLab
             }
         }
 
+        public async Task<Tag> GetRef(int projectId, string tagName)
+        {
+            return await new RestRequest($"/projects/{projectId}/repository/tags/{Uri.EscapeDataString(tagName)}", Method.GET).Execute<Tag>(_client);
+        }
+
         public async Task CreateRef(int projectId, string name, string commit)
         {
             var createTagRequest = new RestRequest($"/projects/{projectId}/repository/tags", Method.POST)
@@ -172,13 +181,16 @@ namespace CodeSaw.GitLab
 
             var createTagResponse = await _client.ExecuteTaskAsync(createTagRequest);
 
-
             if (RrefAlreadyExists(createTagResponse))
             {
-                // This may happen if there are concurrent requests to remeber the same revision
-                throw new RefAlreadyExistsException(projectId, name, commit);
+                var existingTag = await GetRef(projectId, name);
+                if (existingTag.Target != commit) 
+                {
+                    // This may happen if there are concurrent requests to remeber the same revision
+                    throw new ExistingRefConflictException(projectId, name, commit);
+                }
             }
-            if (createTagResponse.StatusCode != HttpStatusCode.Created)
+            else if (createTagResponse.StatusCode != HttpStatusCode.Created)
             {
                 throw new GitLabApiFailedException(createTagRequest, createTagResponse);
             }

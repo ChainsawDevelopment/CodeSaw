@@ -13,7 +13,9 @@
             Pending,
             Running,
             Failed,
-            Canceled
+            Canceled,
+            Skipped,
+            Created
         }
     }
 }
