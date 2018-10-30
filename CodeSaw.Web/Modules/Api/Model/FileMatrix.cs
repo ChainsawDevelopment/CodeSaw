@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CodeSaw.RepositoryApi;
 using Newtonsoft.Json;
@@ -73,6 +74,9 @@ namespace CodeSaw.Web.Modules.Api.Model
         public class Entry
         {
             private readonly RevisionId[] _revisionsOrder;
+
+            public Guid FileId { get; set; }
+
             public PathPair File { get; set; }
             [JsonConverter(typeof(FileMatrixRevisionsConverter))]
             public SortedDictionary<RevisionId, Status> Revisions { get; set; }
@@ -115,6 +119,15 @@ namespace CodeSaw.Web.Modules.Api.Model
                 IsNew = false,
                 IsRenamed = false,
                 IsUnchanged = true
+            };
+
+            public static Status From(PathPair path, FileHistoryEntry historyEntry) => new Status
+            {
+                File = path,
+                IsNew = historyEntry.IsNew,
+                IsRenamed = historyEntry.IsRenamed,
+                IsDeleted = historyEntry.IsDeleted,
+                IsUnchanged = !historyEntry.IsModified,
             };
         }
 
@@ -165,6 +178,33 @@ namespace CodeSaw.Web.Modules.Api.Model
             }
 
             return (reviewedAtLatestRevision, unreviewedAtLatestRevision);
+        }
+
+        public void Append(RevisionId revisionId, PathPair path, FileHistoryEntry historyEntry)
+        {
+            var matrixEntry = Find(x => x.FileId == historyEntry.FileId);
+
+            if (matrixEntry == null)
+            {
+                matrixEntry = new Entry(_revisions)
+                {
+                    FileId = historyEntry.FileId
+                };
+                Add(matrixEntry);
+            }
+
+            matrixEntry.Revisions[revisionId] = Status.From(path, historyEntry);
+        }
+
+        public void TMP_FillFullRangeFilePath()
+        {
+            foreach (var entry in this)
+            {
+                var oldPath = entry.Revisions.First().Value.File.OldPath;
+                var newPath = entry.Revisions.Last().Value.File.NewPath;
+
+                entry.File = PathPair.Make(oldPath, newPath);
+            }
         }
     }
 }
