@@ -14,6 +14,7 @@ namespace CodeSaw.Web.Modules.Api
         public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
         {
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId)));
+            Get("/matrix", async _ => await query.Query(new GetFileMatrix(ReviewId)));
 
             Get("/diff/{previous_base}/{previous_head}/{current_base}/{current_head}",
                 async _ => await query.Query(new GetFileDiff(
