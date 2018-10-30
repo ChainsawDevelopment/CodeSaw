@@ -36,7 +36,7 @@ const ReviewItem = (props: {review: Review}) => {
                 </List.Header>
                 <List.Description>
                     <ExternalLink url={props.review.webUrl} size='small' />
-                    Created by {props.review.author.givenName}. <br />
+                    Created by {props.review.author.name}. <br />
                     <Branch name={props.review.sourceBranch}/> &rarr; <Branch name={props.review.targetBranch} /><br />
                 </List.Description>
             </List.Content>

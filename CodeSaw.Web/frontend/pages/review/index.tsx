@@ -38,6 +38,7 @@ import * as PathPairs from "../../pathPair";
 import CommentsView, { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
+import UserInfo from "../../components/UserInfo";
 
 import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
@@ -71,6 +72,7 @@ interface StateProps {
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
+    author: UserState,
     reviewMode: 'reviewer' | 'author';
 }
 
@@ -156,7 +158,16 @@ class reviewPage extends React.Component<Props> {
                     <Grid>
                         <Grid.Row>
                             <Grid.Column>
-                                <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
+                                <Grid.Row>
+                                    <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
+                                </Grid.Row>
+                                <Grid.Row>
+                                    <UserInfo
+                                        username={props.author.username}
+                                        name={props.author.name}
+                                        avatarUrl={props.author.avatarUrl}
+                                    />
+                                </Grid.Row>
                             </Grid.Column>
                         </Grid.Row>
                         <Grid.Row>
@@ -215,6 +226,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
     unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
+    author: state.review.currentReview.author,
     unpublishedReplies: state.review.unpublishedReplies,
     reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer'
 });

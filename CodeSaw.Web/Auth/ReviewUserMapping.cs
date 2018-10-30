@@ -11,7 +11,7 @@ namespace CodeSaw.Web.Auth
             Id(x => x.Id, id => id.Generator(Generators.Identity));
             Property(x => x.UserName);
             Property(x => x.Token);
-            Property(x => x.GivenName);
+            Property(x => x.Name);
             Property(x => x.AvatarUrl);
         }
     }

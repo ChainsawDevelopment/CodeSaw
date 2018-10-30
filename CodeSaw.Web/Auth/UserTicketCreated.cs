@@ -39,7 +39,7 @@ namespace CodeSaw.Web.Auth
                     await _session.SaveAsync(new ReviewUser
                     {
                         UserName = command.UserName,
-                        GivenName = command.GivenName,
+                        Name = command.GivenName,
                         AvatarUrl = command.AvatarUrl,
                         Token = command.AccessToken
                     });
@@ -48,7 +48,7 @@ namespace CodeSaw.Web.Auth
                 else
                 {
                     existingUser.Token = command.AccessToken;
-                    existingUser.GivenName = command.GivenName;
+                    existingUser.Name = command.GivenName;
                     existingUser.AvatarUrl = command.AvatarUrl;
                     
                     await _session.UpdateAsync(existingUser);

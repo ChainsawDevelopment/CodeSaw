@@ -68,7 +68,7 @@ namespace CodeSaw.GitLab
                 Author = new UserInfo
                 {
                     Username = mr.Author.Username,
-                    GivenName = mr.Author.Name,
+                    Name = mr.Author.Name,
                     AvatarUrl = mr.Author.AvatarUrl
                 },
                 Description = mr.Description,

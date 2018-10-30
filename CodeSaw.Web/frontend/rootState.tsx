@@ -4,8 +4,8 @@ import { AdminState } from "./pages/admin/state";
 import { LoadingState } from "./loading/state";
 
 export interface UserState {
-    userName: string;
-    givenName: string;
+    username: string;
+    name: string;
     avatarUrl: string;
 }
 

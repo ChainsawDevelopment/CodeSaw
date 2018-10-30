@@ -128,6 +128,7 @@ const initial: ReviewState = {
         buildStatuses: [],
         sourceBranch: '',
         targetBranch: '',
+        author: { username: "", name: "", avatarUrl: "" },
         reviewFinished: false,
         isAuthor: false
     },

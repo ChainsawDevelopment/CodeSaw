@@ -160,6 +160,7 @@ export interface ReviewInfo {
     sourceBranch: string;
     targetBranch: string;
     reviewFinished: boolean;
+    author: UserState, 
     isAuthor: boolean;
 }
 

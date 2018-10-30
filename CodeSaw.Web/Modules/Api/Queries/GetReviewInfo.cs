@@ -36,6 +36,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public string SourceBranch { get; set; }
             public string TargetBranch { get; set; }
             public bool ReviewFinished { get; set; }
+            public UserInfo Author { get; set; } 
             public bool IsAuthor { get; set; }
         }
 
@@ -115,6 +116,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 var commitStatus = await _query.Query(new GetCommitStatus(query._reviewId));
 
+                var author = reviewStatus.Author;
+
                 return new Result
                 {
                     FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName),
@@ -136,6 +139,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     WebUrl = reviewStatus.WebUrl,
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
+                    Author = author,
                     FileMatrix = fileMatrix.OrderBy(x => x.File.NewPath),
                     BuildStatuses = buildStatuses,
                     IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
@@ -153,7 +157,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         {
                             comment = new CommentItem
                             {
-                                Author = new UserInfo { GivenName = user.GivenName, Username = user.UserName, AvatarUrl = user.AvatarUrl },
+                                Author = new UserInfo { Username = user.UserName, Name = user.Name, AvatarUrl = user.AvatarUrl },
                                 Content = comment.Content,
                                 CreatedAt = comment.CreatedAt,
                                 Id = comment.Id
