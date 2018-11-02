@@ -40,7 +40,7 @@ namespace CodeSaw.Web.Modules.Api.Model.FileMatrixOperations
                     reviewedRange = entry.Revisions.Skip(lastIndex + 1).Take(lastChangedIndex - lastIndex + 1);
                 }
 
-                yield return new FileRange(entry.File, fileToReview, previousRevision, currentRevision)
+                yield return new FileRange(entry.FileId, entry.File, fileToReview, previousRevision, currentRevision)
                 {
                     ChangeType = DetermineChangeType(reviewedRange)
                 };
@@ -74,14 +74,16 @@ namespace CodeSaw.Web.Modules.Api.Model.FileMatrixOperations
 
         public class FileRange
         {
+            public string FileId { get; set; }
             public PathPair ReviewFile { get; }
             public PathPair DiffFile { get; }
             public RevisionId Previous { get; }
             public RevisionId Current { get; }
             public string ChangeType { get; set; }
 
-            public FileRange(PathPair reviewFile, PathPair diffFile, RevisionId previous, RevisionId current)
+            public FileRange(string fileId, PathPair reviewFile, PathPair diffFile, RevisionId previous, RevisionId current)
             {
+                FileId = fileId;
                 DiffFile = diffFile;
                 Previous = previous;
                 Current = current;
