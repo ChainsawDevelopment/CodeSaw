@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using CodeSaw.RepositoryApi;
 using Newtonsoft.Json;
 
@@ -75,7 +76,7 @@ namespace CodeSaw.Web.Modules.Api.Model
         {
             private readonly RevisionId[] _revisionsOrder;
 
-            public Guid FileId { get; set; }
+            public string FileId { get; set; }
 
             public PathPair File { get; set; }
             [JsonConverter(typeof(FileMatrixRevisionsConverter))]
@@ -182,13 +183,23 @@ namespace CodeSaw.Web.Modules.Api.Model
 
         public void Append(RevisionId revisionId, PathPair path, FileHistoryEntry historyEntry)
         {
-            var matrixEntry = Find(x => x.FileId == historyEntry.FileId);
+            string fileId;
+            if (historyEntry.FileId != Guid.Empty)
+            {
+                fileId = historyEntry.FileId.ToString();
+            }
+            else
+            {
+                fileId = "PROV_" + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{path.OldPath}\0{path.NewPath}"));
+            }
+
+            var matrixEntry = Find(x => x.FileId == fileId);
 
             if (matrixEntry == null)
             {
                 matrixEntry = new Entry(_revisions)
                 {
-                    FileId = historyEntry.FileId
+                    FileId = fileId
                 };
                 Add(matrixEntry);
             }

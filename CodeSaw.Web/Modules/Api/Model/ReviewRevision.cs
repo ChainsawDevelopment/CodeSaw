@@ -16,6 +16,7 @@ namespace CodeSaw.Web.Modules.Api.Model
         public virtual string BaseCommit { get; set; }
 
         public virtual IList<RevisionFile> Files { get; set; } = new List<RevisionFile>();
+        //public virtual IList<FileHistoryEntry> FilesHistory { get; set; } = new List<FileHistoryEntry>();
 
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
     }
@@ -74,6 +75,22 @@ namespace CodeSaw.Web.Modules.Api.Model
             {
                 map.OneToMany();
             });
+
+            //Bag(x => x.FilesHistory, coll =>
+            //{
+            //    coll.Key(key =>
+            //    {
+            //        key.Column(c=>
+            //        {
+            //            c.Name("RevisionId");
+            //            c.NotNullable(true);
+            //        });
+            //    });
+            //    coll.Cascade(Cascade.All);
+            //}, map =>
+            //{
+            //    map.OneToMany();
+            //});
         }
     }
 

@@ -33,6 +33,37 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
             public async Task<FileMatrix> Execute(GetFileMatrix query)
             {
+                var matrix = await BuildMatrix(query);
+
+                AppendReviewers(query, matrix);
+
+                return matrix;
+            }
+
+            private void AppendReviewers(GetFileMatrix query, FileMatrix matrix)
+            {
+                var q = from review in _session.Query<Review>()
+                    join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                    where revision.ReviewId == query.ReviewId
+                    join user in _session.Query<ReviewUser>() on review.UserId equals user.Id
+                    from file in review.Files
+                    where file.Status == FileReviewStatus.Reviewed
+                    select new
+                    {
+                        Revision = new RevisionId.Selected(revision.RevisionNumber),
+                        File = file.File,
+                        Reviewer = user.UserName
+                    };
+
+                foreach (var reviewedFile in q)
+                {
+                    var entry = matrix.Single(x => x.Revisions[reviewedFile.Revision].File.NewPath == reviewedFile.File.NewPath);
+                    entry.Revisions[reviewedFile.Revision].Reviewers.Add(reviewedFile.Reviewer);
+                }
+            }
+
+            private async Task<FileMatrix> BuildMatrix(GetFileMatrix query)
+            {
                 var revisions = await _session.Query<ReviewRevision>()
                     .Where(x => x.ReviewId == query.ReviewId)
                     .OrderBy(x => x.RevisionNumber)
@@ -48,11 +79,13 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     revisionIds = revisionIds.Union(new RevisionId.Hash(mergeRequest.HeadCommit));
                 }
 
-                List<FileDiff> provisionalDiff = new List<FileDiff>();
+                var provisionalDiff = new List<FileDiff>();
                 if (hasProvisional)
                 {
                     provisionalDiff = await _api.GetDiff(query.ReviewId.ProjectId, revisions.LastOrDefault()?.HeadCommit ?? mergeRequest.BaseCommit, mergeRequest.HeadCommit);
                 }
+
+                var remainingDiffs = new HashSet<FileDiff>(provisionalDiff);
 
                 var matrix = new FileMatrix(revisionIds);
 
@@ -90,7 +123,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                     if (hasProvisional)
                     {
-                        var diff = provisionalDiff.SingleOrDefault(x=>x.Path.OldPath == previousEntry.FileName);
+                        var diff = remainingDiffs.SingleOrDefault(x => x.Path.OldPath == previousEntry.FileName);
+                        remainingDiffs.Remove(diff);
 
                         if (diff != null)
                         {
@@ -107,10 +141,22 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     }
                 }
 
+                foreach (var diff in remainingDiffs)
+                {
+                    matrix.Append(new RevisionId.Hash(mergeRequest.HeadCommit), diff.Path, new FileHistoryEntry
+                    {
+                        FileId = Guid.Empty,
+                        FileName = diff.Path.NewPath,
+                        IsNew = diff.NewFile,
+                        IsDeleted = diff.DeletedFile,
+                        IsModified = true,
+                        IsRenamed = diff.RenamedFile
+                    });
+                }
+
                 matrix.TMP_FillFullRangeFilePath();
 
                 matrix.FillUnchanged();
-
                 return matrix;
             }
         }
