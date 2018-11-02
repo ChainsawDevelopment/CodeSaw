@@ -1,4 +1,4 @@
-import { take, put, select, call } from "redux-saga/effects";
+import { take, put, select } from "redux-saga/effects";
 import {
     selectFileForView,
     loadedFileDiff,
@@ -14,26 +14,20 @@ import {
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { delay } from "redux-saga";
 import * as PathPairs from '../../pathPair';
 import { startOperation, stopOperation } from "../../loading/saga";
 import { getUnpublishedReview } from "./storage";
 
-const resolveProvisional = (range: RevisionRange, hash: string): RevisionRange => {
-    return {
-        current: range.current == 'provisional' ? hash : range.current,
-        previous: range.previous == 'provisional' ? hash : range.previous
-    }
-}
 
 function* loadFileDiffSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ path: PathPairs.PathPair }> = yield take(selectFileForView);
-
+        const action: Action<{ fileId: FileId }> = yield take(selectFileForView);
+        
         yield startOperation();
 
         const currentRange = yield select((state: RootState) => ({
@@ -55,7 +49,7 @@ function* loadReviewInfoSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ reviewId: ReviewId, fileToPreload?: string }> = yield take(loadReviewInfo);
+        const action: Action<{ reviewId: ReviewId, fileToPreload?: FileId }> = yield take(loadReviewInfo);
         yield startOperation();
         
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
@@ -78,9 +72,9 @@ function* loadReviewInfoSaga() {
         }
 
         if (action.payload.fileToPreload) {
-            const file = info.filesToReview.find(f => f.reviewFile.newPath == action.payload.fileToPreload)
+            const file = info.filesToReview.find(f => f.fileId == action.payload.fileToPreload)
             if (file != null) {
-                yield put(selectFileForView({ path: file.reviewFile }));
+                yield put(selectFileForView({ fileId: file.fileId }));
             }
         }
 

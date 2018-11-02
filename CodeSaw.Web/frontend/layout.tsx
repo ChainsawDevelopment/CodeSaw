@@ -21,7 +21,7 @@ import Reviews from "./pages/reviews";
 import AdminPage from './pages/admin';
 
 import "./layout.less";
-import { ReviewId } from "./api/reviewer";
+import { ReviewId, FileId } from "./api/reviewer";
 import CurrentUser from './pages/user/User';
 import { RootState } from './rootState';
 import EnvMessages from './components/EnvMesssages';
@@ -33,13 +33,13 @@ const Home = () => (
         <Reviews />
     </span>);
 
-const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string, fileName: string}>) => {
-    const { projectId, id, fileName } = props.match.params;
+const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string, fileId: FileId}>) => {
+    const { projectId, id, fileId } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
     
     return (<ReviewPage
         reviewId={reviewId}
-        fileName={decodeURIComponent(fileName || '')}
+        fileName={fileId || ''}
         history={props.history}
     />)
 });
@@ -77,7 +77,7 @@ const Layout = (props: StateProps) => (
         <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
-                <Route path="/project/:projectId/review/:id/:fileName?" component={Review} />
+                <Route path="/project/:projectId/review/:id/:fileId?" component={Review} />
                 <Route exact path="/admin" component={AdminPage} />
             </ConnectedSwitch>
         </Container>

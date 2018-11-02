@@ -27,6 +27,7 @@ import {
     ReviewDiscussion,
     CommentReply,
     Discussion,
+    FileId,
 } from '../../api/reviewer';
 
 import { OnMount } from "../../components/OnMount";
@@ -68,7 +69,7 @@ interface StateProps {
     currentUser: UserState;
     currentReview: ReviewInfo;
     selectedFile: FileInfo;
-    reviewedFiles: PathPairs.List;
+    reviewedFiles: FileId[];
     unpublishedFileDiscussion: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
@@ -103,7 +104,7 @@ class reviewPage extends React.Component<Props> {
         const props = this.props;
 
         const selectedFile = props.selectedFile ?
-            { ...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path) }
+            { ...props.selectedFile, isReviewed: props.reviewedFiles.indexOf(props.selectedFile.fileId) >= 0 }
             : null;
 
         const load = () => {
@@ -116,11 +117,11 @@ class reviewPage extends React.Component<Props> {
             }
         };
 
-        const selectNewFileForView = (newFile: PathPairs.PathPair) => {
-            if (newFile != null) {
-                props.selectFileForView(newFile);
+        const selectNewFileForView = (fileId: FileId) => {
+            if (fileId != null) {
+                props.selectFileForView(fileId);
                 
-                const fileLink = createLinkToFile(props.reviewId, newFile);
+                const fileLink = createLinkToFile(props.reviewId, fileId);
                 if (fileLink != window.location.pathname) {
                     props.history.push(fileLink);
                 }
@@ -132,7 +133,7 @@ class reviewPage extends React.Component<Props> {
         const selectFileForView = () => {
             const file = props.currentReview.filesToReview.find(f => f.reviewFile.newPath == props.fileName);
             if (file != null) {
-                selectNewFileForView(file.reviewFile);
+                selectNewFileForView(file.fileId);
             }
         };
 
@@ -235,7 +236,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectFileForView: (path) => dispatch(selectFileForView({ path })),
+    selectFileForView: (fileId) => dispatch(selectFileForView({ fileId })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),

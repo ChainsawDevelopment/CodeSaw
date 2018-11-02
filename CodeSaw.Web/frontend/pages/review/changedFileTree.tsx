@@ -6,16 +6,16 @@ import Icon from '@ui/elements/Icon';
 import ReviewMark from './reviewMark';
 import * as PathPairs from "../../pathPair";
 import { FileLink } from "./FileLink";
-import { ReviewId } from "../../api/reviewer";
+import { ReviewId, FileId } from "../../api/reviewer";
 import ReviewMode from "./reviewMode";
 
-const FileItem = (props: { path: PathPairs.PathPair, reviewId: ReviewId, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
+const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
-        header = (<span className='selected-file'>{props.path.newPath}</span>)
+        header = (<span className='selected-file'>{props.fileId}</span>)
     } else {
-        header = (<FileLink reviewId={props.reviewId} path={props.path} />);
+        header = (<FileLink reviewId={props.reviewId} path={PathPairs.make(props.fileId)} fileId={props.fileId} />);
     }
 
     return (
@@ -37,10 +37,10 @@ const FileItem = (props: { path: PathPairs.PathPair, reviewId: ReviewId, isSelec
 
 namespace ChangedFileTree {
     export interface Props {  
-        paths: PathPairs.List;
-        reviewedFiles: PathPairs.List; 
-        selected: PathPairs.PathPair;
-        onSelect: (path: PathPairs.PathPair) => void;
+        files: FileId[];
+        reviewedFiles: FileId[]; 
+        selected: FileId;
+        onSelect: (fileId: FileId) => void;
         reviewId: ReviewId;
     }
 
@@ -69,22 +69,23 @@ export default class ChangeFileTree extends React.Component<ChangedFileTree.Prop
     render() { 
         const props = this.props;
 
-        const filteredPaths = props.paths
-            .filter(p => this.state.searchValue == "" || p.newPath.indexOf(this.state.searchValue) != -1);
+        const filteredFiles = props.files;
+            //.filter(p => this.state.searchValue == "" || p.newPath.indexOf(this.state.searchValue) != -1);
+            //TODO: FIX THIS
 
-        const items = filteredPaths
-            .map(p => (
+        const items = filteredFiles
+            .map(f => (
                 <FileItem
-                    key={p.newPath}
-                    path={p}
-                    isSelected={p.newPath == props.selected.newPath}
-                    isReviewed={PathPairs.contains(props.reviewedFiles, p)}
-                    onclick={() => props.onSelect(p)}
+                    key={f}
+                    fileId={f}
+                    isSelected={f == props.selected}
+                    isReviewed={props.reviewedFiles.indexOf(f) >= 0}
+                    onclick={() => props.onSelect(f)}
                     reviewId={props.reviewId}
                 />
         ));
 
-        const openFirst = () => props.onSelect(filteredPaths[0]);
+        const openFirst = () => props.onSelect(filteredFiles[0]);
     
         return (
             <div>
