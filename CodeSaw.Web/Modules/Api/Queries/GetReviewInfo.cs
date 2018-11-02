@@ -120,7 +120,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 return new Result
                 {
-                    FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName),
+                    FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName).ToList(),
                     ReviewId = query._reviewId,
                     Title = reviewStatus.Title,
                     Description = reviewStatus.Description,

@@ -89,6 +89,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             await _session.SaveAsync(revision);
 
+            await new FillFileHistory(_session, _api, revision).Fill();
+
             return revision.Id;
         }
 
