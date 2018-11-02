@@ -25,8 +25,8 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public List<Guid> ResolvedDiscussions { get; set; } = new List<Guid>(); // root comment ids
         public List<RepliesPublisher.Item> Replies { get; set; } = new List<RepliesPublisher.Item>();
 
-        public Dictionary<RevisionId, List<PathPair>> ReviewedFiles { get; set; }
-        public Dictionary<RevisionId, List<PathPair>> UnreviewedFiles { get; set; }
+        public Dictionary<RevisionId, List<ClientFileId>> ReviewedFiles { get; set; }
+        public Dictionary<RevisionId, List<ClientFileId>> UnreviewedFiles { get; set; }
 
         public class RevisionCommits
         {
