@@ -36,10 +36,10 @@ const Home = () => (
 const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string, fileId: FileId}>) => {
     const { projectId, id, fileId } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
-    
+
     return (<ReviewPage
         reviewId={reviewId}
-        fileName={fileId || ''}
+        fileId={fileId || ''}
         history={props.history}
     />)
 });

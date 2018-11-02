@@ -48,12 +48,12 @@ import { KeyboardHelp } from "./KeyboardHelp";
 
 interface OwnProps {
     reviewId: ReviewId;
-    fileName?: string;
+    fileId?: FileId;
     history: History;
 }
 
 interface DispatchProps {
-    loadReviewInfo(reviewId: ReviewId, fileToPreload?: string): void;
+    loadReviewInfo(reviewId: ReviewId, fileToPreload?: FileId): void;
     selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
@@ -108,9 +108,9 @@ class reviewPage extends React.Component<Props> {
             : null;
 
         const load = () => {
-            if (!selectedFile && props.fileName) {
+            if (!selectedFile && props.fileId) {
                 this.onShowFileHandlerAvailable = this.scrollToFileWhenHandlerIsAvailable;
-                props.loadReviewInfo(props.reviewId, props.fileName);
+                props.loadReviewInfo(props.reviewId, props.fileId);
             } else {
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
                 props.loadReviewInfo(props.reviewId, );
@@ -131,7 +131,7 @@ class reviewPage extends React.Component<Props> {
         };
 
         const selectFileForView = () => {
-            const file = props.currentReview.filesToReview.find(f => f.reviewFile.newPath == props.fileName);
+            const file = props.currentReview.filesToReview.find(f => f.fileId == props.fileId);
             if (file != null) {
                 selectNewFileForView(file.fileId);
             }
@@ -155,7 +155,7 @@ class reviewPage extends React.Component<Props> {
             <div id="review-page">
                 <CurrentReviewMode.Provider value={props.reviewMode}>
                     <OnMount onMount={load} />
-                    <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
+                    <OnPropChanged fileName={props.fileId} onPropChanged={selectFileForView} />
 
                     <Grid>
                         <Grid.Row>
@@ -242,7 +242,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
-    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileName })),
+    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileId })),
     startFileDiscussion: (path, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution, currentUser })),
     startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
     resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
