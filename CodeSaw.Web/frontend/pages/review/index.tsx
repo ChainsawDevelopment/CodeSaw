@@ -43,6 +43,7 @@ import UserInfo from "../../components/UserInfo";
 import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
+import { KeyboardHelp } from "./KeyboardHelp";
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -157,7 +158,7 @@ class reviewPage extends React.Component<Props> {
 
                     <Grid>
                         <Grid.Row>
-                            <Grid.Column>
+                            <Grid.Column className={"header"}>
                                 <Grid.Row>
                                     <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
                                 </Grid.Row>
