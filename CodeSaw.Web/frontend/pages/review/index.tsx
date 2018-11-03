@@ -184,6 +184,7 @@ class reviewPage extends React.Component<Props> {
                         <Grid.Row>
                             <Grid.Column>
                                 <CommentsView
+                                    discussionId="review"
                                     discussions={discussions}
                                     actions={commentActions}
                                     unpublishedReplies={props.unpublishedReplies}

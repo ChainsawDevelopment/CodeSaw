@@ -14,7 +14,7 @@ import { ReviewId, FileDiscussion, CommentReply, FileToReview } from "../../api/
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
-import { DiscussionActions } from "./commentsView";
+import { DiscussionActions, getNewDiscussionTextAreaId } from "./commentsView";
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
 import ReviewMark from "./reviewMark";
@@ -62,6 +62,10 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         this.setState({
             visibleCommentLines: [...this.state.visibleCommentLines, line]
         });
+
+        setTimeout(() => {
+            document.getElementById(getNewDiscussionTextAreaId(line.toString())).focus();
+        }, 0);
     }
 
     render(): JSX.Element {
