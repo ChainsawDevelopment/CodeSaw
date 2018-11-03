@@ -63,11 +63,19 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         };
     }
 
+    private getReplyTextAreaId = (): string => `text-reply-${this.props.comment.id}`
+
     render(): JSX.Element {
         const children = mapComments(this.props.comment.children, this.props.actions);
 
         const switchReply = () => {
             this.setState({ replyVisible: !this.state.replyVisible });
+
+            if (!this.state.replyVisible) {
+                setTimeout(() => {
+                    document.getElementById(this.getReplyTextAreaId()).focus();
+                }, 0);
+            }
         };
 
         const onSubmit = () => {
@@ -80,7 +88,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
         const form = (
             <Form reply onSubmit={onSubmit}>
-                <Form.TextArea onChange={onChangeReply} value={this.state.replyText} placeholder='Reply...' />
+                <Form.TextArea id={this.getReplyTextAreaId()} onChange={onChangeReply} value={this.state.replyText} placeholder='Reply...' />
                 <Button onClick={() => this.props.actions.addReply(this.props.comment.id, this.state.replyText)} primary>Add Comment</Button>
             </Form>
         );
@@ -177,7 +185,10 @@ interface DiscussionsProps {
     title?: string;
     replyOnly?: boolean;
     note?(discussion: Discussion): JSX.Element;
+    discussionId: string;
 }
+
+export const getNewDiscussionTextAreaId = (discussionId: string): string => `text-comment-${discussionId}`;
 
 export default class CommentsComponent extends React.Component<DiscussionsProps, CommentsState> {
     constructor(props: DiscussionsProps) {
@@ -218,7 +229,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
                 {discussions}
                 {!this.props.replyOnly ? 
                     <Form reply onSubmit={onSubmit}>
-                        <Form.TextArea onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
+                        <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
                         <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
                         <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                     </Form>

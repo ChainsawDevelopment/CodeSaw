@@ -89,6 +89,7 @@ const buildCommentView = (props: Props, lineNumber: number, discussions: Discuss
 
     return (
         <CommentsView
+            discussionId={lineNumber.toString()}
             discussions={discussions}
             actions={commentActions}
             unpublishedReplies={props.unpublishedReplies}
@@ -133,6 +134,7 @@ const UnmatchedComments = (props: {
 
     return (
         <CommentsView
+            discussionId="unmatched"
             title="Unmatched comments"
             replyOnly={true}
             note={note}
