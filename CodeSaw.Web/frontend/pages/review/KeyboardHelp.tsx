@@ -23,6 +23,7 @@ export class KeyboardHelp extends React.Component<Props> {
                             <li><code>?</code> - this help</li>
                             <li><code>[ ]</code> - previous/next unreviewed file</li>
                             <li><code>ctrl+p</code> - go to file by name</li>
+                            <li><code>ctrl+g</code> - comment line</li>
                             <li><code>y</code> - mark file as reviewed/unreviewed</li>
                             <li><code>ctrl+enter</code> - publish current review</li>
                         </ul>
