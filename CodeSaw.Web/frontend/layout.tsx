@@ -1,4 +1,4 @@
-import logo from './assets/chainsaw.svg'
+import logo from './assets/logo.svg'
 import './assets/favicon.png'
 
 import * as React from "react";
