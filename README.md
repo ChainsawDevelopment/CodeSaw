@@ -1,4 +1,19 @@
-# Building
+# CodeSaw
+
+The most brutal Code Review tool!
+
+![CodeSaw](CodeSaw.Web/frontend/assets/logo.svg)
+
+Features:
+ - Work on top GitLab.
+ - Mark each file as reviewed separately.
+ - Forces resolving all comments before merging.
+ - Detects unrelated changes due to target branch change. 
+ - Incremental review, supports force pushes.
+ - Advanced, per-project configuration using `Reviewfile.js` placed in project repository.
+ - Great keyboard support.
+
+# Development
 ## Requirements
 * .NET Core SDK 2.1
 * SQL Server
