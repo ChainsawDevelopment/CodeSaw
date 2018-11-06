@@ -4,6 +4,8 @@ import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffVi
 import { FileDiscussion, RevisionId, CommentReply, Discussion } from '../../api/reviewer';
 import CommentsView, { DiscussionActions } from './commentsView';
 import { UserState } from '../../rootState';
+import { SelectLineNumberModal } from './SelectLineNumberModal';
+import { HotKeys } from 'CodeSaw.Web/frontend/components/HotKeys';
 const style = require('./commentedDiffView.less');
 
 export interface LineCommentsActions {
@@ -46,7 +48,7 @@ const splitComments = (props: Props): LineComments => {
         right: new Map<number, FileDiscussion[]>(),
         unmatched: []
     }
-    
+
     const allCommentsUnmatched = props.leftSideRevision == props.rightSideRevision;
 
     for (let fileComment of props.comments) {
@@ -114,7 +116,7 @@ const buildLineWidgets = (props: Props, lineComments: LineComments) => {
 }
 
 const UnmatchedComments = (props: {
-    unpublishedReplies: CommentReply[]; 
+    unpublishedReplies: CommentReply[];
     commentActions: DiscussionActions;
     currentUser: UserState;
     discussions: FileDiscussion[];
@@ -146,39 +148,68 @@ const UnmatchedComments = (props: {
     );
 }
 
-export default (props: Props) => {
-    const {
-        comments,
-        commentActions,
-        leftSideRevision,
-        rightSideRevision,
-        pendingResolved,
-        unpublishedReplies,
-        ...diffViewProps
-    } = props;
+export default class CommentedDiffView extends React.Component<Props, { goToLineModalVisible: boolean }> {
+    constructor(props) {
+        super(props);
 
-    const lineComments = splitComments(props);
+        this.state = {
+            goToLineModalVisible: false
+        };
+    }
 
-    const lineWidgets = buildLineWidgets(props, lineComments);
+    render(): JSX.Element {
+        const {
+            comments,
+            commentActions,
+            leftSideRevision,
+            rightSideRevision,
+            pendingResolved,
+            unpublishedReplies,
+            ...diffViewProps
+        } = this.props;
 
-    const toggleChangeComment = (side, lineNumber) => {
-        if (props.visibleCommentLines.indexOf(lineNumber) == -1) {
-            props.lineCommentsActions.showCommentsForLine(lineNumber);
-        } else {
-            props.lineCommentsActions.hideCommentsForLine(lineNumber);
+        const lineComments = splitComments(this.props);
+
+        const lineWidgets = buildLineWidgets(this.props, lineComments);
+
+        const toggleChangeComment = (side, lineNumber) => {
+            if (this.props.visibleCommentLines.indexOf(lineNumber) == -1) {
+                this.props.lineCommentsActions.showCommentsForLine(lineNumber);
+            } else {
+                this.props.lineCommentsActions.hideCommentsForLine(lineNumber);
+            }
+        };
+
+        const closeGoToLineModal = (selectedLine: string): void => {
+            this.setState({ goToLineModalVisible: false });
+
+            const selectedLineNumber = Number.parseInt(selectedLine, 10);
+
+            if (selectedLineNumber) {
+                toggleChangeComment(null, selectedLineNumber);
+            }
         }
-    };
 
-    return (
-    <div>
-        <DiffView
-            {...diffViewProps}
-            lineWidgets={lineWidgets}
-            onLineClick={toggleChangeComment}
-        />
-        {lineComments.unmatched.length > 0 ? 
-            <UnmatchedComments unpublishedReplies={props.unpublishedReplies} currentUser={props.currentUser} discussions={lineComments.unmatched} commentActions={props.commentActions}/> 
-        : null}
-    </div>
-    );
-};
+        const hotKeys = {
+            'ctrl+g': () => this.setState({ goToLineModalVisible: !this.state.goToLineModalVisible })
+        }
+
+        return (
+            <div>
+                <HotKeys config={hotKeys} />
+                <SelectLineNumberModal
+                    isOpen={this.state.goToLineModalVisible}
+                    handleClose={closeGoToLineModal}
+                />
+                <DiffView
+                    {...diffViewProps}
+                    lineWidgets={lineWidgets}
+                    onLineClick={toggleChangeComment}
+                />
+                {lineComments.unmatched.length > 0 ?
+                    <UnmatchedComments unpublishedReplies={this.props.unpublishedReplies} currentUser={this.props.currentUser} discussions={lineComments.unmatched} commentActions={this.props.commentActions} />
+                    : null}
+            </div>
+        );
+    }
+}
