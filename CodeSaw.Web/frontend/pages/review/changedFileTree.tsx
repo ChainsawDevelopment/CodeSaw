@@ -15,7 +15,7 @@ const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boole
     if (props.isSelected) {
         header = (<span className='selected-file'>{props.fileId}</span>)
     } else {
-        header = (<FileLink reviewId={props.reviewId} path={PathPairs.make(props.fileId)} fileId={props.fileId} />);
+        header = (<FileLink reviewId={props.reviewId} fileId={props.fileId} />);
     }
 
     return (

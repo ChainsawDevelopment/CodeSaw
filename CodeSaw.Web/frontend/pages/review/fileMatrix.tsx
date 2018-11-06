@@ -180,7 +180,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
 
     return (
         <Table.Row>
-            <Table.Cell key='file' className='file'><FileLink reviewId={reviewId} path={review.reviewFile} fileId={props.file.fileId}>{file.newPath}</FileLink> ({props.discussions.length}) </Table.Cell>
+            <Table.Cell key='file' className='file'><FileLink reviewId={reviewId} fileId={props.file.fileId}>{file.newPath}</FileLink> ({props.discussions.length}) </Table.Cell>
             {revisionCells}
         </Table.Row>
     );

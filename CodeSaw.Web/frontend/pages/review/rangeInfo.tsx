@@ -242,14 +242,14 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             menuItems.push(<Menu.Item fitted key="file-navigation">
                 {prevFile &&
                     <Popup
-                        trigger={<FileLink reviewId={this.props.reviewId} path={PathPairs.make('PREV')} fileId={prevFile} >
+                        trigger={<FileLink reviewId={this.props.reviewId} fileId={prevFile} >
                             <Icon name="step backward" circular link /></FileLink>}
                         content="Previous unreviewed file"
                     />}
                 {nextFile &&
                     <Popup
 
-                        trigger={<FileLink reviewId={this.props.reviewId} path={PathPairs.make('NEXT')} fileId={nextFile} >
+                        trigger={<FileLink reviewId={this.props.reviewId} fileId={nextFile} >
                             <Icon name="step forward" circular link /></FileLink>}
                         content="Next unreviewed file"
                     />}
