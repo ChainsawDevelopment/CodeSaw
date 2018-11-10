@@ -103,7 +103,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
             private Review CreateReview(ReviewIdentifier reviewId, RevisionId revisionId)
             {
                 var revision = _session.Query<ReviewRevision>().Single(x => 
-                    x.ReviewId == reviewId &&
+                    x.ReviewId == reviewId &&       
                     x.RevisionNumber == ((RevisionId.Selected) revisionId).Revision
                 );
 
