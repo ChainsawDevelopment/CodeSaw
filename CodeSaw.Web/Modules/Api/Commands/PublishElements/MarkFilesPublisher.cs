@@ -25,11 +25,11 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var review = _reviewForRevision(revisionId);
                 var files = UnpackIds(review.RevisionId, fileIds);
-                var toAdd = files.Where(x => !review.Files.Any(y => y.File == x)).ToList();
+                var toAdd = files.Where(x => review.Files.All(y => y.FileId != x.Id.PersistentId)).ToList();
 
                 if (toAdd.Any())
                 {
-                    review.Files.AddRange(toAdd.Select(x => new FileReview(x) {Status = FileReviewStatus.Reviewed}));
+                    review.Files.AddRange(toAdd.Select(x => new FileReview(x.Path, x.Id.PersistentId) {Status = FileReviewStatus.Reviewed}));
                     await _session.SaveAsync(review);
                 }
             }
@@ -37,27 +37,27 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             foreach (var (revisionId, fileIds) in unreviewedFiles)
             {
                 var review = _reviewForRevision(revisionId);
-                var files = UnpackIds(review.RevisionId, fileIds);
-                var toRemove = review.Files.Where(x => files.Contains(x.File)).ToList();
 
-                if (toRemove.Any())
+                var toRemove2 = review.Files.Where(x => fileIds.Any(y => y.PersistentId == x.FileId)).ToList();
+
+                if (toRemove2.Any())
                 {
-                    review.Files.RemoveRange(toRemove);
+                    review.Files.RemoveRange(toRemove2);
 
                     await _session.SaveAsync(review);
                 }
             }
         }
 
-        private IEnumerable<PathPair> UnpackIds(Guid revisionId, List<ClientFileId> fileIds)
+        private IEnumerable<(ClientFileId Id, PathPair Path)> UnpackIds(Guid revisionId, List<ClientFileId> fileIds)
         {
-            var result = new List<PathPair>();
+            var result = new List<(ClientFileId Id, PathPair Path)>();
 
             foreach (var clientFileId in fileIds)
             {
                 if (clientFileId.PersistentId == Guid.Empty)
                 {
-                    result.Add(clientFileId.ProvisionalPathPair);
+                    result.Add((clientFileId, clientFileId.ProvisionalPathPair));
                     continue;
                 }
 
@@ -68,7 +68,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
                 var prevEntry = _session.Query<FileHistoryEntry>().SingleOrDefault(x => x.RevisionId == prevRevisionId && x.FileId == clientFileId.PersistentId);
 
-                result.Add(PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName));
+                result.Add((clientFileId, PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName)));
             }
 
             return result;

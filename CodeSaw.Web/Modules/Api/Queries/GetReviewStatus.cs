@@ -47,15 +47,17 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     ReviewRevision revision = null;
                     FileReview file = null;
                     FileStatus dto = null;
+                    FileHistoryEntry historyEntry = null;
 
                     fileStatuses = await _session.QueryOver(() => review)
                         .JoinEntityAlias(() => revision, () => revision.Id == review.RevisionId)
                         .JoinAlias(() => review.Files, () => file)
+                        .JoinEntityAlias(() => historyEntry, () => historyEntry.RevisionId == revision.Id && historyEntry.FileId == file.FileId)
                         .Where(() => revision.ReviewId == query.ReviewId)
                         .Select(
                             Projections.Property(() => revision.RevisionNumber).WithAlias(() => dto.RevisionNumber),
                             Projections.Property(() => review.UserId).WithAlias(() => dto.ReviewedBy),
-                            Projections.Property(() => file.File.NewPath).WithAlias(() => dto.Path),
+                            Projections.Property(() => historyEntry.FileName).WithAlias(() => dto.Path),
                             Projections.Property(() => file.Status).WithAlias(() => dto.Status)
                         )
                         .TransformUsing(Transformers.AliasToBean<FileStatus>())

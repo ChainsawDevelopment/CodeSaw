@@ -51,13 +51,13 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     select new
                     {
                         Revision = new RevisionId.Selected(revision.RevisionNumber),
-                        File = file.File,
+                        FileId = file.FileId,
                         Reviewer = user.UserName
                     };
 
                 foreach (var reviewedFile in q)
                 {
-                    var entry = matrix.Single(x => x.Revisions[reviewedFile.Revision].File.NewPath == reviewedFile.File.NewPath);
+                    var entry = matrix.Single(x => x.FileId == reviewedFile.FileId.ToString());
                     entry.Revisions[reviewedFile.Revision].Reviewers.Add(reviewedFile.Reviewer);
                 }
             }

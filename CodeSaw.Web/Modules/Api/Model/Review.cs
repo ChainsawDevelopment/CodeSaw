@@ -20,36 +20,18 @@ namespace CodeSaw.Web.Modules.Api.Model
         {
             Files = new List<FileReview>();
         }
-
-        public virtual void ReviewFiles(IReadOnlyList<PathPair> reviewedFiles)
-        {
-            var wasReviewedNowNot = Files.Where(x => !reviewedFiles.Contains(x.File)).ToList();
-
-            Files.RemoveRange(wasReviewedNowNot);
-
-            foreach (var file in reviewedFiles)
-            {
-                var status = Files.SingleOrDefault(x => x.File == file);
-
-                if (status == null)
-                {
-                    status = new FileReview(file);
-                    Files.Add(status);
-                }
-
-                status.Status = FileReviewStatus.Reviewed;
-            }
-        }
     }
 
     public class FileReview
     {
+        public Guid FileId { get; private set; }
         public PathPair File { get; private set; }
         public FileReviewStatus Status { get; set; }
 
-        public FileReview(PathPair file)
+        public FileReview(PathPair file, Guid fileId)
         {
             File = file;
+            FileId = fileId;
         }
 
         protected FileReview()

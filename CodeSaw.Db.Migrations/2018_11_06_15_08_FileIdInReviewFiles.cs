@@ -30,6 +30,9 @@ join dbo.Revisions revision on revision.Id = review.RevisionId
 join dbo.FileHistory fh on fh.RevisionId = revision.Id and rf.NewPath = fh.FileName
 where review.LastUpdatedAt >= (select MIN(LastUpdatedAt) from dbo.RevisionFiles)
 ");
+
+            Alter.Column("FileId").OnTable("ReviewFiles").InSchema("dbo")
+                .AsGuid().NotNullable();
         }
 
         public override void Down()
