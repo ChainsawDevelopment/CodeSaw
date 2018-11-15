@@ -57,8 +57,9 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 foreach (var reviewedFile in q)
                 {
-                    var entry = matrix.Single(x => x.FileId == reviewedFile.FileId.ToString());
-                    entry.Revisions[reviewedFile.Revision].Reviewers.Add(reviewedFile.Reviewer);
+                    matrix.Single(x => x.FileId.Equals(reviewedFile.FileId.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                        .Revisions[reviewedFile.Revision]
+                        .Reviewers.Add(reviewedFile.Reviewer);
                 }
             }
 

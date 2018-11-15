@@ -60,7 +60,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
 
                 var revisionFactory = new FindOrCreateRevisionPublisher(_session, _revisionFactory, _api);
 
-                var headRevision = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
+                var (headRevision, clientFileIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
 
                 var headReview = await new FindOrCreateReviewPublisher(_session, _user).FindOrCreateReview(command, reviewId, headRevision);
 
@@ -85,6 +85,8 @@ namespace CodeSaw.Web.Modules.Api.Commands
                     return reviews[revId] = CreateReview(reviewId, revId);
                 };
 
+                Func<ClientFileId, Guid> resolveFileId = clientFileId => clientFileIdMap[clientFileId];
+
                 var newCommentsMap = new Dictionary<string, Guid>();
                 var newDiscussionsMap = new Dictionary<string, Guid>();
 
@@ -95,7 +97,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
 
                 await new ResolveDiscussions(_session, reviewForRevision).Publish(resolvedDiscussions);
                 await new RepliesPublisher(_session).Publish(command.Replies, headReview, newCommentsMap);
-                await new MarkFilesPublisher(_session, reviewForRevision).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
+                await new MarkFilesPublisher(_session, reviewForRevision, resolveFileId).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }

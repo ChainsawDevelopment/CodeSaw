@@ -12,11 +12,13 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
     {
         private readonly ISession _session;
         private readonly FindReviewDelegate _reviewForRevision;
+        private readonly Func<ClientFileId, Guid> _resolveFileId;
 
-        public MarkFilesPublisher(ISession session, FindReviewDelegate reviewForRevision)
+        public MarkFilesPublisher(ISession session, FindReviewDelegate reviewForRevision, Func<ClientFileId, Guid> resolveFileId)
         {
             _session = session;
             _reviewForRevision = reviewForRevision;
+            _resolveFileId = resolveFileId;
         }
 
         public async Task MarkFiles(Dictionary<RevisionId, List<ClientFileId>> reviewedFiles, Dictionary<RevisionId, List<ClientFileId>> unreviewedFiles)
@@ -25,11 +27,20 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var review = _reviewForRevision(revisionId);
                 var files = UnpackIds(review.RevisionId, fileIds);
-                var toAdd = files.Where(x => review.Files.All(y => y.FileId != x.Id.PersistentId)).ToList();
+                var toAdd = files.Where(x => review.Files.All(y => y.FileId != _resolveFileId(x.Id))).ToList();
 
                 if (toAdd.Any())
                 {
-                    review.Files.AddRange(toAdd.Select(x => new FileReview(x.Path, x.Id.PersistentId) {Status = FileReviewStatus.Reviewed}));
+                    foreach (var (clientFileId, path) in toAdd)
+                    {
+                        var fileId = _resolveFileId(clientFileId);
+                        review.Files.Add(new FileReview(path, fileId)
+                        {
+                            Status =  FileReviewStatus.Reviewed
+                        });
+                    }
+
+                    //review.Files.AddRange(toAdd.Select(x => new FileReview(x.Path, _resolveFileId(x.Id)) {Status = FileReviewStatus.Reviewed}));
                     await _session.SaveAsync(review);
                 }
             }
@@ -38,7 +49,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var review = _reviewForRevision(revisionId);
 
-                var toRemove2 = review.Files.Where(x => fileIds.Any(y => y.PersistentId == x.FileId)).ToList();
+                var toRemove2 = review.Files.Where(x => fileIds.Any(y => _resolveFileId(y) == x.FileId)).ToList();
 
                 if (toRemove2.Any())
                 {

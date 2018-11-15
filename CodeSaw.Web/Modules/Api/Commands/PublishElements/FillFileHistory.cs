@@ -21,7 +21,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _currentRevision = currentRevision;
         }
 
-        public async Task Fill()
+        public async Task<Dictionary<ClientFileId, Guid>> Fill()
         {
             var (previousRevId, previousHead) = FindPreviousRevision(_currentRevision.ReviewId, _currentRevision.RevisionNumber, _currentRevision.BaseCommit);
 
@@ -30,6 +30,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             TMP_FIllOldRevisionFiles(diff);
 
             var fileIds = FetchFileIds(previousRevId);
+
+            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Value), x => x.Value);
 
             var remainingDiffs = new HashSet<FileDiff>(diff);
 
@@ -58,6 +60,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             foreach (var file in remainingDiffs)
             {
                 var fileId = GuidComb.Generate();
+
+                clientFileIdMap[ClientFileId.Provisional(file.Path)] = fileId;
 
                 if (file.RenamedFile)
                 {
@@ -88,6 +92,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                     IsModified = true
                 });
             }
+
+            return clientFileIdMap;
         }
 
         private void TMP_FIllOldRevisionFiles(List<FileDiff> diff)
