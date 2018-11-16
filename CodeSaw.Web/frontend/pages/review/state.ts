@@ -9,14 +9,17 @@ import {
     ReviewDiscussion,
     CommentReply,
     FileToReview,
-    RevisionId
+    RevisionId,
+    FileId
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
+import * as _ from 'lodash'
 
 export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
+    fileId: FileId;
     fileToReview: FileToReview;
     range: {
         previous: {
@@ -31,7 +34,7 @@ export interface FileInfo {
 }
 
 export interface FileReviewStatusChange {
-    [revision: string]: PathPairs.List;
+    [revision: string]: FileId[];
 }
 
 export interface UnpublishedReview {
@@ -46,14 +49,14 @@ export interface UnpublishedReview {
 export interface ReviewState extends UnpublishedReview {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
-    reviewedFiles: PathPairs.List;
+    reviewedFiles: FileId[];
     nextReplyId: number;
     nextDiscussionCommentId: number;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
 
-export const selectFileForView = createAction<{ path: PathPairs.PathPair }>('SELECT_FILE_FOR_VIEW');
+export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
 
 export const loadedFileDiff = createAction<FileDiff>('LOADED_FILE_DIFF');
 
@@ -159,13 +162,14 @@ const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
     if (selectFileForView.match(action)) {
-        const file = state.currentReview.filesToReview.find(f => PathPairs.equal(f.reviewFile, action.payload.path));
+        const file = state.currentReview.filesToReview.find(f => f.fileId == action.payload.fileId);
 
         return {
             ...state,
             selectedFile: {
                 ...state.selectedFile,
-                path: action.payload.path,
+                fileId: file.fileId,
+                path: file.reviewFile,
                 fileToReview: file,
                 range: {
                     previous: resolveRevision(state.currentReview, file.previous),
@@ -196,11 +200,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         const unpublishedUnreviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedUnreviewedFiles);
 
         const reviewedFileFinal = 
-            PathPairs.subtract(
-                reviewedFiles.map(f => f.reviewFile),
-                unpublishedUnreviewedFiles
-            )
-            .concat(unpublishedReviewedFiles);
+            _.difference(reviewedFiles.map(f => f.fileId), unpublishedUnreviewedFiles)
+             .concat(unpublishedReviewedFiles);
 
         return {
             ...state,
@@ -214,17 +215,17 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (reviewFile.match(action)) {
         const file = state.currentReview.filesToReview.find(f => f.reviewFile == action.payload.path);
 
-        if (PathPairs.contains(state.reviewedFiles, file.reviewFile)) {
+        if (state.reviewedFiles.indexOf(file.fileId) >= 0) {
             return state;
         }
 
         let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
         let unreviewList = (state.unpublishedUnreviewedFiles[file.current] || []).concat([]);
 
-        const fileId = PathPairs.make(file.diffFile.newPath);
+        const fileId = file.fileId;
 
-        const idxInReviewed = reviewList.findIndex(f => PathPairs.equal(f, fileId));
-        const idxInUnreviewed = unreviewList.findIndex(f => PathPairs.equal(f, fileId));
+        const idxInReviewed = reviewList.findIndex(f => f == fileId);
+        const idxInUnreviewed = unreviewList.findIndex(f => f == fileId);
 
         if (idxInUnreviewed >= 0 && idxInReviewed == -1) {
             unreviewList.splice(idxInUnreviewed, 1);
@@ -238,7 +239,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             reviewedFiles: [
                 ...state.reviewedFiles,
-                file.reviewFile
+                file.fileId
             ],
             unpublishedReviewedFiles: {
                 ...state.unpublishedReviewedFiles,
@@ -254,17 +255,17 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     if (unreviewFile.match(action)) {
         const file = state.currentReview.filesToReview.find(f => f.reviewFile == action.payload.path);
 
-        if (!PathPairs.contains(state.reviewedFiles, file.reviewFile)) {
+        if (state.reviewedFiles.indexOf(file.fileId) == -1) {
             return state;
         }
 
         let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
         let unreviewList = (state.unpublishedUnreviewedFiles[file.current] || []).concat([]);
 
-        const fileId = PathPairs.make(file.diffFile.newPath);
+        const fileId = file.fileId;
 
-        const idxInReviewed = reviewList.findIndex(f => PathPairs.equal(f, fileId));
-        const idxInUnreviewed = unreviewList.findIndex(f => PathPairs.equal(f, fileId));
+        const idxInReviewed = reviewList.findIndex(f => f == fileId);
+        const idxInUnreviewed = unreviewList.findIndex(f => f == fileId);
 
         if (idxInUnreviewed == -1 && idxInReviewed >= 0) {
             reviewList.splice(idxInReviewed, 1);
@@ -276,7 +277,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
 
         return {
             ...state,
-            reviewedFiles: state.reviewedFiles.filter(v => !PathPairs.equal(v, file.reviewFile)),
+            reviewedFiles: state.reviewedFiles.filter(v => v != fileId),
             unpublishedReviewedFiles: {
                 ...state.unpublishedReviewedFiles,
                 [file.current]: reviewList

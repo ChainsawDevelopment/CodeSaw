@@ -27,6 +27,7 @@ import {
     ReviewDiscussion,
     CommentReply,
     Discussion,
+    FileId,
 } from '../../api/reviewer';
 
 import { OnMount } from "../../components/OnMount";
@@ -47,12 +48,12 @@ import { KeyboardHelp } from "./KeyboardHelp";
 
 interface OwnProps {
     reviewId: ReviewId;
-    fileName?: string;
+    fileId?: FileId;
     history: History;
 }
 
 interface DispatchProps {
-    loadReviewInfo(reviewId: ReviewId, fileToPreload?: string): void;
+    loadReviewInfo(reviewId: ReviewId, fileToPreload?: FileId): void;
     selectFileForView: SelectFileForViewHandler;
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
@@ -68,7 +69,7 @@ interface StateProps {
     currentUser: UserState;
     currentReview: ReviewInfo;
     selectedFile: FileInfo;
-    reviewedFiles: PathPairs.List;
+    reviewedFiles: FileId[];
     unpublishedFileDiscussion: FileDiscussion[];
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
@@ -103,24 +104,24 @@ class reviewPage extends React.Component<Props> {
         const props = this.props;
 
         const selectedFile = props.selectedFile ?
-            { ...props.selectedFile, isReviewed: PathPairs.contains(props.reviewedFiles, props.selectedFile.path) }
+            { ...props.selectedFile, isReviewed: props.reviewedFiles.indexOf(props.selectedFile.fileId) >= 0 }
             : null;
 
         const load = () => {
-            if (!selectedFile && props.fileName) {
+            if (!selectedFile && props.fileId) {
                 this.onShowFileHandlerAvailable = this.scrollToFileWhenHandlerIsAvailable;
-                props.loadReviewInfo(props.reviewId, props.fileName);
+                props.loadReviewInfo(props.reviewId, props.fileId);
             } else {
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
                 props.loadReviewInfo(props.reviewId, );
             }
         };
 
-        const selectNewFileForView = (newFile: PathPairs.PathPair) => {
-            if (newFile != null) {
-                props.selectFileForView(newFile);
+        const selectNewFileForView = (fileId: FileId) => {
+            if (fileId != null) {
+                props.selectFileForView(fileId);
                 
-                const fileLink = createLinkToFile(props.reviewId, newFile);
+                const fileLink = createLinkToFile(props.reviewId, fileId);
                 if (fileLink != window.location.pathname) {
                     props.history.push(fileLink);
                 }
@@ -130,9 +131,9 @@ class reviewPage extends React.Component<Props> {
         };
 
         const selectFileForView = () => {
-            const file = props.currentReview.filesToReview.find(f => f.reviewFile.newPath == props.fileName);
+            const file = props.currentReview.filesToReview.find(f => f.fileId == props.fileId);
             if (file != null) {
-                selectNewFileForView(file.reviewFile);
+                selectNewFileForView(file.fileId);
             }
         };
 
@@ -154,7 +155,7 @@ class reviewPage extends React.Component<Props> {
             <div id="review-page">
                 <CurrentReviewMode.Provider value={props.reviewMode}>
                     <OnMount onMount={load} />
-                    <OnPropChanged fileName={props.fileName} onPropChanged={selectFileForView} />
+                    <OnPropChanged fileName={props.fileId} onPropChanged={selectFileForView} />
 
                     <Grid>
                         <Grid.Row>
@@ -235,13 +236,13 @@ const mapStateToProps = (state: RootState): StateProps => ({
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectFileForView: (path) => dispatch(selectFileForView({ path })),
+    selectFileForView: (fileId) => dispatch(selectFileForView({ fileId })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
     reviewFile: {
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
-    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileName })),
+    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileId })),
     startFileDiscussion: (path, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution, currentUser })),
     startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
     resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),

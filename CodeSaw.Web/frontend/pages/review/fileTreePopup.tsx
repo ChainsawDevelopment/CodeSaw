@@ -2,7 +2,7 @@ import Popup from '@ui/modules/Popup';
 import Button from '@ui/elements/Button';
 
 import * as React from "react";
-import { ReviewId } from "../../api/reviewer";
+import { ReviewId, FileId } from "../../api/reviewer";
 import ChangedFileTree from './changedFileTree';
 import { PathPair } from '../../pathPair';
 import { HotKeys } from 'CodeSaw.Web/frontend/components/HotKeys';
@@ -13,10 +13,10 @@ interface State {
 }
 
 export interface Props {
-    paths: PathPair[];
-    selected: PathPair;
-    reviewedFiles: PathPair[];
-    onSelect(path: PathPair): void;
+    files: FileId[];
+    selected: FileId;
+    reviewedFiles: FileId[];
+    onSelect(fileId: FileId): void;
     reviewId: ReviewId;
 }
 
@@ -37,8 +37,8 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
         this.setState({ opened: false });
     }
 
-    private _onSelect = (p: PathPair) => {
-        this.props.onSelect(p);
+    private _onSelect = (fileId: FileId) => {
+        this.props.onSelect(fileId);
         this._onClose();
     }
 
@@ -46,7 +46,7 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
         const filesSelector = (
             <div className='file-tree-popup'>
                 <ChangedFileTree
-                    paths={this.props.paths}
+                    files={this.props.files}
                     selected={this.props.selected}
                     reviewedFiles={this.props.reviewedFiles}
                     onSelect={this._onSelect}

@@ -55,5 +55,11 @@ namespace CodeSaw.Web
 
             return bytes.Length >= preamble.Length && bytes.Take(preamble.Length).SequenceEqual(preamble);
         }
+
+        public static void Deconstruct<TKey, TElement>(this IGrouping<TKey, TElement> grouping, out TKey key, out IEnumerable<TElement> elements)
+        {
+            key = grouping.Key;
+            elements = grouping;
+        }
     }
 }

@@ -2,6 +2,8 @@ import * as PathPairs from "../pathPair";
 import { UserState } from "../rootState";
 
 export type RevisionId = 'base' | number | string | 'provisional';
+export type FileId = string;
+
 
 export interface RevisionRange {
     previous: RevisionId;
@@ -120,6 +122,7 @@ export interface ReviewDiscussion extends Discussion {
 }
 
 export interface FileToReview {
+    fileId: FileId;
     reviewFile: PathPairs.PathPair;
     diffFile: PathPairs.PathPair;
     previous: RevisionId;
@@ -193,10 +196,10 @@ export interface ReviewSnapshot {
     resolvedDiscussions: string[];
     replies: CommentReply[];
     reviewedFiles: {
-        [revision: string]: PathPairs.List;
+        [revision: string]: FileId[];
     };
     unreviewedFiles: {
-        [revision: string]: PathPairs.List;
+        [revision: string]: FileId[];
     };
 }
 

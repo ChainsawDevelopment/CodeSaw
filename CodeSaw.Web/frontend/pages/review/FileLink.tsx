@@ -1,14 +1,14 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { ReviewId } from "../../api/reviewer";
-import * as PathPairs from "../../pathPair";
+import { ReviewId, FileId } from "../../api/reviewer";
+import FileName from './fileName';
 
-export const createLinkToFile = (reviewId: ReviewId, file: PathPairs.PathPair) : string => (
-    `/project/${reviewId.projectId}/review/${reviewId.reviewId}/${encodeURIComponent(file.newPath)}`);
+export const createLinkToFile = (reviewId: ReviewId, fileId: FileId) : string => (
+    `/project/${reviewId.projectId}/review/${reviewId.reviewId}/${fileId}`);
 
-export const FileLink = (props: {reviewId: ReviewId, path: PathPairs.PathPair, children?: any}) => {
+export const FileLink = (props: {reviewId: ReviewId, fileId: FileId, children?: any}) => {
     return <Link 
-        to={createLinkToFile(props.reviewId, props.path)}>
-        {props.children || props.path.newPath}
+        to={createLinkToFile(props.reviewId, props.fileId)}>
+        {props.children || <FileName fileId={props.fileId} />}
     </Link>
 }

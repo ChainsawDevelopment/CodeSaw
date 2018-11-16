@@ -10,7 +10,7 @@ import scrollToComponent from 'react-scroll-to-component';
 import { FileLink } from "./FileLink";
 
 import * as PathPairs from "../../pathPair";
-import { ReviewId, FileDiscussion, CommentReply, FileToReview } from "../../api/reviewer";
+import { ReviewId, FileDiscussion, CommentReply, FileToReview, FileId } from "../../api/reviewer";
 import { FileInfo } from "./state";
 
 import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
@@ -122,7 +122,7 @@ const NoFileView = () => {
     )
 };
 
-export type SelectFileForViewHandler = (path: PathPairs.PathPair) => void;
+export type SelectFileForViewHandler = (fileId: FileId) => void;
 export type OnShowFileHandlerAvailable = (handler: () => void) => void;
 
 export interface ReviewFileActions {
@@ -135,7 +135,7 @@ export interface Props {
     selectedFile: FileInfo & { isReviewed: boolean };
     onSelectFileForView: SelectFileForViewHandler;
     reviewFile: ReviewFileActions;
-    reviewedFiles: PathPairs.List;
+    reviewedFiles: FileId[];
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
     reviewId: ReviewId;
@@ -167,7 +167,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         }
     }
 
-    private _findNextUnreviewedFile = (current: PathPairs.PathPair, direction: 1 | -1): PathPairs.PathPair => {
+    private _findNextUnreviewedFile = (current: FileId, direction: 1 | -1): FileId => {
         const changes = this.props.filesToReview.filter(f => f.current != f.previous);
         const currentIndex = changes.findIndex(p => PathPairs.equal(p.reviewFile, this.props.selectedFile.path));
 
@@ -175,7 +175,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             return null;
         }
 
-        const filesReviewedByUser = this.props.reviewedFiles;
+        const filesReviewedByUser: FileId[] = this.props.reviewedFiles;
 
         let index = currentIndex;
 
@@ -192,9 +192,9 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 return current;
             }
 
-            const candidate = changes[index].reviewFile;
+            const candidate = changes[index].fileId;
 
-            if (!PathPairs.contains(filesReviewedByUser, candidate)) {
+            if (filesReviewedByUser.indexOf(candidate) == -1) {
                 return candidate;
             }
         }
@@ -207,8 +207,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         let reviewHotKeys = {}
 
         if (selectedFile) {
-            const nextFile = this._findNextUnreviewedFile(selectedFile.path, 1);
-            const prevFile = this._findNextUnreviewedFile(selectedFile.path, -1);
+            const nextFile = this._findNextUnreviewedFile(selectedFile.fileId, 1);
+            const prevFile = this._findNextUnreviewedFile(selectedFile.fileId, -1);
 
             reviewHotKeys = {
                 '[': () => prevFile && onSelectFileForView(prevFile),
@@ -235,21 +235,21 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 </ReviewMode>);
             menuItems.push(<Menu.Item fitted key="refresh-diff">
                 <Popup
-                    trigger={<Icon onClick={() => onSelectFileForView(selectedFile.path)} name="redo" circular link color="blue"></Icon>}
+                    trigger={<Icon onClick={() => onSelectFileForView(selectedFile.fileId)} name="redo" circular link color="blue"></Icon>}
                     content="Refresh file diff"
                 />
             </Menu.Item>);
             menuItems.push(<Menu.Item fitted key="file-navigation">
                 {prevFile &&
                     <Popup
-                        trigger={<FileLink reviewId={this.props.reviewId} path={prevFile} >
+                        trigger={<FileLink reviewId={this.props.reviewId} fileId={prevFile} >
                             <Icon name="step backward" circular link /></FileLink>}
                         content="Previous unreviewed file"
                     />}
                 {nextFile &&
                     <Popup
 
-                        trigger={<FileLink reviewId={this.props.reviewId} path={nextFile} >
+                        trigger={<FileLink reviewId={this.props.reviewId} fileId={nextFile} >
                             <Icon name="step forward" circular link /></FileLink>}
                         content="Next unreviewed file"
                     />}
@@ -258,8 +258,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
         } else if (this.props.filesToReview.length > 0) {
-            const firstFile = this.props.filesToReview[0].reviewFile;
-            const lastFile = this.props.filesToReview[this.props.filesToReview.length-1].reviewFile;
+            const firstFile = this.props.filesToReview[0].fileId;
+            const lastFile = this.props.filesToReview[this.props.filesToReview.length-1].fileId;
             
             reviewHotKeys = {
                 '[': () => lastFile && onSelectFileForView(lastFile),
@@ -267,7 +267,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             };
         }
 
-        const selectableFiles = this.props.filesToReview.map(i => i.reviewFile);
+        const selectableFiles = this.props.filesToReview.map(i => i.fileId);
 
         return (
             <div ref={this._handleRef}>
@@ -281,8 +281,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                     <PublishButton />
                                     &nbsp;
                                     <ChangedFileTreePopup
-                                        paths={selectableFiles}
-                                        selected={selectedFile ? selectedFile.path : PathPairs.emptyPathPair}
+                                        files={selectableFiles}
+                                        selected={selectedFile ? selectedFile.fileId : null}
                                         reviewedFiles={this.props.reviewedFiles}
                                         onSelect={onSelectFileForView}
                                         reviewId={this.props.reviewId}

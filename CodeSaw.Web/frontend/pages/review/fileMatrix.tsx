@@ -11,7 +11,7 @@ import * as PathPairs from "../../pathPair";
 import * as classNames from "classnames";
 
 import "./fileMatrix.less";
-import { FileToReview, ReviewId, FileDiscussion } from "../../api/reviewer";
+import { FileToReview, ReviewId, FileDiscussion, FileId } from "../../api/reviewer";
 
 import { FileLink } from './FileLink';
 
@@ -30,6 +30,7 @@ interface FileMatrixRevision {
 
 interface FileMatrixEntry {
     file: PathPair;
+    fileId: FileId;
     revisions: FileMatrixRevision[];
 }
 
@@ -179,7 +180,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
 
     return (
         <Table.Row>
-            <Table.Cell key='file' className='file'><FileLink reviewId={reviewId} path={review.reviewFile}>{file.newPath}</FileLink> ({props.discussions.length}) </Table.Cell>
+            <Table.Cell key='file' className='file'><FileLink reviewId={reviewId} fileId={props.file.fileId}>{file.newPath}</FileLink> ({props.discussions.length}) </Table.Cell>
             {revisionCells}
         </Table.Row>
     );

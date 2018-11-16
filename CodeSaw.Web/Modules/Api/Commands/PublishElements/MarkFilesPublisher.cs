@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
@@ -18,11 +19,12 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _reviewForRevision = reviewForRevision;
         }
 
-        public async Task MarkFiles(Dictionary<RevisionId, List<PathPair>> reviewedFiles, Dictionary<RevisionId, List<PathPair>> unreviewedFiles)
+        public async Task MarkFiles(Dictionary<RevisionId, List<ClientFileId>> reviewedFiles, Dictionary<RevisionId, List<ClientFileId>> unreviewedFiles)
         {
-            foreach (var (revisionId, files) in reviewedFiles)
+            foreach (var (revisionId, fileIds) in reviewedFiles)
             {
                 var review = _reviewForRevision(revisionId);
+                var files = UnpackIds(review.RevisionId, fileIds);
                 var toAdd = files.Where(x => !review.Files.Any(y => y.File == x)).ToList();
 
                 if (toAdd.Any())
@@ -32,9 +34,10 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                 }
             }
 
-            foreach (var (revisionId, files) in unreviewedFiles)
+            foreach (var (revisionId, fileIds) in unreviewedFiles)
             {
                 var review = _reviewForRevision(revisionId);
+                var files = UnpackIds(review.RevisionId, fileIds);
                 var toRemove = review.Files.Where(x => files.Contains(x.File)).ToList();
 
                 if (toRemove.Any())
@@ -44,6 +47,31 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                     await _session.SaveAsync(review);
                 }
             }
+        }
+
+        private IEnumerable<PathPair> UnpackIds(Guid revisionId, List<ClientFileId> fileIds)
+        {
+            var result = new List<PathPair>();
+
+            foreach (var clientFileId in fileIds)
+            {
+                if (clientFileId.PersistentId == Guid.Empty)
+                {
+                    result.Add(clientFileId.ProvisionalPathPair);
+                    continue;
+                }
+
+                var currentEntry = _session.Query<FileHistoryEntry>().Single(x => x.RevisionId == revisionId && x.FileId == clientFileId.PersistentId);
+                var currentRevision = _session.Load<ReviewRevision>(revisionId);
+                var prevRevisionId = _session.Query<ReviewRevision>()
+                    .SingleOrDefault(x => x.ReviewId == currentRevision.ReviewId && x.RevisionNumber == currentRevision.RevisionNumber - 1)?.Id;
+
+                var prevEntry = _session.Query<FileHistoryEntry>().SingleOrDefault(x => x.RevisionId == prevRevisionId && x.FileId == clientFileId.PersistentId);
+
+                result.Add(PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName));
+            }
+
+            return result;
         }
     }
 }
