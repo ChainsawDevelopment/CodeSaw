@@ -83,11 +83,7 @@ namespace CodeSaw.Db.Migrations
                 foreach (var entry in filesChangedInRevision)
                 {
                     Guid fileId;
-                    if (fileToId.TryGetValue(entry.OldPath, out fileId))
-                    {
-                        // already tracked file
-                    }
-                    else
+                    if (!fileToId.TryGetValue(entry.OldPath, out fileId))
                     {
                         // new file
                         fileId = Guid.NewGuid();

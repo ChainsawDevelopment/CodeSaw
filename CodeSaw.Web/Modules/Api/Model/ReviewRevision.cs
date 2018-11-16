@@ -16,7 +16,6 @@ namespace CodeSaw.Web.Modules.Api.Model
         public virtual string BaseCommit { get; set; }
 
         public virtual IList<RevisionFile> Files { get; set; } = new List<RevisionFile>();
-        //public virtual IList<FileHistoryEntry> FilesHistory { get; set; } = new List<FileHistoryEntry>();
 
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
     }
@@ -40,86 +39,6 @@ namespace CodeSaw.Web.Modules.Api.Model
                 IsDeleted = file.DeletedFile,
                 IsRenamed = file.RenamedFile
             };
-        }
-    }
-
-    public class ReviewRevisionMapping : ClassMapping<ReviewRevision>
-    {
-        public ReviewRevisionMapping()
-        {
-            Table("Revisions");
-
-            Id(x => x.Id, id => id.Generator(Generators.Assigned));
-            Version(x => x.LastUpdatedAt, v =>
-            {
-                v.Type(new DateTimeOffsetType());
-            });
-
-            Component(x => x.ReviewId);
-            Property(x => x.RevisionNumber);
-            Property(x => x.HeadCommit, p => p.Length(40));
-            Property(x => x.BaseCommit, p => p.Length(40));
-
-            Bag(x => x.Files, coll =>
-            {
-                coll.Key(key =>
-                {
-                    key.Column(c=>
-                    {
-                        c.Name("RevisionId");
-                        c.NotNullable(true);
-                    });
-                });
-                coll.Cascade(Cascade.All);
-            }, map =>
-            {
-                map.OneToMany();
-            });
-
-            //Bag(x => x.FilesHistory, coll =>
-            //{
-            //    coll.Key(key =>
-            //    {
-            //        key.Column(c=>
-            //        {
-            //            c.Name("RevisionId");
-            //            c.NotNullable(true);
-            //        });
-            //    });
-            //    coll.Cascade(Cascade.All);
-            //}, map =>
-            //{
-            //    map.OneToMany();
-            //});
-        }
-    }
-
-    public class ReviewIdenfierMapping : ComponentMapping<ReviewIdentifier>
-    {
-        public ReviewIdenfierMapping()
-        {
-            Property(x => x.ProjectId);
-            Property(x => x.ReviewId);
-        }
-    }
-
-    public class RevisionFileMapping : ClassMapping<RevisionFile>
-    {
-        public RevisionFileMapping()
-        {
-            Table("RevisionFiles");
-
-            Id(x => x.Id, id => id.Generator(Generators.Assigned));
-            Version(x => x.LastUpdatedAt, v =>
-            {
-                v.Type(new DateTimeOffsetType());
-            });
-
-            Component(x => x.File);
-
-            Property(x => x.IsNew);
-            Property(x => x.IsDeleted);
-            Property(x => x.IsRenamed);
         }
     }
 }
