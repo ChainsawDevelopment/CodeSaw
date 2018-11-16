@@ -76,7 +76,7 @@ export interface CreateGitLabLinkArgs {
 }
 
 export interface PublishReviewArgs {
-    fileToLoad: string;
+    fileToLoad: FileId;
 }
 
 export const createGitLabLink = createAction<CreateGitLabLinkArgs>('CREATE_GITLAB_LINK');
