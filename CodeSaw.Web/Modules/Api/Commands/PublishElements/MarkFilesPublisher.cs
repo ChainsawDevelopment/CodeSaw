@@ -40,7 +40,6 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                         });
                     }
 
-                    //review.Files.AddRange(toAdd.Select(x => new FileReview(x.Path, _resolveFileId(x.Id)) {Status = FileReviewStatus.Reviewed}));
                     await _session.SaveAsync(review);
                 }
             }
@@ -49,11 +48,11 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var review = _reviewForRevision(revisionId);
 
-                var toRemove2 = review.Files.Where(x => fileIds.Any(y => _resolveFileId(y) == x.FileId)).ToList();
+                var toRemove = review.Files.Where(x => fileIds.Any(y => _resolveFileId(y) == x.FileId)).ToList();
 
-                if (toRemove2.Any())
+                if (toRemove.Any())
                 {
-                    review.Files.RemoveRange(toRemove2);
+                    review.Files.RemoveRange(toRemove);
 
                     await _session.SaveAsync(review);
                 }
