@@ -14,7 +14,7 @@ node {
 
 	if(isDeploymentBranch(env.BRANCH_NAME)) {
 		stage 'Deploy to pila IIS'
-			withEnv(["DEPLOYMENT_PATH=\\\\pila.fp.lan\\inetpub\\wwwroot"]) {
+			withEnv(["DEPLOYMENT_PATH=\\\\pila.kplabs.pl\\inetpub\\wwwroot"]) {
 				withCredentials(
 					[usernamePassword(credentialsId: 'pila_deployment_user', 
 						usernameVariable: 'DEPLOYMENT_SHARE_USERNAME', 
