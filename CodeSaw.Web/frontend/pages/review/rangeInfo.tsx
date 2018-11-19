@@ -48,7 +48,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
 
     public componentDidUpdate(prevProps: FileViewProps, prevState: { visibleCommentLines: number[] }) {
         if (!PathPairs.equal(prevProps.file.path, this.props.file.path)) {
-            this.setState({visibleCommentLines: []});
+            this.setState({ visibleCommentLines: [] });
         }
     }
 
@@ -109,7 +109,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         currentUser={this.props.currentUser}
                         contents={this.props.file.diff.contents.review}
                         type={diffTypes[this.props.file.fileToReview.changeType]}
-                    /> 
+                    />
                     : null}
             </span>
         );
@@ -216,7 +216,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 'y': () => this._changeFileReviewState(!this.props.selectedFile.isReviewed),
                 'ctrl+Enter': this.props.publishReview
             };
-            
+
             menuItems.push(
                 <ReviewMode key="review-mark">
                     <ReviewMode.Reviewer>
@@ -259,15 +259,15 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             </Menu.Item>);
         } else if (this.props.filesToReview.length > 0) {
             const firstFile = this.props.filesToReview[0].fileId;
-            const lastFile = this.props.filesToReview[this.props.filesToReview.length-1].fileId;
-            
+            const lastFile = this.props.filesToReview[this.props.filesToReview.length - 1].fileId;
+
             reviewHotKeys = {
                 '[': () => lastFile && onSelectFileForView(lastFile),
                 ']': () => firstFile && onSelectFileForView(firstFile)
             };
         }
 
-        const selectableFiles = this.props.filesToReview.map(i => i.fileId);
+        const selectableFiles = this.props.filesToReview.map(i => ({ id: i.fileId, name: i.reviewFile }));
 
         return (
             <div ref={this._handleRef}>
