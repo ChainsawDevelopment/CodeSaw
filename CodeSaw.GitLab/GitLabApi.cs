@@ -109,12 +109,23 @@ namespace CodeSaw.GitLab
 
         public async Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha)
         {
-            return await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
+            var cacheKey = $"GITLAB_DIFF_{projectId}_{prevSha}_{currentSha}";
+
+            if (_cache.TryGetValue(cacheKey, out var cachedDiff))
+            {
+                return (List<FileDiff>) cachedDiff;
+            }
+
+            var fileDiffs = await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
                 .AddQueryParameter("from", prevSha)
                 .AddQueryParameter("to", currentSha)
                 .AddQueryParameter("straight", "true")
                 .Execute<GitLabTreeDiff>(_client)
                 .ContinueWith(x => x.Result.Diffs);
+
+            _cache.Set(cacheKey, fileDiffs);
+
+            return fileDiffs;
         }
 
         public async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
