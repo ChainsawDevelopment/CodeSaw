@@ -37,7 +37,7 @@ const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boole
 
 namespace ChangedFileTree {
     export interface Props {  
-        files: FileId[];
+        files: {id: FileId; name: PathPairs.PathPair}[];
         reviewedFiles: FileId[]; 
         selected: FileId;
         onSelect: (fileId: FileId) => void;
@@ -69,23 +69,22 @@ export default class ChangeFileTree extends React.Component<ChangedFileTree.Prop
     render() { 
         const props = this.props;
 
-        const filteredFiles = props.files;
-            //.filter(p => this.state.searchValue == "" || p.newPath.indexOf(this.state.searchValue) != -1);
-            //TODO: FIX THIS
+        const filteredFiles = props.files
+            .filter(p => this.state.searchValue == "" || p.name.newPath.indexOf(this.state.searchValue) != -1);
 
         const items = filteredFiles
             .map(f => (
                 <FileItem
-                    key={f}
-                    fileId={f}
-                    isSelected={f == props.selected}
-                    isReviewed={props.reviewedFiles.indexOf(f) >= 0}
-                    onclick={() => props.onSelect(f)}
+                    key={f.id}
+                    fileId={f.id}
+                    isSelected={f.id == props.selected}
+                    isReviewed={props.reviewedFiles.indexOf(f.id) >= 0}
+                    onclick={() => props.onSelect(f.id)}
                     reviewId={props.reviewId}
                 />
         ));
 
-        const openFirst = () => props.onSelect(filteredFiles[0]);
+        const openFirst = () => props.onSelect(filteredFiles[0].id);
     
         return (
             <div>

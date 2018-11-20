@@ -13,7 +13,7 @@ interface State {
 }
 
 export interface Props {
-    files: FileId[];
+    files: {id: FileId; name: PathPair}[];
     selected: FileId;
     reviewedFiles: FileId[];
     onSelect(fileId: FileId): void;
