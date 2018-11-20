@@ -61,5 +61,15 @@ namespace CodeSaw.Web
             key = grouping.Key;
             elements = grouping;
         }
+
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> defaultValue)
+        {
+            if (dictionary.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+
+            return defaultValue();
+        }
     }
 }
