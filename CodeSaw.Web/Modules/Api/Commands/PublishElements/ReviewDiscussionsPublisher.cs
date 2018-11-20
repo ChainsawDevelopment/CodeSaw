@@ -25,19 +25,21 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _reviewForRevision = reviewForRevision;
         }
 
-        public async Task Publish(IEnumerable<NewReviewDiscussion> discussions, Dictionary<string, Guid> newCommentsMap)
+        public async Task Publish(IEnumerable<NewReviewDiscussion> discussions, Dictionary<string, Guid> newCommentsMap, Dictionary<string, Guid> newDiscussionsMap)
         {
             foreach (var discussion in discussions)
             {
                 var commentId = GuidComb.Generate();
-                
+                var discussionId = GuidComb.Generate();
+
                 newCommentsMap[discussion.TemporaryId] = commentId;
+                newDiscussionsMap[discussion.TemporaryId] = discussionId;
 
                 var review = _reviewForRevision(discussion.TargetRevisionId);
 
                 await _session.SaveAsync(new ReviewDiscussion
                 {
-                    Id = GuidComb.Generate(),
+                    Id = discussionId,
                     RevisionId = review.RevisionId,
                     State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
                     RootComment = new Comment

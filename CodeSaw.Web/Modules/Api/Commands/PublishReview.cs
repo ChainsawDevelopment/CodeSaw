@@ -22,7 +22,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public RevisionCommits Revision { get; set; } = new RevisionCommits();
         public List<NewReviewDiscussion> StartedReviewDiscussions { get; set; } = new List<NewReviewDiscussion>();
         public NewFileDiscussion[] StartedFileDiscussions { get; set; }
-        public List<Guid> ResolvedDiscussions { get; set; } = new List<Guid>(); // root comment ids
+        public List<string> ResolvedDiscussions { get; set; } = new List<string>(); 
         public List<RepliesPublisher.Item> Replies { get; set; } = new List<RepliesPublisher.Item>();
 
         public Dictionary<RevisionId, List<ClientFileId>> ReviewedFiles { get; set; }
@@ -86,10 +86,14 @@ namespace CodeSaw.Web.Modules.Api.Commands
                 };
 
                 var newCommentsMap = new Dictionary<string, Guid>();
+                var newDiscussionsMap = new Dictionary<string, Guid>();
 
-                await new ReviewDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap);
-                await new FileDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedFileDiscussions, newCommentsMap);
-                await new ResolveDiscussions(_session, reviewForRevision).Publish(command.ResolvedDiscussions);
+                await new ReviewDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap, newDiscussionsMap);
+                await new FileDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedFileDiscussions, newCommentsMap, newDiscussionsMap);
+
+                var resolvedDiscussions = command.ResolvedDiscussions.Select(d => newDiscussionsMap.GetValueOrDefault(d, () => Guid.Parse(d))).ToList();
+
+                await new ResolveDiscussions(_session, reviewForRevision).Publish(resolvedDiscussions);
                 await new RepliesPublisher(_session).Publish(command.Replies, headReview, newCommentsMap);
                 await new MarkFilesPublisher(_session, reviewForRevision).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
 
