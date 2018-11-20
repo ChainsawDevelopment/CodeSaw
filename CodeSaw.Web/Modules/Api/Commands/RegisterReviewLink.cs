@@ -28,13 +28,22 @@ namespace CodeSaw.Web.Modules.Api.Commands
 
             public override async Task Handle(RegisterReviewLink command)
             {
+                var mergeRequest = await _gitlabApi.GetMergeRequestInfo(command.ProjectId, command.ReviewId);
+
+                var description = mergeRequest.Description;
+
+                if (!string.IsNullOrWhiteSpace(description))
+                {
+                    description += "\n\n";
+                }
+
                 string reviewLink = $"{_siteBase}/project/{command.ProjectId}/review/{command.ReviewId}";
                 
                 await _gitlabApi.UpdateDescription(new MergeRequest()
                 {
                     Id = command.ReviewId,
                     ProjectId = command.ProjectId,
-                    Description = $"There's a better review for that: {reviewLink}"
+                    Description = $"{description}There's a better review for that: {reviewLink}"
                 });
             }
         }
