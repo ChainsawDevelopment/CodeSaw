@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using CodeSaw.RepositoryApi;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -18,10 +19,12 @@ namespace CodeSaw.GitLab
 {
     public class GitLabApi : IRepository
     {
+        private readonly IMemoryCache _cache;
         private readonly RestClient _client;
 
-        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl)
+        public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl, IMemoryCache cache)
         {
+            _cache = cache;
             _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
 
             if (accessTokenSource.Type == TokenType.OAuth)
@@ -106,16 +109,34 @@ namespace CodeSaw.GitLab
 
         public async Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha)
         {
-            return await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
+            var cacheKey = $"GITLAB_DIFF_{projectId}_{prevSha}_{currentSha}";
+
+            if (_cache.TryGetValue(cacheKey, out var cachedDiff))
+            {
+                return (List<FileDiff>) cachedDiff;
+            }
+
+            var fileDiffs = await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
                 .AddQueryParameter("from", prevSha)
                 .AddQueryParameter("to", currentSha)
                 .AddQueryParameter("straight", "true")
                 .Execute<GitLabTreeDiff>(_client)
                 .ContinueWith(x => x.Result.Diffs);
+
+            _cache.Set(cacheKey, fileDiffs);
+
+            return fileDiffs;
         }
 
         public async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
         {
+            var cacheKey = $"GITLAB_FILE_{projectId}_{commitHash}_{file}";
+
+            if (_cache.TryGetValue(cacheKey, out var cachedContent))
+            {
+                return (byte[]) cachedContent;
+            }
+
             var request = new RestRequest($"/projects/{projectId}/repository/files/{Uri.EscapeDataString(file)}/raw", Method.GET)
                 .AddQueryParameter("ref", commitHash);
 
@@ -124,8 +145,10 @@ namespace CodeSaw.GitLab
             switch (response.StatusCode)
             {
                 case HttpStatusCode.OK:
+                    _cache.Set(cacheKey, response.RawBytes);
                     return response.RawBytes;
                 case HttpStatusCode.NotFound:
+                    _cache.Set(cacheKey, Array.Empty<byte>());
                     return new byte[0];
                 default:
                     throw new GitLabApiFailedException(request, response);

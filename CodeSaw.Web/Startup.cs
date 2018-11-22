@@ -29,6 +29,7 @@ using NHibernate;
 using NHibernate.Dialect;
 using NHibernate.Mapping.ByCode;
 using CodeSaw.Web.NodeIntegration;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CodeSaw.Web
 {
@@ -154,7 +155,7 @@ namespace CodeSaw.Web
         {
             var cfg = Configuration.GetSection("GitLab");
 
-            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>(), cfg["Proxy"]);
+            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>(), cfg["Proxy"], ctx.Resolve<IMemoryCache>());
         }
 
         private ISessionFactory BuildSessionFactory()

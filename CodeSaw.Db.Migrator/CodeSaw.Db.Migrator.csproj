@@ -6,8 +6,8 @@
     <AssemblyName>CodeSaw.Db.Migrator</AssemblyName>
     <RootNamespace>CodeSaw.Db.Migrator</RootNamespace>
   </PropertyGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
   <ItemGroup>
     <ProjectReference Include="..\CodeSaw.Db.Migrations\CodeSaw.Db.Migrations.csproj" />
   </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

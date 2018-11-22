@@ -4,6 +4,7 @@
     <AssemblyName>CodeSaw.Web</AssemblyName>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>CodeSaw.Web</RootNamespace>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="wwwroot/**" />

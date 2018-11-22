@@ -33,7 +33,6 @@ function* loadFileDiffSaga() {
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: state.review.selectedFile.range,
-            headCommit: state.review.currentReview.headCommit,
             path: state.review.selectedFile.fileToReview.diffFile
         }));
 
