@@ -8,12 +8,13 @@ import * as PathPairs from "../../pathPair";
 import { FileLink } from "./FileLink";
 import { ReviewId, FileId } from "../../api/reviewer";
 import ReviewMode from "./reviewMode";
+import FileName from './FileName';
 
 const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
-        header = (<span className='selected-file'>{props.fileId}</span>)
+        header = (<span className='selected-file'><FileName fileId={props.fileId} /></span>)
     } else {
         header = (<FileLink reviewId={props.reviewId} fileId={props.fileId} />);
     }
