@@ -112,7 +112,7 @@ namespace CodeSaw.Web.Diff
 
                 var reviewInBaseNoContext = baseChangeNoContext.IndexOf(reviewChangeNoContext, StringComparison.InvariantCulture);
 
-                if (reviewInBaseNoContext >= 0)
+                if (reviewInBaseNoContext >= 0 && reviewChangeNoContextDiffs.Any() && baseChangeNoContextDiffs.Any())
                 {
                     var baseContextPrefixDiffs = basePatch.Diffs.Where(x => !x.Operation.IsDelete).TakeWhile(x => x.Operation.IsEqual).ToList();
                     var baseContextPrefixLength = baseContextPrefixDiffs.Sum(x => x.Text.Length);
@@ -128,12 +128,6 @@ namespace CodeSaw.Web.Diff
 
                     if (reviewDiffNoContextStart >= contextPrefixLength)
                     {
-                        if (reviewDiffNoContextEnd + contextSuffixLength >= reviewText.Length)
-                        {
-                            Console.WriteLine("XXXXXXX");
-                        }
-
-
                         var prefix = reviewText.Substring(reviewDiffNoContextStart - contextPrefixLength, contextPrefixLength);
                         var suffix = reviewText.Substring(reviewDiffNoContextEnd, contextSuffixLength);
 
