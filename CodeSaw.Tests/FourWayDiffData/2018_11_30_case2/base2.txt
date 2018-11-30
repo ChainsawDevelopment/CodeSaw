@@ -1,0 +1,14 @@
+template <class DataType>
+DataType GetInterpolated(SurfaceProjection& surfaceView, DetectorChannelIdType channel, Float x, Float y)
+{
+    return res;
+}
+
+static Point<Float, 2> SensorPositionToSurfacePosition(Point<Float, 2> base, const SensorProjection& cameraPose)
+{
+    const Vector3 pInCrf = {base.X(), base.Y(), 1};
+    const auto pixelCoords = (cameraPose.homography * pInCrf).eval();
+    const auto x = pixelCoords[0] / pixelCoords[2];
+    const auto y = pixelCoords[1] / pixelCoords[2];
+    return {x, y};
+}

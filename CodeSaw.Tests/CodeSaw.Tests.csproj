@@ -19,6 +19,11 @@
     <None Remove="FourWayDiffData\2018_11_30_case1\expected.txt" />
     <None Remove="FourWayDiffData\2018_11_30_case1\review1.txt" />
     <None Remove="FourWayDiffData\2018_11_30_case1\review2.txt" />
+    <None Remove="FourWayDiffData\2018_11_30_case2\base1.txt" />
+    <None Remove="FourWayDiffData\2018_11_30_case2\base2.txt" />
+    <None Remove="FourWayDiffData\2018_11_30_case2\expected.txt" />
+    <None Remove="FourWayDiffData\2018_11_30_case2\review1.txt" />
+    <None Remove="FourWayDiffData\2018_11_30_case2\review2.txt" />
     <None Remove="FourWayDiffData\ReplaceManyLines\base1.txt" />
     <None Remove="FourWayDiffData\ReplaceManyLines\base2.txt" />
     <None Remove="FourWayDiffData\ReplaceManyLines\expected.txt" />
