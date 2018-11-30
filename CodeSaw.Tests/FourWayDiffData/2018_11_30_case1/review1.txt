@@ -1,0 +1,19 @@
+void Processing::Process()
+{
+    for()
+    {
+        if(A())
+        {
+
+        }
+
+        if(B())
+        {
+
+        }
+#if 0
+        std::clog << "aaaaaaaaaaaaaaaaaa: " << aaaaaaaaaaaaaaaaaa << std::endl;
+#endif
+        *ccccccccccccc = aaaaaaaaaaaaaaaaaa * bbbbbbbbbbbbbbbbbbbb;
+    }
+}

@@ -128,9 +128,16 @@ namespace CodeSaw.Web.Diff
 
                     if (reviewDiffNoContextStart >= contextPrefixLength)
                     {
+                        if (reviewDiffNoContextEnd + contextSuffixLength >= reviewText.Length)
+                        {
+                            Console.WriteLine("XXXXXXX");
+                        }
+
+
                         var prefix = reviewText.Substring(reviewDiffNoContextStart - contextPrefixLength, contextPrefixLength);
                         var suffix = reviewText.Substring(reviewDiffNoContextEnd, contextSuffixLength);
 
+                       
                         var reviewTextReconstructedContext = prefix + reviewChangeNoContext + suffix;
 
                         if (reviewTextReconstructedContext == baseTextFromDiffs)
