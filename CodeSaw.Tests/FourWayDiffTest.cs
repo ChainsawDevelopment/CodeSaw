@@ -185,9 +185,11 @@ namespace CodeSaw.Tests
         {
             foreach (var patch in patches)
             {
-                var length = patch.Diffs.Where(x => !x.Operation.IsDelete).Sum(x => x.Text.Length);
+                var length2 = patch.Diffs.Where(x => !x.Operation.IsDelete).Sum(x => x.Text.Length);
+                var length1 = patch.Diffs.Where(x => !x.Operation.IsInsert).Sum(x => x.Text.Length);
 
-                Assert.That(patch.Length2, Is.EqualTo(length));
+                Assert.That(patch.Length1, Is.EqualTo(length1), "Patch left length from text does not match metadata");
+                Assert.That(patch.Length2, Is.EqualTo(length2), "Patch right length from text does not match metadata");
 
                 var actualPart = DiffMatchPatchModule.Default.DiffText2(patch.Diffs);
 

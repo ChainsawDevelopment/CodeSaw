@@ -9,47 +9,6 @@ namespace CodeSaw.Web.Diff
     {
         private static readonly DiffMatchPatch.DiffMatchPatch DMP = new DiffMatchPatch.DiffMatchPatch(1f, (short) 32, 4, 0.5f, 1000, 32, 0.5f, (short) 4);
 
-        public static List<DiffMatchPatch.Diff> MakeDiff(string file1, string file2)
-        {
-            var a = DMP.DiffLinesToChars(file1, file2);
-            var lineText1 = a.Item1;
-            var lineText2 = a.Item2;
-            var lineArray = a.Item3;
-            var diffs = DMP.DiffMain(lineText1, lineText2, false);
-            DMP.DiffCharsToLines(diffs, lineArray);
-
-            return diffs;
-        }
-
-        public static List<ClassifiedDiff> ClassifyDiffs(IEnumerable<DiffMatchPatch.Diff> baseDiff, IEnumerable<DiffMatchPatch.Diff> reviewDiff)
-        {
-            var classified = new List<ClassifiedDiff>();
-
-            var chunksFromBaseDiff = new List<DiffMatchPatch.Diff>(baseDiff);
-
-            foreach (var reviewChunk in reviewDiff)
-            {
-                if (Equals(reviewChunk.Operation, Operation.Equal))
-                {
-                    classified.Add(new ClassifiedDiff(reviewChunk, DiffClassification.Unchanged));
-                    continue;
-                }
-
-                var matchingBaseChunkIdx = chunksFromBaseDiff.IndexOf(reviewChunk, new DiffEqualityComparer());
-
-                if (matchingBaseChunkIdx >= 0)
-                {
-                    chunksFromBaseDiff.RemoveRange(0, matchingBaseChunkIdx + 1);
-                    classified.Add(new ClassifiedDiff(reviewChunk, DiffClassification.BaseChange));
-                    continue;
-                }
-
-                classified.Add(new ClassifiedDiff(reviewChunk, DiffClassification.ReviewChange));
-            }
-
-            return classified;
-        }
-
 
         public static List<Patch> MakePatch(string text1, string text2)
         {
@@ -66,7 +25,76 @@ namespace CodeSaw.Web.Diff
                 //ExpandPatchToFullLines(text2, patch);
             }
 
+            patches = patches.SelectMany(SplitPatchIntoAtoms).ToList();
+
             return patches;
+        }
+
+        private static IEnumerable<Patch> SplitPatchIntoAtoms(Patch patch)
+        {
+            int i = 0;
+
+            var start1 = patch.Start1;
+            var start2 = patch.Start2;
+
+            while (i < patch.Diffs.Count)
+            {
+                var currentPatch = new List<DiffMatchPatch.Diff>();
+
+                // patch start: equals (remove from list)
+                int prefixLength = 0;
+                while (i < patch.Diffs.Count && patch.Diffs[i].Operation.IsEqual)
+                {
+                    currentPatch.Add(patch.Diffs[i]);
+                    prefixLength += patch.Diffs[i].Text.Length;
+                    i++;
+                }
+
+                // patch change: inserts/deletes (remove from list)
+                int operationLength1 = 0;
+                int operationLength2 = 0;
+                while (i < patch.Diffs.Count && !patch.Diffs[i].Operation.IsEqual)
+                {
+                    currentPatch.Add(patch.Diffs[i]);
+                    operationLength1 += patch.Diffs[i].Operation.IsDelete ? patch.Diffs[i].Text.Length : 0;
+                    operationLength2 += patch.Diffs[i].Operation.IsInsert ? patch.Diffs[i].Text.Length : 0;
+                    i++;
+                }
+
+                // patch end: equals (don't remove from list)
+                int j = i;
+                int suffixLength = 0;
+                while (j < patch.Diffs.Count && patch.Diffs[j].Operation.IsEqual)
+                {
+                    currentPatch.Add(patch.Diffs[j]);
+                    suffixLength += patch.Diffs[j].Text.Length;
+                    j++;
+                }
+                
+                // if there is nothing after equals - remove from list
+                if (j == patch.Diffs.Count)
+                {
+                    i = j;
+                }
+
+                // build patch (adjust lengths)
+                var length1 = prefixLength + operationLength1 + suffixLength;
+                var length2 = prefixLength + operationLength2 + suffixLength;
+
+                var atomicPatch = new Patch(
+                    diffs:currentPatch,
+                    start1:start1,
+                    start2:start2,
+                    length1:length1,
+                    length2:length2
+                );
+                
+                yield return atomicPatch;
+
+                // leave suffix as prefix for next atomic patch
+                start1 += length1 - suffixLength;
+                start2 += length2 - suffixLength;
+            }
         }
 
         public static bool ArePatchesMatching(string baseText, Patch basePatch, string reviewText, Patch reviewPatch)
