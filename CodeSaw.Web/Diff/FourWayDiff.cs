@@ -20,11 +20,6 @@ namespace CodeSaw.Web.Diff
             DMP.DiffCharsToLines(diffs, lineArray);
             var patches = DMP.Patchmake(diffs);
 
-            foreach (var patch in patches)
-            {
-                //ExpandPatchToFullLines(text2, patch);
-            }
-
             patches = patches.SelectMany(SplitPatchIntoAtoms).ToList();
 
             return patches;
