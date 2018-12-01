@@ -12,11 +12,13 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
     {
         private readonly ISession _session;
         private readonly FindReviewDelegate _reviewForRevision;
+        private readonly Func<ClientFileId, Guid> _resolveFileId;
 
-        public MarkFilesPublisher(ISession session, FindReviewDelegate reviewForRevision)
+        public MarkFilesPublisher(ISession session, FindReviewDelegate reviewForRevision, Func<ClientFileId, Guid> resolveFileId)
         {
             _session = session;
             _reviewForRevision = reviewForRevision;
+            _resolveFileId = resolveFileId;
         }
 
         public async Task MarkFiles(Dictionary<RevisionId, List<ClientFileId>> reviewedFiles, Dictionary<RevisionId, List<ClientFileId>> unreviewedFiles)
@@ -25,11 +27,19 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var review = _reviewForRevision(revisionId);
                 var files = UnpackIds(review.RevisionId, fileIds);
-                var toAdd = files.Where(x => !review.Files.Any(y => y.File == x)).ToList();
+                var toAdd = files.Where(x => review.Files.All(y => y.FileId != _resolveFileId(x.Id))).ToList();
 
                 if (toAdd.Any())
                 {
-                    review.Files.AddRange(toAdd.Select(x => new FileReview(x) {Status = FileReviewStatus.Reviewed}));
+                    foreach (var (clientFileId, path) in toAdd)
+                    {
+                        var fileId = _resolveFileId(clientFileId);
+                        review.Files.Add(new FileReview(path, fileId)
+                        {
+                            Status =  FileReviewStatus.Reviewed
+                        });
+                    }
+
                     await _session.SaveAsync(review);
                 }
             }
@@ -37,8 +47,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             foreach (var (revisionId, fileIds) in unreviewedFiles)
             {
                 var review = _reviewForRevision(revisionId);
-                var files = UnpackIds(review.RevisionId, fileIds);
-                var toRemove = review.Files.Where(x => files.Contains(x.File)).ToList();
+
+                var toRemove = review.Files.Where(x => fileIds.Any(y => _resolveFileId(y) == x.FileId)).ToList();
 
                 if (toRemove.Any())
                 {
@@ -49,15 +59,15 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             }
         }
 
-        private IEnumerable<PathPair> UnpackIds(Guid revisionId, List<ClientFileId> fileIds)
+        private IEnumerable<(ClientFileId Id, PathPair Path)> UnpackIds(Guid revisionId, List<ClientFileId> fileIds)
         {
-            var result = new List<PathPair>();
+            var result = new List<(ClientFileId Id, PathPair Path)>();
 
             foreach (var clientFileId in fileIds)
             {
                 if (clientFileId.PersistentId == Guid.Empty)
                 {
-                    result.Add(clientFileId.ProvisionalPathPair);
+                    result.Add((clientFileId, clientFileId.ProvisionalPathPair));
                     continue;
                 }
 
@@ -68,7 +78,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
                 var prevEntry = _session.Query<FileHistoryEntry>().SingleOrDefault(x => x.RevisionId == prevRevisionId && x.FileId == clientFileId.PersistentId);
 
-                result.Add(PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName));
+                result.Add((clientFileId, PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName)));
             }
 
             return result;

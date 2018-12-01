@@ -9,10 +9,23 @@ using Newtonsoft.Json;
 namespace CodeSaw.Web.Modules.Api.Commands
 {
     [JsonConverter(typeof(ClientFileIdConverter))]
-    public class ClientFileId
+    public class ClientFileId : IEquatable<ClientFileId>
     {
         public Guid PersistentId { get; set; }
         public PathPair ProvisionalPathPair { get; set; }
+
+        public static ClientFileId Persistent(Guid id) => new ClientFileId {PersistentId = id};
+        public static ClientFileId Provisional(PathPair path) => new ClientFileId {PersistentId = Guid.Empty, ProvisionalPathPair = path};
+
+        public override string ToString()
+        {
+            if (PersistentId == Guid.Empty)
+            {
+                return $"Provisional({ProvisionalPathPair})";
+            }
+
+            return $"Persistent({PersistentId})";
+        }
 
         public class ClientFileIdConverter : JsonConverter
         {
@@ -44,6 +57,39 @@ namespace CodeSaw.Web.Modules.Api.Commands
             }
 
             public override bool CanConvert(Type objectType) => typeof(ClientFileId) == objectType;
+        }
+
+        public bool Equals(ClientFileId other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return PersistentId.Equals(other.PersistentId) && Equals(ProvisionalPathPair, other.ProvisionalPathPair);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ClientFileId) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (PersistentId.GetHashCode() * 397) ^ (ProvisionalPathPair != null ? ProvisionalPathPair.GetHashCode() : 0);
+            }
+        }
+
+        public static bool operator ==(ClientFileId left, ClientFileId right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ClientFileId left, ClientFileId right)
+        {
+            return !Equals(left, right);
         }
     }
 }

@@ -4,6 +4,7 @@ import Button from '@ui/elements/Button';
 import { ReviewState, publishReview, FileReviewStatusChange } from "./state";
 import { RootState } from "../../rootState";
 import { Dispatch, connect } from "react-redux";
+import { FileId } from "@api/reviewer";
 
 export namespace PublishButton {
     export interface OwnProps {
@@ -14,7 +15,7 @@ export namespace PublishButton {
     }
 
     export interface DispatchProps {
-        publishReview(fileToLoad: string): void;
+        publishReview(fileToLoad: FileId): void;
     }
 
     export type Props = OwnProps & StateProps & DispatchProps;
@@ -35,7 +36,7 @@ const PublishButtonView = (props: PublishButton.Props) : JSX.Element => {
         countChanges(props.review.unpublishedUnreviewedFiles);
 
     const publishAndLoad = props.review.selectedFile ?
-        () => props.publishReview(props.review.selectedFile.path.newPath)
+        () => props.publishReview(props.review.selectedFile.fileId)
         : () => props.publishReview(undefined);
     
     return <Button 

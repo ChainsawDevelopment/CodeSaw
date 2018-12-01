@@ -45,6 +45,8 @@ namespace CodeSaw.RepositoryApi
         public static PathPair Make(string oldPath, string newPath) => new PathPair {NewPath = newPath, OldPath = oldPath};
 
         public PathPair WithNewName(string newPath) => Make(OldPath, newPath);
+
+        public override string ToString() => $"{OldPath}->{NewPath}";
     }
 
     public class FileDiff

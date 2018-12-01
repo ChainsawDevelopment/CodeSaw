@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
@@ -57,7 +58,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _api = api;
         }
 
-        public async Task<Guid> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
+        public async Task<(Guid RevisionId,Dictionary<ClientFileId, Guid> ClientFileIdMap)> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
         {
             var existingRevision = await _session.Query<ReviewRevision>()
                 .Where(x => x.ReviewId == reviewId)
@@ -66,7 +67,11 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             if (existingRevision != null)
             {
-                return existingRevision.Id;
+                var fileHistory = _session.Query<FileHistoryEntry>()
+                    .Where(x => x.RevisionId == existingRevision.Id)
+                    .ToDictionary(x => ClientFileId.Persistent(x.FileId), x => x.FileId);
+
+                return (existingRevision.Id, fileHistory);
             }
 
             // create revision
@@ -89,9 +94,9 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             await _session.SaveAsync(revision);
 
-            await new FillFileHistory(_session, _api, revision).Fill();
+            var clientFileIdMap = await new FillFileHistory(_session, _api, revision).Fill();
 
-            return revision.Id;
+            return (RevisionId: revision.Id, ClientFileIdMap: clientFileIdMap);
         }
 
         public static int GetNextRevisionNumber(ReviewIdentifier reviewId, ISession session)

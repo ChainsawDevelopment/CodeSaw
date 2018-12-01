@@ -30,6 +30,7 @@ namespace CodeSaw.Web.Modules.Api.Model
         {
             Component(x => x.File);
             Property(x => x.Status);
+            Property(x => x.FileId);
         }
     }
 }
