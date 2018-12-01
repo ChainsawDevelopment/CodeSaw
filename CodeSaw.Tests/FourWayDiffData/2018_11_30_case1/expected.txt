@@ -1,0 +1,21 @@
+U void Processing::Process()
+U {
+U     for()
+U     {
+U         if(A())
+U         {
+U 
+U         }
+U 
+R         *ccccccccccccc = aaaaaaaaaaaaaaaaaa * bbbbbbbbbbbbbbbbbbbb;
+R 
+U         if(B())
+U         {
+U 
+U         }
+U #if 0
+U         std::clog << "aaaaaaaaaaaaaaaaaa: " << aaaaaaaaaaaaaaaaaa << std::endl;
+U #endif
+U     }
+U }
+U

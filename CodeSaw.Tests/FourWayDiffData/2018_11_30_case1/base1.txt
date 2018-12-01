@@ -1,0 +1,7 @@
+void Processing::EnsureBlocksForPoint()
+{
+        const auto minmaxX = std::minmax({extremum1.X(), extremum2.X(), extremum3.X(), extremum4.X()});
+        const auto minmaxY = std::minmax({extremum1.Y(), extremum2.Y(), extremum3.Y(), extremum4.Y()});
+        surface.EnsureBlocksFromRangeAreLoaded(channel);
+    }
+}

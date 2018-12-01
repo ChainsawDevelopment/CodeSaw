@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CodeSaw.Web;
 using CodeSaw.Web.Diff;
 using DiffMatchPatch;
@@ -43,6 +44,11 @@ namespace CodeSaw.Tests
 
             foreach (var (classification, patch) in patches)
             {
+                if (patch.Start2 < previousPosition)
+                {
+                    mapping[patch.Start2] = (classification, Operation.Equal);
+                }
+
                 if (patch.Start2 > previousPosition)
                 {
                     mapping[patch.Start2] = (classification, Operation.Equal);
@@ -73,20 +79,35 @@ namespace CodeSaw.Tests
 
                 foreach (var item in patches)
                 {
-                    Assert.That(item.Patch.Start2, Is.GreaterThanOrEqualTo(previousPatchEnd), "Patches should not overlap");
-
-                    if (previousPatchEnd < item.Patch.Start2)
+                    if (item.Patch.Start2 < previousPatchEnd)
                     {
-                        var gap = fullText.Substring(previousPatchEnd, item.Patch.Start2 - previousPatchEnd);
-                        yield return (DiffClassification.Unchanged, new List<Diff>
-                        {
-                            new Diff(gap, Operation.Equal)
-                        });
+                        var overlapLength = previousPatchEnd - item.Patch.Start2;
+
+                        // strip overlapLength from first diff
+                        var firstDiff = item.Patch.Diffs[0];
+
+                        var stripedDiffs = item.Patch.Diffs.ToList();
+                        stripedDiffs[0] = new Diff(firstDiff.Text.Substring(overlapLength), Operation.Equal);
+
+                        previousPatchEnd = item.Patch.Start2 + item.Patch.Length2;
+
+                        yield return (item.classification, stripedDiffs);
                     }
+                    else
+                    {
+                        if (previousPatchEnd < item.Patch.Start2)
+                        {
+                            var gap = fullText.Substring(previousPatchEnd, item.Patch.Start2 - previousPatchEnd);
+                            yield return (DiffClassification.Unchanged, new List<Diff>
+                            {
+                                new Diff(gap, Operation.Equal)
+                            });
+                        }
 
-                    previousPatchEnd = item.Patch.Start2 + item.Patch.Length2;
+                        previousPatchEnd = item.Patch.Start2 + item.Patch.Length2;
 
-                    yield return (item.classification, item.Patch.Diffs);
+                        yield return (item.classification, item.Patch.Diffs);
+                    }
                 }
 
                 if (previousPatchEnd != fullText.Length-1)
@@ -185,9 +206,11 @@ namespace CodeSaw.Tests
         {
             foreach (var patch in patches)
             {
-                var length = patch.Diffs.Where(x => !x.Operation.IsDelete).Sum(x => x.Text.Length);
+                var length2 = patch.Diffs.Where(x => !x.Operation.IsDelete).Sum(x => x.Text.Length);
+                var length1 = patch.Diffs.Where(x => !x.Operation.IsInsert).Sum(x => x.Text.Length);
 
-                Assert.That(patch.Length2, Is.EqualTo(length));
+                Assert.That(patch.Length1, Is.EqualTo(length1), "Patch left length from text does not match metadata");
+                Assert.That(patch.Length2, Is.EqualTo(length2), "Patch right length from text does not match metadata");
 
                 var actualPart = DiffMatchPatchModule.Default.DiffText2(patch.Diffs);
 
