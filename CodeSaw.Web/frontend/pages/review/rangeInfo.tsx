@@ -167,8 +167,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         }
     }
 
-    private _findNextUnreviewedFile = (current: FileId, direction: 1 | -1): FileId => {
-        const changes = this.props.filesToReview.filter(f => f.current != f.previous);
+    private _findNextFile = (current: FileId, direction: 1 | -1, predicate: (FileToReview) => boolean): FileId => {
+        const changes = this.props.filesToReview;
         const currentIndex = changes.findIndex(p => PathPairs.equal(p.reviewFile, this.props.selectedFile.path));
 
         if (currentIndex == -1) {
@@ -194,10 +194,49 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
             const candidate = changes[index].fileId;
 
-            if (filesReviewedByUser.indexOf(candidate) == -1) {
+            if (predicate(changes[index])) {
                 return candidate;
             }
         }
+    }
+
+    private _findNextUnreviewedFile = (current: FileId, direction: 1 | -1): FileId => {
+        const predicate = (file: FileToReview) => {
+            const filesReviewedByUser: FileId[] = this.props.reviewedFiles;
+
+            const fileDiscussions = this.props.fileComments
+                .filter(f => f.filePath.newPath == file.diffFile.oldPath)
+                .filter(f => f.state === "NeedsResolution");
+
+            if (fileDiscussions.length > 0) {
+                return true;
+            }
+
+            if (filesReviewedByUser.indexOf(file.fileId) == -1) {
+                return true;
+            }
+
+            return false;
+        }
+        
+        return this._findNextFile(current, direction, predicate);
+    }
+
+    private _findNextFileWithUnresolvedComment = (current: FileId, direction: 1 | -1): FileId => {
+        const predicate = (file: FileToReview) => {
+            const fileDiscussions = this.props.fileComments
+                .filter(f => f.filePath.newPath == file.diffFile.oldPath)
+                .filter(f => f.state === "NeedsResolution" 
+                        && f.comment.children.length == 0);
+
+            if (fileDiscussions.length > 0) {
+                return true;
+            }
+
+            return false;
+        }
+
+        return this._findNextFile(current, direction, predicate);
     }
 
     render() {
@@ -210,9 +249,14 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             const nextFile = this._findNextUnreviewedFile(selectedFile.fileId, 1);
             const prevFile = this._findNextUnreviewedFile(selectedFile.fileId, -1);
 
+            const nextFileWithUnresolvedComment = this._findNextFileWithUnresolvedComment(selectedFile.fileId, 1);
+            const prevFileWithUnresolvedComment = this._findNextFileWithUnresolvedComment(selectedFile.fileId, -1);
+
             reviewHotKeys = {
                 '[': () => prevFile && onSelectFileForView(prevFile),
                 ']': () => nextFile && onSelectFileForView(nextFile),
+                '{': () => prevFileWithUnresolvedComment && onSelectFileForView(prevFileWithUnresolvedComment),
+                '}': () => nextFileWithUnresolvedComment && onSelectFileForView(nextFileWithUnresolvedComment),
                 'y': () => this._changeFileReviewState(!this.props.selectedFile.isReviewed),
                 'ctrl+Enter': this.props.publishReview
             };
