@@ -35,7 +35,6 @@ import { OnPropChanged } from "../../components/OnPropChanged";
 import { UserState, RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
 import "./review.less";
-import * as PathPairs from "../../pathPair";
 import CommentsView, { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
@@ -58,7 +57,7 @@ interface DispatchProps {
     mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
     reviewFile: ReviewFileActions;
     publishReview(): void;
-    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean, currentUser?: UserState): void;
+    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean, currentUser?: UserState): void;
     startReviewDiscussion(content: string, needsResolution: boolean, currentUser?: UserState): void;
     resolveDiscussion(rootCommentId: string): void;
     unresolveDiscussion(rootCommentId: string): void;
@@ -243,7 +242,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
         unreview: (path) => dispatch(unreviewFile({ path })),
     },
     publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileId })),
-    startFileDiscussion: (path, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ path, lineNumber, content, needsResolution, currentUser })),
+    startFileDiscussion: (fileId, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ fileId, lineNumber, content, needsResolution, currentUser })),
     startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
     resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
     unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),

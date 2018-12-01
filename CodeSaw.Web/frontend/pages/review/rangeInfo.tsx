@@ -32,7 +32,7 @@ interface FileViewProps {
     unpublishedReplies: CommentReply[];
     commentActions: DiscussionActions;
     currentUser: UserState;
-    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
+    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
 }
 
 class FileView extends React.Component<FileViewProps, { visibleCommentLines: number[] }> {
@@ -72,16 +72,16 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         const { file, commentActions } = this.props;
 
         const fileDiscussions = this.props.comments
-            .filter(f => f.filePath.newPath == file.path.oldPath);
+            .filter(f => f.fileId == file.fileId);
 
         const unpublishedDiscussion = this.props.unpublishedFileDiscussions
-            .filter(f => f.filePath.newPath == file.path.oldPath);
+            .filter(f => f.fileId  == file.fileId);
 
         const lineCommentsActions: LineCommentsActions = {
             hideCommentsForLine: l => this.hideLine(l),
             showCommentsForLine: l => this.showLine(l),
             startFileDiscussion: (lineNumber, content, needResolution) => {
-                this.props.startFileDiscussion(file.path, lineNumber, content, needResolution)
+                this.props.startFileDiscussion(file.fileId, lineNumber, content, needResolution)
             }
         }
 
@@ -141,7 +141,7 @@ export interface Props {
     reviewId: ReviewId;
     fileComments: FileDiscussion[];
     unpublishedFileDiscussion: FileDiscussion[];
-    startFileDiscussion(path: PathPairs.PathPair, lineNumber: number, content: string, needsResolution: boolean): void;
+    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
     commentActions: DiscussionActions;
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];

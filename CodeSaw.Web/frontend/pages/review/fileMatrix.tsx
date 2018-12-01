@@ -167,7 +167,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
             reviewMark = 'current';
         }  
 
-        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value && f.filePath.newPath == r.file.oldPath);
+        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value && f.fileId == props.file.fileId);
 
         revisionCells.push(<MatrixCell
             key={r.revision.value}

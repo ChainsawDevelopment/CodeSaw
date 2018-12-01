@@ -114,7 +114,7 @@ export interface Discussion {
 }
 
 export interface FileDiscussion extends Discussion {
-    filePath: PathPairs.PathPair;
+    fileId: FileId;
     lineNumber: number;
 }
 
@@ -182,7 +182,7 @@ export interface ReviewSnapshot {
     startedFileDiscussions: {
         targetRevisionId: RevisionId;
         temporaryId: string;
-        file: PathPairs.PathPair;
+        fileId: FileId;
         lineNumber: number;
         content: string;
         needsResolution: boolean;
