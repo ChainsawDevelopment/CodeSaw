@@ -1,3 +1,4 @@
+open System
 #r "paket: 
 nuget Fake.Core.Target prerelease
 nuget Fake.DotNet.Cli prerelease
@@ -183,6 +184,27 @@ Target.create "RedoLast" (fun _ ->
 
     if not r.OK then
         failwithf "DbMigrator failed with %A" r.Errors
+)
+
+Target.create "NewMigration" (fun p ->
+    let cmdArgs = p.Context.Arguments
+
+    if cmdArgs.Length <> 1 then
+        failwithf "Provide migration name in command line: build.cmd -t NewMigration -- <MigrationName>"
+
+    let migrationBaseName = cmdArgs.Head
+    let migrationId = DateTime.Now.ToString("yyyy_MM_dd_HH_mm") 
+    let outputFile = root </> "CodeSaw.Db.Migrations" </> (sprintf "%s_%s.cs" migrationId migrationBaseName)
+
+    let replacements = [
+        ("[Id]", migrationId)
+        ("[Name]", migrationBaseName)
+    ]
+
+    [root </> "utils" </> "MigrationTemplate.cs"]
+    |> Fake.IO.Templates.load
+    |> Fake.IO.Templates.replaceKeywords replacements
+    |> Seq.iter (fun (_, content) -> File.write false outputFile (Seq.toList content))
 )
 
 Target.create "_CleanupNetworkShares" (fun _ ->

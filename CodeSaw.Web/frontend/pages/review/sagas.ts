@@ -107,7 +107,7 @@ function* publishReviewSaga() {
             startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
                 targetRevisionId: d.revision,
                 temporaryId: d.comment.id,
-                file: d.filePath,
+                fileId: d.fileId,
                 lineNumber: d.lineNumber,
                 needsResolution: d.state == 'NeedsResolution',
                 content: d.comment.content

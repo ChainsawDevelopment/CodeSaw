@@ -69,7 +69,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
         {
             public Guid Id { get; set; }
             public int Revision { get; set; }
-            public PathPair FilePath { get; set; }
+            public Guid FileId { get; set; }
             public int LineNumber { get; set; }
             public CommentItem Comment { get; set; }
             public CommentState State { get; set; }
@@ -211,7 +211,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     {
                         Id = discussion.Id,
                         Revision = revision.RevisionNumber,
-                        FilePath = discussion.File,
+                        FileId = discussion.FileId,
                         LineNumber = discussion.LineNumber,
                         Comment = comments[discussion.RootComment.Id],
                         State = discussion.State,

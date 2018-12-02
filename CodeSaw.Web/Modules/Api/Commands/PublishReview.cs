@@ -91,7 +91,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
                 var newDiscussionsMap = new Dictionary<string, Guid>();
 
                 await new ReviewDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap, newDiscussionsMap);
-                await new FileDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedFileDiscussions, newCommentsMap, newDiscussionsMap);
+                await new FileDiscussionsPublisher(_session, reviewForRevision, resolveFileId).Publish(command.StartedFileDiscussions, newCommentsMap, newDiscussionsMap);
 
                 var resolvedDiscussions = command.ResolvedDiscussions.Select(d => newDiscussionsMap.GetValueOrDefault(d, () => Guid.Parse(d))).ToList();
 

@@ -94,7 +94,7 @@ export interface MergePullRequestArgs {
 
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
 
-export const startFileDiscussion = createAction<{ path: PathPairs.PathPair; lineNumber: number; content: string; needsResolution: boolean, currentUser: UserState }>('START_FILE_DISCUSSION');
+export const startFileDiscussion = createAction<{ fileId: FileId; lineNumber: number; content: string; needsResolution: boolean, currentUser: UserState }>('START_FILE_DISCUSSION');
 export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean, currentUser: UserState }>('START_REVIEW_DISCUSSION');
 
 export const unresolveDiscussion = createAction<{ discussionId: string }>('UNRESOLVE_DISCUSSION');
@@ -320,7 +320,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 {
                     id: `FILE-${state.nextDiscussionCommentId}`,
                     revision: state.selectedFile.fileToReview.current,
-                    filePath: action.payload.path,
+                    fileId: action.payload.fileId,
                     lineNumber: action.payload.lineNumber,
                     state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
                     canResolve: true,
