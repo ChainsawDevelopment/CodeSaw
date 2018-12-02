@@ -18,8 +18,20 @@ namespace CodeSaw.Web
             {
                 FourWayDiff.ExpandPatchToFullLines(newVersion, patch);
             }
-
+            
             patches = DiffUtils.MergeAdjacentPatches(patches);
+
+            foreach (var patch in patches)
+            {
+                Console.WriteLine($"@@ Prev: {patch.Start1}, {patch.Length1} Cur: {patch.Start2}, {patch.Length2}");
+
+                foreach (var diff in patch.Diffs)
+                {
+                    Console.Write($"{diff.Operation.ToString()[0]}({diff.Text})");
+                }
+
+                Console.WriteLine("\n");
+            }
 
             var commentLinesMap = new PositionToLine(commentVersion);
             var newVersionLinesMap = new PositionToLine(newVersion);
@@ -34,6 +46,14 @@ namespace CodeSaw.Web
             {
                 var patchNewText = DiffMatchPatch.DiffMatchPatchModule.Default.DiffText2(patchContainingComment.Diffs);
                 var commentLinePositionInPatch = patchNewText.IndexOf(commentLine);
+
+                if (commentLinePositionInPatch>=0)
+                {
+                    var newLine = newVersionLinesMap.GetLineinPosition(commentLinePositionInPatch + patchContainingComment.Start2);
+                    return newLine + 1;
+                }
+
+                commentLinePositionInPatch = patchNewText.IndexOf(commentLine.Trim()); // try part-match without leading & trailing whitespaces
 
                 if (commentLinePositionInPatch>=0)
                 {

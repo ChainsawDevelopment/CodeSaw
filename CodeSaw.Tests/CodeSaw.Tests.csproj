@@ -6,6 +6,10 @@
     <RootNamespace>CodeSaw.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="CommentTrackingData\OverlappingPatch\1.txt" />
+    <None Remove="CommentTrackingData\OverlappingPatch\2.txt" />
+    <None Remove="CommentTrackingData\OverlappingPatch\3.txt" />
+    <None Remove="CommentTrackingData\OverlappingPatch\desc.json" />
     <None Remove="CommentTrackingData\CodeDeleted\1.txt" />
     <None Remove="CommentTrackingData\CodeDeleted\2.txt" />
     <None Remove="CommentTrackingData\CodeDeleted\3.txt" />
