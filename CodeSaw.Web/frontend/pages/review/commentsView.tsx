@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as showdown from "showdown"
 import Button from '@ui/elements/Button';
 import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
 import UIComment from '@ui/views/Comment';
@@ -93,6 +94,8 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             </Form>
         );
 
+        const markdown = new showdown.Converter();
+
         return (
             <UIComment>
                 <UIComment.Avatar src={this.props.comment.author.avatarUrl} />
@@ -102,7 +105,9 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                         <div>{this.props.comment.createdAt}</div>
                         {this.props.note}
                     </UIComment.Metadata>
-                    <UIComment.Text>{this.props.comment.content}</UIComment.Text>
+                    <UIComment.Text>
+                        <div dangerouslySetInnerHTML={ {__html: markdown.makeHtml(this.props.comment.content)} }></div>
+                    </UIComment.Text>
                     <UIComment.Actions>
                         <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
                         {this.props.statusComponent}
