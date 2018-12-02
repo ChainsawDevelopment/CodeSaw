@@ -6,6 +6,7 @@ namespace CodeSaw.Web.Diff
     public class PositionToLine
     {
         private readonly SortedDictionary<int, int> _map;
+        public int TotalLines { get; }
 
         public PositionToLine(string text)
         {
@@ -31,6 +32,7 @@ namespace CodeSaw.Web.Diff
             }
 
             _map[text.Length] = line;
+            TotalLines = line;
         }
 
         public int GetLineinPosition(int position)

@@ -53,6 +53,12 @@ namespace CodeSaw.Web
                 return newVersionLinesMap.GetLineinPosition(newCommentPosition) + 1;
             }
 
+            if (line > newVersionLinesMap.TotalLines)
+            {
+                // trim comments to last line in new file
+                line = newVersionLinesMap.TotalLines;
+            }
+
             return line;
         }
 

@@ -6,6 +6,10 @@
     <RootNamespace>CodeSaw.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="CommentTrackingData\CodeDeleted\1.txt" />
+    <None Remove="CommentTrackingData\CodeDeleted\2.txt" />
+    <None Remove="CommentTrackingData\CodeDeleted\3.txt" />
+    <None Remove="CommentTrackingData\CodeDeleted\desc.json" />
     <None Remove="FourWayDiffData\Case1\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample1\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample2\expected.txt" />
