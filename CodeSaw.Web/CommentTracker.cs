@@ -8,6 +8,8 @@ namespace CodeSaw.Web
 {
     public static class CommentTracker
     {
+        private static readonly DiffMatchPatch.DiffMatchPatch DMP = DiffMatchPatchModule.Default;
+
         public static int Track(string commentVersion, string newVersion, int line)
         {
             var patches = MakeDiff(commentVersion, newVersion);
@@ -44,7 +46,7 @@ namespace CodeSaw.Web
 
             if (patchContainingComment != null)
             {
-                var patchNewText = DiffMatchPatch.DiffMatchPatchModule.Default.DiffText2(patchContainingComment.Diffs);
+                var patchNewText = DMP.DiffText2(patchContainingComment.Diffs);
                 var commentLinePositionInPatch = patchNewText.IndexOf(commentLine);
 
                 if (commentLinePositionInPatch>=0)
@@ -53,11 +55,22 @@ namespace CodeSaw.Web
                     return newLine + 1;
                 }
 
-                commentLinePositionInPatch = patchNewText.IndexOf(commentLine.Trim()); // try part-match without leading & trailing whitespaces
+                var commentLineTrimmed = commentLine.Trim();
+                commentLinePositionInPatch = patchNewText.IndexOf(commentLineTrimmed); // try part-match without leading & trailing whitespaces
 
-                if (commentLinePositionInPatch>=0)
+                if (commentLinePositionInPatch >= 0)
                 {
                     var newLine = newVersionLinesMap.GetLineinPosition(commentLinePositionInPatch + patchContainingComment.Start2);
+                    return newLine + 1;
+                }
+
+                // For some reason DMP Match algorithm does not work with pattern longer that some internal limit
+                var prefixLength = patchContainingComment.Diffs.TakeWhile(x => x.Operation.IsEqual).Sum(x => x.Text.Length);
+
+                var approximateMatchPosition = DMP.MatchMain(patchNewText.Substring(prefixLength), commentLineTrimmed.Substring(0, DMP.MatchMaxBits), 0);
+                if (approximateMatchPosition > -1)
+                {
+                    var newLine = newVersionLinesMap.GetLineinPosition(approximateMatchPosition + prefixLength + patchContainingComment.Start2);
                     return newLine + 1;
                 }
             }
