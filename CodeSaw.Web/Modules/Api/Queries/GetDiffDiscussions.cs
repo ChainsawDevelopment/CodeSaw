@@ -32,6 +32,15 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public int LineNumber { get; set; }
             public string Side { get; set; }
             public string Comment { get; set; }
+
+            public static RemappedDiscussion ForSide(string side, Guid discussionId, int line, string comment) => new RemappedDiscussion()
+            {
+                DiscussionId = discussionId,
+                Comment = comment,
+                LineNumber = line,
+                OldLineNumber = line,
+                Side = side
+            };
         }
 
         public class Result
@@ -116,28 +125,14 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     // is left?
                     if (discussion.RevisionBase == query.Commits.PreviousBase && discussion.RevisionHead == query.Commits.PreviousHead)
                     {
-                        remapped.Add(new RemappedDiscussion
-                        {
-                            DiscussionId = discussion.DiscussionId,
-                            LineNumber = discussion.Line,
-                            OldLineNumber = discussion.Line,
-                            Side = "left",
-                            Comment = discussion.Comment
-                        });
+                        remapped.Add(RemappedDiscussion.ForSide("left", discussion.DiscussionId, discussion.Line, discussion.Comment));
                         continue;
                     }
 
                     // is right?
                     if (discussion.RevisionBase == query.Commits.CurrentBase && discussion.RevisionHead == query.Commits.CurrentHead)
                     {
-                        remapped.Add(new RemappedDiscussion
-                        {
-                            DiscussionId = discussion.DiscussionId,
-                            LineNumber = discussion.Line,
-                            OldLineNumber = discussion.Line,
-                            Side = "right",
-                            Comment = discussion.Comment
-                        });
+                        remapped.Add(RemappedDiscussion.ForSide("right", discussion.DiscussionId, discussion.Line, discussion.Comment));
                         continue;
                     }
 
