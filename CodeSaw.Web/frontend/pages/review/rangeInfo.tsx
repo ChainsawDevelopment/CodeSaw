@@ -205,7 +205,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             const filesReviewedByUser: FileId[] = this.props.reviewedFiles;
 
             const fileDiscussions = this.props.fileComments
-                .filter(f => f.filePath.newPath == file.diffFile.oldPath)
+                .filter(f => f.fileId == file.fileId)
                 .filter(f => f.state === "NeedsResolution");
 
             if (fileDiscussions.length > 0) {
@@ -225,7 +225,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
     private _findNextFileWithUnresolvedComment = (current: FileId, direction: 1 | -1): FileId => {
         const predicate = (file: FileToReview) => {
             const fileDiscussions = this.props.fileComments
-                .filter(f => f.filePath.newPath == file.diffFile.oldPath)
+                .filter(f => f.fileId == file.fileId)
                 .filter(f => f.state === "NeedsResolution" 
                         && f.comment.children.length == 0);
 
