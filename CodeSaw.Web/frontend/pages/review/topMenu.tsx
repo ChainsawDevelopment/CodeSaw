@@ -2,7 +2,7 @@ import Menu from "@ui/collections/Menu";
 import Icon from '@ui/elements/Icon';
 import * as React from "react";
 import { KeyboardHelp } from "./KeyboardHelp";
-import { HotKeys } from "CodeSaw.Web/frontend/components/HotKeys";
+import { HotKeys } from "../../components/HotKeys";
 import { Link } from "react-router-dom";
 
 export default class TopMenu extends React.Component<{}, {isOpen:boolean}> {

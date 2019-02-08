@@ -216,6 +216,8 @@ namespace CodeSaw.Web.Diff
                 patch.Diffs[0].Text = prefix + patch.Diffs[0].Text;
                 patch.Start2 -= prefix.Length;
                 patch.Length2 += prefix.Length;
+                patch.Start1 -= prefix.Length;
+                patch.Length1 += prefix.Length;
             }
 
             var patchEnd = patch.Start2 + patch.Length2;
@@ -231,6 +233,7 @@ namespace CodeSaw.Web.Diff
 
                 var suffix = text.Substring(patchEnd, nextNewLine - patchEnd);
                 patch.Length2 += suffix.Length;
+                patch.Length1 += suffix.Length;
                 patch.Diffs[patch.Diffs.Count - 1].Text += suffix;
             }
         }

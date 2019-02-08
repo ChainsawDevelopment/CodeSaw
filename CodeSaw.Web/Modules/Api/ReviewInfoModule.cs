@@ -1,3 +1,4 @@
+using System;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Cqrs;
 using CodeSaw.Web.Modules.Api.Commands;
@@ -29,12 +30,20 @@ namespace CodeSaw.Web.Modules.Api
                     Request.Query.oldPath, Request.Query.newPath
                 )));
 
-            Post("/registerlink", async _ =>
-            {   
-                await command.Execute(new RegisterReviewLink(_.projectId, _.reviewId));
-                return new { success = true };
-            });
-            
+            Get("/discussions/{previous_base}/{previous_head}/{current_base}/{current_head}/{fileId}",
+                async _ => await query.Query(new GetDiffDiscussions(
+                    ReviewId,
+                    new GetDiffDiscussions.HashSet
+                    {
+                        PreviousBase = (string) _.previous_base,
+                        PreviousHead = (string) _.previous_head,
+                        CurrentBase = (string) _.current_base,
+                        CurrentHead = (string) _.current_head,
+                    },
+                    ClientFileId.Parse((string)_.fileId),
+                    (string)Request.Query.fileName
+                )));
+
             Post("/publish", async _ =>
             {
                 try
