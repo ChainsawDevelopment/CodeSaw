@@ -37,6 +37,7 @@ namespace CodeSaw.Web.Diff
 
         public int GetLineinPosition(int position)
         {
+            position = position < 0 ? 0 : position;
             var key = _map.Keys.TakeWhile(lineStart => lineStart <= position).Last();
 
             return _map[key];
