@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
@@ -43,6 +44,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public BinaryFileSizesInfo BinarySizes { get; set; }
         }
 
+        [DebuggerDisplay("{Start}-{End}")]
         public class PatchPosition
         {
             public int Start { get; set; }
@@ -50,6 +52,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public int Length { get; set; }
         }
 
+        [DebuggerDisplay("{OldPosition} -> {NewPosition}")]
         public class HunkInfo
         {
             public PatchPosition NewPosition { get; set; }
@@ -263,6 +266,18 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         lastHunk.NewPosition.Length += hunk.NewPosition.Length - 1;
                         lastHunk.OldPosition.End = hunk.OldPosition.End;
                         lastHunk.OldPosition.Length += hunk.OldPosition.Length - 1;
+                        continue;
+                    }
+
+                    if (lastHunk.NewPosition.End > hunk.NewPosition.Start)
+                    {
+                        // overlapping hunks
+                        var overlap = lastHunk.NewPosition.End - hunk.NewPosition.Start;
+                        lastHunk.Lines.AddRange(hunk.Lines.Skip(overlap));
+                        lastHunk.NewPosition.End = hunk.NewPosition.End;
+                        lastHunk.NewPosition.Length += hunk.NewPosition.Length - overlap;
+                        lastHunk.OldPosition.End = hunk.OldPosition.End;
+                        lastHunk.OldPosition.Length += hunk.OldPosition.Length - overlap;
                         continue;
                     }
 
