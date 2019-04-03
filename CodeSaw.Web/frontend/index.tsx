@@ -1,8 +1,8 @@
-import createHistory from 'history/createBrowserHistory';
+import { createBrowserHistory } from 'history'
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { ConnectedRouter, RouterState, routerMiddleware, routerReducer } from 'react-router-redux';
+import { ConnectedRouter, RouterState, routerMiddleware, connectRouter } from 'connected-react-router';
 import { applyMiddleware, combineReducers, createStore, compose } from 'redux';
 import sagaMiddlewareFactory from 'redux-saga';
 
@@ -28,7 +28,7 @@ interface State {
     router: RouterState
 }
 
-const history = createHistory();
+const history = createBrowserHistory();
 
 const historyMiddleware = routerMiddleware(history);
 
@@ -43,7 +43,7 @@ const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ||
 
 const store = createStore(
     combineReducers({
-        router: routerReducer,
+        router: connectRouter(history),
         review: reviewReducer,
         reviews: reviewsReducer,
         admin: adminReducer,
