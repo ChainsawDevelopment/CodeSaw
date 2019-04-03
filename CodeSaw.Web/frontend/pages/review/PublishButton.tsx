@@ -3,8 +3,9 @@ import Button from '@ui/elements/Button';
 
 import { ReviewState, publishReview, FileReviewStatusChange } from "./state";
 import { RootState } from "../../rootState";
-import { Dispatch, connect } from "react-redux";
+import { connect } from "react-redux";
 import { FileId } from "@api/reviewer";
+import { Dispatch } from "redux";
 
 export namespace PublishButton {
     export interface OwnProps {
