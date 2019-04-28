@@ -156,6 +156,70 @@ const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
     };
 }
 
+
+export const upgradeUnpublishedReview = (current: ReviewInfo, review: UnpublishedReview): UnpublishedReview => 
+{
+    const knownRevisions = current.pastRevisions.map(r => r.number as RevisionId);
+    if (current.hasProvisionalRevision) {
+        knownRevisions.push(current.headRevision as RevisionId);
+    }
+
+    const fileDiscussions = review.unpublishedFileDiscussions.map(fd => {
+        const idx = knownRevisions.indexOf(fd.revision);
+        if(idx != -1) {
+            return fd;
+        }
+        
+        return {
+            ...fd,
+            revision: current.headRevision
+        };
+    });
+
+    const reviewDiscussions = review.unpublishedReviewDiscussions.map(fd => {
+        const idx = knownRevisions.indexOf(fd.revision);
+        if(idx != -1) {
+            return fd;
+        }
+        
+        return {
+            ...fd,
+            revision: current.headRevision
+        };
+    });
+
+    const reviewedFiles: FileReviewStatusChange = {};
+
+    for (const revision of Object.keys(review.unpublishedReviewedFiles)) {
+        const idx = knownRevisions.indexOf(revision);
+        if (idx != -1) {
+            reviewedFiles[revision] = review.unpublishedReviewedFiles[revision];
+        } else {
+            reviewedFiles[current.headRevision] = review.unpublishedReviewedFiles[revision];
+        }
+    }
+
+    const unreviewedFiles: FileReviewStatusChange = {};
+
+    for (const revision of Object.keys(review.unpublishedUnreviewedFiles)) {
+        const idx = knownRevisions.indexOf(revision);
+        if (idx != -1) {
+            unreviewedFiles[revision] = review.unpublishedUnreviewedFiles[revision];
+        } else {
+            unreviewedFiles[current.headRevision] = review.unpublishedUnreviewedFiles[revision];
+        }
+    }
+
+    return {
+        unpublishedFileDiscussions: fileDiscussions,
+        unpublishedReplies: review.unpublishedReplies,
+        unpublishedResolvedDiscussions: review.unpublishedResolvedDiscussions,
+        unpublishedReviewDiscussions: reviewDiscussions,
+        unpublishedReviewedFiles: reviewedFiles,
+        unpublishedUnreviewedFiles: unreviewedFiles
+    };
+}
+
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
     if (selectFileForView.match(action)) {
         const file = state.currentReview.filesToReview.find(f => f.fileId == action.payload.fileId);
@@ -199,14 +263,15 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (loadedReviewInfo.match(action)) {
+        const unpublished = upgradeUnpublishedReview(action.payload.info, action.payload.unpublishedInfo);
         const reviewedFiles = action.payload.info.filesToReview.filter(f => f.current == f.previous);
 
         const getChangedFilesPaths = (changeStatus: FileReviewStatusChange) => Object.keys(changeStatus)
             .map(key => changeStatus[key])
             .reduce((a,b) => a.concat(b), []);
 
-        const unpublishedReviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedReviewedFiles);
-        const unpublishedUnreviewedFiles = getChangedFilesPaths(action.payload.unpublishedInfo.unpublishedUnreviewedFiles);
+        const unpublishedReviewedFiles = getChangedFilesPaths(unpublished.unpublishedReviewedFiles);
+        const unpublishedUnreviewedFiles = getChangedFilesPaths(unpublished.unpublishedUnreviewedFiles);
 
         const reviewedFileFinal = 
             _.difference(reviewedFiles.map(f => f.fileId), unpublishedUnreviewedFiles)
@@ -216,7 +281,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             currentReview: action.payload.info,
             reviewedFiles: reviewedFileFinal,
-            ...action.payload.unpublishedInfo,
+            ...unpublished,
             selectedFile: null
         };
     }

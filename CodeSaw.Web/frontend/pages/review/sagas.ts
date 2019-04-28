@@ -55,6 +55,8 @@ function* loadReviewInfoSaga() {
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const unpublishedInfo = getUnpublishedReview(action.payload.reviewId);
+
+        
      
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
