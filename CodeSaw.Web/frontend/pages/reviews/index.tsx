@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import List from '@ui/elements/List';
 import Image from '@ui/elements/Image';
 import Segment from '@ui/elements/Segment';
-import { connect, Dispatch } from "react-redux";
+import { connect } from "react-redux";
 import { RootState } from "../../rootState";
 import { loadReviews } from "./state";
 import { OnMount } from "../../components/OnMount";
@@ -12,6 +12,7 @@ import "./reviews.less";
 import ProjectReviewsList from "./reviewList";
 import Pagination from "../../components/pagination";
 import SearchOptions from "./searchOptions";
+import { Dispatch } from "redux";
 
 interface StateProps {
     orderBy: 'created_at' | 'updated_at';

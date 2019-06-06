@@ -95,8 +95,8 @@ Target.create "Watch" (fun _ ->
     Process.fireAndForget 
         (fun proc ->
             {proc with
-                FileName = root </> "node_modules" </> ".bin" </> "webpack-serve.cmd"
-                Arguments = "webpack.config.js --no-clipboard -new_console:t:webpack"
+                FileName = yarnExe
+                Arguments = "webpack-dev-server --config webpack.config.js -new_console:t:webpack"
                 WorkingDirectory = root
             }
         )

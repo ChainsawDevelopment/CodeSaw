@@ -1,4 +1,4 @@
-import { take, put, select } from "redux-saga/effects";
+import { take, put, select, delay } from "redux-saga/effects";
 import {
     selectFileForView,
     loadedFileDiff,
@@ -14,7 +14,6 @@ import { Action } from "typescript-fsa";
 import notify from '../../notify';
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId } from '../../api/reviewer';
 import { RootState } from "../../rootState";
-import { delay } from "redux-saga";
 import { startOperation, stopOperation } from "../../loading/saga";
 import { getUnpublishedReview } from "./storage";
 
