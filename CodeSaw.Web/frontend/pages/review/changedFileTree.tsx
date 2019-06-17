@@ -16,7 +16,7 @@ const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boole
     if (props.isSelected) {
         header = (<span className='selected-file'><FileName fileId={props.fileId} /></span>)
     } else {
-        header = (<FileLink reviewId={props.reviewId} fileId={props.fileId} />);
+        header = (<FileLink reviewId={props.reviewId} fileId={props.fileId} onClick={props.onclick} />);
     }
 
     return (
@@ -37,9 +37,9 @@ const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boole
 }
 
 namespace ChangedFileTree {
-    export interface Props {  
-        files: {id: FileId; name: PathPairs.PathPair}[];
-        reviewedFiles: FileId[]; 
+    export interface Props {
+        files: { id: FileId; name: PathPairs.PathPair }[];
+        reviewedFiles: FileId[];
         selected: FileId;
         onSelect: (fileId: FileId) => void;
         reviewId: ReviewId;
@@ -52,7 +52,7 @@ namespace ChangedFileTree {
 
 export default class ChangeFileTree extends React.Component<ChangedFileTree.Props, ChangedFileTree.State> {
     searchFieldRef: React.RefObject<Input>;
-    
+
     constructor(props) {
         super(props);
 
@@ -67,7 +67,7 @@ export default class ChangeFileTree extends React.Component<ChangedFileTree.Prop
         setTimeout(() => this.searchFieldRef.current.focus(), 0);
     }
 
-    render() { 
+    render() {
         const props = this.props;
 
         const filteredFiles = props.files
@@ -83,17 +83,17 @@ export default class ChangeFileTree extends React.Component<ChangedFileTree.Prop
                     onclick={() => props.onSelect(f.id)}
                     reviewId={props.reviewId}
                 />
-        ));
+            ));
 
         const openFirst = () => props.onSelect(filteredFiles[0].id);
-    
+
         return (
             <div>
-                <Input 
+                <Input
                     placeholder="Search..."
                     icon='search'
                     ref={this.searchFieldRef}
-                    onChange={(e, data) => this.setState({searchValue: data.value})}
+                    onChange={(e, data) => this.setState({ searchValue: data.value })}
                     onKeyPress={e => (e.key == "Enter") && openFirst()} />
                 <List className="file-tree">
                     {items}

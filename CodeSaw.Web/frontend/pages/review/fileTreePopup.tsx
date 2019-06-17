@@ -13,7 +13,7 @@ interface State {
 }
 
 export interface Props {
-    files: {id: FileId; name: PathPair}[];
+    files: { id: FileId; name: PathPair }[];
     selected: FileId;
     reviewedFiles: FileId[];
     onSelect(fileId: FileId): void;
@@ -38,7 +38,6 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
     }
 
     private _onSelect = (fileId: FileId) => {
-        this.props.onSelect(fileId);
         this._onClose();
     }
 
@@ -61,22 +60,22 @@ export default class ChangedFileTreePopup extends React.Component<Props, State> 
 
         return (
             <CurrentReviewMode.Consumer>
-                {mode => 
-                <span>
-                    <HotKeys config={fileSearchHotKeys} />
+                {mode =>
+                    <span>
+                        <HotKeys config={fileSearchHotKeys} />
 
-                    <Popup
-                        open={this.state.opened}
-                        trigger={<Button secondary content='Choose File...' />}
-                        content={<CurrentReviewMode.Provider value={mode}>{filesSelector}</CurrentReviewMode.Provider>}
-                        onOpen={this._onOpen}
-                        onClose={this._onClose}
-                        hideOnScroll={true}
-                        on='click'
-                        position='bottom left'
-                        wide='very'
-                    />
-                </span>
+                        <Popup
+                            open={this.state.opened}
+                            trigger={<Button secondary content='Choose File...' />}
+                            content={<CurrentReviewMode.Provider value={mode}>{filesSelector}</CurrentReviewMode.Provider>}
+                            onOpen={this._onOpen}
+                            onClose={this._onClose}
+                            hideOnScroll={false}
+                            on='click'
+                            position='bottom left'
+                            wide='very'
+                        />
+                    </span>
                 }
             </CurrentReviewMode.Consumer>
         );
