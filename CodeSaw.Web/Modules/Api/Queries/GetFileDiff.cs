@@ -141,12 +141,12 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 PatchPosition PatchPositionToLines(PositionToLine map, int start, int length)
                 {
                     var startLine = map.GetLineinPosition(start);
-                    var endLine = map.GetLineinPosition(start + length);
+                    var endLine = map.GetLineinPosition(start + length-1);
                     return new PatchPosition
                     {
                         Start = startLine,
                         End = endLine,
-                        Length = endLine - startLine
+                        Length = 1 + endLine - startLine
                     };
                 }
 
