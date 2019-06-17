@@ -20,27 +20,44 @@ namespace CodeSaw.Web
 
         public static List<Patch> MergeAdjacentPatches(List<Patch> patches)
         {
-            var result = new List<Patch>();
+            var result = new List<Patch>(new [] { patches.First() });
 
-            foreach (var patch in patches)
-            {
-                if (result.Count == 0)
-                {
-                    result.Add(patch);
-                    continue;
-                }
-
+            foreach (var patch in patches.Skip(1))
+            {                
                 var lastPatch = result.Last();
-
-                if (patch.Start2 < lastPatch.Start2+lastPatch.Length2)
+                
+                if (patch.Start2 < lastPatch.Start2 + lastPatch.Length2)
                 {
                     var commonLength = lastPatch.Start2 + lastPatch.Length2 - patch.Start2;
-                    var remainingPrefix = patch.Diffs[0].Text.Substring(commonLength);
-                    lastPatch.Diffs.Last().Text += remainingPrefix;
-                    lastPatch.Diffs.AddRange(patch.Diffs.Skip(1));
-                    lastPatch.Length2 = lastPatch.Length2 + patch.Length2 - commonLength;
-                    lastPatch.Length1 = lastPatch.Length1 + patch.Length1 - commonLength;
-                    continue;
+
+                    // Overwrite common patch between lastPath and patch with new incoming patch if needed                    
+                    var remainingPartToDelete = commonLength;
+                    while(remainingPartToDelete > 0)
+                    {
+                        // Remove common part from lastPatch
+                        if (lastPatch.Diffs.Last().Operation == Operation.Delete)
+                        {
+                            lastPatch.Diffs.Remove(lastPatch.Diffs.Last());
+                            continue;
+                        }
+
+                        var lastLength = lastPatch.Diffs.Last().Text.Length;
+                        if (remainingPartToDelete >= lastPatch.Diffs.Last().Text.Length)
+                        {
+                            lastPatch.Diffs.Remove(lastPatch.Diffs.Last());
+                            remainingPartToDelete -= lastLength;
+                        }
+                        else
+                        {
+                            lastPatch.Diffs.Last().Text = lastPatch.Diffs.Last().Text.Substring(0, lastPatch.Diffs.Last().Text.Length - remainingPartToDelete);
+                            remainingPartToDelete = 0;
+                        }
+                    }
+
+                    // Append entire new patch without changes
+                    lastPatch.Diffs.AddRange(patch.Diffs);
+                    lastPatch.Length2 += patch.Length2 - commonLength;
+                    lastPatch.Length1 += patch.Length1 - commonLength;
                 }
 
                 result.Add(patch);
