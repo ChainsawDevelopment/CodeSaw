@@ -55,7 +55,7 @@ namespace CodeSaw.Web
                 // For some reason DMP Match algorithm does not work with pattern longer that some internal limit
                 var prefixLength = patchContainingComment.Diffs.TakeWhile(x => x.Operation.IsEqual).Sum(x => x.Text.Length);
 
-                var approximateMatchPosition = DMP.MatchMain(patchNewText.Substring(prefixLength), commentLineTrimmed.Substring(0, DMP.MatchMaxBits), 0);
+                var approximateMatchPosition = DMP.MatchMain(patchNewText.Substring(prefixLength), commentLineTrimmed.Substring(0, Math.Min(DMP.MatchMaxBits, commentLineTrimmed.Length)), 0);
                 if (approximateMatchPosition > -1)
                 {
                     var newLine = newVersionLinesMap.GetLineinPosition(approximateMatchPosition + prefixLength + patchContainingComment.Start2);
