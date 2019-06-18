@@ -66,9 +66,9 @@ const mapHunkToView = (hunk: Hunk) => {
 
     const viewHunk = {
         oldStart: hunk.oldPosition.start + 1,
-        oldLines: hunk.oldPosition.length + 1,
+        oldLines: hunk.oldPosition.length,
         newStart: hunk.newPosition.start + 1,
-        newLines: hunk.newPosition.length + 1,
+        newLines: hunk.newPosition.length,
         content: `Hunk ${hunk.newPosition.start + 1} - ${hunk.newPosition.end + 1} (${hunk.newPosition.length} lines)`,
         changes: zipChanges(changes)
     };
