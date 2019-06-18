@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Hunk, FileDiff } from "../../api/reviewer";
 
-import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber, Decoration  } from 'react-diff-view';
+import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber, Decoration } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 const style = require('react-diff-view/style/index.css');
 import './diffView.less';
 import * as classNames from "classnames";
-import {flatMap} from 'lodash';
+import { flatMap } from 'lodash';
 
 interface Change {
     oldLineNumber: number;
@@ -15,7 +15,7 @@ interface Change {
     isDelete: boolean;
     isInsert: boolean;
 
-    [key:string]: any;
+    [key: string]: any;
 }
 
 const mapHunkToView = (hunk: Hunk) => {
@@ -192,7 +192,7 @@ const getFullChangeKey = change => {
         throw new Error('change is not provided');
     }
 
-    const {isNormal, isInsert, oldLineNumber, newLineNumber} = change;
+    const { isNormal, isInsert, oldLineNumber, newLineNumber } = change;
 
     let prefix = '';
 
@@ -238,8 +238,8 @@ const diffView = (props: Props) => {
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
-            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber <= i.oldStart + i.oldLines)
-            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber <= i.newStart + i.newLines)
+            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber < i.oldStart + i.oldLines)
+            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber < i.newStart + i.newLines)
         );
 
         if (matchingHunk >= 0) {
@@ -258,7 +258,7 @@ const diffView = (props: Props) => {
     const events = {
         gutterEvents: {
             onClick: change => {
-                if(props.onLineClick) {
+                if (props.onLineClick) {
                     const lineNumber = change.newLineNumber;
                     props.onLineClick('right', lineNumber);
                 }
@@ -273,7 +273,7 @@ const diffView = (props: Props) => {
 
         for (let hunk of viewHunks) {
             for (let change of hunk.changes) {
-                if( !match(change, item.lineNumber)) {
+                if (!match(change, item.lineNumber)) {
                     continue;
                 }
 
@@ -298,10 +298,10 @@ const diffView = (props: Props) => {
             widgets={widgets}
             tokens={tokens}
         >
-        {flatMap(viewHunks, (h, i) => [
-            <Decoration key={h.content}>{h.content}</Decoration>,
-            <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents}/>
-        ])}
+            {flatMap(viewHunks, (h, i) => [
+                <Decoration key={h.content}>{h.content}</Decoration>,
+                <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
+            ])}
         </Diff>
     );
 };
