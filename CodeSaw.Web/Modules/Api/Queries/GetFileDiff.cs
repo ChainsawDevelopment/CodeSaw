@@ -271,9 +271,23 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                     if (lastHunk.NewPosition.End > hunk.NewPosition.Start)
                     {
-                        // overlapping hunks
-                        var overlap = lastHunk.NewPosition.End - hunk.NewPosition.Start;
-                        lastHunk.Lines.AddRange(hunk.Lines.Skip(overlap));
+                        // overlapping hunks - remove the overlapping part and overwrite it with latter hunk lines
+                        var overlap = 1 + lastHunk.NewPosition.End - hunk.NewPosition.Start;
+                        var toDelete = overlap;
+
+                        while(toDelete > 0 && lastHunk.Lines.Count > 0)
+                        {
+                            var lastLine = lastHunk.Lines.Last();
+                            lastHunk.Lines.RemoveAt(lastHunk.Lines.Count-1);
+
+                            if (lastLine.Operation != "Delete")
+                            {
+                                toDelete--;
+                            }
+                        }
+
+                        lastHunk.Lines.AddRange(hunk.Lines);
+                        
                         lastHunk.NewPosition.End = hunk.NewPosition.End;
                         lastHunk.NewPosition.Length += hunk.NewPosition.Length - overlap;
                         lastHunk.OldPosition.End = hunk.OldPosition.End;
