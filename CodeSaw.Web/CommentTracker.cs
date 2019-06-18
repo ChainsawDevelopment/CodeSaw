@@ -14,6 +14,11 @@ namespace CodeSaw.Web
         {
             var patches = MakeDiff(commentVersion, newVersion);
 
+            if (!patches.Any())
+            {
+                return line;
+            }
+
             DiffUtils.UnrollContext(patches);
 
             foreach (var patch in patches)
@@ -22,6 +27,8 @@ namespace CodeSaw.Web
             }
 
             patches = DiffUtils.MergeAdjacentPatches(patches);
+
+            patches.Sort(new LambdaComparer<Patch, int>(x => x.Start1));
 
             var commentLinesMap = new PositionToLine(commentVersion);
             var newVersionLinesMap = new PositionToLine(newVersion);
