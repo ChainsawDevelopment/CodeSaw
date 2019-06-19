@@ -252,7 +252,15 @@ const diffView = (props: Props) => {
             lineNumber = getCorrespondingOldLineNumber(viewHunks, lineNumber);
         }
 
-        viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
+        try{
+            viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
+        } 
+        catch(e)
+        {
+            // Failed to expand the code, try to display the widgets
+            // TODO: Investigate this
+            console.error(e);
+        }
     }
 
     const events = {
@@ -270,6 +278,7 @@ const diffView = (props: Props) => {
 
     for (let item of props.lineWidgets) {
         const match = item.side == 'left' ? leftSideMatch : rightSideMatch;
+        let found = false;
 
         for (let hunk of viewHunks) {
             for (let change of hunk.changes) {
@@ -277,10 +286,16 @@ const diffView = (props: Props) => {
                     continue;
                 }
 
+                found = true;
                 widgets[getFullChangeKey(change) + '_' + item.side[0].toUpperCase()] = item.widget;
 
                 break;
             }
+        }
+
+        if (!found)
+        {
+            console.error("Failed to display widget", item);
         }
     }
 
