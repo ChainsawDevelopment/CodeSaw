@@ -275,6 +275,7 @@ const diffView = (props: Props) => {
     };
 
     let widgets = {};
+    let failedLineWidgets = []
 
     for (let item of props.lineWidgets) {
         const match = item.side == 'left' ? leftSideMatch : rightSideMatch;
@@ -295,7 +296,8 @@ const diffView = (props: Props) => {
 
         if (!found)
         {
-            console.error("Failed to display widget", item);
+            console.warn("Failed to display widget", {lineNumber: item.lineNumber, side: item.side});
+            failedLineWidgets.push(item);
         }
     }
 
@@ -307,17 +309,21 @@ const diffView = (props: Props) => {
     });
 
     return (
-        <Diff
-            viewType="split"
-            diffType={props.type}
-            widgets={widgets}
-            tokens={tokens}
-        >
-            {flatMap(viewHunks, (h, i) => [
-                <Decoration key={h.content}>{h.content}</Decoration>,
-                <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
-            ])}
-        </Diff>
+        <>
+            <Diff
+                viewType="split"
+                diffType={props.type}
+                widgets={widgets}
+                tokens={tokens}
+            >
+                {flatMap(viewHunks, (h, i) => [
+                    <Decoration key={h.content}>{h.content}</Decoration>,
+                    <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
+                ])}
+            </Diff>
+            {failedLineWidgets.length > 0 && 
+                failedLineWidgets.map(w => <div key={w.lineNumber}>{w.widget}</div>)}
+        </>
     );
 };
 
