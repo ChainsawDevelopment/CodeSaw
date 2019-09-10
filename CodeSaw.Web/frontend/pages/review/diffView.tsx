@@ -315,8 +315,9 @@ const diffView = (props: Props) => {
                 diffType={props.type}
                 widgets={widgets}
                 tokens={tokens}
+                hunks={viewHunks}
             >
-                {flatMap(viewHunks, (h, i) => [
+                {hunks => flatMap(hunks, (h, i) => [
                     <Decoration key={h.content}>{h.content}</Decoration>,
                     <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
                 ])}
