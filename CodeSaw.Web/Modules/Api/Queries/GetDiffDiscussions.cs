@@ -96,10 +96,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     };
                 }
 
-                var revisions = _session.Query<ReviewRevision>()
-                    .Where(x => x.ReviewId == query.ReviewId)
-                    .Where(x => x.HeadCommit == query.Commits.CurrentHead || x.HeadCommit == query.Commits.PreviousHead)
-                    .ToDictionary(x => x.HeadCommit, x => x.RevisionNumber);
+                var headRevision = _session.Query<ReviewRevision>().Where(x => x.ReviewId == query.ReviewId && x.HeadCommit == query.Commits.CurrentHead).FirstOrDefault();
 
                 var q = from discussion in _session.Query<FileDiscussion>()
                     join revision in _session.Query<ReviewRevision>() on discussion.RevisionId equals revision.Id
@@ -139,7 +136,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     // remap
                     var commentFileName = FindFileNameForRevision(query.FileId.PersistentId, discussion.RevisionId);
                     string rightFileName;
-                    if (revisions.ContainsKey(query.Commits.CurrentHead))
+                    if (headRevision != null)
                     {
                         rightFileName = FindFileNameForCommit(query.FileId.PersistentId, query.Commits.CurrentHead);
                     }
