@@ -393,7 +393,7 @@ namespace CodeSaw.GitLab
             if (member.DeclaringType == typeof(ProjectInfo) && member.Name == nameof(ProjectInfo.Namespace))
             {
                 var prop = base.CreateProperty(member, memberSerialization);
-                prop.Converter = new InlineDeserialize(t => ((JObject)t).Property("name").Value.Value<string>());
+                prop.Converter = new InlineDeserialize(t => ((JObject)t).Property("full_path").Value.Value<string>());
                 return prop;
             }
 

@@ -142,6 +142,7 @@ export type ReviewMergeStatus = 'can_be_merged' | 'cannot_be_merged' | 'unchecke
 export interface ReviewInfo {
     reviewId: ReviewId;
     title: string;
+    projectPath: string;
     description: string;
     pastRevisions: {
         number: number;

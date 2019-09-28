@@ -44,6 +44,7 @@ import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import { KeyboardHelp } from "./KeyboardHelp";
+import PageTitle from '../../components/PageTitle';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -150,8 +151,18 @@ class reviewPage extends React.Component<Props> {
                 state: props.unpublishedResolvedDiscussions.indexOf(d.id) >= 0 ? 'ResolvePending' : d.state
             }));
 
+        const title = (() => {
+            if (!props.currentReview.reviewId) {
+                return 'Loading review...';
+            }
+
+            const { currentReview } = props;
+            return `[${currentReview.projectPath}] #${currentReview.reviewId.reviewId} - ${currentReview.title}`;
+        })();
+
         return (
             <div id="review-page">
+                <PageTitle>{title}</PageTitle>
                 <CurrentReviewMode.Provider value={props.reviewMode}>
                     <OnMount onMount={load} />
                     <OnPropChanged fileName={props.fileId} onPropChanged={selectFileForView} />
