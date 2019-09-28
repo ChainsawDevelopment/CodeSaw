@@ -144,7 +144,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
                     Author = author,
-                    FileMatrix = fileMatrix.OrderBy(x => x.File.NewPath),
+                    FileMatrix = fileMatrix,
                     BuildStatuses = buildStatuses,
                     IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
                 };
