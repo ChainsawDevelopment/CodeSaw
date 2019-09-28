@@ -3,8 +3,9 @@ import { Dispatch } from "redux";
 import { connect } from "react-redux";
 import { History } from "history";
 
-import Divider from 'semantic-ui-react/dist/commonjs/elements/Divider';
-import Grid from 'semantic-ui-react/dist/commonjs/collections/Grid';
+import Divider from '@ui/elements/Divider';
+import Grid from '@ui/collections/Grid';
+import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
 
 import {
     selectFileForView,
@@ -43,7 +44,6 @@ import UserInfo from "../../components/UserInfo";
 import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
-import { KeyboardHelp } from "./KeyboardHelp";
 import PageTitle from '../../components/PageTitle';
 
 interface OwnProps {
@@ -80,8 +80,19 @@ interface StateProps {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-class reviewPage extends React.Component<Props> {
+interface State {
+    hideReviewed: boolean;
+}
+
+class reviewPage extends React.Component<Props, State> {
     private showFileHandler: () => void;
+
+    constructor(props: Props) {
+        super(props);
+        this.state = {
+            hideReviewed: false
+        };
+    }
 
     onShowFile() {
         if (this.showFileHandler) {
@@ -160,6 +171,13 @@ class reviewPage extends React.Component<Props> {
             return `[${currentReview.projectPath}] #${currentReview.reviewId.reviewId} - ${currentReview.title}`;
         })();
 
+        const changeHideReviewed = (e: React.SyntheticEvent, data: CheckboxProps) => {
+            this.setState({
+                hideReviewed: data.checked
+            });
+        };
+
+
         return (
             <div id="review-page">
                 <PageTitle>{title}</PageTitle>
@@ -191,7 +209,8 @@ class reviewPage extends React.Component<Props> {
                         </Grid.Row>
                         <Grid.Row centered columns={1}>
                             <Grid.Column>
-                                <FileMatrix />
+                                <Checkbox toggle label="Hide reviewed" onChange={changeHideReviewed}/>
+                                <FileMatrix hideReviewed={this.state.hideReviewed}/>
                             </Grid.Column>
                         </Grid.Row>
                         <Grid.Row>
