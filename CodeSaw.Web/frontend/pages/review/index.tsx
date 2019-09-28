@@ -172,6 +172,7 @@ class reviewPage extends React.Component<Props> {
                             <Grid.Column className={"header"}>
                                 <Grid.Row>
                                     <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
+                                    <h3>{props.currentReview.projectPath}</h3>
                                 </Grid.Row>
                                 <Grid.Row>
                                     <UserInfo
