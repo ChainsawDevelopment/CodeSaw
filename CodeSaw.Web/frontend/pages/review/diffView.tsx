@@ -261,9 +261,9 @@ const diffView = (props: Props) => {
 
     const events = {
         gutterEvents: {
-            onClick: change => {
+            onClick: e => {
                 if (props.onLineClick) {
-                    const lineNumber = change.newLineNumber;
+                    const lineNumber = e.change.newLineNumber;
                     props.onLineClick('right', lineNumber);
                 }
             }
