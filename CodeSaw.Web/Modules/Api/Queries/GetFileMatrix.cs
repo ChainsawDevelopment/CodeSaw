@@ -158,6 +158,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 matrix.TMP_FillFullRangeFilePath();
 
                 matrix.FillUnchanged();
+                matrix.Sort(DelegateComparer.For((FileMatrix.Entry e) => e.File.NewPath));
                 return matrix;
             }
         }

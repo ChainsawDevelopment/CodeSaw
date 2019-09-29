@@ -195,7 +195,11 @@ interface StateProps {
     fileDiscussions: FileDiscussion[];
 }
 
-type Props = StateProps;
+interface OwnProps {
+    hideReviewed: boolean;
+}
+
+type Props = StateProps & OwnProps;
 
 const fileMatrixComponent = (props: Props): JSX.Element => {
     const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>);
@@ -209,6 +213,9 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
+        if (props.hideReviewed && review.current == review.previous) {
+            continue;
+        }
 
         rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={props.fileDiscussions}/>);
     }

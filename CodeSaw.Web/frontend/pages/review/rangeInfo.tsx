@@ -167,15 +167,13 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         }
     }
 
-    private _findNextFile = (current: FileId, direction: 1 | -1, predicate: (FileToReview) => boolean): FileId => {
+    private _findNextFile = (current: FileId, direction: 1 | -1, predicate: (FileToReview) => boolean): FileToReview => {
         const changes = this.props.filesToReview;
-        const currentIndex = changes.findIndex(p => PathPairs.equal(p.reviewFile, this.props.selectedFile.path));
+        const currentIndex = changes.findIndex(p => p.fileId ==this.props.selectedFile.fileId);
 
         if (currentIndex == -1) {
             return null;
         }
-
-        const filesReviewedByUser: FileId[] = this.props.reviewedFiles;
 
         let index = currentIndex;
 
@@ -189,18 +187,18 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             }
 
             if (index == currentIndex) {
-                return current;
+                return changes[currentIndex];
             }
 
-            const candidate = changes[index].fileId;
+            const candidate = changes[index];
 
-            if (predicate(changes[index])) {
+            if (predicate(candidate)) {
                 return candidate;
             }
         }
     }
 
-    private _findNextUnreviewedFile = (current: FileId, direction: 1 | -1): FileId => {
+    private _findNextUnreviewedFile = (current: FileId, direction: 1 | -1): FileToReview => {
         const predicate = (file: FileToReview) => {
             const filesReviewedByUser: FileId[] = this.props.reviewedFiles;
 
@@ -222,7 +220,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         return this._findNextFile(current, direction, predicate);
     }
 
-    private _findNextFileWithUnresolvedComment = (current: FileId, direction: 1 | -1): FileId => {
+    private _findNextFileWithUnresolvedComment = (current: FileId, direction: 1 | -1): FileToReview => {
         const predicate = (file: FileToReview) => {
             const fileDiscussions = this.props.fileComments
                 .filter(f => f.fileId == file.fileId)
@@ -253,10 +251,10 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             const prevFileWithUnresolvedComment = this._findNextFileWithUnresolvedComment(selectedFile.fileId, -1);
 
             reviewHotKeys = {
-                '[': () => prevFile && onSelectFileForView(prevFile),
-                ']': () => nextFile && onSelectFileForView(nextFile),
-                '{': () => prevFileWithUnresolvedComment && onSelectFileForView(prevFileWithUnresolvedComment),
-                '}': () => nextFileWithUnresolvedComment && onSelectFileForView(nextFileWithUnresolvedComment),
+                '[': () => prevFile && onSelectFileForView(prevFile.fileId),
+                ']': () => nextFile && onSelectFileForView(nextFile.fileId),
+                '{': () => prevFileWithUnresolvedComment && onSelectFileForView(prevFileWithUnresolvedComment.fileId),
+                '}': () => nextFileWithUnresolvedComment && onSelectFileForView(nextFileWithUnresolvedComment.fileId),
                 'y': () => this._changeFileReviewState(!this.props.selectedFile.isReviewed),
                 'ctrl+Enter': this.props.publishReview
             };
@@ -286,14 +284,14 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             menuItems.push(<Menu.Item fitted key="file-navigation">
                 {prevFile &&
                     <Popup
-                        trigger={<FileLink reviewId={this.props.reviewId} fileId={prevFile} >
+                        trigger={<FileLink reviewId={this.props.reviewId} fileId={prevFile.fileId} >
                             <Icon name="step backward" circular link /></FileLink>}
                         content="Previous unreviewed file"
                     />}
                 {nextFile &&
                     <Popup
 
-                        trigger={<FileLink reviewId={this.props.reviewId} fileId={nextFile} >
+                        trigger={<FileLink reviewId={this.props.reviewId} fileId={nextFile.fileId} >
                             <Icon name="step forward" circular link /></FileLink>}
                         content="Next unreviewed file"
                     />}

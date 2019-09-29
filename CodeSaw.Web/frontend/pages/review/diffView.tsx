@@ -7,6 +7,8 @@ const style = require('react-diff-view/style/index.css');
 import './diffView.less';
 import * as classNames from "classnames";
 import { flatMap } from 'lodash';
+import HunkHeader from "./diff/HunkHeader";
+import { Segment, Divider, Input, Button } from "semantic-ui-react";
 
 interface Change {
     oldLineNumber: number;
@@ -69,20 +71,13 @@ const mapHunkToView = (hunk: Hunk) => {
         oldLines: hunk.oldPosition.length,
         newStart: hunk.newPosition.start + 1,
         newLines: hunk.newPosition.length,
-        content: `Hunk ${hunk.newPosition.start + 1} - ${hunk.newPosition.end + 1} (${hunk.newPosition.length} lines)`,
+        content: '',//<HunkHeader hunk={hunk}/>,
+        decoration: <HunkHeader hunk={hunk}/>,
         changes: zipChanges(changes)
     };
 
     return viewHunk;
 };
-
-const oppositeType = (type: string) => {
-    switch (type) {
-        case 'insert': return 'delete';
-        case 'delete': return 'insert';
-        default: return type;
-    }
-}
 
 const zipChanges = (changes: Change[]): Change[] => {
     let result = [];
@@ -226,7 +221,8 @@ const diffView = (props: Props) => {
             oldLines: 0,
             newStart: 1,
             newLines: 1,
-            content: '',
+            content: null,
+            decoration: null,
             changes: []
         });
     }
@@ -265,9 +261,9 @@ const diffView = (props: Props) => {
 
     const events = {
         gutterEvents: {
-            onClick: change => {
+            onClick: e => {
                 if (props.onLineClick) {
-                    const lineNumber = change.newLineNumber;
+                    const lineNumber = e.change.newLineNumber;
                     props.onLineClick('right', lineNumber);
                 }
             }
@@ -308,6 +304,8 @@ const diffView = (props: Props) => {
         ]
     });
 
+    let cnt = 0;
+
     return (
         <>
             <Diff
@@ -318,7 +316,9 @@ const diffView = (props: Props) => {
                 hunks={viewHunks}
             >
                 {hunks => flatMap(hunks, (h, i) => [
-                    <Decoration key={h.content}>{h.content}</Decoration>,
+                    <Decoration key={'dec' + cnt++}>
+                        {h.decoration}
+                    </Decoration>,
                     <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
                 ])}
             </Diff>

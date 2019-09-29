@@ -13,6 +13,7 @@ import ProjectReviewsList from "./reviewList";
 import Pagination from "../../components/pagination";
 import SearchOptions from "./searchOptions";
 import { Dispatch } from "redux";
+import PageTitle from "CodeSaw.Web/frontend/components/PageTitle";
 
 interface StateProps {
     orderBy: 'created_at' | 'updated_at';
@@ -39,6 +40,7 @@ const Reviews = (props: Props) => {
 
     return (
         <>
+            <PageTitle>CodeSaw</PageTitle>
             <h2>Reviews</h2>
             <OnMount onMount={initialLoad} />
             <SearchOptions

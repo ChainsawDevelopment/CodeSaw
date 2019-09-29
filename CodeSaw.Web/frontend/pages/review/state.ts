@@ -113,6 +113,7 @@ const initial: ReviewState = {
         pastRevisions: [],
         reviewId: null,
         title: '',
+        projectPath: '',
         description: '',
         headCommit: '',
         baseCommit: '',

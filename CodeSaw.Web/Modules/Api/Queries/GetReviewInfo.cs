@@ -38,6 +38,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public bool ReviewFinished { get; set; }
             public UserInfo Author { get; set; } 
             public bool IsAuthor { get; set; }
+            public string ProjectPath { get; set; }
         }
 
         public class Revision
@@ -106,6 +107,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
                 ).ToArray();
 
+                var project = await _api.Project(query._reviewId.ProjectId);
+
                 var commentsTree = GetCommentsTree(query);
 
                 var reviewStatus = await _query.Query(new GetReviewStatus(query._reviewId));
@@ -123,6 +126,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     FilesToReview = fileMatrix.FindFilesToReview(_currentUser.UserName).ToList(),
                     ReviewId = query._reviewId,
                     Title = reviewStatus.Title,
+                    ProjectPath = $"{project.Namespace}/{project.Name}",
                     Description = reviewStatus.Description,
                     SourceBranch = reviewStatus.SourceBranch,
                     TargetBranch = reviewStatus.TargetBranch,
@@ -140,7 +144,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     FileDiscussions = GetFileDiscussions(query, commentsTree),
                     ReviewDiscussions = GetReviewDiscussions(query, commentsTree),
                     Author = author,
-                    FileMatrix = fileMatrix.OrderBy(x => x.File.NewPath),
+                    FileMatrix = fileMatrix,
                     BuildStatuses = buildStatuses,
                     IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
                 };
