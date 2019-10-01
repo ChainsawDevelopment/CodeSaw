@@ -336,43 +336,4 @@ namespace CodeSaw.Tests
             public override string ToString() => CaseName;
         }
     }
-
-    
-
-    public static class Extensions
-    {
-        public static string NormalizeLineEndings(this string s)
-        {
-            return s.Replace("\r\n", "\n").Replace("\r", "\n");
-        }
-
-        public static IEnumerable<(DiffClassification classification, Operation operation, string line)> SplitLines(this List<ClassifiedDiff> diff)
-        {
-            int index = 0;
-            foreach (var item in diff)
-            {
-                if (item.Diff.Operation.IsDelete)
-                {
-                    index++;
-                    continue;
-                }
-
-                var diffText = item.Diff.Text;
-
-                if (diffText.EndsWith("\n") && index != diff.Count - 1)
-                {
-                    diffText = diffText.Substring(0, diffText.Length - 1);
-                }
-
-                var lines = diffText.Split('\n');
-
-                foreach (var line in lines)
-                {
-                    yield return (item.Classification, item.Diff.Operation, line);
-                }
-
-                index++;
-            }
-        }
-    }
 }

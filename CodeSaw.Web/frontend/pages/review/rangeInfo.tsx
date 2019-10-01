@@ -299,6 +299,29 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             menuItems.push(<Menu.Item fitted key="file-path">
                 <span className="file-path">{selectedFile.path.newPath}</span>
             </Menu.Item>);
+
+            const downloadFile = () => {
+                const content = JSON.stringify({
+                    current: this.props.selectedFile.diff.contents.review.current,
+                    previous: this.props.selectedFile.diff.contents.review.previous,
+                });
+                const f = new File([content], 'state.json', {type: "application/octet-stream"});
+                const url = window.URL.createObjectURL(f);
+                console.log(url);
+                const a = document.createElement('a');
+                a.href = url;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            };
+
+            menuItems.push(
+                <Menu.Item fitted key="download-diff">
+                    <Popup
+                        trigger={<Icon onClick={downloadFile} name="download" circular link color="blue"></Icon>}
+                        content="Download"
+                    />
+                </Menu.Item>
+            );
         } else if (this.props.filesToReview.length > 0) {
             const firstFile = this.props.filesToReview[0].fileId;
             const lastFile = this.props.filesToReview[this.props.filesToReview.length - 1].fileId;

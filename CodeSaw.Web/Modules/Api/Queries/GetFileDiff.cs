@@ -128,7 +128,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 var basePatch = FourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
                 var reviewPatch = FourWayDiff.MakePatch(contents[previousCommit], contents[currentCommit]);
 
-                DiffUtils.UnrollContext(reviewPatch);
+                //DiffUtils.UnrollContext(reviewPatch);
 
                 var classifiedPatches = FourWayDiff.ClassifyPatches(
                     contents[currentBaseCommit], basePatch,

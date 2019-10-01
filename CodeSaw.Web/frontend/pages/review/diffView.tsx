@@ -214,6 +214,8 @@ const diffView = (props: Props) => {
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
+    console.log(viewHunks[viewHunks.length - 1]);
+
     if (viewHunks.length == 0) {
         viewHunks.push({
             oldStart: 1,
