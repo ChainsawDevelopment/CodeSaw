@@ -71,8 +71,7 @@ const mapHunkToView = (hunk: Hunk) => {
         oldLines: hunk.oldPosition.length,
         newStart: hunk.newPosition.start + 1,
         newLines: hunk.newPosition.length,
-        content: '',//<HunkHeader hunk={hunk}/>,
-        decoration: <HunkHeader hunk={hunk}/>,
+        content: '',
         changes: zipChanges(changes)
     };
 
@@ -222,7 +221,6 @@ const diffView = (props: Props) => {
             newStart: 1,
             newLines: 1,
             content: null,
-            decoration: null,
             changes: []
         });
     }
@@ -317,7 +315,20 @@ const diffView = (props: Props) => {
             >
                 {hunks => flatMap(hunks, (h, i) => [
                     <Decoration key={'dec' + cnt++}>
-                        {h.decoration}
+                        <HunkHeader hunk={{
+                            oldPosition: {
+                                start: h.oldStart,
+                                end: h.oldStart + h.oldLines,
+                                length: h.oldLines
+                            },
+                            newPosition: {
+                                start: h.newStart,
+                                end: h.newStart + h.newLines,
+                                length: h.newLines
+                            },
+                            lines: [],
+
+                        }}/>
                     </Decoration>,
                     <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
                 ])}
