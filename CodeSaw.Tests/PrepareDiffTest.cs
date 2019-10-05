@@ -47,7 +47,6 @@ namespace CodeSaw.Tests
                 Current = ReadCaseFile("current.txt");
 
                 ReviewPatch = FourWayDiff.MakePatch(Previous, Current);
-                //ReviewPatch = DiffUtils.MergeAdjacentPatches(ReviewPatch);
             }
 
             public override string ToString() => CaseName;
@@ -108,50 +107,16 @@ namespace CodeSaw.Tests
         [TestCaseSource(nameof(TestCases))]
         public void PatchMatchesText_Previous(FileSet set)
         {
-            var offset = 0;
-
-            foreach (var (patchIdx, patch) in set.ReviewPatch.AsIndexed())
-            {
-                var insertedLength = patch.Diffs.Where(x => x.Operation.IsInsert).Sum(x => x.Text.Length);
-                var deletedLength = patch.Diffs.Where(x => x.Operation.IsDelete).Sum(x => x.Text.Length);
-
-                Console.WriteLine($"[{patchIdx}] L1: {patch.Length1,10} L2: {patch.Length2,10} Delta:{patch.Length2 - patch.Length1,10} Inserted:{insertedLength,10} Deleted:{deletedLength,10}");
-
-                var offset2 = set.ReviewPatch.Where(x => x.Start1 + x.Length1 <= patch.Start1).Sum(x =>
-                {
-                    var del = x.Diffs.Where(y => y.Operation.IsDelete).Sum(y => y.Text.Length);
-                    var ins = x.Diffs.Where(y => y.Operation.IsInsert).Sum(y => y.Text.Length);
-                    return del - ins;
-                });
-
-                var actual = set.Previous.Substring(patch.Start1 + offset2, patch.Length1);
-                var expected = DiffMatchPatchModule.Default.DiffText1(patch.Diffs);
-
-                Assert.That(actual, Is.EqualTo(expected), () =>
-                {
-                    var foundAt = string.Join(", ", set.Previous.FindAllOccurences(expected));
-                    return $"Patch index {patchIdx} Expected position: {patch.Start1} Found at: {foundAt} Offset: {offset} Offset2: {offset2}";
-                });
-
-                offset += deletedLength - insertedLength;
-            }
-        }
-
-        [Test]
-        [TestCaseSource(nameof(TestCases))]
-        public void PatchMatchesText_Previous2(FileSet set)
-        {
             var updatedPreviousText = set.Previous;
-            var offset = 0;
 
             foreach (var (patchIdx, patch) in set.ReviewPatch.AsIndexed())
             {
-                var actual = set.Previous.Substring(patch.Start1 + offset, patch.Length1);
+                var actual = updatedPreviousText.Substring(patch.Start1, patch.Length1);
                 var expected = DiffMatchPatchModule.Default.DiffText1(patch.Diffs);
 
                 Assert.That(actual, Is.EqualTo(expected), () =>
                 {
-                    var foundAt = string.Join(", ", set.Previous.FindAllOccurences(expected));
+                    var foundAt = string.Join(", ", updatedPreviousText.FindAllOccurences(expected));
                     return $"Patch index {patchIdx} Expected position: {patch.Start1} Found at: {foundAt} ";
                 });
 
@@ -160,10 +125,7 @@ namespace CodeSaw.Tests
 
                 Console.WriteLine($"Before: {updatedPreviousText.Length} Now: {newText.Length}");
 
-                offset +=  updatedPreviousText.Length - newText.Length;
-
                 updatedPreviousText = newText;
-                
             }
         }
 
@@ -173,13 +135,14 @@ namespace CodeSaw.Tests
         {
             foreach (var (patchIdx, patch) in set.ReviewPatch.AsIndexed())
             {
-                Console.WriteLine($"{patchIdx, 2}{patch.Start1,5} -> {patch.Start1 + patch.Length1,5}    <=>    {patch.Start2,5} -> {patch.Start2 + patch.Length2}");
+                var diffs = string.Join("", patch.Diffs.Select(x => x.Operation.ToString()[0]));
+                Console.WriteLine($"{patchIdx, 2}{patch.Start1,5} -> {patch.Start1 + patch.Length1,5}    <=>    {patch.Start2,5} -> {patch.Start2 + patch.Length2} {diffs}");
             }
         }
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
-        public void X(FileSet set)
+        public void BuildDiffView(FileSet set)
         {
             var basePatch = FourWayDiff.MakePatch(set.Previous, set.Previous);
 
@@ -229,8 +192,6 @@ namespace CodeSaw.Tests
 
                 Assert.That(offsetPrevious, Is.EqualTo(patch.Start1 + patch.Length1));
                 Assert.That(offsetCurrent, Is.EqualTo(patch.Start2 + patch.Length2));
-
-
             }
 
             void Dump()

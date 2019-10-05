@@ -44,16 +44,6 @@ namespace CodeSaw.Tests
 
             foreach (var (classification, patch) in patches)
             {
-                if (patch.Start2 < previousPosition)
-                {
-                    mapping[patch.Start2] = (classification, Operation.Equal);
-                }
-
-                if (patch.Start2 > previousPosition)
-                {
-                    mapping[patch.Start2] = (classification, Operation.Equal);
-                }
-
                 previousPosition = patch.Start2;
 
                 foreach (var diff in patch.Diffs)
