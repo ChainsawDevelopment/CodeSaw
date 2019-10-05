@@ -23,8 +23,8 @@ interface Change {
 const mapHunkToView = (hunk: Hunk) => {
     var changes: Change[] = [];
 
-    let oldLineCounter = hunk.oldPosition.start + 1;
-    let newLineCounter = hunk.newPosition.start + 1;
+    let oldLineCounter = hunk.oldPosition.start;
+    let newLineCounter = hunk.newPosition.start;
 
     for (const line of hunk.lines) {
         let type = '';
@@ -67,9 +67,9 @@ const mapHunkToView = (hunk: Hunk) => {
     }
 
     const viewHunk = {
-        oldStart: hunk.oldPosition.start + 1,
+        oldStart: hunk.oldPosition.start,
         oldLines: hunk.oldPosition.length,
-        newStart: hunk.newPosition.start + 1,
+        newStart: hunk.newPosition.start,
         newLines: hunk.newPosition.length,
         content: '',
         changes: zipChanges(changes)
@@ -221,7 +221,7 @@ const diffView = (props: Props) => {
             oldStart: 1,
             oldLines: 0,
             newStart: 1,
-            newLines: 1,
+            newLines: 0,
             content: null,
             changes: []
         });
@@ -231,6 +231,17 @@ const diffView = (props: Props) => {
     // however condition is just `false` so nothing will be expanded
     // once we start working on expanding/collapsing hunks this will be useful
     viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
+
+    for(let hunk of props.diffInfo.hunks) {
+        var a = Math.max(1, hunk.newPosition.start - 5);
+        var b = hunk.newPosition.start;
+        console.log('Expanding',a,b, viewHunks.length);
+
+        viewHunks = expandFromRawCode(viewHunks, props.contents.current, a, b);
+        console.log(viewHunks.length);
+        break;
+    }
+
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
