@@ -34,6 +34,12 @@ namespace CodeSaw.Web.Diff
 
         public static IEnumerable<Patch> SplitPatchIntoAtoms(Patch patch)
         {
+            if (patch.Diffs.Count == 1)
+            {
+                yield return patch;
+                yield break;
+            }
+
             using (var diff = patch.Diffs.GetEnumerator())
             {
                 var currentPatch = new List<DiffMatchPatch.Diff>();

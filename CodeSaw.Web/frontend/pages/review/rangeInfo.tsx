@@ -93,7 +93,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         };
 
         return (
-            <span ref={span => this.renderedRef = span}>
+            <span ref={span => this.renderedRef = span} key={file.fileId}>
                 <FileSummary file={file} />
                 {file.diff ?
                     <CommentedDiffView
