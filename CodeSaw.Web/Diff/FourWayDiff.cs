@@ -34,6 +34,12 @@ namespace CodeSaw.Web.Diff
 
         public static IEnumerable<Patch> SplitPatchIntoAtoms(Patch patch)
         {
+            if (patch.Diffs.Count == 1)
+            {
+                yield return patch;
+                yield break;
+            }
+
             using (var diff = patch.Diffs.GetEnumerator())
             {
                 var currentPatch = new List<DiffMatchPatch.Diff>();
@@ -96,26 +102,6 @@ namespace CodeSaw.Web.Diff
 
                     yield return p;
                 }
-
-                //if (start1 + length1 != patch.Start1 + patch.Length1)
-                //{
-                //    throw new InvalidOperationException("A1");
-                //}
-
-                //if (start2 + length2 != patch.Start2 + patch.Length2)
-                //{
-                //    throw new InvalidOperationException("A2");
-                //}
-
-                //if (yl1 == patch.Length1)
-                //{
-                //    throw new InvalidOperationException("B1");
-                //}
-
-                //if (yl2 == patch.Length2)
-                //{
-                //    throw new InvalidOperationException("B2");
-                //}
             }
         }
 

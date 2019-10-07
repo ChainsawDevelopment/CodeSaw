@@ -144,6 +144,18 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                     foreach (var (previous, current) in hunk.Lines)
                     {
+                        if (previous != null && current != null)
+                        {
+                            lines.Add(new LineInfo
+                            {
+                                Text = previous.Text,
+                                Classification = previous.Classification.ToString(),
+                                Operation = previous.Diff?.Operation.ToString() ?? "Equal"
+                            });
+
+                            continue;
+                        }
+
                         if (previous != null)
                         {
                             lines.Add(new LineInfo
@@ -183,7 +195,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     };
                 }
 
-                var baseHunks = DiffView.BuildHunks(currentLines, previousLines);
+                var baseHunks = DiffView.BuildHunks(currentLines, previousLines, true);
                 var hunks = baseHunks.Select(MakeHunkInfo);
 
                 return new Result

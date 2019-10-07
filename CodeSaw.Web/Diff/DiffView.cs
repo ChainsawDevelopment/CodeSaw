@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DiffMatchPatch;
 
@@ -6,6 +7,8 @@ namespace CodeSaw.Web.Diff
 {
     public class DiffView
     {
+        private static readonly Line EmptyLine = new Line(0, 0, "");
+
         public static void AssignPatchesToLines(List<(DiffClassification classification, Patch Patch)> classifiedPatches, LineList currentLines, LineList previousLines)
         {
             var previousCorrection = 0;
@@ -48,25 +51,53 @@ namespace CodeSaw.Web.Diff
             }
         }
 
-        public static IEnumerable<HunkInfo> BuildHunks(LineList current, LineList previous)
+        public static IEnumerable<HunkInfo> BuildHunks(LineList current, LineList previous, bool withMargin)
         {
+            if (current.Count == 0)
+            {
+                yield return MakeAllDeletedHunk(previous);
+                yield break;
+            }
+
+            if (previous.Count == 0)
+            {
+                yield return MakeAllInsertedHunk(current);
+                yield break;
+            }
+
             var previousIndex = 0;
             var currentIndex = 0;
             var hunk = new List<(Line previous, Line current)>();
-            (int, int)? hunkStart = null;
 
-            while (previousIndex < previous.Count && currentIndex < current.Count)
+            var currentEndReached = false;
+            var previousEndReached = false;
+            var previousCount = 0;
+            var currentCount = 0;
+
+            while (!currentEndReached || !previousEndReached)
             {
                 void NextPrevious()
                 {
-                    if (previousIndex < previous.Count)
+                    if (previousIndex == previous.Count - 1)
+                    {
+                        previousEndReached = true;
+                    }
+                    else
+                    {
                         previousIndex++;
+                    }
                 }
 
                 void NextCurrent()
                 {
-                    if (currentIndex < current.Count)
+                    if (currentIndex == current.Count - 1)
+                    {
+                        currentEndReached = true;
+                    }
+                    else
+                    {
                         currentIndex++;
+                    }
                 }
 
                 var previousLine = previous[previousIndex];
@@ -76,10 +107,51 @@ namespace CodeSaw.Web.Diff
                 {
                     if (hunk.Any())
                     {
-                        yield return new HunkInfo(hunkStart.Value.Item1 + 1, hunkStart.Value.Item2 + 1, hunk);
+                        if (withMargin)
+                        {
+                            if ((hunk.Last().previous?.IsNoChange ?? true) && (hunk.Last().current?.IsNoChange ?? true))
+                            {
+                                var prefixPreviousIdx = previousIndex - previousCount - 1;
+                                var prefixCurrentIdx = currentIndex - currentCount - 1;
 
-                        hunk = new List<(Line previous, Line current)>();
-                        hunkStart = null;
+                                if (prefixPreviousIdx >= 0 && prefixCurrentIdx >= 0)
+                                {
+                                    hunk.Insert(0, (previous[prefixPreviousIdx], current[prefixCurrentIdx]));
+                                    previousCount++;
+                                    currentCount++;
+                                }
+                                else if(prefixPreviousIdx >= 0)
+                                {
+                                    hunk.Insert(0, (previous[prefixPreviousIdx], null));
+                                    previousCount++;
+                                }
+                                else if(prefixCurrentIdx >= 0)
+                                {
+                                    hunk.Insert(0, (null, current[prefixCurrentIdx]));
+                                    currentCount++;
+                                }
+
+                                yield return new HunkInfo(previousIndex - previousCount + 1, currentIndex - currentCount + 1, hunk);
+
+                                hunk = new List<(Line previous, Line current)>();
+                                previousCount = 0;
+                                currentCount = 0;
+                            }
+                            else
+                            {
+                                hunk.Add((previous[previousIndex], current[currentIndex]));
+                                previousCount++;
+                                currentCount++;
+                            }
+                        }
+                        else
+                        {
+                            yield return new HunkInfo(previousIndex - previousCount + 1, currentIndex - currentCount + 1, hunk);
+
+                            hunk = new List<(Line previous, Line current)>();
+                            previousCount = 0;
+                            currentCount = 0;
+                        }
                     }
 
                     NextPrevious();
@@ -92,17 +164,41 @@ namespace CodeSaw.Web.Diff
                 if (!previousLine.IsNoChange)
                 {
                     hunk.Add((previousLine, null));
-                    hunkStart = hunkStart ?? (previousIndex, currentIndex);
+                    previousCount++;
                     NextPrevious();
                 }
 
                 if (!currentLine.IsNoChange)
                 {
                     hunk.Add((null, currentLine));
-                    hunkStart = hunkStart ?? (previousIndex, currentIndex);
+                    currentCount++;
                     NextCurrent();
                 }
             }
+
+            if (hunk.Any())
+            {
+                if (withMargin)
+                {
+                    hunk.Insert(0, (previous[previousIndex - previousCount], current[currentIndex - currentCount]));
+
+                    yield return new HunkInfo(previousIndex - previousCount+1, currentIndex - currentCount+1, hunk);
+                }
+                else
+                {
+                    yield return new HunkInfo(previousIndex - previousCount + 2, currentIndex - currentCount + 2, hunk);
+                }
+            }
+        }
+
+        private static HunkInfo MakeAllInsertedHunk(LineList current)
+        {
+            return new HunkInfo(1, 1, current.Select(x => ((Line)null, x)).ToList());
+        }
+
+        private static HunkInfo MakeAllDeletedHunk(LineList previous)
+        {
+            return new HunkInfo(1, 1, previous.Select(x => (x, (Line)null)).ToList());
         }
 
         public class HunkInfo

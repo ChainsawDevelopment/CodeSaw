@@ -214,8 +214,6 @@ const diffView = (props: Props) => {
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
 
-    console.log(viewHunks[viewHunks.length - 1]);
-
     if (viewHunks.length == 0) {
         viewHunks.push({
             oldStart: 1,
@@ -233,15 +231,11 @@ const diffView = (props: Props) => {
     viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
 
     for(let hunk of props.diffInfo.hunks) {
-        var a = Math.max(1, hunk.newPosition.start - 5);
-        var b = hunk.newPosition.start;
-        console.log('Expanding',a,b, viewHunks.length);
+        var a = Math.max(1, hunk.oldPosition.start - 5);
+        var b = hunk.oldPosition.end + 5;
 
         viewHunks = expandFromRawCode(viewHunks, props.contents.current, a, b);
-        console.log(viewHunks.length);
-        break;
     }
-
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
