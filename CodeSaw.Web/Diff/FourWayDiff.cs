@@ -15,9 +15,35 @@ namespace CodeSaw.Web.Diff
         {
             var patches = MakePatchRaw(text1, text2);
 
+            MergeEquals(patches);
+
             patches = patches.SelectMany(SplitPatchIntoAtoms).ToList();
 
             return patches;
+        }
+
+
+        private static void MergeEquals(List<Patch> patches)
+        {
+            foreach (var patch in patches)
+            {
+                if (patch.Diffs.Count < 2)
+                {
+                    continue;
+                }
+
+                for (int i = patch.Diffs.Count - 1; i > 1 ; i--)
+                {
+                    var mergeFrom = patch.Diffs[i];
+                    var mergeTo = patch.Diffs[i - 1];
+
+                    if (mergeFrom.Operation.IsEqual && mergeTo.Operation.IsEqual)
+                    {
+                        mergeTo.Text = mergeTo.Text + mergeFrom.Text;
+                        patch.Diffs.RemoveAt(i);
+                    }
+                }
+            }
         }
 
         public static List<Patch> MakePatchRaw(string text1, string text2)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CodeSaw.Web.Diff
@@ -7,9 +8,16 @@ namespace CodeSaw.Web.Diff
     {
         public IEnumerable<Line> LinesBetween(int start, int end)
         {
-            var lines = this.SkipWhile(x => !x.Contains(start));
+            //var lines = this.SkipWhile(x => x.StartPosition < start);
 
-            return lines.TakeWhile(x => x.EndPosition <= end);
+            //return lines.TakeWhile(x => x.EndPosition <= end);
+
+            return this.Where(x => (x.StartPosition < end) && (x.EndPosition > start));
+        }
+
+        public Line LineInPosition(int position)
+        {
+            return this.SingleOrDefault(x => x.Contains(position));
         }
 
         public static LineList SplitLines(string content)
@@ -27,7 +35,7 @@ namespace CodeSaw.Web.Diff
 
                 var line = content.Substring(offset, nextNewLine - offset);
 
-                result.Add(new Line(offset, nextNewLine, line));
+                result.Add(new Line(offset, nextNewLine + 1, line));
 
                 offset = nextNewLine + 1;
             }

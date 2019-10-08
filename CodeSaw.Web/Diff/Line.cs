@@ -50,6 +50,6 @@ namespace CodeSaw.Web.Diff
             return $"[{StartPosition,4} - {EndPosition,4} {op}] {Text}";
         }
 
-        public bool Contains(int position) => StartPosition <= position && position <= EndPosition;
+        public bool Contains(int position) => StartPosition <= position && position < EndPosition;
     }
 }

@@ -20,20 +20,40 @@ namespace CodeSaw.Web.Diff
 
                 foreach (var diff in patch.Diffs)
                 {
+                    LineList side = null;
+                    int offset = 0;
                     if (diff.Operation.IsInsert)
                     {
-                        foreach (var line in currentLines.LinesBetween(offsetCurrent, offsetCurrent + diff.Text.Length))
-                        {
-                            line.AssignDiff(classification, patch, diff);
-                        }
+                        side = currentLines;
+                        offset = offsetCurrent;
+
+                    }
+                    else if (diff.Operation.IsDelete)
+                    {
+                        side = previousLines;
+                        offset = offsetPrevious;
                     }
 
-                    if (diff.Operation.IsDelete)
+                    if (side != null)
                     {
-                        foreach (var line in previousLines.LinesBetween(offsetPrevious, offsetPrevious + diff.Text.Length))
+                        var diffOffset = 0;
+                        while (diffOffset < diff.Text.Length)
                         {
-                            line.AssignDiff(classification,patch, diff);
+                            var line = side.LineInPosition(offset + diffOffset);
+                            line.AssignDiff(classification, patch, diff);
+
+                            var newLine = diff.Text.IndexOf('\n', diffOffset);
+                            if (newLine == -1)
+                            {
+                                newLine = diff.Text.Length - 1;
+                            }
+
+                            diffOffset = newLine + 1;
                         }
+                        //foreach (var line in side.LinesBetween(offsetCurrent, offsetCurrent + diff.Text.Length + 1))
+                        //{
+                        //    line.AssignDiff(classification, patch, diff);
+                        //}
                     }
 
                     if (!diff.Operation.IsDelete)
