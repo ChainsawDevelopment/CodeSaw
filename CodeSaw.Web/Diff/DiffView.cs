@@ -50,10 +50,6 @@ namespace CodeSaw.Web.Diff
 
                             diffOffset = newLine + 1;
                         }
-                        //foreach (var line in side.LinesBetween(offsetCurrent, offsetCurrent + diff.Text.Length + 1))
-                        //{
-                        //    line.AssignDiff(classification, patch, diff);
-                        //}
                     }
 
                     if (!diff.Operation.IsDelete)
@@ -181,14 +177,14 @@ namespace CodeSaw.Web.Diff
                     continue;
                 }
 
-                if (!previousLine.IsNoChange)
+                if (!previousLine.IsNoChange && !previousEndReached)
                 {
                     hunk.Add((previousLine, null));
                     previousCount++;
                     NextPrevious();
                 }
 
-                if (!currentLine.IsNoChange)
+                if (!currentLine.IsNoChange && !currentEndReached)
                 {
                     hunk.Add((null, currentLine));
                     currentCount++;

@@ -133,7 +133,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     contents[currentCommit], reviewPatch
                 );
 
-                var previousLines = LineList.SplitLines(contents[currentBaseCommit]);
+                var previousLines = LineList.SplitLines(contents[previousCommit]);
                 var currentLines = LineList.SplitLines(contents[currentCommit]);
 
                 DiffView.AssignPatchesToLines(classifiedPatches, currentLines, previousLines);
@@ -196,7 +196,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 }
 
                 var baseHunks = DiffView.BuildHunks(currentLines, previousLines, true);
-                var hunks = baseHunks.Select(MakeHunkInfo);
+                var hunks = baseHunks.TakeLast(1).Select(MakeHunkInfo).ToList();
 
                 return new Result
                 {

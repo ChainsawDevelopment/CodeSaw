@@ -223,7 +223,7 @@ namespace CodeSaw.Tests
 
             var hunks = DiffView.BuildHunks(currentLines, previousLines, false).ToList();
 
-            //Assert.That(hunks, Has.Count.EqualTo(set.ExpectedPatches.Count), "Proper number of hunks generated");
+            Assert.That(hunks, Has.Count.EqualTo(set.ExpectedPatches.Count), "Proper number of hunks generated");
 
             AssertHunks(hunks, previousLines, currentLines, set.ExpectedPatches);
         }
@@ -248,7 +248,7 @@ namespace CodeSaw.Tests
 
             var hunks = DiffView.BuildHunks(currentLines, previousLines, true).ToList();
 
-            //Assert.That(hunks, Has.Count.EqualTo(set.ExpectedPatchesWithMargin.Count), "Proper number of hunks generated");
+            Assert.That(hunks, Has.Count.EqualTo(set.ExpectedPatchesWithMargin.Count), "Proper number of hunks generated");
 
             AssertHunks(hunks, previousLines, currentLines, set.ExpectedPatchesWithMargin);
         }
