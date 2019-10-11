@@ -13,6 +13,9 @@ namespace CodeSaw.Web.Diff
         {
             var previousCorrection = 0;
 
+            var currentEndOffset = currentLines.LastOrDefault()?.EndPosition ?? int.MaxValue;
+            var previousEndOffset = previousLines.LastOrDefault()?.EndPosition ?? int.MaxValue;
+
             foreach (var (classification, patch) in classifiedPatches)
             {
                 var offsetCurrent = patch.Start2;
@@ -21,17 +24,20 @@ namespace CodeSaw.Web.Diff
                 foreach (var diff in patch.Diffs)
                 {
                     LineList side = null;
+                    int endOffset = int.MaxValue;
                     int offset = 0;
                     if (diff.Operation.IsInsert)
                     {
                         side = currentLines;
                         offset = offsetCurrent;
+                        endOffset = currentEndOffset;
 
                     }
                     else if (diff.Operation.IsDelete)
                     {
                         side = previousLines;
                         offset = offsetPrevious;
+                        endOffset = previousEndOffset;
                     }
 
                     if (side != null)
@@ -39,16 +45,29 @@ namespace CodeSaw.Web.Diff
                         var diffOffset = 0;
                         while (diffOffset < diff.Text.Length)
                         {
-                            var line = side.LineInPosition(offset + diffOffset);
-                            line.AssignDiff(classification, patch, diff);
-
                             var newLine = diff.Text.IndexOf('\n', diffOffset);
                             if (newLine == -1)
                             {
                                 newLine = diff.Text.Length - 1;
                             }
 
+                            {
+                                var line = side.LineInPosition(offset + diffOffset);
+                                line.AssignDiff(classification, patch, diff);
+                            }
+
+                            
+
                             diffOffset = newLine + 1;
+                        }
+
+                        if (diff.Text.Length > 0 && diff.Text[diff.Text.Length - 1] == '\n' && offset + diffOffset + 1 == endOffset)
+                        {
+                            side.Last().AssignDiff(classification, patch, diff);
+                        }
+                        else if (diff.Text == "" && offset + diffOffset + 1 == endOffset)
+                        {
+                            side.Last().AssignDiff(classification, patch, diff);
                         }
                     }
 
@@ -65,6 +84,63 @@ namespace CodeSaw.Web.Diff
 
                 previousCorrection += patch.Length2 - patch.Length1;
             }
+        }
+
+        public static void RemoveDiffsFromIdenticalLines(LineList current, LineList previous, List<Line> cleared)
+        {
+            var previousIndex = 0;
+            var currentIndex = 0;
+
+            while (previousIndex < previous.Count && currentIndex < current.Count)
+            {
+                void NextPrevious()
+                {
+                    if (previousIndex < previous.Count)
+                    {
+                        previousIndex++;
+                    }
+                }
+
+                void NextCurrent()
+                {
+                    if (currentIndex < current.Count)
+                    {
+                        currentIndex++;
+                    }
+                }
+
+                var previousLine = previous[previousIndex];
+                var currentLine = current[currentIndex];
+
+                if (previousLine.Diff != null && currentLine.Diff != null && previousLine.Text == currentLine.Text)
+                {
+                    previousLine.ClearDiff();
+                    currentLine.ClearDiff();
+
+                    cleared.Add(previousLine);
+                    cleared.Add(currentLine);
+                    NextPrevious();
+                    NextCurrent();
+                    continue;
+                }
+
+                if (!previousLine.IsNoChange)
+                {
+                    NextPrevious();
+                }
+
+                if (!currentLine.IsNoChange)
+                {
+                    NextCurrent();
+                }
+
+                if (previousLine.IsNoChange && currentLine.IsNoChange)
+                {
+                    NextPrevious();
+                    NextCurrent();
+                }
+            }
+
         }
 
         public static IEnumerable<HunkInfo> BuildHunks(LineList current, LineList previous, bool withMargin)
@@ -90,8 +166,14 @@ namespace CodeSaw.Web.Diff
             var previousCount = 0;
             var currentCount = 0;
 
+            int i = 1000;
+
             while (!currentEndReached || !previousEndReached)
             {
+                #if DEBUG
+                if (i-- == 0) throw new InvalidOperationException("FUCK");
+                #endif
+                
                 void NextPrevious()
                 {
                     if (previousIndex == previous.Count - 1)
@@ -177,28 +259,40 @@ namespace CodeSaw.Web.Diff
                     continue;
                 }
 
-                if (!previousLine.IsNoChange && !previousEndReached)
+                var f1 = !previousLine.IsNoChange && !previousEndReached;
+                var f2 = !currentLine.IsNoChange && !currentEndReached;
+
+                if (!f1 && !f2 && currentIndex == current.Count - 1 && previousIndex == previous.Count - 1) break;
+
+                
+                if (f1)
                 {
                     hunk.Add((previousLine, null));
                     previousCount++;
                     NextPrevious();
                 }
 
-                if (!currentLine.IsNoChange && !currentEndReached)
+               
+                if (f2)
                 {
                     hunk.Add((null, currentLine));
                     currentCount++;
                     NextCurrent();
                 }
+
+                
             }
 
             if (hunk.Any())
             {
                 if (withMargin)
                 {
-                    hunk.Insert(0, (previous[previousIndex - previousCount], current[currentIndex - currentCount]));
+                    if (previousIndex - previousCount >= 0 && currentIndex - currentCount >= 0)
+                    {
+                        hunk.Insert(0, (previous[previousIndex - previousCount], current[currentIndex - currentCount]));
+                    }
 
-                    yield return new HunkInfo(previousIndex - previousCount+1, currentIndex - currentCount+1, hunk);
+                    yield return new HunkInfo(Math.Max(1, previousIndex - previousCount+1), Math.Max(1, currentIndex - currentCount+1), hunk);
                 }
                 else
                 {

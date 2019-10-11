@@ -79,7 +79,9 @@ export interface FileDiff {
         };
         review: {
             previous: string;
+            previousTotalLines: number;
             current: string;
+            currentTotalLines: number;
         };
     };
 }

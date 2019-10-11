@@ -15,6 +15,9 @@ namespace CodeSaw.Web.Diff
         {
             var patches = MakePatchRaw(text1, text2);
 
+            AddInsertToDeleteOnLastLine(patches, text1, text2);
+            AddDeleteToInsertOnLastLine(patches, text1, text2);
+
             MergeEquals(patches);
 
             patches = patches.SelectMany(SplitPatchIntoAtoms).ToList();
@@ -22,6 +25,94 @@ namespace CodeSaw.Web.Diff
             return patches;
         }
 
+        private static void AddInsertToDeleteOnLastLine(List<Patch> patches, string text1, string text2)
+        {
+            if (patches.Count == 0)
+            {
+                return;
+            }
+
+            var lastPatch = patches.Last();
+
+            if (!lastPatch.Diffs.Last().Operation.IsDelete)
+            {
+                return;
+            }
+
+            if (lastPatch.Start1 + lastPatch.Length1 != text1.Length)
+            {
+                return;
+            }
+
+            if (lastPatch.Start2 + lastPatch.Length2 != text2.Length)
+            {
+                return;
+            }
+
+            if (lastPatch.Diffs.Count < 2)
+            {
+                return;
+            }
+
+            var delete = lastPatch.Diffs[lastPatch.Diffs.Count - 1];
+            var equal = lastPatch.Diffs[lastPatch.Diffs.Count - 2];
+
+            if (delete.Operation.IsDelete && !equal.Operation.IsEqual)
+            {
+                return;
+            }
+
+            if (!equal.Text.EndsWith('\n'))
+            {
+                return;
+            }
+
+            lastPatch.Diffs.Add(new DiffMatchPatch.Diff("", Operation.Insert));
+        }
+
+        private static void AddDeleteToInsertOnLastLine(List<Patch> patches, string text1, string text2)
+        {
+            if (patches.Count == 0)
+            {
+                return;
+            }
+
+            var lastPatch = patches.Last();
+
+            if (!lastPatch.Diffs.Last().Operation.IsInsert)
+            {
+                return;
+            }
+
+            if (lastPatch.Start1 + lastPatch.Length1 != text1.Length)
+            {
+                return;
+            }
+
+            if (lastPatch.Start2 + lastPatch.Length2 != text2.Length)
+            {
+                return;
+            }
+
+            if (lastPatch.Diffs.Count < 2)
+            {
+                return;
+            }
+
+            var insert = lastPatch.Diffs[lastPatch.Diffs.Count - 1];
+            var equal = lastPatch.Diffs[lastPatch.Diffs.Count - 2];
+
+            if (insert.Operation.IsInsert && !equal.Operation.IsEqual)
+            {
+                return;
+            }
+            if (!equal.Text.EndsWith('\n'))
+            {
+                return;
+            }
+
+            lastPatch.Diffs.Add(new DiffMatchPatch.Diff("", Operation.Delete));
+        }
 
         private static void MergeEquals(List<Patch> patches)
         {
@@ -32,7 +123,7 @@ namespace CodeSaw.Web.Diff
                     continue;
                 }
 
-                for (int i = patch.Diffs.Count - 1; i > 1 ; i--)
+                for (int i = patch.Diffs.Count - 1; i > 0 ; i--)
                 {
                     var mergeFrom = patch.Diffs[i];
                     var mergeTo = patch.Diffs[i - 1];

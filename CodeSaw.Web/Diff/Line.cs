@@ -51,5 +51,12 @@ namespace CodeSaw.Web.Diff
         }
 
         public bool Contains(int position) => StartPosition <= position && position < EndPosition;
+
+        public void ClearDiff()
+        {
+            Classification = DiffClassification.Unchanged;
+            Patch = null;
+            Diff = null;
+        }
     }
 }

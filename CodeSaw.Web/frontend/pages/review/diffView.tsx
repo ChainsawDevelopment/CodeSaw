@@ -153,7 +153,9 @@ export interface Props {
     onLineClick?: (side: DiffSide, line: number) => void;
     contents: {
         previous: string;
+        previousTotalLines: number;
         current: string;
+        currentTotalLines: number;
     };
 }
 
@@ -232,7 +234,7 @@ const diffView = (props: Props) => {
 
     for(let hunk of props.diffInfo.hunks) {
         var a = Math.max(1, hunk.oldPosition.start - 5);
-        var b = hunk.oldPosition.end + 5;
+        var b = Math.min(props.contents.previousTotalLines, hunk.oldPosition.end + 5);
 
         viewHunks = expandFromRawCode(viewHunks, props.contents.current, a, b);
     }

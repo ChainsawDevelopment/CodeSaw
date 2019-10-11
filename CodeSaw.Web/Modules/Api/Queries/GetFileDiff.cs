@@ -77,6 +77,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
         {
             public string Previous { get; set; }
             public string Current { get; set; }
+            public int PreviousTotalLines { get; set; }
+            public int CurrentTotalLines { get; set; }
         }
 
         public class BinaryFileSizesInfo
@@ -196,7 +198,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 }
 
                 var baseHunks = DiffView.BuildHunks(currentLines, previousLines, true);
-                var hunks = baseHunks.TakeLast(1).Select(MakeHunkInfo).ToList();
+                var hunks = baseHunks.Select(MakeHunkInfo).ToList();
 
                 return new Result
                 {
@@ -219,7 +221,9 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         Review = new RevisionDebugInfo
                         {
                             Previous = contents[previousCommit],
-                            Current = contents[currentCommit]
+                            PreviousTotalLines = previousLines.Count,
+                            Current = contents[currentCommit],
+                            CurrentTotalLines = currentLines.Count
                         },
                         Base = new RevisionDebugInfo
                         {

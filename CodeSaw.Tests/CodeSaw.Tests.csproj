@@ -36,6 +36,10 @@
     <None Remove="DiffViewData\Case14\patches_margin.txt" />
     <None Remove="DiffViewData\Case15\patches.txt" />
     <None Remove="DiffViewData\Case15\patches_margin.txt" />
+    <None Remove="DiffViewData\Case16\patches.txt" />
+    <None Remove="DiffViewData\Case16\patches_margin.txt" />
+    <None Remove="DiffViewData\Case17\patches.txt" />
+    <None Remove="DiffViewData\Case17\patches_margin.txt" />
     <None Remove="DiffViewData\Case1\patches_margin.txt" />
     <None Remove="DiffViewData\Case2\patches.txt" />
     <None Remove="DiffViewData\Case2\patches_margin.txt" />
@@ -53,6 +57,10 @@
     <None Remove="DiffViewData\Case8\patches_margin.txt" />
     <None Remove="DiffViewData\Case9\patches.txt" />
     <None Remove="DiffViewData\Case9\patches_margin.txt" />
+    <None Remove="DiffViewData\InsertNewLineAtEnd\current.txt" />
+    <None Remove="DiffViewData\InsertNewLineAtEnd\patches.txt" />
+    <None Remove="DiffViewData\InsertNewLineAtEnd\patches_margin.txt" />
+    <None Remove="DiffViewData\InsertNewLineAtEnd\previous.txt" />
     <None Remove="DiffViewData\NewLineBeforeEnd\current.txt" />
     <None Remove="DiffViewData\NewLineBeforeEnd\patches.txt" />
     <None Remove="DiffViewData\NewLineBeforeEnd\patches_margin.txt" />
