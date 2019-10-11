@@ -4,9 +4,9 @@ U {
 U 
 U }
 U 
-U static Point<Float, 2> SensorPositionToSurfacePosition( //
-U     const Point<Float, 2>& base,
-U     const SensorProjection& cameraPose)
+R static Point<Float, 2> SensorPositionToSurfacePosition( //
+R     const Point<Float, 2>& base,
+R     const SensorProjection& cameraPose)
 U {
 B     const Vector3 pInCrf = {base.X(), base.Y(), 1};
 B     const auto pixelCoords = (cameraPose.homography * pInCrf).eval();

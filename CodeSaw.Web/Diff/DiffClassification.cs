@@ -2,8 +2,8 @@
 {
     public enum DiffClassification
     {
-        Unchanged,
-        BaseChange,
-        ReviewChange
+        Unchanged = 0,
+        BaseChange = 1,
+        ReviewChange = 2
     }
 }
