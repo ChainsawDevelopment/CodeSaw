@@ -8,10 +8,6 @@ namespace CodeSaw.Web.Diff
     {
         public IEnumerable<Line> LinesBetween(int start, int end)
         {
-            //var lines = this.SkipWhile(x => x.StartPosition < start);
-
-            //return lines.TakeWhile(x => x.EndPosition <= end);
-
             return this.Where(x => (x.StartPosition < end) && (x.EndPosition > start));
         }
 

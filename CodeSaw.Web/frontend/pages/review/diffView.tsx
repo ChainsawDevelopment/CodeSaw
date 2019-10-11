@@ -233,8 +233,15 @@ const diffView = (props: Props) => {
     viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
 
     for(let hunk of props.diffInfo.hunks) {
-        var a = Math.max(1, hunk.oldPosition.start - 5);
-        var b = Math.min(props.contents.previousTotalLines, hunk.oldPosition.end + 5);
+        const position = hunk.oldPosition;
+        const totalLines = props.contents.previousTotalLines;
+
+        var a = Math.max(1, position.start - 5);
+        var b = Math.min(totalLines, position.end + 5);
+
+        if (a == 1 && b == totalLines) {
+            continue;
+        }
 
         viewHunks = expandFromRawCode(viewHunks, props.contents.current, a, b);
     }
