@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
-using CodeSaw.Web;
 using CodeSaw.Web.Diff;
 using DiffMatchPatch;
 using NUnit.Framework;
