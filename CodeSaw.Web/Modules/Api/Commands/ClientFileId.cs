@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CodeSaw.Web.Modules.Api.Commands
 {
@@ -32,7 +33,15 @@ namespace CodeSaw.Web.Modules.Api.Commands
         {
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
-                throw new NotSupportedException();
+                var v = (ClientFileId) value;
+                if (v.IsProvisional)
+                {
+                    JObject.FromObject(new { provisional = v.ProvisionalPathPair}).WriteTo(writer);
+                }
+                else
+                {
+                    JObject.FromObject(new {persistent = v.PersistentId}).WriteTo(writer);
+                }
             }
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)

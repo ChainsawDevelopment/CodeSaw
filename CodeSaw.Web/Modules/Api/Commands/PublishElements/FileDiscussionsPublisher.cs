@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
@@ -20,13 +19,13 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
     public class FileDiscussionsPublisher
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly FindReviewDelegate _reviewForRevision;
         private readonly Func<ClientFileId, Guid> _resolveFileId;
 
-        public FileDiscussionsPublisher(ISession session, FindReviewDelegate reviewForRevision, Func<ClientFileId, Guid> resolveFileId)
+        public FileDiscussionsPublisher(ISessionAdapter sessionAdapter, FindReviewDelegate reviewForRevision, Func<ClientFileId, Guid> resolveFileId)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _reviewForRevision = reviewForRevision;
             _resolveFileId = resolveFileId;
         }
@@ -44,15 +43,14 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                 var review = _reviewForRevision(discussion.TargetRevisionId);
 
                 var resolvedFileId = _resolveFileId(discussion.FileId);
-                var currentEntry = _session.Query<FileHistoryEntry>().Single(x => x.RevisionId == review.RevisionId && x.FileId == resolvedFileId);
 
-                var currentRevision = _session.Load<ReviewRevision>(review.RevisionId);
-                var prevRevisionId = _session.Query<ReviewRevision>()
-                    .SingleOrDefault(x => x.ReviewId == currentRevision.ReviewId && x.RevisionNumber == currentRevision.RevisionNumber - 1)?.Id;
+                var currentRevision = _sessionAdapter.GetRevision(review.RevisionId);
+                var prevRevision = _sessionAdapter.GetPreviousRevision(currentRevision);
 
-                var prevEntry = _session.Query<FileHistoryEntry>().SingleOrDefault(x => x.RevisionId == prevRevisionId && x.FileId == resolvedFileId);
+                var currentEntry = _sessionAdapter.GetFileHistoryEntry(resolvedFileId, currentRevision);
+                var prevEntry = _sessionAdapter.GetFileHistoryEntry(resolvedFileId, prevRevision);
 
-                await _session.SaveAsync(new FileDiscussion
+                _sessionAdapter.Save(new FileDiscussion
                 {
                     RevisionId = review.RevisionId,
                     Id = discussionId,

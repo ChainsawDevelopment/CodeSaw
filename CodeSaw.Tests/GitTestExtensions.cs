@@ -25,7 +25,7 @@ namespace CodeSaw.Tests
                 branch = repo.CreateBranch(branchName);
             }
 
-            Commands.Checkout(repo, branch);
+            LibGit2Sharp.Commands.Checkout(repo, branch);
 
             Assert.That(repo.Head.FriendlyName, Is.EqualTo(branchName), "Branch is switched");
 
@@ -118,7 +118,7 @@ namespace CodeSaw.Tests
 
         public static void Stage(this Repository repo, string pathInTheWorkdir)
         {
-            Commands.Stage(repo, pathInTheWorkdir);
+            LibGit2Sharp.Commands.Stage(repo, pathInTheWorkdir);
         }
 
         public static string CatFile(this Repository repo, string filePath, string versionRef)

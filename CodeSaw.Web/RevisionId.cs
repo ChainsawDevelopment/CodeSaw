@@ -81,7 +81,7 @@ namespace CodeSaw.Web
         {
             public string CommitHash { get; }
 
-            internal Hash(string commitHash)
+            public Hash(string commitHash)
             {
                 CommitHash = commitHash;
             }

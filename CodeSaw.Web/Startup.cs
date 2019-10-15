@@ -98,6 +98,7 @@ namespace CodeSaw.Web
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
 
             builder.RegisterType<RevisionFactory>().AsSelf();
+            builder.RegisterType<Modules.Api.Commands.NHSessionAdapter>().AsImplementedInterfaces();
 
             builder.Register(ctx => Configuration.GetValue<string>("HookSiteBase", null) ?? ctx.ResolveKeyed<string>("SiteBase")).Keyed<string>("HookSiteBase");
 

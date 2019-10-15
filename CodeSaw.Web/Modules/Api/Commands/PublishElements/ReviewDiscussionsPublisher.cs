@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
@@ -16,12 +15,12 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
     public class ReviewDiscussionsPublisher
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly FindReviewDelegate _reviewForRevision;
 
-        public ReviewDiscussionsPublisher(ISession session, FindReviewDelegate reviewForRevision)
+        public ReviewDiscussionsPublisher(ISessionAdapter sessionAdapter, FindReviewDelegate reviewForRevision)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _reviewForRevision = reviewForRevision;
         }
 
@@ -37,7 +36,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
                 var review = _reviewForRevision(discussion.TargetRevisionId);
 
-                await _session.SaveAsync(new ReviewDiscussion
+                _sessionAdapter.Save(new ReviewDiscussion
                 {
                     Id = discussionId,
                     RevisionId = review.RevisionId,

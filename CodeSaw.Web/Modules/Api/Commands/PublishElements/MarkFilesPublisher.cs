@@ -4,19 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
     public class MarkFilesPublisher
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly FindReviewDelegate _reviewForRevision;
         private readonly Func<ClientFileId, Guid> _resolveFileId;
 
-        public MarkFilesPublisher(ISession session, FindReviewDelegate reviewForRevision, Func<ClientFileId, Guid> resolveFileId)
+        public MarkFilesPublisher(ISessionAdapter sessionAdapter, FindReviewDelegate reviewForRevision, Func<ClientFileId, Guid> resolveFileId)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _reviewForRevision = reviewForRevision;
             _resolveFileId = resolveFileId;
         }
@@ -40,7 +39,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                         });
                     }
 
-                    await _session.SaveAsync(review);
+                    _sessionAdapter.Save(review);
                 }
             }
 
@@ -54,7 +53,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                 {
                     review.Files.RemoveRange(toRemove);
 
-                    await _session.SaveAsync(review);
+                    _sessionAdapter.Save(review);
                 }
             }
         }
@@ -71,12 +70,12 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                     continue;
                 }
 
-                var currentEntry = _session.Query<FileHistoryEntry>().Single(x => x.RevisionId == revisionId && x.FileId == clientFileId.PersistentId);
-                var currentRevision = _session.Load<ReviewRevision>(revisionId);
-                var prevRevisionId = _session.Query<ReviewRevision>()
-                    .SingleOrDefault(x => x.ReviewId == currentRevision.ReviewId && x.RevisionNumber == currentRevision.RevisionNumber - 1)?.Id;
+                var currentRevision = _sessionAdapter.GetRevision(revisionId);
+                var currentEntry = _sessionAdapter.GetFileHistoryEntry(clientFileId.PersistentId, currentRevision);
+                
+                var prevRevision = _sessionAdapter.GetPreviousRevision(currentRevision);
 
-                var prevEntry = _session.Query<FileHistoryEntry>().SingleOrDefault(x => x.RevisionId == prevRevisionId && x.FileId == clientFileId.PersistentId);
+                var prevEntry = _sessionAdapter.GetFileHistoryEntry(clientFileId.PersistentId, prevRevision);
 
                 result.Add((clientFileId, PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName)));
             }
