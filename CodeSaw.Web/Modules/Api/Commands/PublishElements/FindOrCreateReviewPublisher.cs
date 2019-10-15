@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Auth;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 using NHibernate.Criterion;
 using NHibernate.Linq;
 
@@ -13,20 +12,18 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
     public class FindOrCreateReviewPublisher
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly ReviewUser _user;
 
-        public FindOrCreateReviewPublisher(ISession session, [CurrentUser] ReviewUser user)
+        public FindOrCreateReviewPublisher(ISessionAdapter sessionAdapter, [CurrentUser] ReviewUser user)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _user = user;
         }
 
         public async Task<Review> FindOrCreateReview(PublishReview command, ReviewIdentifier reviewId, Guid revisionId)
         {
-            var review = await _session.Query<Review>()
-                .Where(x => x.RevisionId == revisionId && x.UserId == _user.Id)
-                .SingleOrDefaultAsync();
+            var review = _sessionAdapter.GetReview(revisionId, _user);
 
             if (review == null)
             {
@@ -40,42 +37,37 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             review.ReviewedAt = DateTimeOffset.Now;
 
-            await _session.SaveAsync(review);
+            _sessionAdapter.Save(review);
             return review;
         }
     }
 
     public class FindOrCreateRevisionPublisher
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly RevisionFactory _factory;
         private readonly IRepository _api;
 
-        public FindOrCreateRevisionPublisher(ISession session, RevisionFactory factory, IRepository api)
+        public FindOrCreateRevisionPublisher(ISessionAdapter sessionAdapter, RevisionFactory factory, IRepository api)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _factory = factory;
             _api = api;
         }
 
         public async Task<(Guid RevisionId,Dictionary<ClientFileId, Guid> ClientFileIdMap)> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
         {
-            var existingRevision = await _session.Query<ReviewRevision>()
-                .Where(x => x.ReviewId == reviewId)
-                .Where(x => x.BaseCommit == commits.Base && x.HeadCommit == commits.Head)
-                .SingleOrDefaultAsync();
+            var existingRevision = await _sessionAdapter.GetRevision(reviewId, commits);
 
             if (existingRevision != null)
             {
-                var fileHistory = _session.Query<FileHistoryEntry>()
-                    .Where(x => x.RevisionId == existingRevision.Id)
-                    .ToDictionary(x => ClientFileId.Persistent(x.FileId), x => x.FileId);
+                var fileHistory = _sessionAdapter.GetFileHistoryEntries(existingRevision);
 
                 return (existingRevision.Id, fileHistory);
             }
 
             // create revision
-            var nextNumber = GetNextRevisionNumber(reviewId, _session);
+            var nextNumber = _sessionAdapter.GetNextRevisionNumber(reviewId);
 
             await CreateRef(reviewId, nextNumber, commits.Base, "base", _api);
 
@@ -92,19 +84,11 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             var revision = await _factory.Create(reviewId, nextNumber, commits.Base, commits.Head);
 
-            await _session.SaveAsync(revision);
+            await _sessionAdapter.Save(revision);
 
-            var clientFileIdMap = await new FillFileHistory(_session, _api, revision).Fill();
+            var clientFileIdMap = await new FillFileHistory(_sessionAdapter, _api, revision).Fill();
 
             return (RevisionId: revision.Id, ClientFileIdMap: clientFileIdMap);
-        }
-
-        public static int GetNextRevisionNumber(ReviewIdentifier reviewId, ISession session)
-        {
-            return 1 + (session.QueryOver<ReviewRevision>()
-                            .Where(x => x.ReviewId == reviewId)
-                            .Select(Projections.Max<ReviewRevision>(x => x.RevisionNumber))
-                            .SingleOrDefault<int?>() ?? 0);
         }
 
         public static async Task CreateRef(ReviewIdentifier reviewId, int revision, string commitRef, string refType, IRepository api)

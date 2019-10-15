@@ -3,31 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
     public class ResolveDiscussions
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly FindReviewDelegate _reviewForRevision;
 
-        public ResolveDiscussions(ISession session, FindReviewDelegate reviewForRevision)
+        public ResolveDiscussions(ISessionAdapter sessionAdapter, FindReviewDelegate reviewForRevision)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _reviewForRevision = reviewForRevision;
         }
 
         public async Task Publish(List<Guid> resolvedDiscussions)
         {
-            var discussionsToResolve = 
-                _session.Query<Discussion>().Where(x => resolvedDiscussions.Contains(x.Id)).ToList();
+            var discussionsToResolve = _sessionAdapter.GetDiscussions(resolvedDiscussions);
 
             foreach (var comment in discussionsToResolve)
             {
                 comment.State = CommentState.Resolved;
 
-                await _session.SaveAsync(comment);
+                _sessionAdapter.Save(comment);
             }
         }
     }
