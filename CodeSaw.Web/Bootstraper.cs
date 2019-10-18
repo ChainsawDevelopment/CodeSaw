@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using Autofac.Core.Lifetime;
@@ -106,6 +107,12 @@ namespace CodeSaw.Web
             pipelines.OnError.AddItemToEndOfPipeline((ctx, ex) => {
                 Logger.Error(ex, "Unhandled Exception in CodeSaw.Web");
                 return ctx.Response;
+            });
+
+            pipelines.AddToLogContext(new Dictionary<string, Func<NancyContext, object>>
+            {
+                ["api.user"] = ctx => ctx.CurrentUser?.Identity?.Name,
+                ["api.url"] = ctx => ctx.Request.Url.ToString(),
             });
         }
     }

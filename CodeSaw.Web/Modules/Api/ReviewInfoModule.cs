@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Cqrs;
 using CodeSaw.Web.Modules.Api.Commands;
 using CodeSaw.Web.Modules.Api.Queries;
 using Nancy;
 using Nancy.ModelBinding;
+using NLog;
 
 namespace CodeSaw.Web.Modules.Api
 {
@@ -14,6 +18,12 @@ namespace CodeSaw.Web.Modules.Api
 
         public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
         {
+            this.AddToLogContext(new Dictionary<string,Func<object>>
+            {
+                ["api.projectId"] = () => ReviewId.ProjectId,
+                ["api.reviewId"] = () => ReviewId.ReviewId
+            });
+
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId)));
             Get("/matrix", async _ => await query.Query(new GetFileMatrix(ReviewId)));
 
