@@ -28,19 +28,19 @@ def main():
         current = list(base_text)
 
         if operation == 'Insert':
-            current.append('Inserted line')
+            current.insert(0, 'Inserted line')
         elif operation == 'Delete':
-            del current[-1]
+            del current[0]
         elif operation == 'Modify':
-            current[-1] = 'Changed line'
+            current[0] = 'Changed line'
 
         if previous_has_new_line:
-            previous.append('')
+            previous.insert(0, '')
 
         if current_has_new_line:
-            current.append('')
+            current.insert(0, '')
 
-        case_name = 'EolNewLine_{}{}_{}'.format(tf_map[previous_has_new_line], tf_map[current_has_new_line], operation)
+        case_name = 'BofNewLine_{}{}_{}'.format(tf_map[previous_has_new_line], tf_map[current_has_new_line], operation)
 
         write_case(case_name, 'previous.txt', previous)
         write_case(case_name, 'current.txt', current)
