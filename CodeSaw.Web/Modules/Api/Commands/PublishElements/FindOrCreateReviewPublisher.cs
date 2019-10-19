@@ -55,7 +55,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _api = api;
         }
 
-        public async Task<(Guid RevisionId,Dictionary<ClientFileId, Guid> ClientFileIdMap)> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
+        public async Task<(Guid RevisionId, Dictionary<ClientFileId, Guid> ClientFileIdMap, Dictionary<string, Guid> ByName)> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
         {
             var existingRevision = await _sessionAdapter.GetRevision(reviewId, commits);
 
@@ -63,7 +63,10 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var fileHistory = _sessionAdapter.GetFileHistoryEntries(existingRevision);
 
-                return (existingRevision.Id, fileHistory);
+                var idMap = fileHistory.ToDictionary(x => ClientFileId.Persistent(x.FileId), x => x.FileId);
+                var nameMap = fileHistory.ToDictionary(x => x.FileName, x => x.FileId);
+                
+                return (existingRevision.Id, idMap, nameMap);
             }
 
             // create revision
@@ -88,7 +91,10 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             var clientFileIdMap = await new FillFileHistory(_sessionAdapter, _api, revision).Fill();
 
-            return (RevisionId: revision.Id, ClientFileIdMap: clientFileIdMap);
+            var byClientId = clientFileIdMap.ToDictionary(x => x.Key, x => x.Value.Item2);
+            var byName = clientFileIdMap.ToDictionary(x => x.Value.Item1, x => x.Value.Item2);
+
+            return (RevisionId: revision.Id, ClientFileIdMap: byClientId, byName);
         }
 
         public static async Task CreateRef(ReviewIdentifier reviewId, int revision, string commitRef, string refType, IRepository api)
