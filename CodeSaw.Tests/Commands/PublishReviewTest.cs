@@ -160,7 +160,6 @@ namespace CodeSaw.Tests.Commands
         }
 
         [Test]
-        [Explicit("Known to fail")]
         [TestCase("file1", "file1")]
         [TestCase("file1_old", "file1")]
         public async Task MakeReviewBasedOnProvisionalAfterRevisionHasBeenSaved(string oldFileName, string newFileName)

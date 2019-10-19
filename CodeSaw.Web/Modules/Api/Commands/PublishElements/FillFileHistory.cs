@@ -20,7 +20,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _currentRevision = currentRevision;
         }
 
-        public async Task<Dictionary<ClientFileId, Guid>> Fill()
+        public async Task<Dictionary<ClientFileId, (string, Guid)>> Fill()
         {
             var (previousRevId, previousHead) = _sessionAdapter.FindPreviousRevision(_currentRevision.ReviewId, _currentRevision.RevisionNumber, _currentRevision.BaseCommit);
 
@@ -30,7 +30,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             var fileIds = _sessionAdapter.FetchFileIds(previousRevId);
 
-            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Value), x => x.Value);
+            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Value), x => (x.Key, x.Value));
 
             var remainingDiffs = new HashSet<FileDiff>(diff);
 
@@ -60,7 +60,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var fileId = GuidComb.Generate();
 
-                clientFileIdMap[ClientFileId.Provisional(file.Path)] = fileId;
+                clientFileIdMap[ClientFileId.Provisional(file.Path)] = (file.Path.NewPath, fileId);
 
                 if (file.RenamedFile)
                 {

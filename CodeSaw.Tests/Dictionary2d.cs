@@ -32,7 +32,7 @@ namespace CodeSaw.Tests
                 }
             }
 
-            value = default;
+            value = default(TValue);
 
             return false;
         }
@@ -72,12 +72,12 @@ namespace CodeSaw.Tests
                 }
             }
 
-            index = default;
+            index = default(int);
 
             return false;
         }
 
-        public TValue GetValueOrDefault(TKey1 key1, TKey2 key2, TValue defaultValue = default)
+        public TValue GetValueOrDefault(TKey1 key1, TKey2 key2, TValue defaultValue = default(TValue))
         {
             if (TryGetValue(key1, key2, out var value))
             {

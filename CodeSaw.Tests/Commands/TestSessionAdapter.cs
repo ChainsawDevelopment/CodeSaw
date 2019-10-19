@@ -127,15 +127,15 @@ namespace CodeSaw.Tests.Commands
             return Revisions.Single(x => x.RevisionNumber == revision.RevisionNumber - 1);
         }
 
-        Dictionary<ClientFileId, Guid> ISessionAdapter.GetFileHistoryEntries(ReviewRevision revision)
+        List<FileHistoryEntry> ISessionAdapter.GetFileHistoryEntries(ReviewRevision revision)
         {
             if (FileHistory.TryGetValue(revision, out var history))
             {
-                return history.ToDictionary(x => ClientFileId.Persistent(x.FileId), x => x.FileId);
+                return history;
             }
             else
             {
-                return new Dictionary<ClientFileId, Guid>();
+                return new List<FileHistoryEntry>();
             }
         }
 

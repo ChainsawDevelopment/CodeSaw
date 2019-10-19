@@ -24,7 +24,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
         ReviewRevision GetRevision(ReviewIdentifier reviewId, RevisionId revisionId);
         ReviewRevision GetRevision(Guid revisionId);
         ReviewRevision GetPreviousRevision(ReviewRevision revision);
-        Dictionary<ClientFileId, Guid> GetFileHistoryEntries(ReviewRevision revision);
+        List<FileHistoryEntry> GetFileHistoryEntries(ReviewRevision revision);
         int GetNextRevisionNumber(ReviewIdentifier reviewId);
         
         Task Save(ReviewRevision revision);
@@ -93,11 +93,10 @@ namespace CodeSaw.Web.Modules.Api.Commands
                 .SingleOrDefault(x => x.ReviewId == revision.ReviewId && x.RevisionNumber == revision.RevisionNumber - 1);
         }
 
-        public Dictionary<ClientFileId, Guid> GetFileHistoryEntries(ReviewRevision revision)
+        public List<FileHistoryEntry> GetFileHistoryEntries(ReviewRevision revision)
         {
             return _session.Query<FileHistoryEntry>()
-                .Where(x => x.RevisionId == revision.Id)
-                .ToDictionary(x => ClientFileId.Persistent(x.FileId), x => x.FileId);
+                .Where(x => x.RevisionId == revision.Id).ToList();
         }
 
         public int GetNextRevisionNumber(ReviewIdentifier reviewId)
@@ -230,7 +229,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
 
                 var revisionFactory = new FindOrCreateRevisionPublisher(_sessionAdapter, _revisionFactory, _api);
 
-                var (headRevision, clientFileIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
+                var (headRevision, clientFileIdMap, nameIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
 
                 var headReview = await new FindOrCreateReviewPublisher(_sessionAdapter, _user).FindOrCreateReview(command, reviewId, headRevision);
 
@@ -248,19 +247,32 @@ namespace CodeSaw.Web.Modules.Api.Commands
                     return reviews[revId] = CreateReview(reviewId, revId);
                 };
 
-                Func<ClientFileId, Guid> resolveFileId = clientFileId => clientFileIdMap[clientFileId];
+                Guid ResolveFileId(ClientFileId clientFileId)
+                {
+                    if (clientFileIdMap.TryGetValue(clientFileId, out var i))
+                    {
+                        return i;
+                    }
+
+                    if (clientFileId.IsProvisional)
+                    {
+                        return nameIdMap[clientFileId.ProvisionalPathPair.NewPath];
+                    }
+
+                    throw new Exception($"Don't know how to translate {clientFileId} into file id");
+                }
 
                 var newCommentsMap = new Dictionary<string, Guid>();
                 var newDiscussionsMap = new Dictionary<string, Guid>();
 
                 await new ReviewDiscussionsPublisher(_sessionAdapter, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap, newDiscussionsMap);
-                await new FileDiscussionsPublisher(_sessionAdapter, reviewForRevision, resolveFileId).Publish(command.StartedFileDiscussions.ToArray(), newCommentsMap, newDiscussionsMap);
+                await new FileDiscussionsPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).Publish(command.StartedFileDiscussions.ToArray(), newCommentsMap, newDiscussionsMap);
 
                 var resolvedDiscussions = command.ResolvedDiscussions.Select(d => newDiscussionsMap.GetValueOrDefault(d, () => Guid.Parse(d))).ToList();
 
                 await new ResolveDiscussions(_sessionAdapter, reviewForRevision).Publish(resolvedDiscussions);
                 await new RepliesPublisher(_sessionAdapter).Publish(command.Replies, headReview, newCommentsMap);
-                await new MarkFilesPublisher(_sessionAdapter, reviewForRevision, resolveFileId).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
+                await new MarkFilesPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }
