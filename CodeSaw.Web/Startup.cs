@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -30,6 +31,8 @@ using NHibernate.Dialect;
 using NHibernate.Mapping.ByCode;
 using CodeSaw.Web.NodeIntegration;
 using Microsoft.Extensions.Caching.Memory;
+using NLog;
+using NLog.LayoutRenderers;
 
 namespace CodeSaw.Web
 {
@@ -49,6 +52,9 @@ namespace CodeSaw.Web
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
+            LayoutRenderer.Register<ContextLayoutRenderer>("ctx");
+            LayoutRenderer.Register("db", _ => Configuration.GetConnectionString("Store"));
+
             services.AddIdentityCore<ReviewUser>(options => { })
                 .AddUserStore<NHibernateUserStore>();
 
@@ -196,7 +202,18 @@ namespace CodeSaw.Web
 
             app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/hooks"), sub => sub.ChallengeAllUnauthenticatedCalls());
 
-            app.UseOwin(owin => { owin.UseNancy(opt => opt.Bootstrapper = new Bootstraper(assetServer, _container, globalToken)); });
+            app.Use(async (ctx, next) =>
+            {
+                using (MappedDiagnosticsLogicalContext.SetScoped("context", new Dictionary<string, object>()))
+                {
+                    await next();
+                }
+            });
+
+            app.UseOwin(owin =>
+            {
+                owin.UseNancy(opt => opt.Bootstrapper = new Bootstraper(assetServer, _container, globalToken));
+            });
         }
     }
 }
