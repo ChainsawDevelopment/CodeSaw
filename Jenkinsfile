@@ -3,17 +3,19 @@ def isDeploymentBranch(branch) {
 }
 
 node {
-	stage 'Checkout'
+	stage('Checkout') {
 		deleteDir()
 		checkout scm
+	}
 
-	stage 'Build'
+	stage('Build') {
 		withEnv(["PATH+NODE=${env.NODE8_PATH}"]) {
 			bat 'build.cmd -t Package --production'
 		}
+	}
 
 	if(isDeploymentBranch(env.BRANCH_NAME)) {
-		stage 'Deploy to pila IIS'
+		stage('Deploy to pila IIS') {
 			withEnv(["DEPLOYMENT_PATH=\\\\pila.kplabs.pl\\inetpub\\wwwroot"]) {
 				withCredentials(
 					[usernamePassword(credentialsId: 'pila_deployment_user', 
@@ -21,16 +23,19 @@ node {
 						passwordVariable: 'DEPLOYMENT_SHARE_PASSWORD')]) {
 					bat 'build.cmd -t DeployArtifacts --production'
 				}
-			}	
+			}
+		}
 
-		stage 'Deploy to pila SQL'
+		stage('Deploy to pila SQL') {
 			withCredentials(
 				[string(credentialsId: 'pila_deployment_connectionstring', 
 					variable: 'DEPLOYMENT_CONNECTION_STRING')]) {
 				bat 'build.cmd -t UpdateDB --production'
 			}
+		}
 	}
 
-	stage 'Archive'
-		archive 'artifacts/web/**'
+	stage('Archive') {
+		archiveArtifacts 'artifacts/web/**'
+	}
 }
