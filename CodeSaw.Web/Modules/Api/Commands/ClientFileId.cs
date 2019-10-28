@@ -32,7 +32,8 @@ namespace CodeSaw.Web.Modules.Api.Commands
         {
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
-                writer.WriteValue(value);
+                var clientFileId = (ClientFileId)value;
+                writer.WriteValue(Write(clientFileId));
             }
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -90,6 +91,22 @@ namespace CodeSaw.Web.Modules.Api.Commands
             else
             {
                 return ClientFileId.Persistent(Guid.Parse(s));
+            }
+        }
+
+        public static string Write(ClientFileId clientFileId)
+        {
+            if (clientFileId.IsProvisional)
+            {
+                var parts = $"{clientFileId.ProvisionalPathPair.OldPath}\0{clientFileId.ProvisionalPathPair.NewPath}";
+                var encoded = Encoding.UTF8.GetBytes(parts);
+                var bytes = Convert.ToBase64String(encoded);
+
+                return $"PROV_{bytes}";
+            }
+            else
+            {
+                return clientFileId.PersistentId.ToString();
             }
         }
     }
