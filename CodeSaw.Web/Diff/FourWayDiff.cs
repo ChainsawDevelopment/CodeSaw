@@ -84,7 +84,9 @@ namespace CodeSaw.Web.Diff
                 return;
             }
 
-            if (lastPatch.Start1 + lastPatch.Length1 != text1.Length)
+            var rollSize = patches.SkipLast(1).Select(x => x.Length1 - x.Length2).Sum();
+
+            if (lastPatch.Start1 + lastPatch.Length1 + rollSize != text1.Length)
             {
                 return;
             }

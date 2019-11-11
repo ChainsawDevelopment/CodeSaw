@@ -140,6 +140,9 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 DiffView.AssignPatchesToLines(classifiedPatches, currentLines, previousLines);
 
+                List<Line> cleared = new List<Line>();
+                DiffView.RemoveDiffsFromIdenticalLines(currentLines, previousLines, cleared);
+
                 HunkInfo MakeHunkInfo(DiffView.HunkInfo hunk)
                 {
                     var lines = new List<LineInfo>();
