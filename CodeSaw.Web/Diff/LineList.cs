@@ -6,6 +6,8 @@ namespace CodeSaw.Web.Diff
 {
     public class LineList : List<Line>
     {
+        public int FileEnd => this.LastOrDefault()?.EndPosition ?? 0;
+
         public IEnumerable<Line> LinesBetween(int start, int end)
         {
             return this.Where(x => (x.StartPosition < end) && (x.EndPosition > start));

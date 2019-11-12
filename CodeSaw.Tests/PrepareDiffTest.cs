@@ -329,6 +329,15 @@ namespace CodeSaw.Tests
 
             DiffView.AssignPatchesToLines(classifiedPatches, currentLines, previousLines);
 
+            List<Line> cleared = new List<Line>();
+            DiffView.RemoveDiffsFromIdenticalLines(currentLines, previousLines, cleared);
+
+            Console.WriteLine("Cleared:");
+            foreach (var line in cleared)
+            {
+                Console.WriteLine(line);
+            }
+
             DumpLines(currentLines, previousLines);
 
             var hunks = DiffView.BuildHunks(currentLines, previousLines, true).ToList();
