@@ -47,6 +47,8 @@
     <None Remove="DiffViewData\Case18\patches.txt" />
     <None Remove="DiffViewData\Case18\patches_margin.txt" />
     <None Remove="DiffViewData\Case1\patches_margin.txt" />
+    <None Remove="DiffViewData\Case20\patches.txt" />
+    <None Remove="DiffViewData\Case20\patches_margin.txt" />
     <None Remove="DiffViewData\Case2\patches.txt" />
     <None Remove="DiffViewData\Case2\patches_margin.txt" />
     <None Remove="DiffViewData\Case3\patches.txt" />

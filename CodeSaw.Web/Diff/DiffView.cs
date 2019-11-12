@@ -56,14 +56,20 @@ namespace CodeSaw.Web.Diff
                                 line.AssignDiff(classification, patch, diff);
                             }
 
-                            
-
                             diffOffset = newLine + 1;
                         }
 
                         if (diff.Text.Length > 0 && diff.Text[diff.Text.Length - 1] == '\n' && offset + diffOffset + 1 == endOffset)
                         {
-                            side.Last().AssignDiff(classification, patch, diff);
+                            var isPatchToPreviousEnd = previousLines.FileEnd == patch.Start1 + patch.Length1 - previousCorrection;
+                            var isPatchToCurrentEnd = currentLines.FileEnd == patch.Start2 + patch.Length2;
+
+                            var isPatchToBothEnds = isPatchToCurrentEnd && isPatchToPreviousEnd;
+
+                            if (!isPatchToBothEnds)
+                            {
+                                side.Last().AssignDiff(classification, patch, diff);
+                            }
                         }
                         else if (diff.Text == "" && offset + diffOffset + 1 == endOffset)
                         {
