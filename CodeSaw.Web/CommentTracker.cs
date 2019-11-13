@@ -30,12 +30,14 @@ namespace CodeSaw.Web
 
             patches.Sort(new LambdaComparer<Patch, int>(x => x.Start1));
 
-            var commentLinesMap = new PositionToLine(commentVersion);
+            var commentLines = LineList.SplitLines(commentVersion);
+
             var newVersionLinesMap = new PositionToLine(newVersion);
+            var newVersionLines = LineList.SplitLines(newVersion);
 
-            var commentPosition = commentLinesMap.GetLineStartPosition(line);
-
-            var commentLine = commentVersion.Substring(commentPosition, commentLinesMap.GetLineStartPosition(line + 1) - commentPosition - 1);
+            var commentLineEntry = commentLines[line - 1];
+            var commentLine = commentLineEntry.Text;
+            var commentPosition = commentLineEntry.StartPosition;
 
             var patchContainingComment = patches.FirstOrDefault(x => x.Start1 <= commentPosition && commentPosition <= x.Start1 + x.Length1);
 
@@ -46,8 +48,9 @@ namespace CodeSaw.Web
 
                 if (commentLinePositionInPatch>=0)
                 {
-                    var newLine = newVersionLinesMap.GetLineinPosition(commentLinePositionInPatch + patchContainingComment.Start2);
-                    return newLine + 1;
+                    var newLine = newVersionLines.LineIndexInPosition(commentLinePositionInPatch + patchContainingComment.Start2);
+                    
+                    return (int)newLine + 1;
                 }
 
                 var commentLineTrimmed = commentLine.Trim();
@@ -55,8 +58,9 @@ namespace CodeSaw.Web
 
                 if (commentLinePositionInPatch >= 0)
                 {
-                    var newLine = newVersionLinesMap.GetLineinPosition(commentLinePositionInPatch + patchContainingComment.Start2);
-                    return newLine + 1;
+                    var newLine = newVersionLines.LineIndexInPosition(commentLinePositionInPatch + patchContainingComment.Start2);
+                    
+                    return (int)newLine + 1;
                 }
 
                 // For some reason DMP Match algorithm does not work with pattern longer that some internal limit
@@ -65,8 +69,9 @@ namespace CodeSaw.Web
                 var approximateMatchPosition = DMP.MatchMain(patchNewText.Substring(prefixLength), commentLineTrimmed.Substring(0, Math.Min(DMP.MatchMaxBits, commentLineTrimmed.Length)), 0);
                 if (approximateMatchPosition > -1)
                 {
-                    var newLine = newVersionLinesMap.GetLineinPosition(approximateMatchPosition + prefixLength + patchContainingComment.Start2);
-                    return newLine + 1;
+                    //var newLine = newVersionLinesMap.GetLineinPosition(approximateMatchPosition + prefixLength + patchContainingComment.Start2);
+                    var newLine = newVersionLines.LineIndexInPosition(approximateMatchPosition + prefixLength + patchContainingComment.Start2);
+                    return (int)newLine + 1;
                 }
             }
 
@@ -78,13 +83,13 @@ namespace CodeSaw.Web
                 var distance = commentPosition - patchEnd;
                 var newCommentPosition = lastPatchBeforeComment.Start2 + lastPatchBeforeComment.Length2 + distance;
 
-                return newVersionLinesMap.GetLineinPosition(newCommentPosition) + 1;
+                return (int) newVersionLines.LineIndexInPosition(newCommentPosition) + 1;
             }
 
-            if (line > newVersionLinesMap.TotalLines)
+            if (line > newVersionLines.Count + 1)
             {
                 // trim comments to last line in new file
-                line = newVersionLinesMap.TotalLines;
+                line = newVersionLines.Count + 1;
             }
 
             return line;
