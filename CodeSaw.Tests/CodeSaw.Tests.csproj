@@ -6,6 +6,8 @@
     <RootNamespace>CodeSaw.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="CommentTrackingData\Code4\1.txt" />
+    <None Remove="CommentTrackingData\Code4\desc.json" />
     <None Remove="CommentTrackingData\NoExactLine\1.txt" />
     <None Remove="CommentTrackingData\NoExactLine\2.txt" />
     <None Remove="CommentTrackingData\NoExactLine\3.txt" />

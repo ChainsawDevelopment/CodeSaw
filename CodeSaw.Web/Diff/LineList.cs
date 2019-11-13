@@ -18,6 +18,19 @@ namespace CodeSaw.Web.Diff
             return this.SingleOrDefault(x => x.Contains(position));
         }
 
+        public int? LineIndexInPosition(int position)
+        {
+            for (var i = 0; i < this.Count; i++)
+            {
+                if (this[i].Contains(position))
+                {
+                    return i;
+                }
+            }
+
+            return null;
+        }
+
         public static LineList SplitLines(string content)
         {
             if (content == "")
