@@ -1,6 +1,5 @@
 ﻿using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,28 +9,28 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
     public class FillFileHistory
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
         private readonly IRepository _api;
         private readonly ReviewRevision _currentRevision;
 
-        public FillFileHistory(ISession session, IRepository api, ReviewRevision currentRevision)
+        public FillFileHistory(ISessionAdapter sessionAdapter, IRepository api, ReviewRevision currentRevision)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
             _api = api;
             _currentRevision = currentRevision;
         }
 
-        public async Task<Dictionary<ClientFileId, Guid>> Fill()
+        public async Task<Dictionary<ClientFileId, (string, Guid)>> Fill()
         {
-            var (previousRevId, previousHead) = FindPreviousRevision(_currentRevision.ReviewId, _currentRevision.RevisionNumber, _currentRevision.BaseCommit);
+            var (previousRevId, previousHead) = _sessionAdapter.FindPreviousRevision(_currentRevision.ReviewId, _currentRevision.RevisionNumber, _currentRevision.BaseCommit);
 
             var diff = await _api.GetDiff(_currentRevision.ReviewId.ProjectId, previousHead, _currentRevision.HeadCommit);
             
             TMP_FIllOldRevisionFiles(diff);
 
-            var fileIds = FetchFileIds(previousRevId);
+            var fileIds = _sessionAdapter.FetchFileIds(previousRevId);
 
-            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Value), x => x.Value);
+            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Value), x => (x.Key, x.Value));
 
             var remainingDiffs = new HashSet<FileDiff>(diff);
 
@@ -43,7 +42,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                     remainingDiffs.Remove(matchingDiff);
                 }
 
-                _session.Save(new FileHistoryEntry
+                _sessionAdapter.Save(new FileHistoryEntry
                 {
                     Id = GuidComb.Generate(),
                     RevisionId = _currentRevision.Id,
@@ -61,11 +60,11 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 var fileId = GuidComb.Generate();
 
-                clientFileIdMap[ClientFileId.Provisional(file.Path)] = fileId;
+                clientFileIdMap[ClientFileId.Provisional(file.Path)] = (file.Path.NewPath, fileId);
 
                 if (file.RenamedFile)
                 {
-                    _session.Save(new FileHistoryEntry
+                    _sessionAdapter.Save(new FileHistoryEntry
                     {
                         Id = GuidComb.Generate(),
                         RevisionId = null,
@@ -79,7 +78,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                     });
                 }
 
-                _session.Save(new FileHistoryEntry
+                _sessionAdapter.Save(new FileHistoryEntry
                 {
                     Id = GuidComb.Generate(),
                     RevisionId = _currentRevision.Id,
@@ -102,29 +101,6 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             {
                 _currentRevision.Files.Add(RevisionFile.FromDiff(file));
             }
-        }
-
-        private Dictionary<string, Guid> FetchFileIds(Guid? previousRevId)
-        {
-            if (previousRevId == null)
-            {
-                return new Dictionary<string, Guid>();
-            }
-
-            return _session.Query<FileHistoryEntry>()
-                .Where(x => x.RevisionId == previousRevId)
-                .ToDictionary(x => x.FileName, x => x.FileId);
-        }
-
-        private (Guid? revisionId, string hash) FindPreviousRevision(ReviewIdentifier reviewId, int number, string baseCommit)
-        {
-            if (number <= 1)
-            {
-                return (null, baseCommit);
-            }
-
-            var previousRevision = _session.Query<ReviewRevision>().Single(x => x.ReviewId == reviewId && x.RevisionNumber == number - 1);
-            return (previousRevision.Id, previousRevision.HeadCommit);
         }
     }
 }

@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
     public class RepliesPublisher
     {
-        private readonly ISession _session;
+        private readonly ISessionAdapter _sessionAdapter;
 
-        public RepliesPublisher(ISession session)
+        public RepliesPublisher(ISessionAdapter sessionAdapter)
         {
-            _session = session;
+            _sessionAdapter = sessionAdapter;
         }
 
         public async Task Publish(List<Item> replies, Review review, Dictionary<string, Guid> newCommentsMap)
@@ -41,7 +40,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                         parentId = Guid.Parse(item.ParentId);
                     }
 
-                    await _session.SaveAsync(new Comment
+                    _sessionAdapter.Save(new Comment
                     {
                         Id = id,
                         PostedInReviewId = review.Id,

@@ -10,10 +10,179 @@ using CodeSaw.Web.Modules.Api.Commands.PublishElements;
 using CodeSaw.Web.Modules.Api.Model;
 using NHibernate;
 using CodeSaw.Web.Modules.Api.Queries;
+using NHibernate.Criterion;
+using NHibernate.Linq;
 
 namespace CodeSaw.Web.Modules.Api.Commands
 {
     public delegate Review FindReviewDelegate(RevisionId revision);
+
+    public interface ISessionAdapter
+    {
+        Dictionary<RevisionId, Review> GetReviews(ReviewIdentifier reviewId, ReviewUser reviewUser);
+        Task<ReviewRevision> GetRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits);
+        ReviewRevision GetRevision(ReviewIdentifier reviewId, RevisionId revisionId);
+        ReviewRevision GetRevision(Guid revisionId);
+        ReviewRevision GetPreviousRevision(ReviewRevision revision);
+        List<FileHistoryEntry> GetFileHistoryEntries(ReviewRevision revision);
+        int GetNextRevisionNumber(ReviewIdentifier reviewId);
+        
+        Task Save(ReviewRevision revision);
+        void Save(FileHistoryEntry entry);
+        void Save(Review review);
+        void Save(ReviewDiscussion discussion);
+        void Save(FileDiscussion discussion);
+        void Save(Discussion discussion);
+        void Save(Comment comment);
+        
+        (Guid? revisionId, string hash) FindPreviousRevision(ReviewIdentifier reviewId, int number, string baseCommit);
+        Dictionary<string, Guid> FetchFileIds(Guid? previousRevId);
+
+        Review GetReview(Guid revisionId, ReviewUser user);
+
+        FileHistoryEntry GetFileHistoryEntry(Guid fileId, ReviewRevision revision);
+        
+        List<Discussion> GetDiscussions(List<Guid> ids);
+    }
+
+    public class NHSessionAdapter : ISessionAdapter
+    {
+        private readonly ISession _session;
+
+        public NHSessionAdapter(ISession session)
+        {
+            _session = session;
+        }
+
+        public Dictionary<RevisionId, Review> GetReviews(ReviewIdentifier reviewId, ReviewUser reviewUser)
+        {
+            return (from review in _session.Query<Review>()
+                join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
+                where review.UserId == reviewUser.Id && revision.ReviewId == reviewId
+                select new
+                {
+                    RevisionId = new RevisionId.Selected(revision.RevisionNumber),
+                    Review = review
+                }).ToDictionary(x => (RevisionId) x.RevisionId, x => x.Review);
+        }
+
+        public async Task<ReviewRevision> GetRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
+        {
+            return  await _session.Query<ReviewRevision>()
+                .Where(x => x.ReviewId == reviewId)
+                .Where(x => x.BaseCommit == commits.Base && x.HeadCommit == commits.Head)
+                .SingleOrDefaultAsync();
+        }
+
+        public ReviewRevision GetRevision(ReviewIdentifier reviewId, RevisionId revisionId)
+        {
+            return _session.Query<ReviewRevision>().Single(x => 
+                x.ReviewId == reviewId &&
+                x.RevisionNumber == ((RevisionId.Selected) revisionId).Revision
+            );
+        }
+
+        public ReviewRevision GetRevision(Guid revisionId)
+        {
+            return _session.Load<ReviewRevision>(revisionId);
+        }
+
+        public ReviewRevision GetPreviousRevision(ReviewRevision revision)
+        {
+            return _session.Query<ReviewRevision>()
+                .SingleOrDefault(x => x.ReviewId == revision.ReviewId && x.RevisionNumber == revision.RevisionNumber - 1);
+        }
+
+        public List<FileHistoryEntry> GetFileHistoryEntries(ReviewRevision revision)
+        {
+            return _session.Query<FileHistoryEntry>()
+                .Where(x => x.RevisionId == revision.Id).ToList();
+        }
+
+        public int GetNextRevisionNumber(ReviewIdentifier reviewId)
+        {
+            return 1 + (_session.QueryOver<ReviewRevision>()
+                            .Where(x => x.ReviewId == reviewId)
+                            .Select(Projections.Max<ReviewRevision>(x => x.RevisionNumber))
+                            .SingleOrDefault<int?>() ?? 0);
+        }
+
+        public async Task Save(ReviewRevision revision)
+        {
+            await _session.SaveAsync(revision);
+        }
+
+        public void Save(FileHistoryEntry entry)
+        {
+            _session.Save(entry);
+        }
+
+        public void Save(Review review)
+        {
+            _session.Save(review);
+        }
+
+        public void Save(ReviewDiscussion discussion)
+        {
+            _session.Save(discussion);
+        }
+
+        public void Save(FileDiscussion discussion)
+        {
+            _session.Save(discussion);
+        }
+
+        public void Save(Discussion discussion)
+        {
+            _session.Save(discussion);
+        }
+
+        public void Save(Comment comment)
+        {
+            _session.Save(comment);
+        }
+
+        public (Guid? revisionId, string hash) FindPreviousRevision(ReviewIdentifier reviewId, int number, string baseCommit)
+        {
+            if (number <= 1)
+            {
+                return (null, baseCommit);
+            }
+
+            var previousRevision = _session.Query<ReviewRevision>().Single(x => x.ReviewId == reviewId && x.RevisionNumber == number - 1);
+            return (previousRevision.Id, previousRevision.HeadCommit);
+        }
+
+        public Dictionary<string, Guid> FetchFileIds(Guid? previousRevId)
+        {
+            if (previousRevId == null)
+            {
+                return new Dictionary<string, Guid>();
+            }
+
+            return _session.Query<FileHistoryEntry>()
+                .Where(x => x.RevisionId == previousRevId)
+                .ToDictionary(x => x.FileName, x => x.FileId);
+        }
+
+        public Review GetReview(Guid revisionId, ReviewUser user)
+        {
+            return _session.Query<Review>()
+                .Where(x => x.RevisionId == revisionId && x.UserId == user.Id)
+                .SingleOrDefault();
+        }
+
+        public FileHistoryEntry GetFileHistoryEntry(Guid fileId, ReviewRevision revision)
+        {
+            var revisionId = revision?.Id;
+            return _session.Query<FileHistoryEntry>().SingleOrDefault(x => x.RevisionId == revisionId && x.FileId == fileId);
+        }
+
+        public List<Discussion> GetDiscussions(List<Guid> ids)
+        {
+            return _session.Query<Discussion>().Where(x => ids.Contains(x.Id)).ToList();
+        }
+    }
 
     public class PublishReview : ICommand
     {
@@ -21,12 +190,12 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public int ReviewId { get; set; }
         public RevisionCommits Revision { get; set; } = new RevisionCommits();
         public List<NewReviewDiscussion> StartedReviewDiscussions { get; set; } = new List<NewReviewDiscussion>();
-        public NewFileDiscussion[] StartedFileDiscussions { get; set; }
+        public List<NewFileDiscussion> StartedFileDiscussions { get; set; } = new List<NewFileDiscussion>();
         public List<string> ResolvedDiscussions { get; set; } = new List<string>(); 
         public List<RepliesPublisher.Item> Replies { get; set; } = new List<RepliesPublisher.Item>();
 
-        public Dictionary<RevisionId, List<ClientFileId>> ReviewedFiles { get; set; }
-        public Dictionary<RevisionId, List<ClientFileId>> UnreviewedFiles { get; set; }
+        public Dictionary<RevisionId, List<ClientFileId>> ReviewedFiles { get; set; } = new Dictionary<RevisionId, List<ClientFileId>>();
+        public Dictionary<RevisionId, List<ClientFileId>> UnreviewedFiles { get; set; } = new Dictionary<RevisionId, List<ClientFileId>>();
 
         public class RevisionCommits
         {
@@ -36,16 +205,16 @@ namespace CodeSaw.Web.Modules.Api.Commands
 
         public class Handler : CommandHandler<PublishReview>
         {
-            private readonly ISession _session;
+            private readonly ISessionAdapter _sessionAdapter;
             private readonly IRepository _api;
             private readonly ReviewUser _user;
             private readonly IEventBus _eventBus;
             private readonly RevisionFactory _revisionFactory;
             private readonly IMemoryCache _cache;
 
-            public Handler(ISession session, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory, IMemoryCache cache)
+            public Handler(ISessionAdapter sessionAdapter, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory, IMemoryCache cache)
             {
-                _session = session;
+                _sessionAdapter = sessionAdapter;
                 _api = api;
                 _user = user;
                 _eventBus = eventBus;
@@ -58,20 +227,13 @@ namespace CodeSaw.Web.Modules.Api.Commands
                 var reviewId = new ReviewIdentifier(command.ProjectId, command.ReviewId);
                 _cache.Remove(GetCommitStatus.CacheKey(reviewId));
 
-                var revisionFactory = new FindOrCreateRevisionPublisher(_session, _revisionFactory, _api);
+                var revisionFactory = new FindOrCreateRevisionPublisher(_sessionAdapter, _revisionFactory, _api);
 
-                var (headRevision, clientFileIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
+                var (headRevision, clientFileIdMap, nameIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
 
-                var headReview = await new FindOrCreateReviewPublisher(_session, _user).FindOrCreateReview(command, reviewId, headRevision);
+                var headReview = await new FindOrCreateReviewPublisher(_sessionAdapter, _user).FindOrCreateReview(command, reviewId, headRevision);
 
-                var reviews = (from review in _session.Query<Review>()
-                    join revision in _session.Query<ReviewRevision>() on review.RevisionId equals revision.Id
-                    where review.UserId == _user.Id && revision.ReviewId == reviewId
-                    select new
-                    {
-                        RevisionId = new RevisionId.Selected(revision.RevisionNumber),
-                        Review = review
-                    }).ToDictionary(x => (RevisionId)x.RevisionId, x => x.Review);
+                var reviews = _sessionAdapter.GetReviews(reviewId, _user);
 
                 reviews[new RevisionId.Hash(command.Revision.Head)] = headReview;
 
@@ -85,29 +247,39 @@ namespace CodeSaw.Web.Modules.Api.Commands
                     return reviews[revId] = CreateReview(reviewId, revId);
                 };
 
-                Func<ClientFileId, Guid> resolveFileId = clientFileId => clientFileIdMap[clientFileId];
+                Guid ResolveFileId(ClientFileId clientFileId)
+                {
+                    if (clientFileIdMap.TryGetValue(clientFileId, out var i))
+                    {
+                        return i;
+                    }
+
+                    if (clientFileId.IsProvisional)
+                    {
+                        return nameIdMap[clientFileId.ProvisionalPathPair.NewPath];
+                    }
+
+                    throw new Exception($"Don't know how to translate {clientFileId} into file id");
+                }
 
                 var newCommentsMap = new Dictionary<string, Guid>();
                 var newDiscussionsMap = new Dictionary<string, Guid>();
 
-                await new ReviewDiscussionsPublisher(_session, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap, newDiscussionsMap);
-                await new FileDiscussionsPublisher(_session, reviewForRevision, resolveFileId).Publish(command.StartedFileDiscussions, newCommentsMap, newDiscussionsMap);
+                await new ReviewDiscussionsPublisher(_sessionAdapter, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap, newDiscussionsMap);
+                await new FileDiscussionsPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).Publish(command.StartedFileDiscussions.ToArray(), newCommentsMap, newDiscussionsMap);
 
                 var resolvedDiscussions = command.ResolvedDiscussions.Select(d => newDiscussionsMap.GetValueOrDefault(d, () => Guid.Parse(d))).ToList();
 
-                await new ResolveDiscussions(_session, reviewForRevision).Publish(resolvedDiscussions);
-                await new RepliesPublisher(_session).Publish(command.Replies, headReview, newCommentsMap);
-                await new MarkFilesPublisher(_session, reviewForRevision, resolveFileId).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
+                await new ResolveDiscussions(_sessionAdapter, reviewForRevision).Publish(resolvedDiscussions);
+                await new RepliesPublisher(_sessionAdapter).Publish(command.Replies, headReview, newCommentsMap);
+                await new MarkFilesPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }
 
             private Review CreateReview(ReviewIdentifier reviewId, RevisionId revisionId)
             {
-                var revision = _session.Query<ReviewRevision>().Single(x => 
-                    x.ReviewId == reviewId &&
-                    x.RevisionNumber == ((RevisionId.Selected) revisionId).Revision
-                );
+                var revision = _sessionAdapter.GetRevision(reviewId, revisionId);
 
                 var review = new Review
                 {
@@ -116,7 +288,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
                     UserId = _user.Id,
                     ReviewedAt = DateTimeOffset.UtcNow
                 };
-                _session.Save(review);
+                _sessionAdapter.Save(review);
 
                 return review;
             }
