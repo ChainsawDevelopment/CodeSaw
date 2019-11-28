@@ -248,8 +248,8 @@ const diffView = (props: Props) => {
 
     for (let widget of props.lineWidgets) {
         const matchingHunk = viewHunks.findIndex(i =>
-            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber < i.oldStart + i.oldLines)
-            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber < i.newStart + i.newLines)
+            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber <= i.oldStart + i.oldLines)
+            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber <= i.newStart + i.newLines)
         );
 
         if (matchingHunk >= 0) {
@@ -263,6 +263,7 @@ const diffView = (props: Props) => {
         }
 
         try{
+            
             viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
         } 
         catch(e)

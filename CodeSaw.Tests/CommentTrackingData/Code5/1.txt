@@ -1,0 +1,26 @@
+﻿from enum import IntEnum
+
+
+class EpsStatus(IntEnum):
+    NoError = 0b0,
+    LastCommandNotRecognised = 0b00000001
+    WatchdogError = 0b00000010
+    IncorrectData = 0b00000100
+    IncorrectChannel = 0b00001000
+    EepromReadError = 0b00010000
+    PowerOnResetError = 0b00100000
+    BrownOutReset = 0b01000000
+
+
+class EpsError(IntEnum):  # TODO
+    NoError = 0x00,
+    ExampleError = 0x01
+
+
+class EpsBoardStatus():
+    def __init__(self, mb_status: EpsStatus, db_status: EpsStatus) -> None:
+        self.motherboard: EpsStatus = mb_status
+        self.daughterboard: EpsStatus = db_status
+
+    def __str__(self) -> str:
+        return 'Motherboard status: {}, daughterboard status: {}'.format(self.motherboard, self.daughterboard)
