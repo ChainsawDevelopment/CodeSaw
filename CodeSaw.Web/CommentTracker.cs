@@ -82,13 +82,18 @@ namespace CodeSaw.Web
                 var distance = commentPosition - patchEnd;
                 var newCommentPosition = lastPatchBeforeComment.Start2 + lastPatchBeforeComment.Length2 + distance;
 
-                return (int) newVersionLines.LineIndexInPosition(newCommentPosition) + 1;
+                var newVersionLine = newVersionLines.LineIndexInPosition(newCommentPosition);
+
+                if (newVersionLine.HasValue)
+                {
+                    return (int) newVersionLine + 1;
+                }
             }
 
-            if (line > newVersionLines.Count + 1)
+            if (line > newVersionLines.Count)
             {
                 // trim comments to last line in new file
-                line = newVersionLines.Count + 1;
+                line = newVersionLines.Count;
             }
 
             return line;
