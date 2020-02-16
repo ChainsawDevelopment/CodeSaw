@@ -59,6 +59,7 @@ export interface ReviewState extends UnpublishedReview {
 const createAction = actionCreatorFactory('REVIEW');
 
 export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
+export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_REVIEWED');
 
 export const loadedFileDiff = createAction<{diff: FileDiff; remappedDiscussions: DiffDiscussions}>('LOADED_FILE_DIFF');
 
@@ -138,7 +139,7 @@ const initial: ReviewState = {
     ...emptyUnpublishedReview,
 };
 
-const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
+export const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
     if (revision == 'base') {
         return { base: state.baseCommit, head: state.baseCommit };
     };

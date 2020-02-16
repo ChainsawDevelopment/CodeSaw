@@ -46,12 +46,13 @@ const Review = withRouter((props: RouteComponentProps<{projectId: string; id: st
 
 interface StateProps {
     inProgressOperationsCount: number;
+    inProgressOperationLastMessage: string;
 }
 
 const Layout = (props: StateProps) => (
     <Dimmer.Dimmable as='div'>
         <Dimmer active={props.inProgressOperationsCount > 0} page>
-            <Loader size='large' />
+            <Loader size='large' >{props.inProgressOperationLastMessage || null}</Loader>
         </Dimmer>
         <Menu inverted>
             <Container fluid>
@@ -90,6 +91,7 @@ const Layout = (props: StateProps) => (
 
 export default connect(
     (state: RootState):StateProps => ({
-        inProgressOperationsCount: state.loading.inProgressOperationsCount
+        inProgressOperationsCount: state.loading.inProgressOperationsCount,
+        inProgressOperationLastMessage: state.loading.inProgressOperationLastMessage
     })
 )(Layout);
