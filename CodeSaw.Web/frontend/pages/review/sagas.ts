@@ -9,14 +9,91 @@ import {
     MergePullRequestArgs,
     PublishReviewArgs,
     clearUnpublishedReviewInfo,
+    ReviewState,
+    FileReviewStatusChange,
+    reviewFile,
+    markEmptyFilesAsReviewed,
+    resolveRevision
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, RevisionId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId, FileToReview, FileDiff, DiffDiscussions } from '../../api/reviewer';
 import { RootState } from "../../rootState";
-import { startOperation, stopOperation } from "../../loading/saga";
+import { startOperation, stopOperation, setOperationMessage } from "../../loading/saga";
 import { getUnpublishedReview } from "./storage";
 
+function* markNotChangedAsViewed() {
+    const api = new ReviewerApi();
+
+    for (; ;) {
+        const action: Action<{ fileId: FileId }> = yield take(markEmptyFilesAsReviewed);
+
+        yield startOperation();
+
+        const state = yield select((s: RootState) => ({
+            currentReview: s.review.currentReview,
+            unpublishedReviewedFiles: s.review.unpublishedReviewedFiles,
+            unpublishedUnreviewedFiles: s.review.unpublishedUnreviewedFiles,
+            reviewedFiles: s.review.reviewedFiles
+        }));
+
+        const currentReview: ReviewInfo = state.currentReview;
+        const reviewedFiles: FileId[] = state.reviewedFiles;
+        const unpublishedReviewedFiles: FileReviewStatusChange = state.unpublishedReviewedFiles;
+
+        console.log(`Marking empty files as reviewed. ${currentReview.filesToReview.length} files to check`);
+
+        let fileIndex = 0;
+        let markAsReviewedCount = 0;
+        const progressRefreshStep = Math.ceil(currentReview.filesToReview.length * 5 / 100);
+
+        for (const file of currentReview.filesToReview) {
+            if (fileIndex % progressRefreshStep == 0) {
+                yield setOperationMessage(`Scanning for empty files: ${fileIndex+1}/${currentReview.filesToReview.length}`);
+                yield delay(1);
+            }
+
+            fileIndex++;
+
+            const fileId = file.fileId;
+            const fileUnpublishedReviewedFiles = state.unpublishedReviewedFiles[fileId] || [];
+
+            if (reviewedFiles.indexOf(fileId) >= 0 || fileUnpublishedReviewedFiles.indexOf(fileId) >= 0) {
+                console.log({ message: "Already marked as reviewed", file: file });
+                continue; // already mark as reviewed
+            }
+
+            const currentRange = {
+                reviewId: state.currentReview.reviewId,
+                range: {
+                    previous: resolveRevision(state.currentReview, file.previous),
+                    current: resolveRevision(state.currentReview, file.current)
+                },
+                path: file.diffFile,
+                fileId: file.fileId
+            }
+
+            const diff: FileDiff = yield api.getDiff(currentRange.reviewId, currentRange.range, currentRange.path);
+            const remappedDiscussions: DiffDiscussions = yield api.getDiffDiscussions(currentRange.reviewId, currentRange.range, currentRange.fileId, currentRange.path.newPath);
+
+            const isEmpty = diff.hunks.length == 0 && remappedDiscussions.remapped.length == 0;
+
+            if (isEmpty) {
+                console.log({ message: "Marking automatically as reviewed", file: file });
+                markAsReviewedCount++;
+                yield put(reviewFile({ path: file.reviewFile }));
+            } else {
+                console.log({ message: "File Not empty", file: file });
+            }
+        }
+
+        console.log("Marking empty files as reviewed... Finished");
+
+        yield stopOperation();
+
+        notify.success(`Marked ${markAsReviewedCount} files as reviewed.`);
+    }
+}
 
 function* loadFileDiffSaga() {
     const api = new ReviewerApi();
@@ -24,14 +101,16 @@ function* loadFileDiffSaga() {
     for (; ;) {
         const action: Action<{ fileId: FileId }> = yield take(selectFileForView);
         
-        yield startOperation();
-
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: state.review.selectedFile.range,
             path: state.review.selectedFile.fileToReview.diffFile,
             fileId: state.review.selectedFile.fileId
         }));
+
+
+        yield startOperation(`Loading file ${currentRange.path.newPath} ...`);
+
 
         const diff = yield api.getDiff(currentRange.reviewId, currentRange.range, currentRange.path);
         const remappedDiscussions = yield api.getDiffDiscussions(currentRange.reviewId, currentRange.range, currentRange.fileId, currentRange.path.newPath);
@@ -89,7 +168,7 @@ function* publishReviewSaga() {
     for (; ;) {
         const action: Action<PublishReviewArgs> = yield take(publishReview);
 
-        yield startOperation();
+        yield startOperation("Publishing...");
 
         const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
             reviewId: s.review.currentReview.reviewId,
@@ -150,7 +229,7 @@ function* mergePullRequestSaga() {
     for (; ;) {
         const action: Action<MergePullRequestArgs> = yield take(mergePullRequest);
 
-        yield startOperation();
+        yield startOperation("Merging...");
 
         try {
             yield api.mergePullRequest(action.payload.reviewId, action.payload.shouldRemoveBranch, action.payload.commitMessage);
@@ -173,4 +252,5 @@ export default [
     loadReviewInfoSaga,
     publishReviewSaga,
     mergePullRequestSaga,
+    markNotChangedAsViewed,
 ];

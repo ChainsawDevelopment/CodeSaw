@@ -146,6 +146,7 @@ export interface Props {
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
+    markNonEmptyAsViewed: any;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -256,7 +257,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 '{': () => prevFileWithUnresolvedComment && onSelectFileForView(prevFileWithUnresolvedComment.fileId),
                 '}': () => nextFileWithUnresolvedComment && onSelectFileForView(nextFileWithUnresolvedComment.fileId),
                 'y': () => this._changeFileReviewState(!this.props.selectedFile.isReviewed),
-                'ctrl+Enter': this.props.publishReview
+                'ctrl+Enter': this.props.publishReview,
+                'ctrl+y': () => this.props.markNonEmptyAsViewed()
             };
 
             menuItems.push(
@@ -328,7 +330,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
             reviewHotKeys = {
                 '[': () => lastFile && onSelectFileForView(lastFile),
-                ']': () => firstFile && onSelectFileForView(firstFile)
+                ']': () => firstFile && onSelectFileForView(firstFile),
+                'ctrl+y': () => this.props.markNonEmptyAsViewed()
             };
         }
 

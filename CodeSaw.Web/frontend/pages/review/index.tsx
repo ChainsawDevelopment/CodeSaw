@@ -3,6 +3,9 @@ import { Dispatch } from "redux";
 import { connect } from "react-redux";
 import { History } from "history";
 
+import { PublishButton } from "./PublishButton";
+
+import Menu from '@ui/collections/Menu';
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
 import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
@@ -19,7 +22,8 @@ import {
     startReviewDiscussion,
     resolveDiscussion,
     unresolveDiscussion,
-    replyToComment
+    replyToComment,
+    markEmptyFilesAsReviewed
 } from "./state";
 import {
     ReviewInfo,
@@ -45,6 +49,7 @@ import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
+import { Button } from "semantic-ui-react";
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -63,6 +68,7 @@ interface DispatchProps {
     resolveDiscussion(rootCommentId: string): void;
     unresolveDiscussion(rootCommentId: string): void;
     addReply(parentCommentId: string, content: string): void;
+    markNonEmptyAsViewed(): void;
 }
 
 interface StateProps {
@@ -209,7 +215,17 @@ class reviewPage extends React.Component<Props, State> {
                         </Grid.Row>
                         <Grid.Row centered columns={1}>
                             <Grid.Column>
-                                <Checkbox toggle label="Hide reviewed" onChange={changeHideReviewed}/>
+                                <Menu secondary id="summary-menu">
+                                    <Menu.Menu position='right'>
+                                        <Menu.Item>
+                                            <PublishButton />&nbsp;
+                                            <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
+                                            <Checkbox toggle label="Hide reviewed" onChange={changeHideReviewed} />&nbsp;
+
+                                        </Menu.Item>
+                                    </Menu.Menu>
+                                </Menu>
+                                
                                 <FileMatrix hideReviewed={this.state.hideReviewed}/>
                             </Grid.Column>
                         </Grid.Row>
@@ -244,6 +260,7 @@ class reviewPage extends React.Component<Props, State> {
                         pendingResolved={props.unpublishedResolvedDiscussions}
                         unpublishedReplies={props.unpublishedReplies}
                         currentUser={props.currentUser}
+                        markNonEmptyAsViewed={props.markNonEmptyAsViewed}
                     />
                 </CurrentReviewMode.Provider>
             </div>
@@ -278,6 +295,7 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
     resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
     unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),
     addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
+    markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
 });
 
 export default connect(
