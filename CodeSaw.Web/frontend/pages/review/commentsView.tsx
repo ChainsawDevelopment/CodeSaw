@@ -7,6 +7,7 @@ import Form from '@ui/collections/Form';
 import Header from '@ui/elements/Header';
 import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment, Discussion } from "../../api/reviewer";
+import { IsCommentUnpublished } from './state';
 
 import "./commentsView.less";
 import { UserState } from "../../rootState";
@@ -14,6 +15,7 @@ import { UserState } from "../../rootState";
 export interface DiscussionActions {
     addNew(content: string, needsResolution: boolean);
     addReply(parentId: string, content: string): void;
+    editReply(commentId: string, content: string): void;
     resolve(discussionId: string);
     unresolve(discussionId: string);
 }
@@ -39,17 +41,19 @@ interface CommentProps {
 interface CommentState {
     replyText: string;
     replyVisible: boolean;
+    editText: string;
+    editVisible: boolean;
 }
 
 const mapComments = (
     comments: Comment[],
-    actions: DiscussionActions
+    defaultProps: CommentProps
 ): JSX.Element[] => {
     return comments.map(comment => (
         <CommentComponent
             key={comment.id}
             comment={comment}
-            actions={actions}
+            actions={defaultProps.actions}
         />
     ));
 };
@@ -60,17 +64,20 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
         this.state = {
             replyText: '',
-            replyVisible: false
+            replyVisible: false,
+            editText: props.comment.content,
+            editVisible: false
         };
     }
 
     private getReplyTextAreaId = (): string => `text-reply-${this.props.comment.id}`
+    private getEditTextAreaId = (): string => `text-edit-${this.props.comment.id}`
 
     render(): JSX.Element {
-        const children = mapComments(this.props.comment.children, this.props.actions);
+        const children = mapComments(this.props.comment.children, this.props);
 
         const switchReply = () => {
-            this.setState({ replyVisible: !this.state.replyVisible });
+            this.setState({ replyVisible: !this.state.replyVisible, editVisible: false });
 
             if (!this.state.replyVisible) {
                 setTimeout(() => {
@@ -80,13 +87,32 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             }
         };
 
+        const switchEdit = () => {
+            this.setState({ editVisible: !this.state.editVisible, replyVisible: false });
+
+            if (!this.state.editVisible) {
+                setTimeout(() => {
+                    const textArea = document.getElementById(this.getEditTextAreaId());
+                    textArea.focus();
+                }, 0);
+            }
+        }
+
 
         const onSubmit = () => {
             this.setState({ replyText: '', replyVisible: false });
         };
 
+        const onSubmitEdited = () => {
+            this.setState({ editVisible: false });
+        }
+
         const onChangeReply = (event: React.FormEvent<HTMLTextAreaElement>, data: TextAreaProps) => {
             this.setState({ replyText: data.value.toString() });
+        };
+
+        const onChangeEdit = (event: React.FormEvent<HTMLTextAreaElement>, data: TextAreaProps) => {
+            this.setState({ editText: data.value.toString() });
         };
 
         const form = (
@@ -96,11 +122,20 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             </Form>
         );
 
+        const editForm = (
+            <Form reply onSubmit={onSubmitEdited}>
+                <Form.TextArea id={this.getEditTextAreaId()} onChange={onChangeEdit} value={this.state.editText} />
+                <Button onClick={() => this.props.actions.editReply(this.props.comment.id, this.state.editText)} primary>Update response</Button>
+            </Form>
+            )
+
         const markdown = new showdown.Converter();
 
         const ack = '\ud83d\udc4d';
         const acknowledgeVisible = this.props.comment.children.length == 0 && this.props.comment.content !== ack;
         const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
+
+        const isUnpublished = IsCommentUnpublished(this.props.comment.id);
 
         return (
             <UIComment>
@@ -110,11 +145,14 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     <UIComment.Metadata>
                         <div>{this.props.comment.createdAt && new Date(this.props.comment.createdAt).toLocaleString()}</div>
                         {this.props.note}
+                        {isUnpublished && 'Unpublished'}
                     </UIComment.Metadata>
                     <UIComment.Text>
-                        <div dangerouslySetInnerHTML={{ __html: markdown.makeHtml(this.props.comment.content) }}></div>
+                        {!this.state.editVisible && <div dangerouslySetInnerHTML={{ __html: markdown.makeHtml(this.props.comment.content) }}></div>}
+                        {this.state.editVisible && editForm}
                     </UIComment.Text>
                     <UIComment.Actions>
+                        {isUnpublished && <UIComment.Action onClick={switchEdit}>Edit</UIComment.Action>}
                         <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
                         {acknowledgeButton}
                         {this.props.statusComponent}
@@ -131,6 +169,7 @@ interface DiscussionComponentProps {
     discussion: Discussion;
     actions: DiscussionActions;
     note?(discussion: Discussion): JSX.Element;
+    unpublishedReplies: Reply[];
 }
 const DiscussionComponent = (props: DiscussionComponentProps) => {
     let status: JSX.Element = null;
@@ -219,7 +258,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
                 comment: mergeCommentsWithReplies([d.comment], this.props.unpublishedReplies, this.props.currentUser)[0]
             }))
 
-        const discussions = discussionsWithReplies.map(d => <DiscussionComponent key={d.id} discussion={d} actions={this.props.actions} note={this.props.note} />)
+        const discussions = discussionsWithReplies.map(d => <DiscussionComponent key={d.id} discussion={d} actions={this.props.actions} note={this.props.note} unpublishedReplies={this.props.unpublishedReplies} />)
 
         const onSubmit = () => {
             this.setState({ commentText: '' });

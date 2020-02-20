@@ -45,15 +45,15 @@ export interface UnpublishedReview {
     unpublishedResolvedDiscussions: string[]; 
     unpublishedReplies: CommentReply[];
     unpublishedReviewedFiles: FileReviewStatusChange;
-    unpublishedUnreviewedFiles: FileReviewStatusChange;    
+    unpublishedUnreviewedFiles: FileReviewStatusChange;
+    nextReplyId: number;
+    nextDiscussionCommentId: number;
 }
 
 export interface ReviewState extends UnpublishedReview {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
     reviewedFiles: FileId[];
-    nextReplyId: number;
-    nextDiscussionCommentId: number;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -97,6 +97,18 @@ export const startReviewDiscussion = createAction<{ content: string; needsResolu
 export const unresolveDiscussion = createAction<{ discussionId: string }>('UNRESOLVE_DISCUSSION');
 export const resolveDiscussion = createAction<{ discussionId: string }>('RESOLVE_DISCUSSION');
 export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
+export const editUnpublishedComment = createAction<{ commentId: string, content: string }>('EDIT_UNPUBLISHED_COMMENT');
+
+const UnpublishedCommentPrefixes = {
+    Review: "REVIEW-",
+    File: "FILE-",
+    Reply: "REPLY-"
+};
+
+export const IsCommentUnpublished = (commentId: string): boolean => {
+    return Object.keys(UnpublishedCommentPrefixes).findIndex(key => commentId.startsWith(UnpublishedCommentPrefixes[key])) >= 0;
+}
+    
 
 export const emptyUnpublishedReview : UnpublishedReview = {
     unpublishedFileDiscussions: [],
@@ -105,6 +117,8 @@ export const emptyUnpublishedReview : UnpublishedReview = {
     unpublishedReplies: [],
     unpublishedReviewedFiles: {},
     unpublishedUnreviewedFiles: {},
+    nextDiscussionCommentId: 0,
+    nextReplyId: 0,
 }
 
 const initial: ReviewState = {
@@ -134,8 +148,6 @@ const initial: ReviewState = {
         isAuthor: false
     },
     reviewedFiles: [],
-    nextDiscussionCommentId: 0,
-    nextReplyId: 0,
     ...emptyUnpublishedReview,
 };
 
@@ -213,16 +225,21 @@ export const upgradeUnpublishedReview = (current: ReviewInfo, review: Unpublishe
     }
 
     return {
+        nextDiscussionCommentId: review.nextDiscussionCommentId,
+        nextReplyId: review.nextReplyId,
         unpublishedFileDiscussions: fileDiscussions,
         unpublishedReplies: review.unpublishedReplies,
         unpublishedResolvedDiscussions: review.unpublishedResolvedDiscussions,
         unpublishedReviewDiscussions: reviewDiscussions,
         unpublishedReviewedFiles: reviewedFiles,
         unpublishedUnreviewedFiles: unreviewedFiles
+
     };
 }
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
+    console.log({ nextReplyId: state.nextReplyId });
+
     if (selectFileForView.match(action)) {
         const file = state.currentReview.filesToReview.find(f => f.fileId == action.payload.fileId);
 
@@ -394,7 +411,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedFileDiscussions: [
                 ...state.unpublishedFileDiscussions,
                 {
-                    id: `FILE-${state.nextDiscussionCommentId}`,
+                    id: `${UnpublishedCommentPrefixes.File}${state.nextDiscussionCommentId}`,
                     revision: state.selectedFile.fileToReview.current,
                     fileId: action.payload.fileId,
                     lineNumber: action.payload.lineNumber,
@@ -405,7 +422,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
-                        id: `FILE-${state.nextDiscussionCommentId}`
+                        id: `${UnpublishedCommentPrefixes.File}${state.nextDiscussionCommentId}`
                     }
                 }
             ]
@@ -419,7 +436,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedReviewDiscussions: [
                 ...state.unpublishedReviewDiscussions,
                 {
-                    id: `REVIEW-${state.nextDiscussionCommentId}`,
+                    id: `${UnpublishedCommentPrefixes.Review}${state.nextDiscussionCommentId}`,
                     revision: state.currentReview.headRevision,
                     state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
                     canResolve: true,
@@ -428,7 +445,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                         content: action.payload.content,
                         children: [],
                         createdAt: '',
-                        id: `REVIEW-${state.nextDiscussionCommentId}`
+                        id: `${UnpublishedCommentPrefixes.Review}${state.nextDiscussionCommentId}`
                     }
                 }
             ]
@@ -463,12 +480,67 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             unpublishedReplies: [
                 ...state.unpublishedReplies,
                 {
-                    id: 'REPLY-' + state.nextReplyId,
+                    id: UnpublishedCommentPrefixes.Reply + state.nextReplyId,
                     parentId: action.payload.parentId,
                     content: action.payload.content
                 }
             ]
         };
+    }
+
+    if (editUnpublishedComment.match(action)) {
+        if (action.payload.commentId.startsWith(UnpublishedCommentPrefixes.Reply)) {
+            const indexToRemove = state.unpublishedReplies.findIndex(reply => reply.id == action.payload.commentId);
+            if (indexToRemove === -1) {
+                return state;
+            }
+
+            const newReply: CommentReply = {
+                ...state.unpublishedReplies[indexToRemove],
+                content: action.payload.content
+            };
+
+            return {
+                ...state,
+                unpublishedReplies: [...state.unpublishedReplies.slice(0, indexToRemove), newReply, ...state.unpublishedReplies.slice(indexToRemove + 1)]
+            };
+        } else if (action.payload.commentId.startsWith(UnpublishedCommentPrefixes.File)) {
+            const indexToRemove = state.unpublishedFileDiscussions.findIndex(discussion => discussion.id == action.payload.commentId);
+            if (indexToRemove === -1) {
+                return state;
+            }
+
+            const newDiscussion: FileDiscussion = {
+                ...state.unpublishedFileDiscussions[indexToRemove],
+                comment: {
+                    ...state.unpublishedFileDiscussions[indexToRemove].comment,
+                    content: action.payload.content
+                }
+            };
+
+            return {
+                ...state,
+                unpublishedFileDiscussions: [...state.unpublishedFileDiscussions.slice(0, indexToRemove), newDiscussion, ...state.unpublishedFileDiscussions.slice(indexToRemove + 1)]
+            };
+        } else if (action.payload.commentId.startsWith(UnpublishedCommentPrefixes.Review)) {
+            const indexToRemove = state.unpublishedReviewDiscussions.findIndex(discussion => discussion.id == action.payload.commentId);
+            if (indexToRemove === -1) {
+                return state;
+            }
+
+            const newDiscussion: ReviewDiscussion = {
+                ...state.unpublishedReviewDiscussions[indexToRemove],
+                comment: {
+                    ...state.unpublishedReviewDiscussions[indexToRemove].comment,
+                    content: action.payload.content
+                }
+            };
+
+            return {
+                ...state,
+                unpublishedReviewDiscussions: [...state.unpublishedReviewDiscussions.slice(0, indexToRemove), newDiscussion, ...state.unpublishedReviewDiscussions.slice(indexToRemove + 1)]
+            };
+        }
     }
 
     return state;
