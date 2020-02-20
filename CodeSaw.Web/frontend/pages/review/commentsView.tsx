@@ -131,11 +131,11 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
         const markdown = new showdown.Converter();
 
-        const ack = '\ud83d\udc4d';
-        const acknowledgeVisible = this.props.comment.children.length == 0 && this.props.comment.content !== ack;
-        const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
-
         const isUnpublished = IsCommentUnpublished(this.props.comment.id);
+
+        const ack = '\ud83d\udc4d';
+        const acknowledgeVisible = !isUnpublished && this.props.comment.children.length == 0 && this.props.comment.content !== ack;
+        const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
 
         return (
             <UIComment>
@@ -153,9 +153,9 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     </UIComment.Text>
                     <UIComment.Actions>
                         {isUnpublished && <UIComment.Action onClick={switchEdit}>Edit</UIComment.Action>}
-                        <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
+                        {!isUnpublished && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
                         {acknowledgeButton}
-                        {this.props.statusComponent}
+                        {!isUnpublished && this.props.statusComponent}
                     </UIComment.Actions>
                     {this.state.replyVisible ? form : null}
                     {children}
