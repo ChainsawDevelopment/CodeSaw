@@ -307,6 +307,10 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (reviewFile.match(action)) {
+        if (state.currentReview.isAuthor) {
+            return state;
+        }
+
         const file = state.currentReview.filesToReview.find(f => f.reviewFile == action.payload.path);
 
         if (state.reviewedFiles.indexOf(file.fileId) >= 0) {
