@@ -13,7 +13,7 @@ import { UserState } from "../../rootState";
 
 export interface DiscussionActions {
     addNew(content: string, needsResolution: boolean);
-    addReply(parentId: string, content: string):void;
+    addReply(parentId: string, content: string): void;
     resolve(discussionId: string);
     unresolve(discussionId: string);
 }
@@ -74,10 +74,12 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
             if (!this.state.replyVisible) {
                 setTimeout(() => {
-                    document.getElementById(this.getReplyTextAreaId()).focus();
+                    const textArea = document.getElementById(this.getReplyTextAreaId());
+                    textArea.focus();
                 }, 0);
             }
         };
+
 
         const onSubmit = () => {
             this.setState({ replyText: '', replyVisible: false });
@@ -96,20 +98,25 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
 
         const markdown = new showdown.Converter();
 
+        const ack = '\ud83d\udc4d';
+        const acknowledgeVisible = this.props.comment.children.length == 0 && this.props.comment.content !== ack;
+        const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
+
         return (
             <UIComment>
                 <UIComment.Avatar src={this.props.comment.author.avatarUrl} />
                 <UIComment.Content>
                     <UIComment.Author>{this.props.comment.author.name}</UIComment.Author>
                     <UIComment.Metadata>
-                        <div>{this.props.comment.createdAt}</div>
+                        <div>{this.props.comment.createdAt && new Date(this.props.comment.createdAt).toLocaleString()}</div>
                         {this.props.note}
                     </UIComment.Metadata>
                     <UIComment.Text>
-                        <div dangerouslySetInnerHTML={ {__html: markdown.makeHtml(this.props.comment.content)} }></div>
+                        <div dangerouslySetInnerHTML={{ __html: markdown.makeHtml(this.props.comment.content) }}></div>
                     </UIComment.Text>
                     <UIComment.Actions>
                         <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>
+                        {acknowledgeButton}
                         {this.props.statusComponent}
                     </UIComment.Actions>
                     {this.state.replyVisible ? form : null}
@@ -134,29 +141,29 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
         case 'NeedsResolution':
             if (props.discussion.canResolve) {
                 const resolve = () => props.actions.resolve(props.discussion.id);
-                status =  <UIComment.Action onClick={resolve}>Resolve</UIComment.Action>;
+                status = <UIComment.Action onClick={resolve}>Resolve</UIComment.Action>;
             }
             break;
         case 'ResolvePending':
             const unresolve = () => props.actions.unresolve(props.discussion.id);
-            status =  <UIComment.Action className="resolved-pending" onClick={unresolve}>Resolved (pending)</UIComment.Action>;
+            status = <UIComment.Action className="resolved-pending" onClick={unresolve}>Resolved (pending)</UIComment.Action>;
             break;
         case 'Resolved':
-            status =  <span>Resolved</span>;
+            status = <span>Resolved</span>;
             break;
     }
 
-    return (<CommentComponent 
+    return (<CommentComponent
         comment={props.discussion.comment}
         statusComponent={status}
         actions={props.actions}
-        note={props.note ? props.note(props.discussion): null}
+        note={props.note ? props.note(props.discussion) : null}
     />);
 };
 
 const mergeCommentsWithReplies = (
     comments: Comment[],
-    replies:  Reply[],
+    replies: Reply[],
     currentUser: UserState
 ): Comment[] => {
     const result: Comment[] = [];
@@ -206,13 +213,13 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
     }
 
     render(): JSX.Element {
-        const discussionsWithReplies = 
-            this.props.discussions.map(d=>({
+        const discussionsWithReplies =
+            this.props.discussions.map(d => ({
                 ...d,
                 comment: mergeCommentsWithReplies([d.comment], this.props.unpublishedReplies, this.props.currentUser)[0]
             }))
 
-        const discussions = discussionsWithReplies.map(d => <DiscussionComponent key={d.id} discussion={d} actions={this.props.actions} note={this.props.note}/>)
+        const discussions = discussionsWithReplies.map(d => <DiscussionComponent key={d.id} discussion={d} actions={this.props.actions} note={this.props.note} />)
 
         const onSubmit = () => {
             this.setState({ commentText: '' });
@@ -232,13 +239,13 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
                     {this.props.title || 'Comments'}
                 </Header>
                 {discussions}
-                {!this.props.replyOnly ? 
+                {!this.props.replyOnly ?
                     <Form reply onSubmit={onSubmit}>
                         <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
                         <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
                         <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
                     </Form>
-                : null}
+                    : null}
             </UIComment.Group>
         );
     }
