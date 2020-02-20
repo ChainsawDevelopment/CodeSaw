@@ -85,7 +85,8 @@ const buildCommentView = (props: Props, lineNumber: number, discussions: Discuss
         addReply: props.commentActions.addReply,
         editReply: props.commentActions.editReply,
         resolve: props.commentActions.resolve,
-        unresolve: props.commentActions.unresolve
+        unresolve: props.commentActions.unresolve,
+        removeUnpublishedComment: props.commentActions.removeUnpublishedComment
     }
 
     return (
@@ -127,7 +128,8 @@ const UnmatchedComments = (props: {
         addReply: props.commentActions.addReply,
         editReply: props.commentActions.editReply,
         resolve: props.commentActions.resolve,
-        unresolve: props.commentActions.unresolve
+        unresolve: props.commentActions.unresolve,
+        removeUnpublishedComment: props.commentActions.removeUnpublishedComment
     }
 
     const note = (d: Discussion): JSX.Element => <div className="unmatched-comment-info">Revision {d.revision} line {(d as FileDiscussion).lineNumber}</div>;

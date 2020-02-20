@@ -98,6 +98,7 @@ export const unresolveDiscussion = createAction<{ discussionId: string }>('UNRES
 export const resolveDiscussion = createAction<{ discussionId: string }>('RESOLVE_DISCUSSION');
 export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 export const editUnpublishedComment = createAction<{ commentId: string, content: string }>('EDIT_UNPUBLISHED_COMMENT');
+export const removeUnpublishedComment = createAction<{ commentId: string }>('REMOVE_UNPUBLISHED_COMMENT');
 
 const UnpublishedCommentPrefixes = {
     Review: "REVIEW-",
@@ -542,6 +543,41 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             };
         }
     }
+
+    if (removeUnpublishedComment.match(action)) {
+        if (action.payload.commentId.startsWith(UnpublishedCommentPrefixes.Reply)) {
+            const indexToRemove = state.unpublishedReplies.findIndex(reply => reply.id == action.payload.commentId);
+            if (indexToRemove === -1) {
+                return state;
+            }
+
+            return {
+                ...state,
+                unpublishedReplies: [...state.unpublishedReplies.slice(0, indexToRemove), ...state.unpublishedReplies.slice(indexToRemove + 1)]
+            };
+        } else if (action.payload.commentId.startsWith(UnpublishedCommentPrefixes.File)) {
+            const indexToRemove = state.unpublishedFileDiscussions.findIndex(discussion => discussion.id == action.payload.commentId);
+            if (indexToRemove === -1) {
+                return state;
+            }
+
+            return {
+                ...state,
+                unpublishedFileDiscussions: [...state.unpublishedFileDiscussions.slice(0, indexToRemove), ...state.unpublishedFileDiscussions.slice(indexToRemove + 1)]
+            };
+        } else if (action.payload.commentId.startsWith(UnpublishedCommentPrefixes.Review)) {
+            const indexToRemove = state.unpublishedReviewDiscussions.findIndex(discussion => discussion.id == action.payload.commentId);
+            if (indexToRemove === -1) {
+                return state;
+            }
+
+            return {
+                ...state,
+                unpublishedReviewDiscussions: [...state.unpublishedReviewDiscussions.slice(0, indexToRemove), ...state.unpublishedReviewDiscussions.slice(indexToRemove + 1)]
+            };
+        }
+    }
+
 
     return state;
 }

@@ -16,6 +16,7 @@ export interface DiscussionActions {
     addNew(content: string, needsResolution: boolean);
     addReply(parentId: string, content: string): void;
     editReply(commentId: string, content: string): void;
+    removeUnpublishedComment(commentId: string): void;
     resolve(discussionId: string);
     unresolve(discussionId: string);
 }
@@ -153,6 +154,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     </UIComment.Text>
                     <UIComment.Actions>
                         {isUnpublished && <UIComment.Action onClick={switchEdit}>Edit</UIComment.Action>}
+                        {isUnpublished && <UIComment.Action onClick={() => this.props.actions.removeUnpublishedComment(this.props.comment.id)}>Remove</UIComment.Action>}
                         {!isUnpublished && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
                         {acknowledgeButton}
                         {!isUnpublished && this.props.statusComponent}
