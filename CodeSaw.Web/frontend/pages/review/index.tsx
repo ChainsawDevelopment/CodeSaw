@@ -23,7 +23,9 @@ import {
     resolveDiscussion,
     unresolveDiscussion,
     replyToComment,
-    markEmptyFilesAsReviewed
+    markEmptyFilesAsReviewed,
+    editUnpublishedComment,
+    removeUnpublishedComment
 } from "./state";
 import {
     ReviewInfo,
@@ -68,6 +70,8 @@ interface DispatchProps {
     resolveDiscussion(rootCommentId: string): void;
     unresolveDiscussion(rootCommentId: string): void;
     addReply(parentCommentId: string, content: string): void;
+    editReply(commentId: string, content: string): void;
+    removeUnpublishedComment(commentId: string): void;
     markNonEmptyAsViewed(): void;
 }
 
@@ -157,8 +161,10 @@ class reviewPage extends React.Component<Props, State> {
         const commentActions: DiscussionActions = {
             addNew: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
             addReply: props.addReply,
+            editReply: props.editReply,
             resolve: props.resolveDiscussion,
-            unresolve: props.unresolveDiscussion
+            unresolve: props.unresolveDiscussion,
+            removeUnpublishedComment: props.removeUnpublishedComment
         }
 
         const discussions: Discussion[] = props.currentReview.reviewDiscussions
@@ -295,7 +301,9 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
     resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
     unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),
     addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
+    editReply: (commentId, content) => dispatch(editUnpublishedComment({commentId, content})),
     markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
+    removeUnpublishedComment: (commentId) => dispatch(removeUnpublishedComment({ commentId }))
 });
 
 export default connect(

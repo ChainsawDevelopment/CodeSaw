@@ -7,11 +7,14 @@ const createReviewKey = (reviewId: ReviewId): string => {
 
 export const saveUnpublishedReview = (review: ReviewState): void => {
     const reviewKey = createReviewKey(review.currentReview.reviewId);
-    
+
     const unpublishedData = {};
     Object.keys(review).filter(key => key.startsWith("unpublished")).forEach(key => {
         unpublishedData[key] = review[key];
     });
+
+    unpublishedData['nextReplyId'] = review.nextReplyId;
+    unpublishedData['nextDiscussionCommentId'] = review.nextDiscussionCommentId;
 
     try {
         localStorage.setItem(reviewKey, JSON.stringify(unpublishedData));
