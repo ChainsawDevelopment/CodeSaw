@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeSaw.Web.Diff;
 using DiffMatchPatch;
+using NLog;
 
 namespace CodeSaw.Web
 {
     public static class CommentTracker
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly DiffMatchPatch.DiffMatchPatch DMP = DiffMatchPatchModule.Default;
 
         public static int Track(string commentVersion, string newVersion, int line)
@@ -49,8 +51,13 @@ namespace CodeSaw.Web
                 if (commentLinePositionInPatch>=0)
                 {
                     var newLine = newVersionLines.LineIndexInPosition(commentLinePositionInPatch + patchContainingComment.Start2);
+
+                    if (newLine == null)
+                    {
+                        Logger.Error("LineIndexInPosition returned null!");
+                    }
                     
-                    return (int)newLine + 1;
+                    return (newLine ?? 0) + 1;
                 }
 
                 var commentLineTrimmed = commentLine.Trim();
@@ -59,8 +66,12 @@ namespace CodeSaw.Web
                 if (commentLinePositionInPatch >= 0)
                 {
                     var newLine = newVersionLines.LineIndexInPosition(commentLinePositionInPatch + patchContainingComment.Start2);
-                    
-                    return (int)newLine + 1;
+                    if (newLine == null)
+                    {
+                        Logger.Error("LineIndexInPosition returned null!");
+                    }
+
+                    return (newLine ?? 0) + 1;
                 }
 
                 // For some reason DMP Match algorithm does not work with pattern longer that some internal limit
@@ -70,7 +81,12 @@ namespace CodeSaw.Web
                 if (approximateMatchPosition > -1)
                 {
                     var newLine = newVersionLines.LineIndexInPosition(approximateMatchPosition + prefixLength + patchContainingComment.Start2);
-                    return (int)newLine + 1;
+                    if (newLine == null)
+                    {
+                        Logger.Error("LineIndexInPosition returned null!");
+                    }
+
+                    return (newLine ?? 0) + 1;
                 }
             }
 
