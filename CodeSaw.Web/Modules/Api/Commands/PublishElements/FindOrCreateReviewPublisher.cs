@@ -64,7 +64,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                 var fileHistory = _sessionAdapter.GetFileHistoryEntries(existingRevision);
 
                 var idMap = fileHistory.ToDictionary(x => ClientFileId.Persistent(x.FileId), x => x.FileId);
-                var nameMap = fileHistory.ToDictionary(x => x.FileName, x => x.FileId);
+
+                var nameMap = fileHistory.GroupBy(x => x.FileName).ToDictionary(x => x.Key, x => x.First().FileId);
                 
                 return (existingRevision.Id, idMap, nameMap);
             }
