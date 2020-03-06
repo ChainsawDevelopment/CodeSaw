@@ -231,18 +231,18 @@ namespace CodeSaw.Tests.Commands
             return (previousRevision.Id, previousRevision.HeadCommit);
         }
 
-        Dictionary<string, Guid> ISessionAdapter.FetchFileIds(Guid? previousRevId)
+        Dictionary<Guid, string> ISessionAdapter.FetchFileIds(Guid? previousRevId)
         {
             if (previousRevId == null)
             {
-                return new Dictionary<string, Guid>();
+                return new Dictionary<Guid, string>();
             }
 
             Assert.That(previousRevId.Value, Is.AnyOf(Revisions.Select(x => (object)x.Id).ToArray()), "Asking for file entries from invalid revision");
 
             var revision = Revisions.Single(x => x.Id == previousRevId);
 
-            return FileHistory[revision].ToDictionary(x => x.FileName, x => x.FileId);
+            return FileHistory[revision].ToDictionary(x => x.FileId, x => x.FileName);
 
         }
 

@@ -92,7 +92,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             var clientFileIdMap = await new FillFileHistory(_sessionAdapter, _api, revision).Fill();
 
             var byClientId = clientFileIdMap.ToDictionary(x => x.Key, x => x.Value.Item2);
-            var byName = clientFileIdMap.ToDictionary(x => x.Value.Item1, x => x.Value.Item2);
+            
+            var byName = clientFileIdMap.GroupBy(x => x.Value.Item1).ToDictionary(x => x.Key, x => x.First().Value.Item2);
 
             return (RevisionId: revision.Id, ClientFileIdMap: byClientId, byName);
         }

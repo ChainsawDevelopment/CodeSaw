@@ -36,7 +36,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
         void Save(Comment comment);
         
         (Guid? revisionId, string hash) FindPreviousRevision(ReviewIdentifier reviewId, int number, string baseCommit);
-        Dictionary<string, Guid> FetchFileIds(Guid? previousRevId);
+        Dictionary<Guid, string> FetchFileIds(Guid? previousRevId);
 
         Review GetReview(Guid revisionId, ReviewUser user);
 
@@ -153,16 +153,16 @@ namespace CodeSaw.Web.Modules.Api.Commands
             return (previousRevision.Id, previousRevision.HeadCommit);
         }
 
-        public Dictionary<string, Guid> FetchFileIds(Guid? previousRevId)
+        public Dictionary<Guid, string> FetchFileIds(Guid? previousRevId)
         {
             if (previousRevId == null)
             {
-                return new Dictionary<string, Guid>();
+                return new Dictionary<Guid, string>();
             }
 
             return _session.Query<FileHistoryEntry>()
                 .Where(x => x.RevisionId == previousRevId)
-                .ToDictionary(x => x.FileName, x => x.FileId);
+                .ToDictionary(x => x.FileId, x => x.FileName);
         }
 
         public Review GetReview(Guid revisionId, ReviewUser user)

@@ -1,5 +1,6 @@
 ﻿using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
     public class FillFileHistory
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly ISessionAdapter _sessionAdapter;
         private readonly IRepository _api;
         private readonly ReviewRevision _currentRevision;
@@ -25,18 +27,24 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             var (previousRevId, previousHead) = _sessionAdapter.FindPreviousRevision(_currentRevision.ReviewId, _currentRevision.RevisionNumber, _currentRevision.BaseCommit);
 
             var diff = await _api.GetDiff(_currentRevision.ReviewId.ProjectId, previousHead, _currentRevision.HeadCommit);
-            
+
             TMP_FIllOldRevisionFiles(diff);
 
             var fileIds = _sessionAdapter.FetchFileIds(previousRevId);
 
-            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Value), x => (x.Key, x.Value));
+            var clientFileIdMap = fileIds.ToDictionary(x => ClientFileId.Persistent(x.Key), x => (x.Value, x.Key));
 
             var remainingDiffs = new HashSet<FileDiff>(diff);
 
-            foreach (var (latestFileName, fileId) in fileIds)
+            foreach (var (fileId, latestFileName) in fileIds)
             {
-                var matchingDiff = remainingDiffs.SingleOrDefault(x => x.Path.OldPath == latestFileName);
+                var allMatchingDiffs = remainingDiffs.Where(x => x.Path.OldPath == latestFileName);
+                if (allMatchingDiffs.Count() > 1)
+                {
+                    Logger.Error($"More that one diff found for {latestFileName}");
+                }
+
+                var matchingDiff = allMatchingDiffs.FirstOrDefault();
                 if (matchingDiff != null)
                 {
                     remainingDiffs.Remove(matchingDiff);
