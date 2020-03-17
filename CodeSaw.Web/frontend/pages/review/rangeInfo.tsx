@@ -92,6 +92,8 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
             'renamed': 'modify' as DiffType
         };
 
+        const language = file.path.newPath.split('.').slice(-1)[0];
+
         return (
             <span ref={span => this.renderedRef = span} key={file.fileId}>
                 <FileSummary file={file} />
@@ -109,6 +111,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         currentUser={this.props.currentUser}
                         contents={this.props.file.diff.contents.review}
                         type={diffTypes[this.props.file.fileToReview.changeType]}
+                        language={language}
                     />
                     : null}
             </span>
