@@ -37,6 +37,7 @@ interface CommentProps {
     actions: DiscussionActions;
     statusComponent?: JSX.Element;
     note?: JSX.Element;
+    readOnly?: boolean;
 }
 
 interface CommentState {
@@ -55,6 +56,7 @@ const mapComments = (
             key={comment.id}
             comment={comment}
             actions={defaultProps.actions}
+            readOnly={defaultProps.readOnly}
         />
     ));
 };
@@ -135,11 +137,11 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const isUnpublished = IsCommentUnpublished(this.props.comment.id);
 
         const ack = '\ud83d\udc4d';
-        const acknowledgeVisible = !isUnpublished && this.props.comment.children.length == 0 && this.props.comment.content !== ack;
+        const acknowledgeVisible = !this.props.readOnly && !isUnpublished && this.props.comment.children.length == 0 && this.props.comment.content !== ack;
         const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
 
         return (
-            <UIComment>
+            <UIComment className={this.props.readOnly ? 'read-only' : null} >
                 <UIComment.Avatar src={this.props.comment.author.avatarUrl} />
                 <UIComment.Content>
                     <UIComment.Author>{this.props.comment.author.name}</UIComment.Author>
@@ -155,7 +157,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     <UIComment.Actions>
                         {isUnpublished && <UIComment.Action onClick={switchEdit}>Edit</UIComment.Action>}
                         {isUnpublished && <UIComment.Action onClick={() => this.props.actions.removeUnpublishedComment(this.props.comment.id)}>Remove</UIComment.Action>}
-                        {!isUnpublished && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
+                        {!this.props.readOnly && !isUnpublished && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
                         {acknowledgeButton}
                         {!isUnpublished && this.props.statusComponent}
                     </UIComment.Actions>
@@ -199,6 +201,7 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
         statusComponent={status}
         actions={props.actions}
         note={props.note ? props.note(props.discussion) : null}
+        readOnly={props.discussion.state === 'Resolved'}
     />);
 };
 
