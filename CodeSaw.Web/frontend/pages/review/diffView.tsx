@@ -44,7 +44,8 @@ const mapHunkToView = (hunk: Hunk) => {
                 type = 'insert';
                 break;
             default:
-                console.log('Unknown', line.operation);}
+                console.log('Unknown', line.operation);
+        }
 
         changes.push({
             type: type,
@@ -320,7 +321,7 @@ const diffView = (props: Props) => {
     const tokens = tokenize(viewHunks, {
         highlight: true,
         refractor: refractor,
-        language: 'cpp',
+        language: refractor.registered(props.language) ? props.language : 'cpp',
         oldSource: props.contents.previous,
         enhancers: [
             markEdits(viewHunks)
