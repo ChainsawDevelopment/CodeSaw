@@ -30,6 +30,7 @@ interface Reply {
 interface CommentsState {
     commentText: string;
     needsResolution: boolean;
+    newDiscussionVisible: boolean;
 }
 
 interface CommentProps {
@@ -37,6 +38,7 @@ interface CommentProps {
     actions: DiscussionActions;
     statusComponent?: JSX.Element;
     note?: JSX.Element;
+    readOnly?: boolean;
 }
 
 interface CommentState {
@@ -55,6 +57,7 @@ const mapComments = (
             key={comment.id}
             comment={comment}
             actions={defaultProps.actions}
+            readOnly={defaultProps.readOnly}
         />
     ));
 };
@@ -135,11 +138,11 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const isUnpublished = IsCommentUnpublished(this.props.comment.id);
 
         const ack = '\ud83d\udc4d';
-        const acknowledgeVisible = !isUnpublished && this.props.comment.children.length == 0 && this.props.comment.content !== ack;
+        const acknowledgeVisible = !this.props.readOnly && !isUnpublished && this.props.comment.children.length == 0 && this.props.comment.content !== ack;
         const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
 
         return (
-            <UIComment>
+            <UIComment className={this.props.readOnly ? 'read-only' : null} >
                 <UIComment.Avatar src={this.props.comment.author.avatarUrl} />
                 <UIComment.Content>
                     <UIComment.Author>{this.props.comment.author.name}</UIComment.Author>
@@ -155,7 +158,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                     <UIComment.Actions>
                         {isUnpublished && <UIComment.Action onClick={switchEdit}>Edit</UIComment.Action>}
                         {isUnpublished && <UIComment.Action onClick={() => this.props.actions.removeUnpublishedComment(this.props.comment.id)}>Remove</UIComment.Action>}
-                        {!isUnpublished && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
+                        {!this.props.readOnly && !isUnpublished && <UIComment.Action active={this.state.replyVisible} onClick={switchReply}>Reply</UIComment.Action>}
                         {acknowledgeButton}
                         {!isUnpublished && this.props.statusComponent}
                     </UIComment.Actions>
@@ -199,6 +202,7 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
         statusComponent={status}
         actions={props.actions}
         note={props.note ? props.note(props.discussion) : null}
+        readOnly={props.discussion.state === 'Resolved'}
     />);
 };
 
@@ -249,7 +253,8 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
 
         this.state = {
             commentText: '',
-            needsResolution: true
+            needsResolution: true,
+            newDiscussionVisible: false
         };
     }
 
@@ -274,19 +279,39 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
             this.setState({ needsResolution: data.checked });
         };
 
+        const addComment = () => {
+            this.props.actions.addNew(this.state.commentText, this.state.needsResolution);
+            this.setState({newDiscussionVisible: false});
+        }
+
+        const newDiscussion = <Form reply onSubmit={onSubmit}>
+            <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
+            <Button onClick={addComment} secondary>Add Comment</Button>
+            {discussions.length > 0 ? <Button onClick={() => this.setState({newDiscussionVisible: false})} secondary>Cancel</Button> : null}
+            <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
+        </Form>
+
+        const showDiscussion = <Button className={"start-another-discussion"} onClick={() => this.setState({newDiscussionVisible: true})} basic >Start Another Discussion</Button>
+
+        const selectDiscussionView = () => {
+            if (this.props.replyOnly) {
+                return null;
+            }
+
+            if (discussions.length == 0 || this.state.newDiscussionVisible) {
+                return newDiscussion;
+            }
+            
+            return showDiscussion;
+        }
+
         return (
             <UIComment.Group>
                 <Header as='h3' dividing>
                     {this.props.title || 'Comments'}
                 </Header>
                 {discussions}
-                {!this.props.replyOnly ?
-                    <Form reply onSubmit={onSubmit}>
-                        <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
-                        <Button onClick={() => this.props.actions.addNew(this.state.commentText, this.state.needsResolution)} secondary>Add Comment</Button>
-                        <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
-                    </Form>
-                    : null}
+                {selectDiscussionView()}
             </UIComment.Group>
         );
     }

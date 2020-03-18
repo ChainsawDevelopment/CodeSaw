@@ -9,6 +9,11 @@ import * as classNames from "classnames";
 import { flatMap } from 'lodash';
 import HunkHeader from "./diff/HunkHeader";
 import { Segment, Divider, Input, Button } from "semantic-ui-react";
+import refractor from "refractor"
+
+import 'prismjs/themes/prism.css';
+import 'prism-color-variables/variables.css';
+import 'prism-color-variables/themes/visual-studio.css';
 
 interface Change {
     oldLineNumber: number;
@@ -157,6 +162,7 @@ export interface Props {
         current: string;
         currentTotalLines: number;
     };
+    language: string;
 }
 
 const leftSideMatch = (change: Change, lineNumber: number) => {
@@ -313,6 +319,9 @@ const diffView = (props: Props) => {
     }
 
     const tokens = tokenize(viewHunks, {
+        highlight: true,
+        refractor: refractor,
+        language: refractor.registered(props.language) ? props.language : 'cpp',
         oldSource: props.contents.previous,
         enhancers: [
             markEdits(viewHunks)

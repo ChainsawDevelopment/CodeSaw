@@ -33,6 +33,7 @@ interface FileViewProps {
     commentActions: DiscussionActions;
     currentUser: UserState;
     startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
+    scrollToFile(): void;
 }
 
 class FileView extends React.Component<FileViewProps, { visibleCommentLines: number[] }> {
@@ -50,6 +51,13 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
         if (!PathPairs.equal(prevProps.file.path, this.props.file.path)) {
             this.setState({ visibleCommentLines: [] });
         }
+    }
+
+    public componentDidMount() {
+        if (this.props.scrollToFile) {
+            this.props.scrollToFile();
+        }
+
     }
 
     private hideLine(line: number) {
@@ -92,6 +100,8 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
             'renamed': 'modify' as DiffType
         };
 
+        const language = file.path.newPath.split('.').slice(-1)[0];
+
         return (
             <span ref={span => this.renderedRef = span} key={file.fileId}>
                 <FileSummary file={file} />
@@ -109,6 +119,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
                         currentUser={this.props.currentUser}
                         contents={this.props.file.diff.contents.review}
                         type={diffTypes[this.props.file.fileToReview.changeType]}
+                        language={language}
                     />
                     : null}
             </span>
@@ -155,9 +166,13 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         this.state = { stickyContainer: null };
     }
 
+    private scrollToFile = () => {
+        scrollToComponent(this.state.stickyContainer, { offset: 0, align: 'top', duration: 100, ease: 'linear' })
+    }
+
     private _handleRef = el => {
         this.setState({ stickyContainer: el });
-        this.props.onShowFileHandlerAvailable(() => scrollToComponent(el, { offset: 0, align: 'top', duration: 100, ease: 'linear' }));
+        this.props.onShowFileHandlerAvailable(this.scrollToFile);
     }
 
     private _changeFileReviewState = (newState: boolean) => {
@@ -370,6 +385,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                                 pendingResolved={this.props.pendingResolved}
                                 unpublishedReplies={this.props.unpublishedReplies}
                                 currentUser={this.props.currentUser}
+                                scrollToFile={this.scrollToFile}
                             />
                             : <NoFileView />
                         }
