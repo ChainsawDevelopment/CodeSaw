@@ -162,7 +162,13 @@ namespace CodeSaw.Web
         {
             var cfg = Configuration.GetSection("GitLab");
 
-            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>(), cfg["Proxy"], ctx.Resolve<IMemoryCache>());
+            bool readOnly = false;
+            if (!bool.TryParse(cfg["readOnly"] ?? "", out readOnly))
+            {
+                readOnly = false;
+            }
+
+            return new GitLabApi(cfg["url"], ctx.Resolve<IGitAccessTokenSource>(), cfg["Proxy"], ctx.Resolve<IMemoryCache>(), readOnly);
         }
 
         private ISessionFactory BuildSessionFactory()
