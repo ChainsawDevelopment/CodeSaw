@@ -8,7 +8,12 @@ import { PublishButton } from "./PublishButton";
 import Menu from '@ui/collections/Menu';
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
+import Dropdown from '@ui/modules/Dropdown';
+import Input from '@ui/elements/Input';
+
 import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
+import vscodeLogo from '../../assets/vscode.png'
+
 
 import {
     selectFileForView,
@@ -23,9 +28,11 @@ import {
     resolveDiscussion,
     unresolveDiscussion,
     replyToComment,
-    markEmptyFilesAsReviewed,
+    markEmptyFilesAsReviewed,
+
     editUnpublishedComment,
-    removeUnpublishedComment
+    removeUnpublishedComment,
+    saveVSCodeWorkspace
 } from "./state";
 import {
     ReviewInfo,
@@ -73,6 +80,7 @@ interface DispatchProps {
     editReply(commentId: string, content: string): void;
     removeUnpublishedComment(commentId: string): void;
     markNonEmptyAsViewed(): void;
+    saveVSCodeWorkspace(vsCodeWorkspace: string): void;
 }
 
 interface StateProps {
@@ -84,14 +92,42 @@ interface StateProps {
     unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
-    author: UserState,
+    author: UserState;
     reviewMode: 'reviewer' | 'author';
+    vsCodeWorkspace: string;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
     hideReviewed: boolean;
+    showVsCodeWorkspaceEditor: boolean;
+}
+
+class VSCodeWorkspaceEditor extends React.Component<any, any> {
+    constructor(props: any) {
+        super(props);
+
+        this.state = {
+            value: this.props.vsCodeWorkspace
+        };
+    }
+
+    render() {
+        return <Input 
+            fluid
+            action={ <Button 
+                        primary 
+                        icon='save' 
+                        onClick={ () => this.props.save(this.state.value) }                         
+                        />
+                    }
+            placeholder='VS Code workspace path'
+            onChange={(e, data) => this.setState({ value: data.value })}
+            defaultValue={this.props.vsCodeWorkspace}
+        />
+    }
+
 }
 
 class reviewPage extends React.Component<Props, State> {
@@ -100,7 +136,8 @@ class reviewPage extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            hideReviewed: false
+            hideReviewed: false,
+            showVsCodeWorkspaceEditor: false
         };
     }
 
@@ -202,7 +239,25 @@ class reviewPage extends React.Component<Props, State> {
                             <Grid.Column className={"header"}>
                                 <Grid.Row>
                                     <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
-                                    <h3>{props.currentReview.projectPath}</h3>
+                                    <h3>{props.currentReview.projectPath}
+                                        {props.currentReview.projectPath ? 
+                                        <Dropdown floating inline icon='setting'>
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item onClick={() => this.setState({showVsCodeWorkspaceEditor: true})}>
+                                                    <img src={vscodeLogo}/> Set VS Code workspace for {props.currentReview.projectPath}</Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                        : null}
+                                    </h3>
+
+                                    {this.state.showVsCodeWorkspaceEditor ? 
+                                    <VSCodeWorkspaceEditor vsCodeWorkspace={this.props.vsCodeWorkspace} save={(vsCodeWorkspace: string) => {
+                                        this.props.saveVSCodeWorkspace(vsCodeWorkspace);
+                                        this.setState({showVsCodeWorkspaceEditor: false});
+                                    }} />
+
+                                    : null}
+
                                 </Grid.Row>
                                 <Grid.Row>
                                     <UserInfo
@@ -267,6 +322,7 @@ class reviewPage extends React.Component<Props, State> {
                         unpublishedReplies={props.unpublishedReplies}
                         currentUser={props.currentUser}
                         markNonEmptyAsViewed={props.markNonEmptyAsViewed}
+                        vsCodeWorkspace={props.vsCodeWorkspace}
                     />
                 </CurrentReviewMode.Provider>
             </div>
@@ -284,7 +340,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
     author: state.review.currentReview.author,
     unpublishedReplies: state.review.unpublishedReplies,
-    reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer'
+    reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer',
+    vsCodeWorkspace: state.review.vsCodeWorkspace
 });
 
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
@@ -303,7 +360,8 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
     addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
     editReply: (commentId, content) => dispatch(editUnpublishedComment({commentId, content})),
     markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
-    removeUnpublishedComment: (commentId) => dispatch(removeUnpublishedComment({ commentId }))
+    removeUnpublishedComment: (commentId) => dispatch(removeUnpublishedComment({ commentId })),
+    saveVSCodeWorkspace: (vsCodeWorkspace: string) => dispatch(saveVSCodeWorkspace({ vsCodeWorkspace}))
 });
 
 export default connect(

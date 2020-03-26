@@ -54,6 +54,7 @@ export interface ReviewState extends UnpublishedReview {
     selectedFile: FileInfo;
     currentReview: ReviewInfo;
     reviewedFiles: FileId[];
+    vsCodeWorkspace: string;
 }
 
 const createAction = actionCreatorFactory('REVIEW');
@@ -64,7 +65,7 @@ export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_RE
 export const loadedFileDiff = createAction<{diff: FileDiff; remappedDiscussions: DiffDiscussions}>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
-export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview}>('LOADED_REVIEW_INFO');
+export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, vsCodeWorkspace: string}>('LOADED_REVIEW_INFO');
 
 export const clearUnpublishedReviewInfo = createAction<{reviewId: ReviewId}>("CLEAR_UNPUBLISHED_REVIEW");
 
@@ -99,6 +100,10 @@ export const resolveDiscussion = createAction<{ discussionId: string }>('RESOLVE
 export const replyToComment = createAction<{ parentId: string, content: string }>('REPLY_TO_COMMENT');
 export const editUnpublishedComment = createAction<{ commentId: string, content: string }>('EDIT_UNPUBLISHED_COMMENT');
 export const removeUnpublishedComment = createAction<{ commentId: string }>('REMOVE_UNPUBLISHED_COMMENT');
+
+export const saveVSCodeWorkspace = createAction<{ vsCodeWorkspace: string}>('SAVE_VS_CODE_WORKSPACE');
+export const loadedVsCodeWorkspace = createAction<{ vsCodeWorkspace: string}>('LOADED_VS_CODE_WORKSPACE');
+
 
 const UnpublishedCommentPrefixes = {
     Review: "REVIEW-",
@@ -146,10 +151,11 @@ const initial: ReviewState = {
         targetBranch: '',
         author: { username: "", name: "", avatarUrl: "" },
         reviewFinished: false,
-        isAuthor: false
+        isAuthor: false,
     },
     reviewedFiles: [],
     ...emptyUnpublishedReview,
+    vsCodeWorkspace: ''
 };
 
 export const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
@@ -302,7 +308,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             currentReview: action.payload.info,
             reviewedFiles: reviewedFileFinal,
             ...unpublished,
-            selectedFile: null
+            selectedFile: null,
+            vsCodeWorkspace: action.payload.vsCodeWorkspace
         };
     }
 
@@ -579,6 +586,13 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 ...state,
                 unpublishedReviewDiscussions: [...state.unpublishedReviewDiscussions.slice(0, indexToRemove), ...state.unpublishedReviewDiscussions.slice(indexToRemove + 1)]
             };
+        }
+    }
+
+    if (loadedVsCodeWorkspace.match(action)) {
+        return {
+            ...state,
+            vsCodeWorkspace: action.payload.vsCodeWorkspace
         }
     }
 
