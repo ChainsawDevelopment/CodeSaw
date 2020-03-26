@@ -24,6 +24,8 @@ import { HotKeys } from "../../components/HotKeys";
 import { PublishButton } from "./PublishButton";
 import ReviewMode from "./reviewMode";
 
+import vscodeLogo from '../../assets/vscode.png'
+
 interface FileViewProps {
     file: FileInfo;
     comments: FileDiscussion[];
@@ -158,6 +160,7 @@ export interface Props {
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
     markNonEmptyAsViewed: any;
+    vsCodeWorkspace: string;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -339,6 +342,22 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                     />
                 </Menu.Item>
             );
+
+            if ((this.props.vsCodeWorkspace || '').length > 0)
+            {
+                const workspacePath = this.props.vsCodeWorkspace.trim().replace(/\/+$/, '');
+
+                menuItems.push(
+                    <Menu.Item fitted key="vscode-diff">
+                        <Popup
+                            trigger={
+                                <img src={vscodeLogo} className="vscode-icon" onClick={() => window.open(`vscode://file/${workspacePath}/${selectedFile.path.newPath}`)} />                            
+                            }
+                            content="Open in VS Code"
+                        />
+                    </Menu.Item>
+                );
+            }
         } else if (this.props.filesToReview.length > 0) {
             const firstFile = this.props.filesToReview[0].fileId;
             const lastFile = this.props.filesToReview[this.props.filesToReview.length - 1].fileId;

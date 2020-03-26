@@ -13,14 +13,16 @@ import {
     FileReviewStatusChange,
     reviewFile,
     markEmptyFilesAsReviewed,
-    resolveRevision
+    resolveRevision,
+    saveVSCodeWorkspace,
+    loadedVsCodeWorkspace
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
 import { ReviewerApi, ReviewInfo, ReviewId, RevisionId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId, FileToReview, FileDiff, DiffDiscussions } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { startOperation, stopOperation, setOperationMessage } from "../../loading/saga";
-import { getUnpublishedReview } from "./storage";
+import { getUnpublishedReview, getReviewVSCodeWorkspace, saveReviewVSCodeWorkspace } from "./storage";
 
 function* markNotChangedAsViewed() {
     const api = new ReviewerApi();
@@ -136,10 +138,11 @@ function* loadReviewInfoSaga() {
         const unpublishedInfo = getUnpublishedReview(action.payload.reviewId);
 
         
+        const vsCodeWorkspace = getReviewVSCodeWorkspace(action.payload.reviewId)
      
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
-        yield put(loadedReviewInfo({ info, unpublishedInfo }));
+        yield put(loadedReviewInfo({ info, unpublishedInfo, vsCodeWorkspace }));
 
         let newRange: RevisionRange = {
             previous: 'base',
@@ -158,6 +161,7 @@ function* loadReviewInfoSaga() {
                 yield put(selectFileForView({ fileId: file.fileId }));
             }
         }
+
 
         yield stopOperation();
     }
@@ -247,10 +251,22 @@ function* mergePullRequestSaga() {
     }
 }
 
+function* saveVSCodeWorkspaceSaga() {
+    for (;; ) {
+        const action: Action<{vsCodeWorkspace: string}> = yield take(saveVSCodeWorkspace);
+        const currentReviewId = yield select((s: RootState): ReviewId => s.review.currentReview.reviewId);
+
+        saveReviewVSCodeWorkspace(currentReviewId, action.payload.vsCodeWorkspace);
+
+        yield put(loadedVsCodeWorkspace({ vsCodeWorkspace: action.payload.vsCodeWorkspace }));
+    }
+}
+
 export default [
     loadFileDiffSaga,
     loadReviewInfoSaga,
     publishReviewSaga,
     mergePullRequestSaga,
     markNotChangedAsViewed,
+    saveVSCodeWorkspaceSaga
 ];

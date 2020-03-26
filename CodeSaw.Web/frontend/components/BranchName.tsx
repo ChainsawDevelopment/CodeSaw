@@ -7,7 +7,7 @@ import "./branchName.less";
 
 const Branch = (props: { name: string }): JSX.Element => (<span id={props.name} className='branch-name'>{props.name}
     {props.name ? <Popup content='Copy branch name' trigger={
-        <Icon className={"copy-branch-name"} data-clipboard-text={props.name} color='black' name='copy' />
+        <Icon className={"copy-branch-name"} data-clipboard-text={props.name} color='black' name='copy outline' />
     } />
     : null}
     
