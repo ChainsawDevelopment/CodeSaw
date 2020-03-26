@@ -142,7 +142,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const acknowledgeButton = !acknowledgeVisible ? null : <UIComment.Action onClick={() => this.props.actions.addReply(this.props.comment.id, ack)}>{ack}</UIComment.Action>;
 
         return (
-            <UIComment className={this.props.readOnly ? 'read-only' : null} >
+            <UIComment >
                 <UIComment.Avatar src={this.props.comment.author.avatarUrl} />
                 <UIComment.Content>
                     <UIComment.Author>{this.props.comment.author.name}</UIComment.Author>
@@ -197,13 +197,15 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
             break;
     }
 
-    return (<CommentComponent
-        comment={props.discussion.comment}
-        statusComponent={status}
-        actions={props.actions}
-        note={props.note ? props.note(props.discussion) : null}
-        readOnly={props.discussion.state === 'Resolved'}
-    />);
+    return (<div className={props.discussion.state === 'Resolved' ? 'read-only' : null}>
+                <CommentComponent
+                    comment={props.discussion.comment}
+                    statusComponent={status}
+                    actions={props.actions}
+                    note={props.note ? props.note(props.discussion) : null}
+                    readOnly={props.discussion.state === 'Resolved'}
+                />
+            </div>);
 };
 
 const mergeCommentsWithReplies = (
