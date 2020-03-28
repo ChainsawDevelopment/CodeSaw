@@ -55,6 +55,7 @@ import PageTitle from '../../components/PageTitle';
 import { Button } from "semantic-ui-react";
 
 import Header from './sections/header';
+import Actions from './sections/actions';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -189,12 +190,11 @@ class reviewPage extends React.Component<Props, State> {
             return `[${currentReview.projectPath}] #${currentReview.reviewId.reviewId} - ${currentReview.title}`;
         })();
 
-        const changeHideReviewed = (e: React.SyntheticEvent, data: CheckboxProps) => {
+        const changeHideReviewed = (hide: boolean) => {
             this.setState({
-                hideReviewed: data.checked
+                hideReviewed: hide
             });
         };
-
 
         return (
             <div id="review-page">
@@ -212,19 +212,13 @@ class reviewPage extends React.Component<Props, State> {
                                 <Divider />
                             </Grid.Column>
                         </Grid.Row>
-                        <Grid.Row centered columns={1}>
+                        <Grid.Row columns={1}>
                             <Grid.Column>
-                                <Menu secondary id="summary-menu">
-                                    <Menu.Menu position='right'>
-                                        <Menu.Item>
-                                            <PublishButton />&nbsp;
-                                            <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
-                                            <Checkbox toggle label="Hide reviewed" onChange={changeHideReviewed} />&nbsp;
-
-                                        </Menu.Item>
-                                    </Menu.Menu>
-                                </Menu>
-
+                                <Actions onHideReviewedChange={changeHideReviewed} />
+                            </Grid.Column>
+                        </Grid.Row>
+                        <Grid.Row columns={1}>
+                            <Grid.Column>
                                 <FileMatrix hideReviewed={this.state.hideReviewed} />
                             </Grid.Column>
                         </Grid.Row>
