@@ -1,4 +1,5 @@
 {
   "typescript.tsdk": "node_modules\\typescript\\lib",
-  "prettier.disableLanguages": ["vue", "typescript", "typescriptreact"]
+  "prettier.disableLanguages": ["vue", "typescript", "typescriptreact"],
+  "editor.formatOnSave": true
 }
