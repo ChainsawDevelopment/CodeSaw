@@ -3,14 +3,8 @@ import { Dispatch } from "redux";
 import { connect } from "react-redux";
 import { History } from "history";
 
-import { PublishButton } from "./PublishButton";
-
-import Menu from '@ui/collections/Menu';
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
-
-import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
-
 
 import {
     selectFileForView,
@@ -34,9 +28,7 @@ import {
     ReviewInfo,
     ReviewId,
     FileDiscussion,
-    ReviewDiscussion,
     CommentReply,
-    Discussion,
     FileId,
 } from '../../api/reviewer';
 
@@ -45,17 +37,17 @@ import { OnPropChanged } from "../../components/OnPropChanged";
 import { UserState, RootState } from "../../rootState";
 import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
 import "./review.less";
-import CommentsView, { DiscussionActions } from './commentsView';
+import { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
-import { Button } from "semantic-ui-react";
 
 import Header from './sections/header';
 import Actions from './sections/actions';
+import ReviewDiscussions from './sections/reviewDiscussions';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -85,7 +77,6 @@ interface StateProps {
     selectedFile: FileInfo;
     reviewedFiles: FileId[];
     unpublishedFileDiscussion: FileDiscussion[];
-    unpublishedReviewDiscussions: ReviewDiscussion[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
     author: UserState;
@@ -174,13 +165,6 @@ class reviewPage extends React.Component<Props, State> {
             removeUnpublishedComment: props.removeUnpublishedComment
         }
 
-        const discussions: Discussion[] = props.currentReview.reviewDiscussions
-            .concat(props.unpublishedReviewDiscussions)
-            .map(d => ({
-                ...d,
-                state: props.unpublishedResolvedDiscussions.indexOf(d.id) >= 0 ? 'ResolvePending' : d.state
-            }));
-
         const title = (() => {
             if (!props.currentReview.reviewId) {
                 return 'Loading review...';
@@ -222,17 +206,7 @@ class reviewPage extends React.Component<Props, State> {
                                 <FileMatrix hideReviewed={this.state.hideReviewed} />
                             </Grid.Column>
                         </Grid.Row>
-                        <Grid.Row>
-                            <Grid.Column>
-                                <CommentsView
-                                    discussionId="review"
-                                    discussions={discussions}
-                                    actions={commentActions}
-                                    unpublishedReplies={props.unpublishedReplies}
-                                    currentUser={props.currentUser}
-                                />
-                            </Grid.Column>
-                        </Grid.Row>
+                        <ReviewDiscussions />
                     </Grid>
 
                     <Divider />
@@ -268,7 +242,6 @@ const mapStateToProps = (state: RootState): StateProps => ({
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
     unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
-    unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
     unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
     author: state.review.currentReview.author,
     unpublishedReplies: state.review.unpublishedReplies,
