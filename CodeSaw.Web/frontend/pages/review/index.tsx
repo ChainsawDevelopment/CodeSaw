@@ -8,11 +8,8 @@ import { PublishButton } from "./PublishButton";
 import Menu from '@ui/collections/Menu';
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
-import Dropdown from '@ui/modules/Dropdown';
-import Input from '@ui/elements/Input';
 
 import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
-import vscodeLogo from '../../assets/vscode.png'
 
 
 import {
@@ -32,7 +29,6 @@ import {
 
     editUnpublishedComment,
     removeUnpublishedComment,
-    saveVSCodeWorkspace
 } from "./state";
 import {
     ReviewInfo,
@@ -52,13 +48,13 @@ import "./review.less";
 import CommentsView, { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
-import UserInfo from "../../components/UserInfo";
 
-import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
 import { Button } from "semantic-ui-react";
+
+import Header from './sections/header';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -80,7 +76,6 @@ interface DispatchProps {
     editReply(commentId: string, content: string): void;
     removeUnpublishedComment(commentId: string): void;
     markNonEmptyAsViewed(): void;
-    saveVSCodeWorkspace(vsCodeWorkspace: string): void;
 }
 
 interface StateProps {
@@ -101,34 +96,9 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
     hideReviewed: boolean;
-    showVsCodeWorkspaceEditor: boolean;
 }
 
-class VSCodeWorkspaceEditor extends React.Component<any, any> {
-    constructor(props: any) {
-        super(props);
 
-        this.state = {
-            value: this.props.vsCodeWorkspace
-        };
-    }
-
-    render() {
-        return <Input 
-            fluid
-            action={ <Button 
-                        primary 
-                        icon='save' 
-                        onClick={ () => this.props.save(this.state.value) }                         
-                        />
-                    }
-            placeholder='VS Code workspace path'
-            onChange={(e, data) => this.setState({ value: data.value })}
-            defaultValue={this.props.vsCodeWorkspace}
-        />
-    }
-
-}
 
 class reviewPage extends React.Component<Props, State> {
     private showFileHandler: () => void;
@@ -137,7 +107,6 @@ class reviewPage extends React.Component<Props, State> {
         super(props);
         this.state = {
             hideReviewed: false,
-            showVsCodeWorkspaceEditor: false
         };
     }
 
@@ -171,14 +140,14 @@ class reviewPage extends React.Component<Props, State> {
                 props.loadReviewInfo(props.reviewId, props.fileId);
             } else {
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
-                props.loadReviewInfo(props.reviewId, );
+                props.loadReviewInfo(props.reviewId);
             }
         };
 
         const selectNewFileForView = (fileId: FileId) => {
             if (fileId != null) {
                 props.selectFileForView(fileId);
-                
+
                 const fileLink = createLinkToFile(props.reviewId, fileId);
                 if (fileLink != window.location.pathname) {
                     props.history.push(fileLink);
@@ -235,39 +204,8 @@ class reviewPage extends React.Component<Props, State> {
                     <OnPropChanged fileName={props.fileId} onPropChanged={selectFileForView} />
 
                     <Grid>
-                        <Grid.Row>
-                            <Grid.Column className={"header"}>
-                                <Grid.Row>
-                                    <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
-                                    <h3>{props.currentReview.projectPath}
-                                        {props.currentReview.projectPath ? 
-                                        <Dropdown floating inline icon='setting'>
-                                            <Dropdown.Menu>
-                                                <Dropdown.Item onClick={() => this.setState({showVsCodeWorkspaceEditor: true})}>
-                                                    <img src={vscodeLogo}/> Set VS Code workspace for {props.currentReview.projectPath}</Dropdown.Item>
-                                            </Dropdown.Menu>
-                                        </Dropdown>
-                                        : null}
-                                    </h3>
+                        <Header />
 
-                                    {this.state.showVsCodeWorkspaceEditor ? 
-                                    <VSCodeWorkspaceEditor vsCodeWorkspace={this.props.vsCodeWorkspace} save={(vsCodeWorkspace: string) => {
-                                        this.props.saveVSCodeWorkspace(vsCodeWorkspace);
-                                        this.setState({showVsCodeWorkspaceEditor: false});
-                                    }} />
-
-                                    : null}
-
-                                </Grid.Row>
-                                <Grid.Row>
-                                    <UserInfo
-                                        username={props.author.username}
-                                        name={props.author.name}
-                                        avatarUrl={props.author.avatarUrl}
-                                    />
-                                </Grid.Row>
-                            </Grid.Column>
-                        </Grid.Row>
                         <Grid.Row>
                             <Grid.Column>
                                 <ReviewInfoView />
@@ -286,8 +224,8 @@ class reviewPage extends React.Component<Props, State> {
                                         </Menu.Item>
                                     </Menu.Menu>
                                 </Menu>
-                                
-                                <FileMatrix hideReviewed={this.state.hideReviewed}/>
+
+                                <FileMatrix hideReviewed={this.state.hideReviewed} />
                             </Grid.Column>
                         </Grid.Row>
                         <Grid.Row>
@@ -358,16 +296,15 @@ const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchPro
     resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
     unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),
     addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
-    editReply: (commentId, content) => dispatch(editUnpublishedComment({commentId, content})),
+    editReply: (commentId, content) => dispatch(editUnpublishedComment({ commentId, content })),
     markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
     removeUnpublishedComment: (commentId) => dispatch(removeUnpublishedComment({ commentId })),
-    saveVSCodeWorkspace: (vsCodeWorkspace: string) => dispatch(saveVSCodeWorkspace({ vsCodeWorkspace}))
 });
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps,
-    (stateProps: StateProps, dispatchProps: DispatchProps, ownProps: OwnProps) : Props => ({
+    (stateProps: StateProps, dispatchProps: DispatchProps, ownProps: OwnProps): Props => ({
         ...ownProps,
         ...stateProps,
         ...dispatchProps,
