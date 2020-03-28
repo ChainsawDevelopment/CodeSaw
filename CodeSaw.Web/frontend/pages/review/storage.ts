@@ -39,3 +39,25 @@ export const getUnpublishedReview = (reviewId: ReviewId): UnpublishedReview => {
         return emptyUnpublishedReview;
     }
 }
+
+export const getReviewVSCodeWorkspace = (reviewId: ReviewId) : string => {
+    const key = `vscodeworkspace_${reviewId.projectId}`
+
+    try {
+        return localStorage.getItem(key);
+    } catch(err) {
+        return null;
+    }
+}
+
+export const saveReviewVSCodeWorkspace = (reviewId: ReviewId, vsCodeWorkspace: string) : void => {
+    const key = `vscodeworkspace_${reviewId.projectId}`
+
+    try {
+        localStorage.setItem(key, vsCodeWorkspace);
+    }
+    catch (err) {
+        console.warn({msg: "Error when writing vsCodeWorkspace to local storage", err});
+    }
+    
+}
