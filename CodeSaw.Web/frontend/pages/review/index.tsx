@@ -10,34 +10,19 @@ import {
     selectFileForView,
     loadReviewInfo,
     FileInfo,
-    publishReview,
-    reviewFile,
-    unreviewFile,
     mergePullRequest,
-    startFileDiscussion,
-    startReviewDiscussion,
-    resolveDiscussion,
-    unresolveDiscussion,
-    replyToComment,
-    markEmptyFilesAsReviewed,
-
-    editUnpublishedComment,
-    removeUnpublishedComment,
 } from "./state";
 import {
     ReviewInfo,
     ReviewId,
-    FileDiscussion,
-    CommentReply,
     FileId,
 } from '../../api/reviewer';
 
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
 import { UserState, RootState } from "../../rootState";
-import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
+import { SelectFileForViewHandler } from './rangeInfo';
 import "./review.less";
-import { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 
@@ -48,6 +33,7 @@ import PageTitle from '../../components/PageTitle';
 import Header from './sections/header';
 import Actions from './sections/actions';
 import ReviewDiscussions from './sections/reviewDiscussions';
+import File from './sections/file';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -58,17 +44,7 @@ interface OwnProps {
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId, fileToPreload?: FileId): void;
     selectFileForView: SelectFileForViewHandler;
-    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
-    reviewFile: ReviewFileActions;
-    publishReview(): void;
-    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean, currentUser?: UserState): void;
-    startReviewDiscussion(content: string, needsResolution: boolean, currentUser?: UserState): void;
-    resolveDiscussion(rootCommentId: string): void;
-    unresolveDiscussion(rootCommentId: string): void;
-    addReply(parentCommentId: string, content: string): void;
-    editReply(commentId: string, content: string): void;
-    removeUnpublishedComment(commentId: string): void;
-    markNonEmptyAsViewed(): void;
+    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): void;
 }
 
 interface StateProps {
@@ -76,12 +52,8 @@ interface StateProps {
     currentReview: ReviewInfo;
     selectedFile: FileInfo;
     reviewedFiles: FileId[];
-    unpublishedFileDiscussion: FileDiscussion[];
-    unpublishedResolvedDiscussions: string[];
-    unpublishedReplies: CommentReply[];
     author: UserState;
     reviewMode: 'reviewer' | 'author';
-    vsCodeWorkspace: string;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -89,7 +61,6 @@ type Props = OwnProps & StateProps & DispatchProps;
 interface State {
     hideReviewed: boolean;
 }
-
 
 
 class reviewPage extends React.Component<Props, State> {
@@ -156,15 +127,6 @@ class reviewPage extends React.Component<Props, State> {
             }
         };
 
-        const commentActions: DiscussionActions = {
-            addNew: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
-            addReply: props.addReply,
-            editReply: props.editReply,
-            resolve: props.resolveDiscussion,
-            unresolve: props.unresolveDiscussion,
-            removeUnpublishedComment: props.removeUnpublishedComment
-        }
-
         const title = (() => {
             if (!props.currentReview.reviewId) {
                 return 'Loading review...';
@@ -211,24 +173,12 @@ class reviewPage extends React.Component<Props, State> {
 
                     <Divider />
 
-                    <RangeInfo
-                        filesToReview={props.currentReview.filesToReview}
-                        selectedFile={selectedFile}
-                        onSelectFileForView={selectNewFileForView}
-                        reviewFile={props.reviewFile}
-                        reviewedFiles={props.reviewedFiles}
-                        publishReview={props.publishReview}
-                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
+                    <File
+                        showFileHandler={this.showFileHandler}
                         reviewId={props.reviewId}
-                        fileComments={props.currentReview.fileDiscussions}
-                        startFileDiscussion={props.startFileDiscussion}
-                        unpublishedFileDiscussion={props.unpublishedFileDiscussion}
-                        commentActions={commentActions}
-                        pendingResolved={props.unpublishedResolvedDiscussions}
-                        unpublishedReplies={props.unpublishedReplies}
-                        currentUser={props.currentUser}
-                        markNonEmptyAsViewed={props.markNonEmptyAsViewed}
-                        vsCodeWorkspace={props.vsCodeWorkspace}
+                        fileId={props.fileId}
+                        history={props.history}
+                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
                     />
                 </CurrentReviewMode.Provider>
             </div>
@@ -241,41 +191,17 @@ const mapStateToProps = (state: RootState): StateProps => ({
     currentReview: state.review.currentReview,
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
-    unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
-    unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
     author: state.review.currentReview.author,
-    unpublishedReplies: state.review.unpublishedReplies,
     reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer',
-    vsCodeWorkspace: state.review.vsCodeWorkspace
 });
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
     selectFileForView: (fileId) => dispatch(selectFileForView({ fileId })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
-    reviewFile: {
-        review: (path) => dispatch(reviewFile({ path })),
-        unreview: (path) => dispatch(unreviewFile({ path })),
-    },
-    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileId })),
-    startFileDiscussion: (fileId, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ fileId, lineNumber, content, needsResolution, currentUser })),
-    startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
-    resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
-    unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),
-    addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
-    editReply: (commentId, content) => dispatch(editUnpublishedComment({ commentId, content })),
-    markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
-    removeUnpublishedComment: (commentId) => dispatch(removeUnpublishedComment({ commentId })),
 });
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps,
-    (stateProps: StateProps, dispatchProps: DispatchProps, ownProps: OwnProps): Props => ({
-        ...ownProps,
-        ...stateProps,
-        ...dispatchProps,
-        startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatchProps.startFileDiscussion(path, lineNumber, content, needsResolution, stateProps.currentUser),
-        startReviewDiscussion: (content, needsResolution) => dispatchProps.startReviewDiscussion(content, needsResolution, stateProps.currentUser)
-    })
+    mapDispatchToProps
 )(reviewPage);
