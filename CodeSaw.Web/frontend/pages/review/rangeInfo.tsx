@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import Menu from '@ui/collections/Menu';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
 import scrollToComponent from 'react-scroll-to-component';
@@ -10,14 +9,12 @@ import { ReviewId, FileDiscussion, CommentReply, FileToReview, FileId } from "..
 import { FileInfo } from "./state";
 
 import { DiscussionActions } from "./commentsView";
-import ChangedFileTreePopup from "./fileTreePopup";
 import { UserState } from "../../rootState";
 import { HotKeys } from "../../components/HotKeys";
-import { PublishButton } from "./PublishButton";
 
-import * as RIMenu from './sections/rangeInfo_menu';
 import { FileView, NoFileView } from "./sections/fileView";
 import FileList from '@src/fileList';
+import DiffHeader from "./sections/DiffHeader";
 
 export type SelectFileForViewHandler = (fileId: FileId) => void;
 export type OnShowFileHandlerAvailable = (handler: () => void) => void;
@@ -35,7 +32,6 @@ export interface Props {
     reviewedFiles: FileId[];
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
-    reviewId: ReviewId;
     fileComments: FileDiscussion[];
     unpublishedFileDiscussion: FileDiscussion[];
     startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
@@ -44,7 +40,6 @@ export interface Props {
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
     markNonEmptyAsViewed: any;
-    vsCodeWorkspace: string;
 }
 
 export default class RangeInfo extends React.Component<Props, { stickyContainer: HTMLDivElement }> {
@@ -73,7 +68,6 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
     render() {
         const { selectedFile, onSelectFileForView } = this.props;
 
-        const menuItems = [];
         let reviewHotKeys = {}
 
         if (selectedFile) {
@@ -98,20 +92,6 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 'ctrl+Enter': this.props.publishReview,
                 'ctrl+y': () => this.props.markNonEmptyAsViewed()
             };
-
-            menuItems.push(<RIMenu.ToggleReviewed key="review-mark" isReviewed={this.props.selectedFile.isReviewed} onChange={this._changeFileReviewState} />)
-
-            menuItems.push(<RIMenu.RefreshDiff key="refresh-diff" onRefresh={() => onSelectFileForView(selectedFile.fileId)} />);
-
-            menuItems.push(<RIMenu.FileNavigation key="file-navigation" reviewId={this.props.reviewId} prevFile={prevFile} nextFile={nextFile} />);
-
-            menuItems.push(<RIMenu.FilePath key="file-path" path={selectedFile.path} />);
-
-            menuItems.push(<RIMenu.DownloadDiff key="download-diff" diff={this.props.selectedFile.diff} />);
-
-            if ((this.props.vsCodeWorkspace || '').length > 0) {
-                menuItems.push(<RIMenu.OpenVSCode key="vscode-diff" workspace={this.props.vsCodeWorkspace} path={this.props.selectedFile.path} />)
-            }
         } else if (this.props.filesToReview.length > 0) {
             const firstFile = this.props.filesToReview[0].fileId;
             const lastFile = this.props.filesToReview[this.props.filesToReview.length - 1].fileId;
@@ -123,29 +103,12 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
             };
         }
 
-        const selectableFiles = this.props.filesToReview.map(i => ({ id: i.fileId, name: i.reviewFile }));
-
         return (
             <div ref={this._handleRef}>
                 <HotKeys config={reviewHotKeys} />
                 <Segment>
                     <Sticky context={this.state.stickyContainer} id="file-sticky">
-                        <Menu secondary id="file-menu">
-                            {menuItems}
-                            <Menu.Menu position='right'>
-                                <Menu.Item>
-                                    <PublishButton />
-                                    &nbsp;
-                                    <ChangedFileTreePopup
-                                        files={selectableFiles}
-                                        selected={selectedFile ? selectedFile.fileId : null}
-                                        reviewedFiles={this.props.reviewedFiles}
-                                        onSelect={onSelectFileForView}
-                                        reviewId={this.props.reviewId}
-                                    />
-                                </Menu.Item>
-                            </Menu.Menu>
-                        </Menu>
+                        <DiffHeader onSelectFileForView={this.props.onSelectFileForView} />
                     </Sticky>
                     <div>
                         {selectedFile ?

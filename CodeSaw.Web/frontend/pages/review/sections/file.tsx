@@ -21,7 +21,6 @@ interface StateProps {
     currentReview: ReviewInfo;
     reviewedFiles: FileId[];
     currentUser: UserState;
-    vsCodeWorkspace: string;
     unpublishedReplies: CommentReply[];
     unpublishedFileDiscussion: FileDiscussion[];
     unpublishedResolvedDiscussions: string[];
@@ -67,7 +66,6 @@ const File = (props: Props): JSX.Element => {
         reviewedFiles={props.reviewedFiles}
         publishReview={props.publishReview}
         onShowFileHandlerAvailable={props.onShowFileHandlerAvailable}
-        reviewId={props.reviewId}
         fileComments={props.currentReview.fileDiscussions}
         startFileDiscussion={props.startFileDiscussion}
         unpublishedFileDiscussion={props.unpublishedFileDiscussion}
@@ -76,7 +74,6 @@ const File = (props: Props): JSX.Element => {
         unpublishedReplies={props.unpublishedReplies}
         currentUser={props.currentUser}
         markNonEmptyAsViewed={props.markNonEmptyAsViewed}
-        vsCodeWorkspace={props.vsCodeWorkspace}
     />
 };
 
@@ -88,7 +85,6 @@ export default connect(
         unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
         unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
         unpublishedReplies: state.review.unpublishedReplies,
-        vsCodeWorkspace: state.review.vsCodeWorkspace,
         selectedFile: state.review.selectedFile,
     }),
     (dispatch: Dispatch, ownProps: OwnProps) => ({
