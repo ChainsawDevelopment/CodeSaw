@@ -4,7 +4,6 @@ import Menu from '@ui/collections/Menu';
 import { PublishButton } from "../PublishButton";
 import Button from '@ui/elements/Button';
 import Checkbox from '@ui/modules/Checkbox';
-import { RootState } from "@src/rootState";
 import { Dispatch } from "redux";
 import { markEmptyFilesAsReviewed } from "../state";
 
@@ -23,10 +22,9 @@ const Actions = (props: Props): JSX.Element => {
         <Menu.Menu position='right'>
             <Menu.Item>
                 <PublishButton />&nbsp;
-            <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
-            <Checkbox toggle label="Hide reviewed" onChange={(e, data) => props.onHideReviewedChange(data.checked)} />&nbsp;
-
-        </Menu.Item>
+                <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
+                <Checkbox toggle label="Hide reviewed" onChange={(e, data) => props.onHideReviewedChange(data.checked)} />&nbsp;
+            </Menu.Item>
         </Menu.Menu>
     </Menu>;
 }
