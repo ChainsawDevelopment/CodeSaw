@@ -1,13 +1,9 @@
 import * as React from "react";
 
 import Menu from '@ui/collections/Menu';
-import Button from '@ui/elements/Button';
 import Segment from '@ui/elements/Segment';
 import Sticky from '@ui/modules/Sticky';
-import Icon from '@ui/elements/Icon';
-import Popup from '@ui/modules/Popup';
 import scrollToComponent from 'react-scroll-to-component';
-import { FileLink } from "./FileLink";
 
 import * as PathPairs from "../../pathPair";
 import { ReviewId, FileDiscussion, CommentReply, FileToReview, FileId } from "../../api/reviewer";
@@ -17,14 +13,12 @@ import CommentedDiffView, { LineCommentsActions } from './commentedDiffView';
 import { DiscussionActions, getNewDiscussionTextAreaId } from "./commentsView";
 import FileSummary from './fileSummary';
 import ChangedFileTreePopup from "./fileTreePopup";
-import ReviewMark from "./reviewMark";
 import { UserState } from "../../rootState";
 import { DiffType } from "./diffView";
 import { HotKeys } from "../../components/HotKeys";
 import { PublishButton } from "./PublishButton";
-import ReviewMode from "./reviewMode";
 
-import vscodeLogo from '../../assets/vscode.png'
+import * as RIMenu from './sections/rangeInfo_menu';
 
 interface FileViewProps {
     file: FileInfo;
@@ -85,7 +79,7 @@ class FileView extends React.Component<FileViewProps, { visibleCommentLines: num
             .filter(f => f.fileId == file.fileId);
 
         const unpublishedDiscussion = this.props.unpublishedFileDiscussions
-            .filter(f => f.fileId  == file.fileId);
+            .filter(f => f.fileId == file.fileId);
 
         const lineCommentsActions: LineCommentsActions = {
             hideCommentsForLine: l => this.hideLine(l),
@@ -188,7 +182,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
     private _findNextFile = (current: FileId, direction: 1 | -1, predicate: (FileToReview) => boolean): FileToReview => {
         const changes = this.props.filesToReview;
-        const currentIndex = changes.findIndex(p => p.fileId ==this.props.selectedFile.fileId);
+        const currentIndex = changes.findIndex(p => p.fileId == this.props.selectedFile.fileId);
 
         if (currentIndex == -1) {
             return null;
@@ -235,7 +229,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
 
             return false;
         }
-        
+
         return this._findNextFile(current, direction, predicate);
     }
 
@@ -243,8 +237,8 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
         const predicate = (file: FileToReview) => {
             const fileDiscussions = this.props.fileComments
                 .filter(f => f.fileId == file.fileId)
-                .filter(f => f.state === "NeedsResolution" 
-                        && f.comment.children.length == 0);
+                .filter(f => f.state === "NeedsResolution"
+                    && f.comment.children.length == 0);
 
             if (fileDiscussions.length > 0) {
                 return true;
@@ -279,84 +273,18 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                 'ctrl+y': () => this.props.markNonEmptyAsViewed()
             };
 
-            menuItems.push(
-                <ReviewMode key="review-mark">
-                    <ReviewMode.Reviewer>
-                        <Menu.Item fitted>
-                            <Popup
-                                trigger={<ReviewMark reviewed={this.props.selectedFile.isReviewed} onClick={this._changeFileReviewState} />}
-                                content="Toggle review status"
-                            />
-                        </Menu.Item>
-                    </ReviewMode.Reviewer>
-                    <ReviewMode.Author>
-                        <Menu.Item fitted>
-                            <Icon circular inverted name='eye' color='grey' />
-                        </Menu.Item>
-                    </ReviewMode.Author>
-                </ReviewMode>);
-            menuItems.push(<Menu.Item fitted key="refresh-diff">
-                <Popup
-                    trigger={<Icon onClick={() => onSelectFileForView(selectedFile.fileId)} name="redo" circular link color="blue"></Icon>}
-                    content="Refresh file diff"
-                />
-            </Menu.Item>);
-            menuItems.push(<Menu.Item fitted key="file-navigation">
-                {prevFile &&
-                    <Popup
-                        trigger={<FileLink reviewId={this.props.reviewId} fileId={prevFile.fileId} >
-                            <Icon name="step backward" circular link /></FileLink>}
-                        content="Previous unreviewed file"
-                    />}
-                {nextFile &&
-                    <Popup
+            menuItems.push(<RIMenu.ToggleReviewed key="review-mark" isReviewed={this.props.selectedFile.isReviewed} onChange={this._changeFileReviewState} />)
 
-                        trigger={<FileLink reviewId={this.props.reviewId} fileId={nextFile.fileId} >
-                            <Icon name="step forward" circular link /></FileLink>}
-                        content="Next unreviewed file"
-                    />}
-            </Menu.Item>);
-            menuItems.push(<Menu.Item fitted key="file-path">
-                <span className="file-path">{selectedFile.path.newPath}</span>
-            </Menu.Item>);
+            menuItems.push(<RIMenu.RefreshDiff key="refresh-diff" onRefresh={() => onSelectFileForView(selectedFile.fileId)} />);
 
-            const downloadFile = () => {
-                const content = JSON.stringify({
-                    current: this.props.selectedFile.diff.contents.review.current,
-                    previous: this.props.selectedFile.diff.contents.review.previous,
-                });
-                const f = new File([content], 'state.json', {type: "application/octet-stream"});
-                const url = window.URL.createObjectURL(f);
-                console.log(url);
-                const a = document.createElement('a');
-                a.href = url;
-                a.click();
-                window.URL.revokeObjectURL(url);
-            };
+            menuItems.push(<RIMenu.FileNavigation key="file-navigation" reviewId={this.props.reviewId} prevFile={prevFile} nextFile={nextFile} />);
 
-            menuItems.push(
-                <Menu.Item fitted key="download-diff">
-                    <Popup
-                        trigger={<Icon onClick={downloadFile} name="download" circular link color="blue"></Icon>}
-                        content="Download"
-                    />
-                </Menu.Item>
-            );
+            menuItems.push(<RIMenu.FilePath key="file-path" path={selectedFile.path} />);
 
-            if ((this.props.vsCodeWorkspace || '').length > 0)
-            {
-                const workspacePath = encodeURI(this.props.vsCodeWorkspace.trim().replace('\\', '/').replace(/\/+$/, ''));
+            menuItems.push(<RIMenu.DownloadDiff key="download-diff" diff={this.props.selectedFile.diff} />);
 
-                menuItems.push(
-                    <Menu.Item fitted key="vscode-diff">
-                        <Popup
-                            trigger={
-                                <img src={vscodeLogo} className="vscode-icon" onClick={() => window.open(`vscode://file/${workspacePath}/${selectedFile.path.newPath}`)} />                            
-                            }
-                            content="Open in VS Code"
-                        />
-                    </Menu.Item>
-                );
+            if ((this.props.vsCodeWorkspace || '').length > 0) {
+                menuItems.push(<RIMenu.OpenVSCode key="vscode-diff" workspace={this.props.vsCodeWorkspace} path={this.props.selectedFile.path} />)
             }
         } else if (this.props.filesToReview.length > 0) {
             const firstFile = this.props.filesToReview[0].fileId;
