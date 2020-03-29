@@ -6,7 +6,7 @@ import ChangedFileTreePopup from "../fileTreePopup";
 import { RootState } from "@src/rootState";
 import { FileToReview, FileId, FileDiscussion, ReviewId } from "@api/reviewer";
 import { FileInfo } from "../state";
-import { SelectFileForViewHandler } from "../rangeInfo";
+import { SelectFileForViewHandler } from "../selectFile";
 import FileList from '@src/fileList';
 import * as RIMenu from './rangeInfo_menu';
 

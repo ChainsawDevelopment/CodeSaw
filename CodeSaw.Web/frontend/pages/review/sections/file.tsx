@@ -1,6 +1,6 @@
 import { connect } from "react-redux";
 import * as React from "react";
-import { ReviewFileActions, SelectFileForViewHandler, OnShowFileHandlerAvailable } from "../rangeInfo";
+import { SelectFileForViewHandler, OnShowFileHandlerAvailable } from "../selectFile";
 import { Dispatch } from "redux";
 import { RootState } from "@src/rootState";
 import { ReviewInfo, FileId, ReviewId } from "@api/reviewer";
@@ -15,6 +15,12 @@ import { NoFileView } from "./fileView";
 import DiffContent from './diffContent';
 import FileList from '@src/fileList';
 import scrollToComponent from 'react-scroll-to-component';
+import * as PathPairs from "@src/pathPair";
+
+interface ReviewFileActions {
+    review(file: PathPairs.PathPair): void;
+    unreview(file: PathPairs.PathPair): void;
+}
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -114,8 +120,6 @@ const File = (props: Props): JSX.Element => {
         };
     }
 
-
-
     return <div ref={setStickyContainer}>
         <HotKeys config={reviewHotKeys} />
         <Segment>
@@ -129,19 +133,7 @@ const File = (props: Props): JSX.Element => {
                 }
             </div>
         </Segment>
-    </div>
-
-    // return <RangeInfo
-    //     filesToReview={props.currentReview.filesToReview}
-    //     selectedFile={selectedFile}
-    //     onSelectFileForView={selectNewFileForView}
-    //     reviewFile={props.reviewFile}
-    //     reviewedFiles={props.reviewedFiles}
-    //     publishReview={props.publishReview}
-    //     onShowFileHandlerAvailable={props.onShowFileHandlerAvailable}
-    //     fileComments={props.currentReview.fileDiscussions}
-    //     markNonEmptyAsViewed={props.markNonEmptyAsViewed}
-    // />
+    </div>;
 };
 
 export default connect(

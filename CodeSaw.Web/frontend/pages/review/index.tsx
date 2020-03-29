@@ -21,7 +21,7 @@ import {
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
 import { UserState, RootState } from "../../rootState";
-import { SelectFileForViewHandler } from './rangeInfo';
+import { SelectFileForViewHandler } from './selectFile';
 import "./review.less";
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
