@@ -5,14 +5,12 @@ import Sticky from '@ui/modules/Sticky';
 import scrollToComponent from 'react-scroll-to-component';
 
 import * as PathPairs from "../../pathPair";
-import { ReviewId, FileDiscussion, CommentReply, FileToReview, FileId } from "../../api/reviewer";
+import { FileDiscussion, FileToReview, FileId } from "../../api/reviewer";
 import { FileInfo } from "./state";
 
-import { DiscussionActions } from "./commentsView";
-import { UserState } from "../../rootState";
 import { HotKeys } from "../../components/HotKeys";
 
-import { FileView, NoFileView } from "./sections/fileView";
+import { NoFileView } from "./sections/fileView";
 import FileList from '@src/fileList';
 import DiffHeader from "./sections/DiffHeader";
 import DiffContent from './sections/diffContent';
@@ -34,12 +32,6 @@ export interface Props {
     publishReview(): void;
     onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
     fileComments: FileDiscussion[];
-    unpublishedFileDiscussion: FileDiscussion[];
-    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
-    commentActions: DiscussionActions;
-    pendingResolved: string[];
-    unpublishedReplies: CommentReply[];
-    currentUser: UserState;
     markNonEmptyAsViewed: any;
 }
 
