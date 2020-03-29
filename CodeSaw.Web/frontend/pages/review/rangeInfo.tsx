@@ -15,6 +15,7 @@ import { HotKeys } from "../../components/HotKeys";
 import { FileView, NoFileView } from "./sections/fileView";
 import FileList from '@src/fileList';
 import DiffHeader from "./sections/DiffHeader";
+import DiffContent from './sections/diffContent';
 
 export type SelectFileForViewHandler = (fileId: FileId) => void;
 export type OnShowFileHandlerAvailable = (handler: () => void) => void;
@@ -112,17 +113,7 @@ export default class RangeInfo extends React.Component<Props, { stickyContainer:
                     </Sticky>
                     <div>
                         {selectedFile ?
-                            <FileView
-                                file={selectedFile}
-                                commentActions={this.props.commentActions}
-                                comments={this.props.selectedFile.discussions}
-                                startFileDiscussion={this.props.startFileDiscussion}
-                                unpublishedFileDiscussions={this.props.unpublishedFileDiscussion}
-                                pendingResolved={this.props.pendingResolved}
-                                unpublishedReplies={this.props.unpublishedReplies}
-                                currentUser={this.props.currentUser}
-                                scrollToFile={this.scrollToFile}
-                            />
+                            <DiffContent scrollToFile={this.scrollToFile} />
                             : <NoFileView />
                         }
                     </div>
