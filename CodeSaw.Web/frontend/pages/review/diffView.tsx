@@ -58,7 +58,8 @@ const mapHunkToView = (hunk: Hunk) => {
             lineNumber: type == 'delete' ? oldLineCounter : newLineCounter,
             classNames: classNames({
                 'base-change': line.classification == 'BaseChange' && line.operation != 'Equal',
-                'review-change': line.classification == 'ReviewChange' && line.operation != 'Equal'
+                'review-change': line.classification == 'ReviewChange' && line.operation != 'Equal',
+                'potato-badge': line.text.indexOf('os_mock') >= 0,
             })
         });
 
@@ -238,7 +239,7 @@ const diffView = (props: Props) => {
     // once we start working on expanding/collapsing hunks this will be useful
     viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
 
-    for(let hunk of props.diffInfo.hunks) {
+    for (let hunk of props.diffInfo.hunks) {
         const position = hunk.oldPosition;
         const totalLines = props.contents.previousTotalLines;
 
@@ -268,12 +269,11 @@ const diffView = (props: Props) => {
             lineNumber = getCorrespondingOldLineNumber(viewHunks, lineNumber);
         }
 
-        try{
-            
+        try {
+
             viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
-        } 
-        catch(e)
-        {
+        }
+        catch (e) {
             // Failed to expand the code, try to display the widgets
             // TODO: Investigate this
             console.error(e);
@@ -311,9 +311,8 @@ const diffView = (props: Props) => {
             }
         }
 
-        if (!found)
-        {
-            console.warn("Failed to display widget", {lineNumber: item.lineNumber, side: item.side});
+        if (!found) {
+            console.warn("Failed to display widget", { lineNumber: item.lineNumber, side: item.side });
             failedLineWidgets.push(item);
         }
     }
@@ -354,12 +353,12 @@ const diffView = (props: Props) => {
                             },
                             lines: [],
 
-                        }}/>
+                        }} />
                     </Decoration>,
                     <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
                 ])}
             </Diff>
-            {failedLineWidgets.length > 0 && 
+            {failedLineWidgets.length > 0 &&
                 failedLineWidgets.map(w => <div key={w.lineNumber}>{w.widget}</div>)}
         </>
     );

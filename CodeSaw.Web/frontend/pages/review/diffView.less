@@ -9,6 +9,14 @@
                 }
             }
         }
+
+        &.potato-badge {
+            .diff-gutter:nth-child(3), .diff-gutter:nth-child(1) {
+                &::before{
+                    content: 'A ' attr(data-line-number);
+                }
+            }
+        }
     }
 }
 
