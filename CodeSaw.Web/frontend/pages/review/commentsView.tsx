@@ -6,20 +6,15 @@ import Form from '@ui/collections/Form';
 import Header from '@ui/elements/Header';
 import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment, Discussion } from "../../api/reviewer";
-import { IsCommentUnpublished } from './state';
+import { IsCommentUnpublished, DiscussionType } from './state';
 
 import "./commentsView.less";
 import { UserState } from "../../rootState";
 import Radio from '@ui/addons/Radio';
-
-export enum DiscussionType {
-    Comment,
-    NeedsResolution,
-    GoodWork
-}
+import * as classNames from "classnames";
 
 export interface DiscussionActions {
-    addNew(content: string, needsResolution: boolean);
+    addNew(content: string, type: DiscussionType);
     addReply(parentId: string, content: string): void;
     editReply(commentId: string, content: string): void;
     removeUnpublishedComment(commentId: string): void;
@@ -58,7 +53,6 @@ interface Reply {
 interface CommentsState {
     commentText: string;
     discussionType: DiscussionType;
-    needsResolution: boolean;
     newDiscussionVisible: boolean;
 }
 
@@ -226,13 +220,13 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
             break;
     }
 
-    return (<div className={props.discussion.state === 'Resolved' ? 'read-only' : null}>
+    return (<div className={classNames({ 'read-only': props.discussion.state === 'Resolved', 'good-work': props.discussion.state === 'GoodWork' })}>
         <CommentComponent
             comment={props.discussion.comment}
             statusComponent={status}
             actions={props.actions}
             note={props.note ? props.note(props.discussion) : null}
-            readOnly={props.discussion.state === 'Resolved'}
+            readOnly={props.discussion.state === 'Resolved' || props.discussion.state === 'GoodWork'}
         />
     </div>);
 };
@@ -285,7 +279,6 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
         this.state = {
             commentText: '',
             discussionType: DiscussionType.NeedsResolution,
-            needsResolution: true,
             newDiscussionVisible: false
         };
     }
@@ -308,11 +301,11 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
         };
 
         const onChangeType = (t: DiscussionType) => {
-            this.setState({ needsResolution: t == DiscussionType.NeedsResolution, discussionType: t });
+            this.setState({ discussionType: t });
         };
 
         const addComment = () => {
-            this.props.actions.addNew(this.state.commentText, this.state.needsResolution);
+            this.props.actions.addNew(this.state.commentText, this.state.discussionType);
             this.setState({ newDiscussionVisible: false });
         }
 
@@ -324,7 +317,6 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
                 <DiscussionTypeSelector type={this.state.discussionType} onChange={onChangeType} />
             </Form.Group>
         </Form>
-        {/* <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" /> */ }
 
         const showDiscussion = <Button className={"start-another-discussion"} onClick={() => this.setState({ newDiscussionVisible: true })} basic >Start Another Discussion</Button>
 

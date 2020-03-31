@@ -166,7 +166,7 @@ export interface ReviewInfo {
     sourceBranch: string;
     targetBranch: string;
     reviewFinished: boolean;
-    author: UserState, 
+    author: UserState,
     isAuthor: boolean;
 }
 
@@ -188,13 +188,13 @@ export interface ReviewSnapshot {
         fileId: FileId;
         lineNumber: number;
         content: string;
-        needsResolution: boolean;
+        state: CommentState;
     }[];
     startedReviewDiscussions: {
         targetRevisionId: RevisionId;
         temporaryId: string;
-        needsResolution: boolean;
         content: string;
+        state: CommentState;
     }[];
     resolvedDiscussions: string[];
     replies: CommentReply[];
@@ -206,7 +206,7 @@ export interface ReviewSnapshot {
     };
 }
 
-export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending';
+export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending' | 'GoodWork';
 
 export interface Comment {
     id: string;
@@ -349,14 +349,14 @@ export class ReviewerApi {
                 commitMessage
             })
         })
-        .then(r => {
-            if (r.status == 418) {
-                throw new MergeFailedError();
-            }
+            .then(r => {
+                if (r.status == 418) {
+                    throw new MergeFailedError();
+                }
 
-            return r;
-        })
-        .then(mustBeOk);
+                return r;
+            })
+            .then(mustBeOk);
     }
 
     public getProjects = (): Promise<ProjectInfo[]> => {

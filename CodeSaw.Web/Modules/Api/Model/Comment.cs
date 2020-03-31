@@ -12,7 +12,8 @@ namespace CodeSaw.Web.Modules.Api.Model
     {
         NoActionNeeded,
         NeedsResolution,
-        Resolved
+        Resolved,
+        GoodWork
     }
 
     public class Comment

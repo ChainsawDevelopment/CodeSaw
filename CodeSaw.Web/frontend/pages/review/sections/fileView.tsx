@@ -1,4 +1,4 @@
-import { FileInfo } from "../state";
+import { FileInfo, DiscussionType } from "../state";
 import { FileDiscussion, CommentReply, FileId } from "@api/reviewer";
 import { DiscussionActions, getNewDiscussionTextAreaId } from "../commentsView";
 import { UserState } from "@src/rootState";
@@ -16,7 +16,7 @@ interface FileViewProps {
     unpublishedReplies: CommentReply[];
     commentActions: DiscussionActions;
     currentUser: UserState;
-    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
+    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, type: DiscussionType): void;
     scrollToFile(): void;
 }
 
@@ -72,8 +72,8 @@ export class FileView extends React.Component<FileViewProps, { visibleCommentLin
         const lineCommentsActions: LineCommentsActions = {
             hideCommentsForLine: l => this.hideLine(l),
             showCommentsForLine: l => this.showLine(l),
-            startFileDiscussion: (lineNumber, content, needResolution) => {
-                this.props.startFileDiscussion(file.fileId, lineNumber, content, needResolution)
+            startFileDiscussion: (lineNumber, content, type) => {
+                this.props.startFileDiscussion(file.fileId, lineNumber, content, type)
             }
         }
 

@@ -11,9 +11,17 @@
         }
 
         &.potato-badge {
-            .diff-gutter:nth-child(3), .diff-gutter:nth-child(1) {
+            .diff-gutter:nth-child(3) {
                 &::before{
-                    content: 'A ' attr(data-line-number);
+                    content: '  ' attr(data-line-number);
+                }
+                background-image: url('../../assets/potato.png');
+                background-size: contain;
+                background-repeat: no-repeat no-repeat;
+                background-position: left;
+                    
+                &:hover {
+                    transform: scale(2);
                 }
             }
         }

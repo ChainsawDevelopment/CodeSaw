@@ -5,11 +5,36 @@ using CodeSaw.Web.Modules.Api.Model;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
+    public enum DiscussionState
+    {
+        NoActionNeeded,
+        NeedsResolution,
+        GoodWork,
+    }
+
+    public static class DiscussionStateExtensions
+    {
+        public static CommentState AsCommentState(this DiscussionState state)
+        {
+            switch (state)
+            {
+                case DiscussionState.NoActionNeeded:
+                    return CommentState.NoActionNeeded;
+                case DiscussionState.NeedsResolution:
+                    return CommentState.NeedsResolution;
+                case DiscussionState.GoodWork:
+                    return CommentState.GoodWork;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state));
+            }
+        }
+    }
+
     public class NewReviewDiscussion
     {
         public string TemporaryId { get; set; }
         public string Content { get; set; }
-        public bool NeedsResolution { get; set; }
+        public DiscussionState State { get; set; }
         public RevisionId TargetRevisionId { get; set; }
     }
 
@@ -40,7 +65,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                 {
                     Id = discussionId,
                     RevisionId = review.RevisionId,
-                    State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
+                    State = discussion.State.AsCommentState(),
                     RootComment = new Comment
                     {
                         Id = commentId,

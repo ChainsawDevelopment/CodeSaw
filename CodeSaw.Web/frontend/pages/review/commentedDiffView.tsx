@@ -6,12 +6,13 @@ import CommentsView, { DiscussionActions } from './commentsView';
 import { UserState } from '../../rootState';
 import { SelectLineNumberModal } from './SelectLineNumberModal';
 import { HotKeys } from 'CodeSaw.Web/frontend/components/HotKeys';
+import { DiscussionType } from './state';
 const style = require('./commentedDiffView.less');
 
 export interface LineCommentsActions {
     showCommentsForLine(lineNumber: number): void;
     hideCommentsForLine(lineNumber: number): void;
-    startFileDiscussion(lineNumber: number, content: string, needResolution: boolean): void;
+    startFileDiscussion(lineNumber: number, content: string, type: DiscussionType): void;
 }
 
 interface CommentProps {
@@ -79,8 +80,8 @@ const splitComments = (props: Props): LineComments => {
 
 const buildCommentView = (props: Props, lineNumber: number, discussions: Discussion[]) => {
     const commentActions: DiscussionActions = {
-        addNew: (content, needResolution) => {
-            props.lineCommentsActions.startFileDiscussion(lineNumber, content, needResolution);
+        addNew: (content, type) => {
+            props.lineCommentsActions.startFileDiscussion(lineNumber, content, type);
         },
         addReply: props.commentActions.addReply,
         editReply: props.commentActions.editReply,
@@ -122,7 +123,7 @@ const UnmatchedComments = (props: {
     discussions: FileDiscussion[];
 }) => {
     const commentActions: DiscussionActions = {
-        addNew: (content, needResolution) => {
+        addNew: (content, type) => {
             throw 'Not supported';
         },
         addReply: props.commentActions.addReply,
