@@ -5,10 +5,12 @@ import { PublishButton } from "../PublishButton";
 import ChangedFileTreePopup from "../fileTreePopup";
 import { RootState } from "@src/rootState";
 import { FileToReview, FileId, FileDiscussion, ReviewId } from "@api/reviewer";
-import { FileInfo } from "../state";
+import { FileInfo, reviewFile, unreviewFile } from "../state";
 import { SelectFileForViewHandler } from "../selectFile";
 import FileList from '@src/fileList';
 import * as RIMenu from './rangeInfo_menu';
+import * as PathPairs from "@src/pathPair";
+import { Dispatch } from "redux";
 
 interface OwnProps {
     onSelectFileForView: SelectFileForViewHandler;
@@ -23,7 +25,12 @@ interface StateProps {
     vsCodeWorkspace: string;
 }
 
-type Props = StateProps & OwnProps;
+interface DispatchProps {
+    review(file: PathPairs.PathPair): void;
+    unreview(file: PathPairs.PathPair): void;
+}
+
+type Props = StateProps & DispatchProps & OwnProps;
 
 const DiffHeader = (props: Props): JSX.Element => {
     const menuItems = [];
@@ -42,9 +49,9 @@ const DiffHeader = (props: Props): JSX.Element => {
 
         const changeFileReviewState = (newState: boolean) => {
             if (newState) {
-                this.props.reviewFile.review(this.props.selectedFile.path);
+                props.review(props.selectedFile.path);
             } else {
-                this.props.reviewFile.unreview(this.props.selectedFile.path);
+                props.unreview(props.selectedFile.path);
             }
         }
 
@@ -94,5 +101,9 @@ export default connect(
         fileComments: state.review.currentReview.fileDiscussions,
         vsCodeWorkspace: state.review.vsCodeWorkspace,
         reviewId: state.review.currentReview.reviewId
+    }),
+    (dispatch: Dispatch): DispatchProps => ({
+        review: (path) => dispatch(reviewFile({ path })),
+        unreview: (path) => dispatch(unreviewFile({ path })),
     })
 )(DiffHeader);
