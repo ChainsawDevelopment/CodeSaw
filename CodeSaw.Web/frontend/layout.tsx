@@ -25,15 +25,16 @@ import { ReviewId, FileId } from "./api/reviewer";
 import CurrentUser from './pages/user/User';
 import { RootState } from './rootState';
 import EnvMessages from './components/EnvMesssages';
+import Playground from './playground';
 
 const Home = () => (
     <span>
-        <h1><span className="logo" dangerouslySetInnerHTML={{__html: logo}}></span>CodeSaw</h1>
+        <h1><span className="logo" dangerouslySetInnerHTML={{ __html: logo }}></span>CodeSaw</h1>
         <p>The most brutal code review tool!</p>
         <Reviews />
     </span>);
 
-const Review = withRouter((props: RouteComponentProps<{projectId: string; id: string, fileId: FileId}>) => {
+const Review = withRouter((props: RouteComponentProps<{ projectId: string; id: string, fileId: FileId }>) => {
     const { projectId, id, fileId } = props.match.params;
     const reviewId: ReviewId = { projectId: parseInt(projectId), reviewId: parseInt(id) };
 
@@ -80,17 +81,18 @@ const Layout = (props: StateProps) => (
                 <Route exact path="/" component={Home} />
                 <Route path="/project/:projectId/review/:id/:fileId?" component={Review} />
                 <Route exact path="/admin" component={AdminPage} />
+                <Route exact path="/test" component={Playground} />
             </ConnectedSwitch>
         </Container>
 
-       
+
 
         <div className="footer">This is the bottom <i aria-hidden="true" className="pointing down icon"></i></div>
     </Dimmer.Dimmable>
 );
 
 export default connect(
-    (state: RootState):StateProps => ({
+    (state: RootState): StateProps => ({
         inProgressOperationsCount: state.loading.inProgressOperationsCount,
         inProgressOperationLastMessage: state.loading.inProgressOperationLastMessage
     })
