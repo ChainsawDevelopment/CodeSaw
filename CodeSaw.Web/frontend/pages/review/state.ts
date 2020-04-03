@@ -67,6 +67,7 @@ export interface ReviewState extends UnpublishedReview {
 const createAction = actionCreatorFactory('REVIEW');
 
 export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
+export const changeFileRange = createAction<{ previous: { base: string; head: string }; current: { base: string; head: string }; }>('CHANGE_FILE_RANGE');
 export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_REVIEWED');
 
 export const loadedFileDiff = createAction<{ diff: FileDiff; remappedDiscussions: DiffDiscussions }>('LOADED_FILE_DIFF');
@@ -266,6 +267,19 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     current: resolveRevision(state.currentReview, file.current)
                 },
                 discussions: []
+            }
+        };
+    }
+
+    if (changeFileRange.match(action)) {
+        return {
+            ...state,
+            selectedFile: {
+                ...state.selectedFile,
+                range: {
+                    previous: action.payload.previous,
+                    current: action.payload.current
+                }
             }
         };
     }

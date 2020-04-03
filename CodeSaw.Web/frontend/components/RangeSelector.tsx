@@ -37,7 +37,7 @@ const Block = (props: {
         onMouseOver={onOver}
         onMouseUp={onUp}
         className={classNames({
-            'item': true,
+            'selector-item': true,
             'start': props.index === props.ends[0],
             'end': props.index === props.ends[1],
             'middle': props.ends[0] < props.index && props.index < props.ends[1]

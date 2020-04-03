@@ -4,13 +4,14 @@ import { Menu } from "semantic-ui-react";
 import { PublishButton } from "../PublishButton";
 import ChangedFileTreePopup from "../fileTreePopup";
 import { RootState } from "@src/rootState";
-import { FileToReview, FileId, FileDiscussion, ReviewId } from "@api/reviewer";
-import { FileInfo, reviewFile, unreviewFile } from "../state";
+import { FileToReview, FileId, FileDiscussion, ReviewId, ReviewInfo } from "@api/reviewer";
+import { FileInfo, reviewFile, unreviewFile, changeFileRange } from "../state";
 import { SelectFileForViewHandler } from "../selectFile";
 import FileList from '@src/fileList';
 import * as RIMenu from './rangeInfo_menu';
 import * as PathPairs from "@src/pathPair";
 import { Dispatch } from "redux";
+import RangeSelector from "@src/components/RangeSelector";
 
 interface OwnProps {
     onSelectFileForView: SelectFileForViewHandler;
@@ -23,11 +24,20 @@ interface StateProps {
     fileComments: FileDiscussion[];
     reviewId: ReviewId;
     vsCodeWorkspace: string;
+    revisions: {
+        number: number;
+        head: string;
+        base: string;
+    }[];
+    hasProvisional: boolean;
+    base: string;
+    head: string;
 }
 
 interface DispatchProps {
     review(file: PathPairs.PathPair): void;
     unreview(file: PathPairs.PathPair): void;
+    changeFileRange(previous: { head: string; base: string }, current: { head: string; base: string }): void;
 }
 
 type Props = StateProps & DispatchProps & OwnProps;
@@ -68,6 +78,43 @@ const DiffHeader = (props: Props): JSX.Element => {
         if ((props.vsCodeWorkspace || '').length > 0) {
             menuItems.push(<RIMenu.OpenVSCode key="vscode-diff" workspace={props.vsCodeWorkspace} path={props.selectedFile.path} />)
         }
+
+        const revisions = [
+            { number: '&perp;', head: props.base, base: props.base },
+            ...props.revisions.map(r => ({
+                ...r,
+                number: r.number.toString(),
+            }))
+        ];
+
+        if (props.hasProvisional) {
+            revisions.push({
+                number: 'P',
+                head: props.head,
+                base: props.base
+            });
+        }
+
+        const startIndex = revisions.findIndex(r => r.base == props.selectedFile.range.previous.base && r.head == props.selectedFile.range.previous.head);
+        const endIndex = revisions.findIndex(r => r.base == props.selectedFile.range.current.base && r.head == props.selectedFile.range.current.head);
+
+        const selectors = revisions.map(r => <span key={r.number} dangerouslySetInnerHTML={{ __html: r.number }} />)
+
+        const onChange = (s: number, e: number) => {
+            props.changeFileRange({
+                base: revisions[s].base,
+                head: revisions[s].head
+            }, {
+                base: revisions[e].base,
+                head: revisions[e].head
+            });
+        }
+
+        menuItems.push(<Menu.Item fitted key="revision-select">
+            <RangeSelector start={startIndex} end={endIndex} onChange={onChange}>
+                {selectors}
+            </RangeSelector>
+        </Menu.Item>);
     }
 
     const selectableFiles = props.filesToReview.map(i => ({ id: i.fileId, name: i.reviewFile }));
@@ -100,10 +147,15 @@ export default connect(
         reviewedFiles: state.review.reviewedFiles,
         fileComments: state.review.currentReview.fileDiscussions,
         vsCodeWorkspace: state.review.vsCodeWorkspace,
-        reviewId: state.review.currentReview.reviewId
+        reviewId: state.review.currentReview.reviewId,
+        revisions: state.review.currentReview.pastRevisions,
+        hasProvisional: state.review.currentReview.hasProvisionalRevision,
+        head: state.review.currentReview.headCommit,
+        base: state.review.currentReview.baseCommit
     }),
     (dispatch: Dispatch): DispatchProps => ({
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
+        changeFileRange: (previous, current) => dispatch(changeFileRange({ previous, current }))
     })
 )(DiffHeader);
