@@ -9,7 +9,7 @@ node {
 	}
 
 	stage('Build') {
-		withEnv(["PATH+NODE=${env.NODE8_PATH}"]) {
+		withEnv(["PATH+NODE=${env.NODE8_PATH}", "PUBLIC_PATH=http://pila.kplabs.pl/dist/"]) {
 			bat 'build.cmd -t Package --production'
 		}
 	}

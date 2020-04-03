@@ -1,12 +1,14 @@
 const path = require("path");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 
+const PUBLIC_PATH = process.env.PUBLIC_PATH || "http://localhost:8080/";
+
 module.exports = {
   entry: ["./CodeSaw.Web/frontend/index.tsx"],
   output: {
     path: path.resolve(__dirname, "CodeSaw.Web/wwwroot"),
     filename: "dist.js",
-    publicPath: "http://localhost:8080/"
+    publicPath: PUBLIC_PATH
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js", ".jsx"],
