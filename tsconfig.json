@@ -4,12 +4,22 @@
         "module": "es6",
         "jsx": "react",
         "sourceMap": true,
-        "typeRoots": ["./node_modules/@types", "./CodeSaw.Web/frontend/assets"],
+        "typeRoots": [
+            "./node_modules/@types",
+            "./CodeSaw.Web/frontend/assets"
+        ],
         "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
-            "@ui/*": [ "./node_modules/semantic-ui-react/dist/commonjs/*" ],
-            "@api/*": ["./CodeSaw.Web/frontend/api/*"]
+            "@ui/*": [
+                "./node_modules/semantic-ui-react/dist/commonjs/*"
+            ],
+            "@api/*": [
+                "./CodeSaw.Web/frontend/api/*"
+            ],
+            "@src/*": [
+                "./CodeSaw.Web/frontend/*"
+            ]
         }
     }
 }

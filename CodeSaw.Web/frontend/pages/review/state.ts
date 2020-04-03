@@ -42,7 +42,7 @@ export interface FileReviewStatusChange {
 export interface UnpublishedReview {
     unpublishedFileDiscussions: (FileDiscussion)[];
     unpublishedReviewDiscussions: (ReviewDiscussion)[];
-    unpublishedResolvedDiscussions: string[]; 
+    unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
     unpublishedReviewedFiles: FileReviewStatusChange;
     unpublishedUnreviewedFiles: FileReviewStatusChange;
@@ -62,12 +62,12 @@ const createAction = actionCreatorFactory('REVIEW');
 export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
 export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_REVIEWED');
 
-export const loadedFileDiff = createAction<{diff: FileDiff; remappedDiscussions: DiffDiscussions}>('LOADED_FILE_DIFF');
+export const loadedFileDiff = createAction<{ diff: FileDiff; remappedDiscussions: DiffDiscussions }>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
-export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, vsCodeWorkspace: string}>('LOADED_REVIEW_INFO');
+export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, vsCodeWorkspace: string }>('LOADED_REVIEW_INFO');
 
-export const clearUnpublishedReviewInfo = createAction<{reviewId: ReviewId}>("CLEAR_UNPUBLISHED_REVIEW");
+export const clearUnpublishedReviewInfo = createAction<{ reviewId: ReviewId }>("CLEAR_UNPUBLISHED_REVIEW");
 
 export interface RememberRevisionArgs {
     reviewId: ReviewId;
@@ -101,8 +101,8 @@ export const replyToComment = createAction<{ parentId: string, content: string }
 export const editUnpublishedComment = createAction<{ commentId: string, content: string }>('EDIT_UNPUBLISHED_COMMENT');
 export const removeUnpublishedComment = createAction<{ commentId: string }>('REMOVE_UNPUBLISHED_COMMENT');
 
-export const saveVSCodeWorkspace = createAction<{ vsCodeWorkspace: string}>('SAVE_VS_CODE_WORKSPACE');
-export const loadedVsCodeWorkspace = createAction<{ vsCodeWorkspace: string}>('LOADED_VS_CODE_WORKSPACE');
+export const saveVSCodeWorkspace = createAction<{ vsCodeWorkspace: string }>('SAVE_VS_CODE_WORKSPACE');
+export const loadedVsCodeWorkspace = createAction<{ vsCodeWorkspace: string }>('LOADED_VS_CODE_WORKSPACE');
 
 
 const UnpublishedCommentPrefixes = {
@@ -114,9 +114,9 @@ const UnpublishedCommentPrefixes = {
 export const IsCommentUnpublished = (commentId: string): boolean => {
     return Object.keys(UnpublishedCommentPrefixes).findIndex(key => commentId.startsWith(UnpublishedCommentPrefixes[key])) >= 0;
 }
-    
 
-export const emptyUnpublishedReview : UnpublishedReview = {
+
+export const emptyUnpublishedReview: UnpublishedReview = {
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
     unpublishedResolvedDiscussions: [],
@@ -178,8 +178,7 @@ export const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
 }
 
 
-export const upgradeUnpublishedReview = (current: ReviewInfo, review: UnpublishedReview): UnpublishedReview => 
-{
+export const upgradeUnpublishedReview = (current: ReviewInfo, review: UnpublishedReview): UnpublishedReview => {
     const knownRevisions = current.pastRevisions.map(r => r.number as RevisionId);
     if (current.hasProvisionalRevision) {
         knownRevisions.push(current.headRevision as RevisionId);
@@ -187,10 +186,10 @@ export const upgradeUnpublishedReview = (current: ReviewInfo, review: Unpublishe
 
     const fileDiscussions = review.unpublishedFileDiscussions.map(fd => {
         const idx = knownRevisions.indexOf(fd.revision);
-        if(idx != -1) {
+        if (idx != -1) {
             return fd;
         }
-        
+
         return {
             ...fd,
             revision: current.headRevision
@@ -199,10 +198,10 @@ export const upgradeUnpublishedReview = (current: ReviewInfo, review: Unpublishe
 
     const reviewDiscussions = review.unpublishedReviewDiscussions.map(fd => {
         const idx = knownRevisions.indexOf(fd.revision);
-        if(idx != -1) {
+        if (idx != -1) {
             return fd;
         }
-        
+
         return {
             ...fd,
             revision: current.headRevision
@@ -245,8 +244,6 @@ export const upgradeUnpublishedReview = (current: ReviewInfo, review: Unpublishe
 }
 
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
-    console.log({ nextReplyId: state.nextReplyId });
-
     if (selectFileForView.match(action)) {
         const file = state.currentReview.filesToReview.find(f => f.fileId == action.payload.fileId);
 
@@ -294,14 +291,14 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
 
         const getChangedFilesPaths = (changeStatus: FileReviewStatusChange) => Object.keys(changeStatus)
             .map(key => changeStatus[key])
-            .reduce((a,b) => a.concat(b), []);
+            .reduce((a, b) => a.concat(b), []);
 
         const unpublishedReviewedFiles = getChangedFilesPaths(unpublished.unpublishedReviewedFiles);
         const unpublishedUnreviewedFiles = getChangedFilesPaths(unpublished.unpublishedUnreviewedFiles);
 
-        const reviewedFileFinal = 
+        const reviewedFileFinal =
             _.difference(reviewedFiles.map(f => f.fileId), unpublishedUnreviewedFiles)
-             .concat(unpublishedReviewedFiles);
+                .concat(unpublishedReviewedFiles);
 
         return {
             ...state,

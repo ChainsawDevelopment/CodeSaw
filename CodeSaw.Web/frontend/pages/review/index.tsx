@@ -3,62 +3,37 @@ import { Dispatch } from "redux";
 import { connect } from "react-redux";
 import { History } from "history";
 
-import { PublishButton } from "./PublishButton";
-
-import Menu from '@ui/collections/Menu';
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
-import Dropdown from '@ui/modules/Dropdown';
-import Input from '@ui/elements/Input';
-
-import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
-import vscodeLogo from '../../assets/vscode.png'
-
 
 import {
     selectFileForView,
     loadReviewInfo,
     FileInfo,
-    publishReview,
-    reviewFile,
-    unreviewFile,
     mergePullRequest,
-    startFileDiscussion,
-    startReviewDiscussion,
-    resolveDiscussion,
-    unresolveDiscussion,
-    replyToComment,
-    markEmptyFilesAsReviewed,
-
-    editUnpublishedComment,
-    removeUnpublishedComment,
-    saveVSCodeWorkspace
 } from "./state";
 import {
     ReviewInfo,
     ReviewId,
-    FileDiscussion,
-    ReviewDiscussion,
-    CommentReply,
-    Discussion,
     FileId,
 } from '../../api/reviewer';
 
 import { OnMount } from "../../components/OnMount";
 import { OnPropChanged } from "../../components/OnPropChanged";
 import { UserState, RootState } from "../../rootState";
-import RangeInfo, { SelectFileForViewHandler, ReviewFileActions } from './rangeInfo';
+import { SelectFileForViewHandler } from './selectFile';
 import "./review.less";
-import CommentsView, { DiscussionActions } from './commentsView';
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
-import UserInfo from "../../components/UserInfo";
 
-import ExternalLink from "../../components/externalLink";
 import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
-import { Button } from "semantic-ui-react";
+
+import Header from './sections/header';
+import Actions from './sections/actions';
+import ReviewDiscussions from './sections/reviewDiscussions';
+import File from './sections/file';
 
 interface OwnProps {
     reviewId: ReviewId;
@@ -69,18 +44,7 @@ interface OwnProps {
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId, fileToPreload?: FileId): void;
     selectFileForView: SelectFileForViewHandler;
-    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string);
-    reviewFile: ReviewFileActions;
-    publishReview(): void;
-    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean, currentUser?: UserState): void;
-    startReviewDiscussion(content: string, needsResolution: boolean, currentUser?: UserState): void;
-    resolveDiscussion(rootCommentId: string): void;
-    unresolveDiscussion(rootCommentId: string): void;
-    addReply(parentCommentId: string, content: string): void;
-    editReply(commentId: string, content: string): void;
-    removeUnpublishedComment(commentId: string): void;
-    markNonEmptyAsViewed(): void;
-    saveVSCodeWorkspace(vsCodeWorkspace: string): void;
+    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): void;
 }
 
 interface StateProps {
@@ -88,47 +52,16 @@ interface StateProps {
     currentReview: ReviewInfo;
     selectedFile: FileInfo;
     reviewedFiles: FileId[];
-    unpublishedFileDiscussion: FileDiscussion[];
-    unpublishedReviewDiscussions: ReviewDiscussion[];
-    unpublishedResolvedDiscussions: string[];
-    unpublishedReplies: CommentReply[];
     author: UserState;
     reviewMode: 'reviewer' | 'author';
-    vsCodeWorkspace: string;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
     hideReviewed: boolean;
-    showVsCodeWorkspaceEditor: boolean;
 }
 
-class VSCodeWorkspaceEditor extends React.Component<any, any> {
-    constructor(props: any) {
-        super(props);
-
-        this.state = {
-            value: this.props.vsCodeWorkspace
-        };
-    }
-
-    render() {
-        return <Input 
-            fluid
-            action={ <Button 
-                        primary 
-                        icon='save' 
-                        onClick={ () => this.props.save(this.state.value) }                         
-                        />
-                    }
-            placeholder='VS Code workspace path'
-            onChange={(e, data) => this.setState({ value: data.value })}
-            defaultValue={this.props.vsCodeWorkspace}
-        />
-    }
-
-}
 
 class reviewPage extends React.Component<Props, State> {
     private showFileHandler: () => void;
@@ -137,7 +70,6 @@ class reviewPage extends React.Component<Props, State> {
         super(props);
         this.state = {
             hideReviewed: false,
-            showVsCodeWorkspaceEditor: false
         };
     }
 
@@ -171,14 +103,14 @@ class reviewPage extends React.Component<Props, State> {
                 props.loadReviewInfo(props.reviewId, props.fileId);
             } else {
                 this.onShowFileHandlerAvailable = this.saveShowFileHandler;
-                props.loadReviewInfo(props.reviewId, );
+                props.loadReviewInfo(props.reviewId);
             }
         };
 
         const selectNewFileForView = (fileId: FileId) => {
             if (fileId != null) {
                 props.selectFileForView(fileId);
-                
+
                 const fileLink = createLinkToFile(props.reviewId, fileId);
                 if (fileLink != window.location.pathname) {
                     props.history.push(fileLink);
@@ -195,22 +127,6 @@ class reviewPage extends React.Component<Props, State> {
             }
         };
 
-        const commentActions: DiscussionActions = {
-            addNew: (content, needsResolution) => props.startReviewDiscussion(content, needsResolution),
-            addReply: props.addReply,
-            editReply: props.editReply,
-            resolve: props.resolveDiscussion,
-            unresolve: props.unresolveDiscussion,
-            removeUnpublishedComment: props.removeUnpublishedComment
-        }
-
-        const discussions: Discussion[] = props.currentReview.reviewDiscussions
-            .concat(props.unpublishedReviewDiscussions)
-            .map(d => ({
-                ...d,
-                state: props.unpublishedResolvedDiscussions.indexOf(d.id) >= 0 ? 'ResolvePending' : d.state
-            }));
-
         const title = (() => {
             if (!props.currentReview.reviewId) {
                 return 'Loading review...';
@@ -220,12 +136,11 @@ class reviewPage extends React.Component<Props, State> {
             return `[${currentReview.projectPath}] #${currentReview.reviewId.reviewId} - ${currentReview.title}`;
         })();
 
-        const changeHideReviewed = (e: React.SyntheticEvent, data: CheckboxProps) => {
+        const changeHideReviewed = (hide: boolean) => {
             this.setState({
-                hideReviewed: data.checked
+                hideReviewed: hide
             });
         };
-
 
         return (
             <div id="review-page">
@@ -235,94 +150,35 @@ class reviewPage extends React.Component<Props, State> {
                     <OnPropChanged fileName={props.fileId} onPropChanged={selectFileForView} />
 
                     <Grid>
-                        <Grid.Row>
-                            <Grid.Column className={"header"}>
-                                <Grid.Row>
-                                    <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
-                                    <h3>{props.currentReview.projectPath}
-                                        {props.currentReview.projectPath ? 
-                                        <Dropdown floating inline icon='setting'>
-                                            <Dropdown.Menu>
-                                                <Dropdown.Item onClick={() => this.setState({showVsCodeWorkspaceEditor: true})}>
-                                                    <img src={vscodeLogo}/> Set VS Code workspace for {props.currentReview.projectPath}</Dropdown.Item>
-                                            </Dropdown.Menu>
-                                        </Dropdown>
-                                        : null}
-                                    </h3>
+                        <Header />
 
-                                    {this.state.showVsCodeWorkspaceEditor ? 
-                                    <VSCodeWorkspaceEditor vsCodeWorkspace={this.props.vsCodeWorkspace} save={(vsCodeWorkspace: string) => {
-                                        this.props.saveVSCodeWorkspace(vsCodeWorkspace);
-                                        this.setState({showVsCodeWorkspaceEditor: false});
-                                    }} />
-
-                                    : null}
-
-                                </Grid.Row>
-                                <Grid.Row>
-                                    <UserInfo
-                                        username={props.author.username}
-                                        name={props.author.name}
-                                        avatarUrl={props.author.avatarUrl}
-                                    />
-                                </Grid.Row>
-                            </Grid.Column>
-                        </Grid.Row>
                         <Grid.Row>
                             <Grid.Column>
                                 <ReviewInfoView />
                                 <Divider />
                             </Grid.Column>
                         </Grid.Row>
-                        <Grid.Row centered columns={1}>
+                        <Grid.Row columns={1}>
                             <Grid.Column>
-                                <Menu secondary id="summary-menu">
-                                    <Menu.Menu position='right'>
-                                        <Menu.Item>
-                                            <PublishButton />&nbsp;
-                                            <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
-                                            <Checkbox toggle label="Hide reviewed" onChange={changeHideReviewed} />&nbsp;
-
-                                        </Menu.Item>
-                                    </Menu.Menu>
-                                </Menu>
-                                
-                                <FileMatrix hideReviewed={this.state.hideReviewed}/>
+                                <Actions onHideReviewedChange={changeHideReviewed} />
                             </Grid.Column>
                         </Grid.Row>
-                        <Grid.Row>
+                        <Grid.Row columns={1}>
                             <Grid.Column>
-                                <CommentsView
-                                    discussionId="review"
-                                    discussions={discussions}
-                                    actions={commentActions}
-                                    unpublishedReplies={props.unpublishedReplies}
-                                    currentUser={props.currentUser}
-                                />
+                                <FileMatrix hideReviewed={this.state.hideReviewed} />
                             </Grid.Column>
                         </Grid.Row>
+                        <ReviewDiscussions />
                     </Grid>
 
                     <Divider />
 
-                    <RangeInfo
-                        filesToReview={props.currentReview.filesToReview}
-                        selectedFile={selectedFile}
-                        onSelectFileForView={selectNewFileForView}
-                        reviewFile={props.reviewFile}
-                        reviewedFiles={props.reviewedFiles}
-                        publishReview={props.publishReview}
-                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
+                    <File
+                        showFileHandler={this.showFileHandler}
                         reviewId={props.reviewId}
-                        fileComments={props.currentReview.fileDiscussions}
-                        startFileDiscussion={props.startFileDiscussion}
-                        unpublishedFileDiscussion={props.unpublishedFileDiscussion}
-                        commentActions={commentActions}
-                        pendingResolved={props.unpublishedResolvedDiscussions}
-                        unpublishedReplies={props.unpublishedReplies}
-                        currentUser={props.currentUser}
-                        markNonEmptyAsViewed={props.markNonEmptyAsViewed}
-                        vsCodeWorkspace={props.vsCodeWorkspace}
+                        fileId={props.fileId}
+                        history={props.history}
+                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
                     />
                 </CurrentReviewMode.Provider>
             </div>
@@ -335,43 +191,17 @@ const mapStateToProps = (state: RootState): StateProps => ({
     currentReview: state.review.currentReview,
     selectedFile: state.review.selectedFile,
     reviewedFiles: state.review.reviewedFiles,
-    unpublishedFileDiscussion: state.review.unpublishedFileDiscussions,
-    unpublishedReviewDiscussions: state.review.unpublishedReviewDiscussions,
-    unpublishedResolvedDiscussions: state.review.unpublishedResolvedDiscussions,
     author: state.review.currentReview.author,
-    unpublishedReplies: state.review.unpublishedReplies,
     reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer',
-    vsCodeWorkspace: state.review.vsCodeWorkspace
 });
 
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps): DispatchProps => ({
+const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
     selectFileForView: (fileId) => dispatch(selectFileForView({ fileId })),
     mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
-    reviewFile: {
-        review: (path) => dispatch(reviewFile({ path })),
-        unreview: (path) => dispatch(unreviewFile({ path })),
-    },
-    publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileId })),
-    startFileDiscussion: (fileId, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ fileId, lineNumber, content, needsResolution, currentUser })),
-    startReviewDiscussion: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
-    resolveDiscussion: (discussionId) => dispatch(resolveDiscussion({ discussionId })),
-    unresolveDiscussion: (discussionId) => dispatch(unresolveDiscussion({ discussionId })),
-    addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
-    editReply: (commentId, content) => dispatch(editUnpublishedComment({commentId, content})),
-    markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
-    removeUnpublishedComment: (commentId) => dispatch(removeUnpublishedComment({ commentId })),
-    saveVSCodeWorkspace: (vsCodeWorkspace: string) => dispatch(saveVSCodeWorkspace({ vsCodeWorkspace}))
 });
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps,
-    (stateProps: StateProps, dispatchProps: DispatchProps, ownProps: OwnProps) : Props => ({
-        ...ownProps,
-        ...stateProps,
-        ...dispatchProps,
-        startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatchProps.startFileDiscussion(path, lineNumber, content, needsResolution, stateProps.currentUser),
-        startReviewDiscussion: (content, needsResolution) => dispatchProps.startReviewDiscussion(content, needsResolution, stateProps.currentUser)
-    })
+    mapDispatchToProps
 )(reviewPage);
