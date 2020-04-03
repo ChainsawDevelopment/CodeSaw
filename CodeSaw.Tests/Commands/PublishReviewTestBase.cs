@@ -84,7 +84,8 @@ namespace CodeSaw.Tests.Commands
                 Content = $"FILE-{discussioId}",
                 FileId = fileId,
                 LineNumber = 10,
-                TargetRevisionId = revisionId
+                TargetRevisionId = revisionId,
+                State = DiscussionState.NeedsResolution
             };
         }
 
@@ -108,7 +109,7 @@ namespace CodeSaw.Tests.Commands
             return new NewReviewDiscussion
             {
                 Content = $"REVIEW-{discussionId}",
-                NeedsResolution = true,
+                State = DiscussionState.NeedsResolution,
                 TargetRevisionId = revisionId,
                 TemporaryId = $"REVIEW-{discussionId}"
             };

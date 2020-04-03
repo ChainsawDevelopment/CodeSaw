@@ -11,7 +11,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
     {
         public ClientFileId FileId { get; set; }
         public int LineNumber { get; set; }
-        public bool NeedsResolution { get; set; }
+        public DiscussionState State { get; set; }
         public string Content { get; set; }
         public string TemporaryId { get; set; }
         public RevisionId TargetRevisionId { get; set; }
@@ -57,7 +57,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
                     FileId = resolvedFileId,
                     File = PathPair.Make(prevEntry?.FileName ?? currentEntry.FileName, currentEntry.FileName),
                     LineNumber = discussion.LineNumber,
-                    State = discussion.NeedsResolution ? CommentState.NeedsResolution : CommentState.NoActionNeeded,
+                    State = discussion.State.AsCommentState(),
                     RootComment = new Comment
                     {
                         Id = commentId,

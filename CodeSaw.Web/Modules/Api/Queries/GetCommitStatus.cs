@@ -61,7 +61,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     Matrix = fileMatrix,
                     UnresolvedDiscussions = summary.UnresolvedDiscussions,
                     ResolvedDiscussions = summary.ResolvedDiscussions,
-                    Discussion = summary.Discussions
+                    Discussions = summary.Discussions
                 };
 
                 var commitStatus = new CommitStatus

@@ -1,24 +1,47 @@
 import * as React from "react";
 import * as showdown from "showdown"
 import Button from '@ui/elements/Button';
-import Checkbox, { CheckboxProps } from '@ui/modules/Checkbox';
 import UIComment from '@ui/views/Comment';
 import Form from '@ui/collections/Form';
 import Header from '@ui/elements/Header';
 import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment, Discussion } from "../../api/reviewer";
-import { IsCommentUnpublished } from './state';
+import { IsCommentUnpublished, DiscussionType } from './state';
 
 import "./commentsView.less";
 import { UserState } from "../../rootState";
+import Radio from '@ui/addons/Radio';
+import * as classNames from "classnames";
 
 export interface DiscussionActions {
-    addNew(content: string, needsResolution: boolean);
+    addNew(content: string, type: DiscussionType);
     addReply(parentId: string, content: string): void;
     editReply(commentId: string, content: string): void;
     removeUnpublishedComment(commentId: string): void;
     resolve(discussionId: string);
     unresolve(discussionId: string);
+}
+
+const DiscussionTypeSelector = (props: {
+    type: DiscussionType;
+    onChange: (type: DiscussionType) => void;
+}): JSX.Element => {
+    const names = {
+        [DiscussionType.Comment]: 'Comment',
+        [DiscussionType.NeedsResolution]: 'To fix',
+        [DiscussionType.GoodWork]: 'Good work! Grab potato!'
+    }
+
+    const { type, onChange } = props;
+
+    const Item = (props: { type: DiscussionType; }) => <Form.Field>
+        <Radio label={names[props.type]} checked={type == props.type} onChange={() => onChange(props.type)} />
+    </Form.Field>
+    return <>
+        <Item type={DiscussionType.Comment} />
+        <Item type={DiscussionType.NeedsResolution} />
+        <Item type={DiscussionType.GoodWork} />
+    </>;
 }
 
 interface Reply {
@@ -29,7 +52,7 @@ interface Reply {
 
 interface CommentsState {
     commentText: string;
-    needsResolution: boolean;
+    discussionType: DiscussionType;
     newDiscussionVisible: boolean;
 }
 
@@ -131,7 +154,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                 <Form.TextArea id={this.getEditTextAreaId()} onChange={onChangeEdit} value={this.state.editText} />
                 <Button onClick={() => this.props.actions.editReply(this.props.comment.id, this.state.editText)} primary>Update response</Button>
             </Form>
-            )
+        )
 
         const markdown = new showdown.Converter();
 
@@ -197,15 +220,15 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
             break;
     }
 
-    return (<div className={props.discussion.state === 'Resolved' ? 'read-only' : null}>
-                <CommentComponent
-                    comment={props.discussion.comment}
-                    statusComponent={status}
-                    actions={props.actions}
-                    note={props.note ? props.note(props.discussion) : null}
-                    readOnly={props.discussion.state === 'Resolved'}
-                />
-            </div>);
+    return (<div className={classNames({ 'read-only': props.discussion.state === 'Resolved', 'good-work': props.discussion.state === 'GoodWork' })}>
+        <CommentComponent
+            comment={props.discussion.comment}
+            statusComponent={status}
+            actions={props.actions}
+            note={props.note ? props.note(props.discussion) : null}
+            readOnly={props.discussion.state === 'Resolved' || props.discussion.state === 'GoodWork'}
+        />
+    </div>);
 };
 
 const mergeCommentsWithReplies = (
@@ -255,7 +278,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
 
         this.state = {
             commentText: '',
-            needsResolution: true,
+            discussionType: DiscussionType.NeedsResolution,
             newDiscussionVisible: false
         };
     }
@@ -277,23 +300,25 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
             this.setState({ commentText: data.value.toString() });
         };
 
-        const onChangeNeedsResolution = (event: React.FormEvent<HTMLInputElement>, data: CheckboxProps) => {
-            this.setState({ needsResolution: data.checked });
+        const onChangeType = (t: DiscussionType) => {
+            this.setState({ discussionType: t });
         };
 
         const addComment = () => {
-            this.props.actions.addNew(this.state.commentText, this.state.needsResolution);
-            this.setState({newDiscussionVisible: false});
+            this.props.actions.addNew(this.state.commentText, this.state.discussionType);
+            this.setState({ newDiscussionVisible: false });
         }
 
         const newDiscussion = <Form reply onSubmit={onSubmit}>
             <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
-            <Button onClick={addComment} secondary>Add Comment</Button>
-            {discussions.length > 0 ? <Button onClick={() => this.setState({newDiscussionVisible: false})} secondary>Cancel</Button> : null}
-            <Checkbox onChange={onChangeNeedsResolution} checked={this.state.needsResolution} label="Needs resolution" />
+            <Form.Group inline>
+                <Button onClick={addComment} secondary>Add Comment</Button>
+                {discussions.length > 0 ? <Button onClick={() => this.setState({ newDiscussionVisible: false })} secondary>Cancel</Button> : null}
+                <DiscussionTypeSelector type={this.state.discussionType} onChange={onChangeType} />
+            </Form.Group>
         </Form>
 
-        const showDiscussion = <Button className={"start-another-discussion"} onClick={() => this.setState({newDiscussionVisible: true})} basic >Start Another Discussion</Button>
+        const showDiscussion = <Button className={"start-another-discussion"} onClick={() => this.setState({ newDiscussionVisible: true })} basic >Start Another Discussion</Button>
 
         const selectDiscussionView = () => {
             if (this.props.replyOnly) {
@@ -303,7 +328,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
             if (discussions.length == 0 || this.state.newDiscussionVisible) {
                 return newDiscussion;
             }
-            
+
             return showDiscussion;
         }
 
@@ -318,3 +343,4 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
         );
     }
 }
+

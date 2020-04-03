@@ -27,6 +27,11 @@ function status(review) {
         state.reasons.push(`${summary.unresolved} discussions unresolved`);
     }
 
+    const goodWorkCount = review.discussions.filter(d => d.state === 'GoodWork').length;
+    if (goodWorkCount > 0) {
+        state.reasons.push(`${goodWorkCount} potatoes for good work`);
+    }
+
     return state;
 }
 

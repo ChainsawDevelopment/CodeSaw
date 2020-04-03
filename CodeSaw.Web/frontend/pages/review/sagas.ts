@@ -51,7 +51,7 @@ function* markNotChangedAsViewed() {
 
         for (const file of currentReview.filesToReview) {
             if (fileIndex % progressRefreshStep == 0) {
-                yield setOperationMessage(`Scanning for empty files: ${fileIndex+1}/${currentReview.filesToReview.length}`);
+                yield setOperationMessage(`Scanning for empty files: ${fileIndex + 1}/${currentReview.filesToReview.length}`);
                 yield delay(1);
             }
 
@@ -102,7 +102,7 @@ function* loadFileDiffSaga() {
 
     for (; ;) {
         const action: Action<{ fileId: FileId }> = yield take(selectFileForView);
-        
+
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: state.review.selectedFile.range,
@@ -132,14 +132,14 @@ function* loadReviewInfoSaga() {
     for (; ;) {
         const action: Action<{ reviewId: ReviewId, fileToPreload?: FileId }> = yield take(loadReviewInfo);
         yield startOperation();
-        
+
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const unpublishedInfo = getUnpublishedReview(action.payload.reviewId);
 
-        
+
         const vsCodeWorkspace = getReviewVSCodeWorkspace(action.payload.reviewId)
-     
+
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
         yield put(loadedReviewInfo({ info, unpublishedInfo, vsCodeWorkspace }));
@@ -184,14 +184,14 @@ function* publishReviewSaga() {
                 temporaryId: d.comment.id,
                 fileId: d.fileId,
                 lineNumber: d.lineNumber,
-                needsResolution: d.state == 'NeedsResolution',
+                state: d.state,
                 content: d.comment.content
             })),
             startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
                 targetRevisionId: d.revision,
                 temporaryId: d.comment.id,
                 content: d.comment.content,
-                needsResolution: d.state == 'NeedsResolution'
+                state: d.state,
             })),
             resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
             replies: s.review.unpublishedReplies,
@@ -215,7 +215,7 @@ function* publishReviewSaga() {
         }
 
         if (successfulPublish) {
-            yield put(clearUnpublishedReviewInfo({ reviewId: reviewSnapshot.reviewId}));
+            yield put(clearUnpublishedReviewInfo({ reviewId: reviewSnapshot.reviewId }));
         }
 
         yield put(loadReviewInfo({ reviewId: reviewSnapshot.reviewId, fileToPreload: action.payload.fileToLoad }));
@@ -251,8 +251,8 @@ function* mergePullRequestSaga() {
 }
 
 function* saveVSCodeWorkspaceSaga() {
-    for (;; ) {
-        const action: Action<{vsCodeWorkspace: string}> = yield take(saveVSCodeWorkspace);
+    for (; ;) {
+        const action: Action<{ vsCodeWorkspace: string }> = yield take(saveVSCodeWorkspace);
         const currentReviewId = yield select((s: RootState): ReviewId => s.review.currentReview.reviewId);
 
         saveReviewVSCodeWorkspace(currentReviewId, action.payload.vsCodeWorkspace);

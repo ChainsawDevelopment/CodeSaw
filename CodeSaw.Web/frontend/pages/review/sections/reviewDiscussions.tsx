@@ -51,7 +51,7 @@ export default connect(
         unpublishedReplies: state.review.unpublishedReplies,
     }),
     (dispatch: Dispatch) => ({
-        addNew: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
+        addNew: (content, type, currentUser) => dispatch(startReviewDiscussion({ content, type, currentUser })),
         discussionActions: {
             addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
             editReply: (commentId, content) => dispatch(editUnpublishedComment({ commentId, content })),
@@ -65,7 +65,7 @@ export default connect(
         ...dispatchProps,
         discussionActions: {
             ...dispatchProps.discussionActions,
-            addNew: (content, needsResolution) => dispatchProps.addNew(content, needsResolution, stateProps.currentUser),
+            addNew: (content, type) => dispatchProps.addNew(content, type, stateProps.currentUser),
         }
     })
 )(ReviewDiscussion);

@@ -3,7 +3,7 @@ import * as React from "react";
 import { FileView } from "./fileView";
 import { Dispatch } from "redux";
 import { RootState, UserState } from "@src/rootState";
-import { FileInfo, startFileDiscussion, startReviewDiscussion, replyToComment, editUnpublishedComment, removeUnpublishedComment, resolveDiscussion, unresolveDiscussion } from "../state";
+import { FileInfo, startFileDiscussion, startReviewDiscussion, replyToComment, editUnpublishedComment, removeUnpublishedComment, resolveDiscussion, unresolveDiscussion, DiscussionType } from "../state";
 import { DiscussionActions } from "../commentsView";
 import { FileId, FileDiscussion, CommentReply } from "@api/reviewer";
 
@@ -21,7 +21,7 @@ interface StateProps {
 
 interface DispatchProps {
     commentActions: DiscussionActions;
-    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, needsResolution: boolean): void;
+    startFileDiscussion(fileId: FileId, lineNumber: number, content: string, type: DiscussionType): void;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -49,8 +49,8 @@ export default connect(
         currentUser: state.currentUser,
     }),
     (dispatch: Dispatch) => ({
-        startFileDiscussion: (fileId, lineNumber, content, needsResolution, currentUser) => dispatch(startFileDiscussion({ fileId, lineNumber, content, needsResolution, currentUser })),
-        addNew: (content, needsResolution, currentUser) => dispatch(startReviewDiscussion({ content, needsResolution, currentUser })),
+        startFileDiscussion: (fileId, lineNumber, content, type, currentUser) => dispatch(startFileDiscussion({ fileId, lineNumber, content, type, currentUser })),
+        addNew: (content, type, currentUser) => dispatch(startReviewDiscussion({ content, type, currentUser })),
         commentActions: {
             addReply: (parentId, content) => dispatch(replyToComment({ parentId, content })),
             editReply: (commentId, content) => dispatch(editUnpublishedComment({ commentId, content })),
@@ -63,10 +63,10 @@ export default connect(
         ...stateProps,
         ...dispatchProps,
         ...ownProps,
-        startFileDiscussion: (path, lineNumber, content, needsResolution) => dispatchProps.startFileDiscussion(path, lineNumber, content, needsResolution, stateProps.currentUser),
+        startFileDiscussion: (path, lineNumber, content, type) => dispatchProps.startFileDiscussion(path, lineNumber, content, type, stateProps.currentUser),
         commentActions: {
             ...dispatchProps.commentActions,
-            addNew: (content, needsResolution) => dispatchProps.addNew(content, needsResolution, stateProps.currentUser),
+            addNew: (content, type) => dispatchProps.addNew(content, type, stateProps.currentUser),
         },
     })
 )(DiffContent);

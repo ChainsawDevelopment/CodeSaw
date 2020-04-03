@@ -12,10 +12,17 @@ import {
     RevisionId,
     FileId,
     DiffDiscussions,
+    CommentState,
 } from '../../api/reviewer';
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
 import * as _ from 'lodash'
+
+export enum DiscussionType {
+    Comment,
+    NeedsResolution,
+    GoodWork
+}
 
 export interface FileInfo {
     path: PathPairs.PathPair;
@@ -92,8 +99,8 @@ export interface MergePullRequestArgs {
 
 export const mergePullRequest = createAction<MergePullRequestArgs>('MERGE_PULL_REQUEST');
 
-export const startFileDiscussion = createAction<{ fileId: FileId; lineNumber: number; content: string; needsResolution: boolean, currentUser: UserState }>('START_FILE_DISCUSSION');
-export const startReviewDiscussion = createAction<{ content: string; needsResolution: boolean, currentUser: UserState }>('START_REVIEW_DISCUSSION');
+export const startFileDiscussion = createAction<{ fileId: FileId; lineNumber: number; content: string; type: DiscussionType; currentUser: UserState }>('START_FILE_DISCUSSION');
+export const startReviewDiscussion = createAction<{ content: string; type: DiscussionType; currentUser: UserState }>('START_REVIEW_DISCUSSION');
 
 export const unresolveDiscussion = createAction<{ discussionId: string }>('UNRESOLVE_DISCUSSION');
 export const resolveDiscussion = createAction<{ discussionId: string }>('RESOLVE_DISCUSSION');
@@ -413,6 +420,12 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         return null;
     }
 
+    const DISCUSSION_TYPE_TO_STATUS = {
+        [DiscussionType.Comment]: 'NoActionNeeded' as CommentState,
+        [DiscussionType.NeedsResolution]: 'NeedsResolution' as CommentState,
+        [DiscussionType.GoodWork]: 'GoodWork' as CommentState
+    }
+
     if (startFileDiscussion.match(action)) {
         return {
             ...state,
@@ -424,7 +437,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                     revision: state.selectedFile.fileToReview.current,
                     fileId: action.payload.fileId,
                     lineNumber: action.payload.lineNumber,
-                    state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                    state: DISCUSSION_TYPE_TO_STATUS[action.payload.type],
                     canResolve: true,
                     comment: {
                         author: action.payload.currentUser,
@@ -447,7 +460,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 {
                     id: `${UnpublishedCommentPrefixes.Review}${state.nextDiscussionCommentId}`,
                     revision: state.currentReview.headRevision,
-                    state: action.payload.needsResolution ? 'NeedsResolution' : 'NoActionNeeded',
+                    state: DISCUSSION_TYPE_TO_STATUS[action.payload.type],
                     canResolve: true,
                     comment: {
                         author: action.payload.currentUser,
