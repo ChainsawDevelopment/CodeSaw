@@ -274,6 +274,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             ...state,
             selectedFile: {
                 ...state.selectedFile,
+                diff: null,
                 range: {
                     previous: action.payload.previous,
                     current: action.payload.current
@@ -290,7 +291,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             remappedDiscussions.push({
                 ...discussion,
                 lineNumber: discussionRef.lineNumber,
-                revision: discussionRef.side == 'left' ? state.selectedFile.fileToReview.previous : state.selectedFile.fileToReview.current
+                revision: discussionRef.side == 'left' ? state.selectedFile.range.previous : state.selectedFile.range.current
             });
         }
 

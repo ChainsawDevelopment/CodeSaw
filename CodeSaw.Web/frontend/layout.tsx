@@ -25,7 +25,6 @@ import { ReviewId, FileId } from "./api/reviewer";
 import CurrentUser from './pages/user/User';
 import { RootState } from './rootState';
 import EnvMessages from './components/EnvMesssages';
-import Playground from './playground';
 
 const Home = () => (
     <span>
@@ -81,7 +80,6 @@ const Layout = (props: StateProps) => (
                 <Route exact path="/" component={Home} />
                 <Route path="/project/:projectId/review/:id/:fileId?" component={Review} />
                 <Route exact path="/admin" component={AdminPage} />
-                <Route exact path="/test" component={Playground} />
             </ConnectedSwitch>
         </Container>
 
