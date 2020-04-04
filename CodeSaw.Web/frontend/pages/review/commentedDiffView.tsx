@@ -54,7 +54,6 @@ const splitComments = (props: Props): LineComments => {
     const allCommentsUnmatched = props.leftSideRevision == props.rightSideRevision;
 
     for (let fileComment of props.comments) {
-
         if (!allCommentsUnmatched && (fileComment.revision == props.rightSideRevision || fileComment.revision == props.leftSideRevision)) {
             let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
             lineComments[side].set(fileComment.lineNumber, [
