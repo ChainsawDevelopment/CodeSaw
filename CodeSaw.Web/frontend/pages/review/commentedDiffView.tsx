@@ -25,6 +25,7 @@ interface CommentProps {
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
+    replyOnly: boolean;
 }
 
 interface CalculatedProps {
@@ -97,6 +98,7 @@ const buildCommentView = (props: Props, lineNumber: number, discussions: Discuss
             actions={commentActions}
             unpublishedReplies={props.unpublishedReplies}
             currentUser={props.currentUser}
+            replyOnly={props.replyOnly}
         />
     )
 };
