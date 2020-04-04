@@ -4,7 +4,7 @@ import { Menu } from "semantic-ui-react";
 import { PublishButton } from "../PublishButton";
 import ChangedFileTreePopup from "../fileTreePopup";
 import { RootState } from "@src/rootState";
-import { FileToReview, FileId, FileDiscussion, ReviewId, ReviewInfo } from "@api/reviewer";
+import { FileToReview, FileId, FileDiscussion, ReviewId, ReviewInfo, RevisionId } from "@api/reviewer";
 import { FileInfo, reviewFile, unreviewFile, changeFileRange } from "../state";
 import { SelectFileForViewHandler } from "../selectFile";
 import FileList from '@src/fileList';
@@ -37,7 +37,7 @@ interface StateProps {
 interface DispatchProps {
     review(file: PathPairs.PathPair): void;
     unreview(file: PathPairs.PathPair): void;
-    changeFileRange(previous: { head: string; base: string }, current: { head: string; base: string }): void;
+    changeFileRange(previous: RevisionId, current: RevisionId): void;
 }
 
 type Props = StateProps & DispatchProps & OwnProps;
@@ -80,34 +80,30 @@ const DiffHeader = (props: Props): JSX.Element => {
         }
 
         const revisions = [
-            { number: '&perp;', head: props.base, base: props.base },
+            { label: '&perp;', id: 'base' as RevisionId },
             ...props.revisions.map(r => ({
-                ...r,
-                number: r.number.toString(),
+                label: r.number.toString(),
+                id: r.number as RevisionId
             }))
         ];
 
         if (props.hasProvisional) {
             revisions.push({
-                number: 'P',
-                head: props.head,
-                base: props.base
+                label: 'P',
+                id: 'provisional' as RevisionId
             });
         }
 
-        const startIndex = revisions.findIndex(r => r.base == props.selectedFile.range.previous.base && r.head == props.selectedFile.range.previous.head);
-        const endIndex = revisions.findIndex(r => r.base == props.selectedFile.range.current.base && r.head == props.selectedFile.range.current.head);
+        const startIndex = revisions.findIndex(r => r.id == props.selectedFile.range.previous);
+        let endIndex = revisions.findIndex(r => r.id == props.selectedFile.range.current);
+        if (endIndex == -1 && props.selectedFile.range.current == props.head) {
+            endIndex = revisions.findIndex(r => r.id == 'provisional');
+        }
 
-        const selectors = revisions.map(r => <span key={r.number} dangerouslySetInnerHTML={{ __html: r.number }} />)
+        const selectors = revisions.map(r => <span key={r.id} dangerouslySetInnerHTML={{ __html: r.label }} />)
 
         const onChange = (s: number, e: number) => {
-            props.changeFileRange({
-                base: revisions[s].base,
-                head: revisions[s].head
-            }, {
-                base: revisions[e].base,
-                head: revisions[e].head
-            });
+            props.changeFileRange(revisions[s].id, revisions[e].id);
         }
 
         menuItems.push(<Menu.Item fitted key="revision-select">

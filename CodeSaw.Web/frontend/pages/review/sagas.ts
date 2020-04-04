@@ -109,7 +109,10 @@ function* loadFileDiffSaga() {
 
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
-            range: state.review.selectedFile.range,
+            range: {
+                previous: resolveRevision(state.review.currentReview, state.review.selectedFile.range.previous),
+                current: resolveRevision(state.review.currentReview, state.review.selectedFile.range.current),
+            },
             path: state.review.selectedFile.fileToReview.diffFile,
             fileId: state.review.selectedFile.fileId
         }));
