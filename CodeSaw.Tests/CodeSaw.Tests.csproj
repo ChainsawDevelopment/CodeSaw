@@ -96,6 +96,7 @@
     <None Remove="DiffViewData\DeleteAtEnd\previous.txt" />
     <None Remove="DiffViewData\AllDelete\patches.txt" />
     <None Remove="DiffViewData\AllDelete\patches_margin.txt" />
+    <None Remove="FourWayDiffData\2020_04_06_case1\expected.txt" />
     <None Remove="FourWayDiffData\Case1\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample1\expected.txt" />
     <None Remove="FourWayDiffData\CodeSample2\expected.txt" />

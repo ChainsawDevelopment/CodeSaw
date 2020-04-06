@@ -1,0 +1,4 @@
+        OperationsTest.cpp
+        gpio_watchdog/GpioWatchdogTest.cpp
+        hierarchical_watchdog/HierarchicalWatchdogTest.cpp
+)
