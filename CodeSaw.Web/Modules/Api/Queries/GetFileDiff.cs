@@ -121,6 +121,12 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         .WhenAll())
                     .ToDictionary(x => x.File.Commit, x => x.Content);
 
+                if (contents[previousCommit] == "" && query.OldPath != query.NewPath)
+                {
+                    contents[previousCommit] =
+                        (await _api.GetFileContent(query.ReviewId.ProjectId, previousCommit, query.NewPath)).DecodeString();
+                }
+
                 foreach (var content in contents)
                 {
                     if (IsBinaryFile(content.Value))
