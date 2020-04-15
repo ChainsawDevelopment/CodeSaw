@@ -25,6 +25,7 @@ interface CommentProps {
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
+    replyOnly: boolean;
 }
 
 interface CalculatedProps {
@@ -53,7 +54,6 @@ const splitComments = (props: Props): LineComments => {
     const allCommentsUnmatched = props.leftSideRevision == props.rightSideRevision;
 
     for (let fileComment of props.comments) {
-
         if (!allCommentsUnmatched && (fileComment.revision == props.rightSideRevision || fileComment.revision == props.leftSideRevision)) {
             let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
             lineComments[side].set(fileComment.lineNumber, [
@@ -97,6 +97,7 @@ const buildCommentView = (props: Props, lineNumber: number, discussions: Discuss
             actions={commentActions}
             unpublishedReplies={props.unpublishedReplies}
             currentUser={props.currentUser}
+            replyOnly={props.replyOnly}
         />
     )
 };

@@ -1,0 +1,43 @@
+.selector {
+    display: flex;
+    
+    .selector-item {
+        &:first-child {
+            border-left: solid thin black;
+        }
+
+        cursor: pointer;
+
+        border-right: solid thin black;
+        border-top: solid thin black;
+        border-bottom: solid thin black;
+        
+        &.start .wrapper {
+            border-left: solid blue thin;
+            border-top: solid blue thin;
+            border-bottom: solid blue thin;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+        &.end .wrapper {
+            border-right: solid blue thin;
+            border-top: solid blue thin;
+            border-bottom: solid blue thin;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        &.middle .wrapper {
+            border-top: solid blue thin;
+            border-bottom: solid blue thin;
+        }
+
+        .wrapper {
+            border: solid transparent thin;
+            padding: 5px;
+            vertical-align: middle;
+            text-align: center;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+    }
+}

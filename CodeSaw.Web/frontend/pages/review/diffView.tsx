@@ -59,7 +59,6 @@ const mapHunkToView = (hunk: Hunk) => {
             classNames: classNames({
                 'base-change': line.classification == 'BaseChange' && line.operation != 'Equal',
                 'review-change': line.classification == 'ReviewChange' && line.operation != 'Equal',
-                'potato-badge': line.text.indexOf('os_mock') >= 0,
             })
         });
 
@@ -229,7 +228,7 @@ const diffView = (props: Props) => {
             oldLines: 0,
             newStart: 1,
             newLines: 0,
-            content: null,
+            content: '',
             changes: []
         });
     }

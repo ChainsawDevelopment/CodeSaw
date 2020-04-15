@@ -1,4 +1,4 @@
-import { take, put, select, delay } from "redux-saga/effects";
+import { take, put, select, delay, race } from "redux-saga/effects";
 import {
     selectFileForView,
     loadedFileDiff,
@@ -15,7 +15,8 @@ import {
     markEmptyFilesAsReviewed,
     resolveRevision,
     saveVSCodeWorkspace,
-    loadedVsCodeWorkspace
+    loadedVsCodeWorkspace,
+    changeFileRange
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
@@ -101,11 +102,17 @@ function* loadFileDiffSaga() {
     const api = new ReviewerApi();
 
     for (; ;) {
-        const action: Action<{ fileId: FileId }> = yield take(selectFileForView);
+        const action = yield race({
+            selectFileForView: take(selectFileForView),
+            changeFielRange: take(changeFileRange)
+        });
 
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
-            range: state.review.selectedFile.range,
+            range: {
+                previous: resolveRevision(state.review.currentReview, state.review.selectedFile.range.previous),
+                current: resolveRevision(state.review.currentReview, state.review.selectedFile.range.current),
+            },
             path: state.review.selectedFile.fileToReview.diffFile,
             fileId: state.review.selectedFile.fileId
         }));

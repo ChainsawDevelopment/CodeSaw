@@ -30,14 +30,8 @@ export interface FileInfo {
     fileId: FileId;
     fileToReview: FileToReview;
     range: {
-        previous: {
-            base: string;
-            head: string;
-        };
-        current: {
-            base: string;
-            head: string
-        };
+        previous: RevisionId;
+        current: RevisionId;
     };
     discussions: FileDiscussion[];
 }
@@ -67,6 +61,7 @@ export interface ReviewState extends UnpublishedReview {
 const createAction = actionCreatorFactory('REVIEW');
 
 export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
+export const changeFileRange = createAction<{ previous: RevisionId; current: RevisionId; }>('CHANGE_FILE_RANGE');
 export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_REVIEWED');
 
 export const loadedFileDiff = createAction<{ diff: FileDiff; remappedDiscussions: DiffDiscussions }>('LOADED_FILE_DIFF');
@@ -174,6 +169,10 @@ export const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
         return { base: state.baseCommit, head: state.headCommit };
     }
 
+    if (revision == 'provisional') {
+        return { base: state.baseCommit, head: state.headCommit };
+    }
+
     const r = parseInt(revision.toString());
 
     const pastRevision = state.pastRevisions.find(x => x.number == r);
@@ -262,10 +261,24 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 path: file.reviewFile,
                 fileToReview: file,
                 range: {
-                    previous: resolveRevision(state.currentReview, file.previous),
-                    current: resolveRevision(state.currentReview, file.current)
+                    previous: file.previous,
+                    current: file.current
                 },
                 discussions: []
+            }
+        };
+    }
+
+    if (changeFileRange.match(action)) {
+        return {
+            ...state,
+            selectedFile: {
+                ...state.selectedFile,
+                diff: null,
+                range: {
+                    previous: action.payload.previous,
+                    current: action.payload.current
+                }
             }
         };
     }
@@ -278,7 +291,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             remappedDiscussions.push({
                 ...discussion,
                 lineNumber: discussionRef.lineNumber,
-                revision: discussionRef.side == 'left' ? state.selectedFile.fileToReview.previous : state.selectedFile.fileToReview.current
+                revision: discussionRef.side == 'left' ? state.selectedFile.range.previous : state.selectedFile.range.current
             });
         }
 
