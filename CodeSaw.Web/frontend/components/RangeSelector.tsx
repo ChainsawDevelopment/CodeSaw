@@ -11,14 +11,16 @@ const Block = (props: {
     selectOver: () => void;
     children: any;
 }): JSX.Element => {
-    const onDown = (e: React.SyntheticEvent) => {
-        props.startSelecting();
-        e.preventDefault();
+    const onDown = (e: React.MouseEvent) => {
+        if (e.button == 0) {
+            props.startSelecting();
+            e.preventDefault();
+        }
     };
 
-    const onUp = () => {
+    const onUp = whenSelecting((e: React.MouseEvent) => {
         props.stopSelecting();
-    }
+    });
 
     function whenSelecting<T>(value: T): T {
         if (props.isSelecting) {
