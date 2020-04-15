@@ -78,7 +78,7 @@ function* markNotChangedAsViewed() {
             const diff: FileDiff = yield api.getDiff(currentRange.reviewId, currentRange.range, currentRange.path);
             const remappedDiscussions: DiffDiscussions = yield api.getDiffDiscussions(currentRange.reviewId, currentRange.range, currentRange.fileId, currentRange.path.newPath);
 
-            const isEmpty = diff.hunks.length == 0 && remappedDiscussions.remapped.length == 0;
+            const isEmpty = (diff.hunks == null || diff.hunks.length == 0) && remappedDiscussions.remapped.length == 0;
 
             if (isEmpty) {
                 console.log({ message: "Marking automatically as reviewed", file: file });
