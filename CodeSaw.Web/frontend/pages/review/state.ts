@@ -185,9 +185,10 @@ export const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
 
 
 export const upgradeUnpublishedReview = (current: ReviewInfo, review: UnpublishedReview): UnpublishedReview => {
-    const knownRevisions = current.pastRevisions.map(r => r.number as RevisionId);
+    const knownRevisions = current.pastRevisions.map(r => r.number.toString() as RevisionId);
+
     if (current.hasProvisionalRevision) {
-        knownRevisions.push(current.headRevision as RevisionId);
+        knownRevisions.push(current.headRevision.toString() as RevisionId);
     }
 
     const fileDiscussions = review.unpublishedFileDiscussions.map(fd => {
