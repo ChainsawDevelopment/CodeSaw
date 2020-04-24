@@ -17,6 +17,125 @@ using RestSharp.Deserializers;
 
 namespace CodeSaw.GitLab
 {
+    public static class GitLabApiFactory
+    {
+        public static GitLabApi CreateGitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl, IMemoryCache cache, bool readOnly)
+        {
+            if (readOnly)
+            {
+                return new ReadOnlyGitLabApi(serverUrl, accessTokenSource, proxyUrl, cache);
+            }
+            else
+            {
+                return new GitLabApi(serverUrl, accessTokenSource, proxyUrl, cache);
+            }
+        }
+    }
+
+    public class ReadOnlyGitLabApi : GitLabApi
+    {        
+        public ReadOnlyGitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl, IMemoryCache cache) 
+        : base(serverUrl, accessTokenSource, proxyUrl, cache)
+        {
+            
+        }
+
+        private Task NotAllowed()
+        {
+            throw new InvalidOperationException("This operation is not allowed in read-only mode");            
+        }
+
+        public override async Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task AddProjectHook(int projectId, string url, HookEvents hookEvents)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task ApproveMergeRequest(int projectId, int mergeRequestIid)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task CreateRef(int projectId, string name, string commit)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)
+        {
+            return await base.GetAwardEmojis(projectId, mergeRequestIid);
+        }
+
+        public override async Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha)
+        {
+            return await base.GetBuildStatuses(projectId, commitSha);
+        }
+
+        public override async Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha)
+        {
+            return await base.GetDiff(projectId, prevSha, currentSha);
+        }
+
+        public override async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
+        {
+            return await base.GetFileContent(projectId, commitHash, file);
+        }
+
+        public override async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
+        {
+            return await base.GetMergeRequestInfo(projectId, mergeRequestId);
+        }
+
+        public override async Task<List<ProjectInfo>> GetProjects()
+        {
+            return await base.GetProjects();
+        }
+
+        public override async Task<Paged<MergeRequest>> MergeRequests(MergeRequestSearchArgs args)
+        {
+            return await base.MergeRequests(args);
+        }
+
+        public override async Task<ProjectInfo> Project(int projectId)
+        {
+            return await base.Project(projectId);
+        }
+
+        public override async Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task SetCommitStatus(int projectId, CommitStatus status)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task UnapproveMergeRequest(int projectId, int mergeRequestIid)
+        {
+            await NotAllowed();
+        }
+
+        public override async Task UpdateDescription(MergeRequest mergeRequest)
+        {
+            await NotAllowed();
+        }
+    }
+
     public class GitLabApi : IRepository
     {
         private readonly IMemoryCache _cache;
@@ -54,7 +173,7 @@ namespace CodeSaw.GitLab
             _client.AddHandler("application/json", new NewtonsoftDeserializer(serializer));
         }
 
-        public async Task<Paged<MergeRequest>> MergeRequests(MergeRequestSearchArgs args)
+        public virtual async Task<Paged<MergeRequest>> MergeRequests(MergeRequestSearchArgs args)
         {
             var request = new RestRequest("/merge_requests", Method.GET)
                 .AddQueryParameter("state", args.State)
@@ -95,25 +214,25 @@ namespace CodeSaw.GitLab
             };
         }
 
-        public async Task<ProjectInfo> Project(int projectId)
+        public virtual async Task<ProjectInfo> Project(int projectId)
         {
             return await new RestRequest($"/projects/{projectId}", Method.GET)
                 .Execute<ProjectInfo>(_client);
         }
 
-        public async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
+        public virtual async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
         {
             return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}", Method.GET)
                 .Execute<MergeRequest>(_client);
         }
 
-        public async Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha)
+        public virtual async Task<List<FileDiff>> GetDiff(int projectId, string prevSha, string currentSha)
         {
             var cacheKey = $"GITLAB_DIFF_{projectId}_{prevSha}_{currentSha}";
 
             if (_cache.TryGetValue(cacheKey, out var cachedDiff))
             {
-                return (List<FileDiff>) cachedDiff;
+                return (List<FileDiff>)cachedDiff;
             }
 
             var fileDiffs = await new RestRequest($"/projects/{projectId}/repository/compare", Method.GET)
@@ -128,13 +247,13 @@ namespace CodeSaw.GitLab
             return fileDiffs;
         }
 
-        public async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
+        public virtual async Task<byte[]> GetFileContent(int projectId, string commitHash, string file)
         {
             var cacheKey = $"GITLAB_FILE_{projectId}_{commitHash}_{file}";
 
             if (_cache.TryGetValue(cacheKey, out var cachedContent))
             {
-                return (byte[]) cachedContent;
+                return (byte[])cachedContent;
             }
 
             var request = new RestRequest($"/projects/{projectId}/repository/files/{Uri.EscapeDataString(file)}/raw", Method.GET)
@@ -154,8 +273,8 @@ namespace CodeSaw.GitLab
                     throw new GitLabApiFailedException(request, response);
             }
         }
-        
-        public async Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)
+
+        public virtual async Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)
         {
             var request = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestId}/merge", Method.PUT)
                 .AddQueryParameter("should_remove_source_branch", shouldRemoveBranch ? "true" : "false");
@@ -168,7 +287,7 @@ namespace CodeSaw.GitLab
             if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.MethodNotAllowed && response.StatusCode != HttpStatusCode.NotAcceptable)
             {
                 throw new GitLabApiFailedException(
-                    $"Request {request.Method} {request.Resource} failed with {(int) response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
+                    $"Request {request.Method} {request.Resource} failed with {(int)response.StatusCode} {response.StatusDescription}\nError: {response.ErrorMessage}");
             }
 
             if (response.StatusCode == HttpStatusCode.MethodNotAllowed)
@@ -188,12 +307,12 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task<Tag> GetRef(int projectId, string tagName)
+        public virtual async Task<Tag> GetRef(int projectId, string tagName)
         {
             return await new RestRequest($"/projects/{projectId}/repository/tags/{Uri.EscapeDataString(tagName)}", Method.GET).Execute<Tag>(_client);
         }
 
-        public async Task CreateRef(int projectId, string name, string commit)
+        public virtual async Task CreateRef(int projectId, string name, string commit)
         {
             var createTagRequest = new RestRequest($"/projects/{projectId}/repository/tags", Method.POST)
                 .AddJsonBody(new
@@ -207,7 +326,7 @@ namespace CodeSaw.GitLab
             if (RrefAlreadyExists(createTagResponse))
             {
                 var existingTag = await GetRef(projectId, name);
-                if (existingTag.Target != commit) 
+                if (existingTag.Target != commit)
                 {
                     // This may happen if there are concurrent requests to remeber the same revision
                     throw new ExistingRefConflictException(projectId, name, commit);
@@ -219,10 +338,10 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody)
+        public virtual async Task CreateNewMergeRequestNote(int projectId, int mergeRequestIid, string noteBody)
         {
             var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/notes", Method.POST)
-                .AddJsonBody(new {body = noteBody});
+                .AddJsonBody(new { body = noteBody });
 
             var restResponse = await createNoteRequest.Execute(_client);
 
@@ -232,7 +351,7 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task UpdateDescription(MergeRequest mergeRequest)
+        public virtual async Task UpdateDescription(MergeRequest mergeRequest)
         {
             var updateDescriptionRequest = new RestRequest($"/projects/{mergeRequest.ProjectId}/merge_requests/{mergeRequest.Id}", Method.PUT)
                 .AddJsonBody(new { description = mergeRequest.Description });
@@ -244,7 +363,7 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task SetCommitStatus(int projectId, CommitStatus status)
+        public virtual async Task SetCommitStatus(int projectId, CommitStatus status)
         {
             await new RestRequest($"/projects/{projectId}/statuses/{status.Commit}", Method.POST)
                 .AddJsonBody(new
@@ -257,14 +376,14 @@ namespace CodeSaw.GitLab
                 .Execute(_client);
         }
 
-        public async Task<List<ProjectInfo>> GetProjects()
+        public virtual async Task<List<ProjectInfo>> GetProjects()
         {
             var result = await Paged<ProjectInfo>(new RestRequest("/projects"));
 
             return result;
         }
 
-        public async Task AddProjectHook(int projectId, string url, HookEvents hookEvents)
+        public virtual async Task AddProjectHook(int projectId, string url, HookEvents hookEvents)
         {
             await new RestRequest($"/projects/{projectId}/hooks", Method.POST)
                 .AddJsonBody(new
@@ -277,7 +396,7 @@ namespace CodeSaw.GitLab
                 .Execute(_client);
         }
 
-        public async Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType)
+        public virtual async Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType)
         {
             var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji", Method.POST)
                 .AddQueryParameter("name", emojiType.ToString().ToLower());
@@ -290,7 +409,7 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId)
+        public virtual async Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId)
         {
             var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji/{awardEmojiId}", Method.DELETE);
 
@@ -302,7 +421,7 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha)
+        public virtual async Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha)
         {
             var statuses = await new RestRequest($"/projects/{projectId}/repository/commits/{commitSha}/statuses")
                 .Execute<List<GitlabBuildStatus>>(_client);
@@ -316,12 +435,12 @@ namespace CodeSaw.GitLab
             }).ToList();
         }
 
-        public async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)
+        public virtual async Task<List<AwardEmoji>> GetAwardEmojis(int projectId, int mergeRequestIid)
         {
             return await new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/award_emoji").Execute<List<AwardEmoji>>(_client);
         }
 
-        public async Task ApproveMergeRequest(int projectId, int mergeRequestIid)
+        public virtual async Task ApproveMergeRequest(int projectId, int mergeRequestIid)
         {
             var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/approve ", Method.POST);
 
@@ -333,7 +452,7 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task UnapproveMergeRequest(int projectId, int mergeRequestIid)
+        public virtual async Task UnapproveMergeRequest(int projectId, int mergeRequestIid)
         {
             var createNoteRequest = new RestRequest($"/projects/{projectId}/merge_requests/{mergeRequestIid}/unapprove ", Method.POST);
 
@@ -345,7 +464,7 @@ namespace CodeSaw.GitLab
             }
         }
 
-        public async Task<List<T>> Paged<T>(RestRequest request)
+        public virtual async Task<List<T>> Paged<T>(RestRequest request)
         {
             var result = new List<T>();
 
@@ -446,7 +565,7 @@ namespace CodeSaw.GitLab
 
         private object ExtractCanConfigureHooksForProject(JToken arg)
         {
-            var obj = (JObject) arg;
+            var obj = (JObject)arg;
 
             var projectAccess = obj.Property("project_access").Value.Value<JObject>()?.Property("access_level").Value.Value<int>();
             var groupAccess = obj.Property("group_access").Value.Value<JObject>()?.Property("access_level").Value.Value<int>();

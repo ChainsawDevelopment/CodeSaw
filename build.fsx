@@ -85,7 +85,7 @@ Target.create "Watch" (fun _ ->
         (fun proc ->
             {proc with
                 FileName = "dotnet"
-                Arguments = "watch run -new_console:t:\"Web (watch)\""
+                Arguments = "watch run -new_console:sH:t:web"
                 WorkingDirectory = root </> "CodeSaw.Web"
             } 
             |> Process.setEnvironmentVariable "ASPNETCORE_ENVIRONMENT" "development"
@@ -96,7 +96,7 @@ Target.create "Watch" (fun _ ->
         (fun proc ->
             {proc with
                 FileName = yarnExe
-                Arguments = "webpack-dev-server --config webpack.config.js -new_console:t:webpack"
+                Arguments = "webpack-dev-server --config webpack.config.js -new_console:sH:t:webpack"
                 WorkingDirectory = root
             }
         )

@@ -4,13 +4,14 @@ import { Menu } from "semantic-ui-react";
 import { PublishButton } from "../PublishButton";
 import ChangedFileTreePopup from "../fileTreePopup";
 import { RootState } from "@src/rootState";
-import { FileToReview, FileId, FileDiscussion, ReviewId } from "@api/reviewer";
-import { FileInfo, reviewFile, unreviewFile } from "../state";
+import { FileToReview, FileId, FileDiscussion, ReviewId, ReviewInfo, RevisionId } from "@api/reviewer";
+import { FileInfo, reviewFile, unreviewFile, changeFileRange } from "../state";
 import { SelectFileForViewHandler } from "../selectFile";
 import FileList from '@src/fileList';
 import * as RIMenu from './rangeInfo_menu';
 import * as PathPairs from "@src/pathPair";
 import { Dispatch } from "redux";
+import RangeSelector from "@src/components/RangeSelector";
 
 interface OwnProps {
     onSelectFileForView: SelectFileForViewHandler;
@@ -23,11 +24,20 @@ interface StateProps {
     fileComments: FileDiscussion[];
     reviewId: ReviewId;
     vsCodeWorkspace: string;
+    revisions: {
+        number: number;
+        head: string;
+        base: string;
+    }[];
+    hasProvisional: boolean;
+    base: string;
+    head: string;
 }
 
 interface DispatchProps {
     review(file: PathPairs.PathPair): void;
     unreview(file: PathPairs.PathPair): void;
+    changeFileRange(previous: RevisionId, current: RevisionId): void;
 }
 
 type Props = StateProps & DispatchProps & OwnProps;
@@ -68,6 +78,39 @@ const DiffHeader = (props: Props): JSX.Element => {
         if ((props.vsCodeWorkspace || '').length > 0) {
             menuItems.push(<RIMenu.OpenVSCode key="vscode-diff" workspace={props.vsCodeWorkspace} path={props.selectedFile.path} />)
         }
+
+        const revisions = [
+            { label: '&perp;', id: 'base' as RevisionId },
+            ...props.revisions.map(r => ({
+                label: r.number.toString(),
+                id: r.number as RevisionId
+            }))
+        ];
+
+        if (props.hasProvisional) {
+            revisions.push({
+                label: 'P',
+                id: 'provisional' as RevisionId
+            });
+        }
+
+        const startIndex = revisions.findIndex(r => r.id == props.selectedFile.range.previous);
+        let endIndex = revisions.findIndex(r => r.id == props.selectedFile.range.current);
+        if (endIndex == -1 && props.selectedFile.range.current == props.head) {
+            endIndex = revisions.findIndex(r => r.id == 'provisional');
+        }
+
+        const selectors = revisions.map(r => <span key={r.id} dangerouslySetInnerHTML={{ __html: r.label }} />)
+
+        const onChange = (s: number, e: number) => {
+            props.changeFileRange(revisions[s].id, revisions[e].id);
+        }
+
+        menuItems.push(<Menu.Item fitted key="revision-select">
+            <RangeSelector start={startIndex} end={endIndex} onChange={onChange}>
+                {selectors}
+            </RangeSelector>
+        </Menu.Item>);
     }
 
     const selectableFiles = props.filesToReview.map(i => ({ id: i.fileId, name: i.reviewFile }));
@@ -100,10 +143,15 @@ export default connect(
         reviewedFiles: state.review.reviewedFiles,
         fileComments: state.review.currentReview.fileDiscussions,
         vsCodeWorkspace: state.review.vsCodeWorkspace,
-        reviewId: state.review.currentReview.reviewId
+        reviewId: state.review.currentReview.reviewId,
+        revisions: state.review.currentReview.pastRevisions,
+        hasProvisional: state.review.currentReview.hasProvisionalRevision,
+        head: state.review.currentReview.headCommit,
+        base: state.review.currentReview.baseCommit
     }),
     (dispatch: Dispatch): DispatchProps => ({
         review: (path) => dispatch(reviewFile({ path })),
         unreview: (path) => dispatch(unreviewFile({ path })),
+        changeFileRange: (previous, current) => dispatch(changeFileRange({ previous, current }))
     })
 )(DiffHeader);

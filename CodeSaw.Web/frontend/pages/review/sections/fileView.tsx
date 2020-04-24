@@ -56,7 +56,8 @@ export class FileView extends React.Component<FileViewProps, { visibleCommentLin
         });
 
         setTimeout(() => {
-            document.getElementById(getNewDiscussionTextAreaId(line.toString())).focus();
+            const el = document.getElementById(getNewDiscussionTextAreaId(line.toString()));
+            if (el) { el.focus(); }
         }, 0);
     }
 
@@ -94,8 +95,8 @@ export class FileView extends React.Component<FileViewProps, { visibleCommentLin
                         diffInfo={file.diff}
                         comments={fileDiscussions.concat(unpublishedDiscussion)}
                         commentActions={commentActions}
-                        leftSideRevision={file.fileToReview.previous}
-                        rightSideRevision={file.fileToReview.current}
+                        leftSideRevision={file.range.previous}
+                        rightSideRevision={file.range.current}
                         visibleCommentLines={this.state.visibleCommentLines}
                         lineCommentsActions={lineCommentsActions}
                         pendingResolved={this.props.pendingResolved}
@@ -104,6 +105,7 @@ export class FileView extends React.Component<FileViewProps, { visibleCommentLin
                         contents={this.props.file.diff.contents.review}
                         type={diffTypes[this.props.file.fileToReview.changeType]}
                         language={language}
+                        replyOnly={!(file.fileToReview.current == file.range.current || file.range.current == 'provisional')}
                     />
                     : null}
             </span>

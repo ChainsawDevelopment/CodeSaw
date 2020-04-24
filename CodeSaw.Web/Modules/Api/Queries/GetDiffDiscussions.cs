@@ -113,6 +113,11 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         Comment = discussion.RootComment.Content
                     };
 
+                if(headRevision!= null)
+                {
+                    q = q.Where(x => x.RevisionNo <= headRevision.RevisionNumber);
+                }
+
                 var discussions = q.ToList();
 
                 var remapped = new List<RemappedDiscussion>();
