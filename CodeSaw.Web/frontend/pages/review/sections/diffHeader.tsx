@@ -4,7 +4,7 @@ import { Menu } from "semantic-ui-react";
 import { PublishButton } from "../PublishButton";
 import ChangedFileTreePopup from "../fileTreePopup";
 import { RootState } from "@src/rootState";
-import { FileToReview, FileId, FileDiscussion, ReviewId, ReviewInfo, RevisionId } from "@api/reviewer";
+import { FileToReview, FileId, FileDiscussion, ReviewId } from "@api/reviewer";
 import { FileInfo, reviewFile, unreviewFile, changeFileRange } from "../state";
 import { SelectFileForViewHandler } from "../selectFile";
 import FileList from '@src/fileList';
@@ -12,6 +12,7 @@ import * as RIMenu from './rangeInfo_menu';
 import * as PathPairs from "@src/pathPair";
 import { Dispatch } from "redux";
 import RangeSelector from "@src/components/RangeSelector";
+import { LocalRevisionId, RevisionId } from "@api/revisionId";
 
 interface OwnProps {
     onSelectFileForView: SelectFileForViewHandler;
@@ -37,10 +38,22 @@ interface StateProps {
 interface DispatchProps {
     review(file: PathPairs.PathPair): void;
     unreview(file: PathPairs.PathPair): void;
-    changeFileRange(previous: RevisionId, current: RevisionId): void;
+    changeFileRange(previous: LocalRevisionId, current: LocalRevisionId): void;
 }
 
 type Props = StateProps & DispatchProps & OwnProps;
+
+const getSelector = (revision: LocalRevisionId) => {
+    if(RevisionId.isBase(revision)) {
+        return <span key='base' dangerouslySetInnerHTML={{ __html: '&perp;' }} />;
+    }
+
+    if(RevisionId.isProvisional(revision)) {
+        return <span key='provisional'>P</span>;
+    }
+
+    return <span key={revision.revision}>{revision.revision}</span>;
+}
 
 const DiffHeader = (props: Props): JSX.Element => {
     const menuItems = [];
@@ -79,36 +92,27 @@ const DiffHeader = (props: Props): JSX.Element => {
             menuItems.push(<RIMenu.OpenVSCode key="vscode-diff" workspace={props.vsCodeWorkspace} path={props.selectedFile.path} />)
         }
 
-        const revisions = [
-            { label: '&perp;', id: 'base' as RevisionId },
-            ...props.revisions.map(r => ({
-                label: r.number.toString(),
-                id: r.number as RevisionId
-            }))
+        const revisions: LocalRevisionId[] = [
+            RevisionId.Base,
+            ...props.revisions.map(r => RevisionId.makeSelected(r.number))
         ];
 
         if (props.hasProvisional) {
-            revisions.push({
-                label: 'P',
-                id: 'provisional' as RevisionId
-            });
+            revisions.push(RevisionId.Provisional);
         }
 
-        const startIndex = revisions.findIndex(r => r.id == props.selectedFile.range.previous);
-        let endIndex = revisions.findIndex(r => r.id == props.selectedFile.range.current);
-        if (endIndex == -1 && props.selectedFile.range.current == props.head) {
-            endIndex = revisions.findIndex(r => r.id == 'provisional');
-        }
+        const startIndex2 = revisions.findIndex(r => RevisionId.equal(r, props.selectedFile.range.previous));
+        const endIndex2 = revisions.findIndex(r => RevisionId.equal(r, props.selectedFile.range.current));
 
-        const selectors = revisions.map(r => <span key={r.id} dangerouslySetInnerHTML={{ __html: r.label }} />)
+        const selectors2 = revisions.map(getSelector);
 
         const onChange = (s: number, e: number) => {
-            props.changeFileRange(revisions[s].id, revisions[e].id);
+            props.changeFileRange(revisions[s], revisions[e]);
         }
 
         menuItems.push(<Menu.Item fitted key="revision-select">
-            <RangeSelector start={startIndex} end={endIndex} onChange={onChange}>
-                {selectors}
+            <RangeSelector start={startIndex2} end={endIndex2} onChange={onChange}>
+                {selectors2}
             </RangeSelector>
         </Menu.Item>);
     }

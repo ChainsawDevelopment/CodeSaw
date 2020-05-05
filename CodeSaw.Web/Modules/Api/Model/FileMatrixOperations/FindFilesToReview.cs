@@ -79,15 +79,11 @@ namespace CodeSaw.Web.Modules.Api.Model.FileMatrixOperations
             public string FileId { get; set; }
             public PathPair ReviewFile { get; }
             public PathPair DiffFile { get; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
             public RevisionId Previous { get; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
             public RevisionId Current { get; }
             public string ChangeType { get; set; }
-
-            [JsonConverter(typeof(RevisionIdObjectConverter))]
-            public RevisionId Previous2 => Previous;
-
-            [JsonConverter(typeof(RevisionIdObjectConverter))]
-            public RevisionId Current2 => Current;
 
             public FileRange(string fileId, PathPair reviewFile, PathPair diffFile, RevisionId previous, RevisionId current)
             {

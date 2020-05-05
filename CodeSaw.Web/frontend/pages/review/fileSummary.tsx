@@ -43,8 +43,8 @@ export default (props: {file: FileInfo}): JSX.Element => {
         <Message className="file-summary">
             <Message.Content>
                 <div>Show diff
-                    <strong> <FriendlyRevisionId revision={props.file.fileToReview.previous2}/> </strong>
-                    to <strong> <FriendlyRevisionId revision={props.file.fileToReview.current2}/> </strong>
+                    <strong> <FriendlyRevisionId revision={props.file.fileToReview.previous}/> </strong>
+                    to <strong> <FriendlyRevisionId revision={props.file.fileToReview.current}/> </strong>
                 </div>
                 {items}
             </Message.Content>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CodeSaw.Web.Serialization
 {
@@ -39,7 +40,20 @@ namespace CodeSaw.Web.Serialization
         public override RevisionId ReadJson(JsonReader reader, Type objectType, RevisionId existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var obj = (JObject)JToken.ReadFrom(reader);
+            var revisionType = obj.Property("type").Value.Value<string>();
+
+            switch (revisionType)
+            {
+                case "base":
+                    return new RevisionId.Base();
+                case "hash":
+                    return new RevisionId.Hash(obj.Property("head").Value.Value<string>());
+                case "selected":
+                    return new RevisionId.Selected(obj.Property("revision").Value.Value<int>());
+                default:
+                    throw new InvalidOperationException($"Unrecognized revision type {revisionType}");
+            }
         }
     }
 }

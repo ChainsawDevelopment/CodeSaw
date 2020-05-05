@@ -1,15 +1,8 @@
 import * as PathPairs from "../pathPair";
 import { UserState } from "../rootState";
-import { RemoteRevisionId, LocalRevisionId, Revision2Id } from "./revisionId";
+import { RemoteRevisionId, LocalRevisionId, RevisionId } from "./revisionId";
 
-export type RevisionId = 'base' | number | string | 'provisional';
 export type FileId = string;
-
-
-export interface RevisionRange {
-    previous: RevisionId;
-    current: RevisionId;
-}
 
 export interface ChangedFile {
     path: PathPairs.PathPair;
@@ -108,20 +101,34 @@ export interface Review {
 
 export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
 
-export interface Discussion {
-    id: string;
-    revision: RevisionId;
-    state: CommentState;
-    comment: Comment;
-    canResolve: boolean;
+namespace remote {
+    export interface Discussion {
+        id: string;
+        revision: RemoteRevisionId;
+        state: CommentState;
+        comment: Comment;
+        canResolve: boolean;
+    }
+
+    export interface FileDiscussion extends Discussion {
+        fileId: FileId;
+        lineNumber: number;
+    }
+
+    export interface ReviewDiscussion extends Discussion {
+    }
 }
 
-export interface FileDiscussion extends Discussion {
+export interface Discussion extends FilteredBase<remote.Discussion, 'revision'> {
+    revision: LocalRevisionId;
+}
+
+export interface FileDiscussion extends Discussion, FilteredBase<remote.FileDiscussion, 'revision'> {
     fileId: FileId;
     lineNumber: number;
 }
 
-export interface ReviewDiscussion extends Discussion {
+export interface ReviewDiscussion extends Discussion, FilteredBase<remote.ReviewDiscussion, 'revision'> {
 }
 
 namespace remote {
@@ -129,10 +136,8 @@ namespace remote {
         fileId: FileId;
         reviewFile: PathPairs.PathPair;
         diffFile: PathPairs.PathPair;
-        previous: RevisionId;
-        current: RevisionId;
-        previous2: RemoteRevisionId;
-        current2: RemoteRevisionId;
+        previous: RemoteRevisionId;
+        current: RemoteRevisionId;
         changeType: 'modified' | 'renamed' | 'created' | 'deleted';
     }
 }
@@ -143,9 +148,9 @@ type FilteredBase<T, Remove> = {
     [K in Diff<keyof T, Remove>]: T[K];
 };
 
-export interface FileToReview extends FilteredBase<remote.FileToReview, 'previous2' | 'current2'> {
-    previous2: LocalRevisionId;
-    current2: LocalRevisionId;
+export interface FileToReview extends FilteredBase<remote.FileToReview, 'previous' | 'current'> {
+    previous: LocalRevisionId;
+    current: LocalRevisionId;
 }
 
 export interface BuildStatus {
@@ -172,7 +177,7 @@ namespace remote {
         headCommit: string;
         baseCommit: string;
         webUrl: string;
-        headRevision: RevisionId;
+        headRevision: RemoteRevisionId;
         state: ReviewInfoState;
         mergeStatus: ReviewMergeStatus;
         fileDiscussions: FileDiscussion[];
@@ -188,14 +193,22 @@ namespace remote {
     }
 }
 
-export interface ReviewInfo extends FilteredBase<remote.ReviewInfo, 'filesToReview'> {
+export interface ReviewInfo extends FilteredBase<remote.ReviewInfo, 'filesToReview' | 'fileDiscussions' | 'reviewDiscussions' | 'headRevision'> {
+    headRevision: LocalRevisionId;
     filesToReview: FileToReview[];
+    fileDiscussions: FileDiscussion[];
+    reviewDiscussions: ReviewDiscussion[];
 }
 
 export interface CommentReply {
     id: string;
     parentId: string;
     content: string;
+}
+
+export interface ReviewSnapshotFileRef {
+    revision: RemoteRevisionId;
+    fileId: FileId;
 }
 
 export interface ReviewSnapshot {
@@ -205,7 +218,7 @@ export interface ReviewSnapshot {
         base: string
     };
     startedFileDiscussions: {
-        targetRevisionId: RevisionId;
+        targetRevisionId: RemoteRevisionId;
         temporaryId: string;
         fileId: FileId;
         lineNumber: number;
@@ -213,19 +226,15 @@ export interface ReviewSnapshot {
         state: CommentState;
     }[];
     startedReviewDiscussions: {
-        targetRevisionId: RevisionId;
+        targetRevisionId: RemoteRevisionId;
         temporaryId: string;
         content: string;
         state: CommentState;
     }[];
     resolvedDiscussions: string[];
     replies: CommentReply[];
-    reviewedFiles: {
-        [revision: string]: FileId[];
-    };
-    unreviewedFiles: {
-        [revision: string]: FileId[];
-    };
+    reviewedFiles: ReviewSnapshotFileRef[];
+    unreviewedFiles: ReviewSnapshotFileRef[];
 }
 
 export type CommentState = 'NoActionNeeded' | 'NeedsResolution' | 'Resolved' | 'ResolvePending' | 'GoodWork';
@@ -335,10 +344,19 @@ export class ReviewerApi {
             .then(r => r as remote.ReviewInfo)
             .then(r => ({
                 ...r,
+                headRevision: RevisionId.mapRemoteToLocal(r.headRevision),
                 filesToReview: r.filesToReview.map(f => ({
                     ...f,
-                    previous2: Revision2Id.mapRemoteToLocal(f.previous2),
-                    current2: Revision2Id.mapRemoteToLocal(f.current2),
+                    previous: RevisionId.mapRemoteToLocal(f.previous),
+                    current: RevisionId.mapRemoteToLocal(f.current),
+                })),
+                fileDiscussions: r.fileDiscussions.map(d => ({
+                    ...d,
+                    revision: RevisionId.mapRemoteToLocal(d.revision)
+                })),
+                reviewDiscussions: r.reviewDiscussions.map(d => ({
+                    ...d,
+                    revision: RevisionId.mapRemoteToLocal(d.revision)
                 }))
             }));
     }

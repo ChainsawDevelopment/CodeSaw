@@ -7,6 +7,7 @@ import * as PathPairs from '@src/pathPair';
 import CommentedDiffView, { LineCommentsActions } from "../commentedDiffView";
 import { DiffType } from "../diffView";
 import FileSummary from '../fileSummary';
+import { RevisionId } from "@api/revisionId";
 
 interface FileViewProps {
     file: FileInfo;
@@ -105,7 +106,7 @@ export class FileView extends React.Component<FileViewProps, { visibleCommentLin
                         contents={this.props.file.diff.contents.review}
                         type={diffTypes[this.props.file.fileToReview.changeType]}
                         language={language}
-                        replyOnly={!(file.fileToReview.current == file.range.current || file.range.current == 'provisional')}
+                        replyOnly={!(RevisionId.equal(file.fileToReview.current, file.range.current) || RevisionId.isProvisional(file.range.current))}
                     />
                     : null}
             </span>

@@ -1,22 +1,22 @@
-import { Revision2Id } from "@api/revisionId";
+import { RevisionId } from "@api/revisionId";
 import * as React from "react";
 
-const toFriendly = (r:Revision2Id) => {
-    if(Revision2Id.isBase(r)) {
+const toFriendly = (r:RevisionId) => {
+    if(RevisionId.isBase(r)) {
         return 'base';
     }
-    if(Revision2Id.isSelected(r)) {
+    if(RevisionId.isSelected(r)) {
         return r.revision.toString();
     }
-    if(Revision2Id.isHash(r)) {
+    if(RevisionId.isHash(r)) {
         return `HASH: ${r.head}`;
     }
-    if(Revision2Id.isProvisional(r)) {
+    if(RevisionId.isProvisional(r)) {
         return 'provisional';
     }
 }
 
-const FriendlyRevisionId = (props: {revision: Revision2Id}) => {
+const FriendlyRevisionId = (props: {revision: RevisionId}) => {
     return <pre style={{display: 'inline'}}>{toFriendly(props.revision)}</pre>
 }
 

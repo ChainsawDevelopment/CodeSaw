@@ -9,21 +9,20 @@ import {
     MergePullRequestArgs,
     PublishReviewArgs,
     clearUnpublishedReviewInfo,
-    ReviewState,
-    FileReviewStatusChange,
     reviewFile,
     markEmptyFilesAsReviewed,
-    resolveRevision,
     saveVSCodeWorkspace,
     loadedVsCodeWorkspace,
-    changeFileRange
+    changeFileRange,
+    resolveRevision2,
 } from './state';
 import { Action } from "typescript-fsa";
 import notify from '../../notify';
-import { ReviewerApi, ReviewInfo, ReviewId, RevisionId, RevisionRange, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId, FileToReview, FileDiff, DiffDiscussions } from '../../api/reviewer';
+import { ReviewerApi, ReviewInfo, ReviewId, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId, FileToReview, FileDiff, DiffDiscussions } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { startOperation, stopOperation, setOperationMessage } from "../../loading/saga";
 import { getUnpublishedReview, getReviewVSCodeWorkspace, saveReviewVSCodeWorkspace } from "./storage";
+import { RevisionId } from "@api/revisionId";
 
 function* markNotChangedAsViewed() {
     const api = new ReviewerApi();
@@ -35,14 +34,11 @@ function* markNotChangedAsViewed() {
 
         const state = yield select((s: RootState) => ({
             currentReview: s.review.currentReview,
-            unpublishedReviewedFiles: s.review.unpublishedReviewedFiles,
-            unpublishedUnreviewedFiles: s.review.unpublishedUnreviewedFiles,
             reviewedFiles: s.review.reviewedFiles
         }));
 
         const currentReview: ReviewInfo = state.currentReview;
         const reviewedFiles: FileId[] = state.reviewedFiles;
-        const unpublishedReviewedFiles: FileReviewStatusChange = state.unpublishedReviewedFiles;
 
         console.log(`Marking empty files as reviewed. ${currentReview.filesToReview.length} files to check`);
 
@@ -59,9 +55,8 @@ function* markNotChangedAsViewed() {
             fileIndex++;
 
             const fileId = file.fileId;
-            const fileUnpublishedReviewedFiles = state.unpublishedReviewedFiles[fileId] || [];
 
-            if (reviewedFiles.indexOf(fileId) >= 0 || fileUnpublishedReviewedFiles.indexOf(fileId) >= 0) {
+            if (reviewedFiles.indexOf(fileId) >= 0) {
                 console.log({ message: "Already marked as reviewed", file: file });
                 continue; // already mark as reviewed
             }
@@ -69,8 +64,8 @@ function* markNotChangedAsViewed() {
             const currentRange = {
                 reviewId: state.currentReview.reviewId,
                 range: {
-                    previous: resolveRevision(state.currentReview, file.previous),
-                    current: resolveRevision(state.currentReview, file.current)
+                    previous: resolveRevision2(state.currentReview, file.previous),
+                    current: resolveRevision2(state.currentReview, file.current)
                 },
                 path: file.diffFile,
                 fileId: file.fileId
@@ -110,8 +105,8 @@ function* loadFileDiffSaga() {
         const currentRange = yield select((state: RootState) => ({
             reviewId: state.review.currentReview.reviewId,
             range: {
-                previous: resolveRevision(state.review.currentReview, state.review.selectedFile.range.previous),
-                current: resolveRevision(state.review.currentReview, state.review.selectedFile.range.current),
+                previous: resolveRevision2(state.review.currentReview, state.review.selectedFile.range.previous),
+                current: resolveRevision2(state.review.currentReview, state.review.selectedFile.range.current),
             },
             path: state.review.selectedFile.fileToReview.diffFile,
             fileId: state.review.selectedFile.fileId
@@ -151,17 +146,6 @@ function* loadReviewInfoSaga() {
 
         yield put(loadedReviewInfo({ info, unpublishedInfo, vsCodeWorkspace }));
 
-        let newRange: RevisionRange = {
-            previous: 'base',
-            current: info.hasProvisionalRevision ? 'provisional' : info.pastRevisions[info.pastRevisions.length - 1].number
-        }
-
-        if (currentReview && action.payload.reviewId.projectId == currentReview.projectId && action.payload.reviewId.reviewId == currentReview.reviewId) {
-            if (newRange.current == 'provisional' && !info.hasProvisionalRevision) {
-                newRange.current = info.pastRevisions[info.pastRevisions.length - 1].number;
-            }
-        }
-
         if (action.payload.fileToPreload) {
             const file = info.filesToReview.find(f => f.fileId == action.payload.fileToPreload)
             if (file != null) {
@@ -187,7 +171,7 @@ function* publishReviewSaga() {
                 head: s.review.currentReview.headCommit
             },
             startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
-                targetRevisionId: d.revision,
+                targetRevisionId: RevisionId.mapLocalToRemote(d.revision, s.review.currentReview.headCommit),
                 temporaryId: d.comment.id,
                 fileId: d.fileId,
                 lineNumber: d.lineNumber,
@@ -195,15 +179,21 @@ function* publishReviewSaga() {
                 content: d.comment.content
             })),
             startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
-                targetRevisionId: d.revision,
+                targetRevisionId: RevisionId.mapLocalToRemote(d.revision, s.review.currentReview.headCommit),
                 temporaryId: d.comment.id,
                 content: d.comment.content,
                 state: d.state,
             })),
             resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
             replies: s.review.unpublishedReplies,
-            reviewedFiles: s.review.unpublishedReviewedFiles,
-            unreviewedFiles: s.review.unpublishedUnreviewedFiles
+            reviewedFiles: s.review.unpublishedReviewedFiles.map(f => ({
+                ...f,
+                revision: RevisionId.mapLocalToRemote(f.revision, s.review.currentReview.headCommit)
+            })),
+            unreviewedFiles: s.review.unpublishedUnreviewedFiles.map(f => ({
+                ...f,
+                revision: RevisionId.mapLocalToRemote(f.revision, s.review.currentReview.headCommit)
+            })),
         }));
 
         let successfulPublish = false;

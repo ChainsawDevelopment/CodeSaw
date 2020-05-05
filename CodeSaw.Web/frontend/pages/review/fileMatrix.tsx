@@ -14,7 +14,7 @@ import "./fileMatrix.less";
 import { FileToReview, ReviewId, FileDiscussion, FileId } from "../../api/reviewer";
 
 import { FileLink } from './FileLink';
-import { RemoteRevisionId, Revision2Id, LocalRevisionId } from "@api/revisionId";
+import { RemoteRevisionId, RevisionId, LocalRevisionId } from "@api/revisionId";
 
 namespace remote
 {
@@ -152,7 +152,7 @@ const MatrixRow = (props: { file: remote.FileMatrixEntry; review: FileToReview, 
 
     const revisions = props.file.revisions.map(r => ({
         ...r,
-        revision: Revision2Id.mapRemoteToLocal(r.revision)
+        revision: RevisionId.mapRemoteToLocal(r.revision)
     }));
 
     const revisionCells = [];
@@ -162,7 +162,7 @@ const MatrixRow = (props: { file: remote.FileMatrixEntry; review: FileToReview, 
         isNew: false,
         isRenamed: false,
         isUnchanged: true,
-        revision: Revision2Id.Base,
+        revision: RevisionId.Base,
         file: PathPairs.make(props.file.file.oldPath),
         reviewers: []
     });
@@ -178,19 +178,19 @@ const MatrixRow = (props: { file: remote.FileMatrixEntry; review: FileToReview, 
             reviewMark = 'outside';
         }
 
-        if(Revision2Id.equal(r.revision, review.previous2) && Revision2Id.equal(r.revision, review.current2)) {
+        if(RevisionId.equal(r.revision, review.previous) && RevisionId.equal(r.revision, review.current)) {
             reviewMark = 'single';
         }
-        else if (Revision2Id.equal(r.revision, review.previous2)) {
+        else if (RevisionId.equal(r.revision, review.previous)) {
             reviewMark = 'previous';
-        } else if (Revision2Id.equal(r.revision, review.current2)) {
+        } else if (RevisionId.equal(r.revision, review.current)) {
             reviewMark = 'current';
         }
 
-        const revisionDiscussions = props.discussions.filter(f => Revision2Id.equal(r.revision, Revision2Id.makeSelected(f.revision as number)) && f.fileId == props.file.fileId);
+        const revisionDiscussions = props.discussions.filter(f => RevisionId.equal(r.revision, f.revision) && f.fileId == props.file.fileId);
 
         revisionCells.push(<MatrixCell
-            key={Revision2Id.asString(r.revision)}
+            key={RevisionId.asString(r.revision)}
             revision={r}
             reviewMark={reviewMark}
             discussions={revisionDiscussions}
@@ -233,7 +233,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        if (props.hideReviewed && Revision2Id.equal(review.previous2, review.current2)) {
+        if (props.hideReviewed && RevisionId.equal(review.previous, review.current)) {
             continue;
         }
 

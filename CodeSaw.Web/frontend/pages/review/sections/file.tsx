@@ -10,7 +10,7 @@ import { History } from "history";
 import { HotKeys } from "@src/components/HotKeys";
 import Segment from "semantic-ui-react/dist/commonjs/elements/Segment";
 import Sticky from "semantic-ui-react/dist/commonjs/modules/Sticky";
-import DiffHeader from "./DiffHeader";
+import DiffHeader from "./diffHeader";
 import { NoFileView } from "./fileView";
 import DiffContent from './diffContent';
 import FileList from '@src/fileList';
