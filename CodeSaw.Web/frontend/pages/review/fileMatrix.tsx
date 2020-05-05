@@ -14,27 +14,47 @@ import "./fileMatrix.less";
 import { FileToReview, ReviewId, FileDiscussion, FileId } from "../../api/reviewer";
 
 import { FileLink } from './FileLink';
+import { RemoteRevisionId, Revision2Id, LocalRevisionId } from "@api/revisionId";
 
-interface FileMatrixRevision {
-    revision: {
-        type: string;
-        value: number | string;
-    };
-    file: PathPair;
-    isNew: boolean;
-    isRenamed: boolean;
-    isDeleted: boolean;
-    isUnchanged: boolean;
-    reviewers: string[];
+namespace remote
+{
+    export interface FileMatrixRevision {
+        revision: RemoteRevisionId;
+        file: PathPair;
+        isNew: boolean;
+        isRenamed: boolean;
+        isDeleted: boolean;
+        isUnchanged: boolean;
+        reviewers: string[];
+    }
+
+    export interface FileMatrixEntry {
+        file: PathPair;
+        fileId: FileId;
+        revisions: FileMatrixRevision[];
+    }
 }
 
-interface FileMatrixEntry {
-    file: PathPair;
-    fileId: FileId;
-    revisions: FileMatrixRevision[];
+namespace local
+{
+    export interface FileMatrixRevision {
+        revision: LocalRevisionId;
+        file: PathPair;
+        isNew: boolean;
+        isRenamed: boolean;
+        isDeleted: boolean;
+        isUnchanged: boolean;
+        reviewers: string[];
+    }
+
+    export interface FileMatrixEntry {
+        file: PathPair;
+        fileId: FileId;
+        revisions: FileMatrixRevision[];
+    }
 }
 
-type FileMatrix = FileMatrixEntry[];
+type FileMatrix = remote.FileMatrixEntry[];
 
 type ReviewMark = 'outside' | 'previous' | 'inside' | 'current' | 'single';
 
@@ -49,12 +69,12 @@ const FileDiscussionSummary = (props: {discussions:  FileDiscussion[]}): JSX.Ele
 
     if (unresolved.length > 0) {
         content = [
-            ...content, 
+            ...content,
             <span key='unresolved-title'>Discussions that needs resolution:</span>,
             <ul key='unresolved-list'>
                 {unresolved.map(d => <li key={d.lineNumber}>line {d.lineNumber} from {d.comment.author.name}</li>)}
             </ul>
-            
+
         ];
     }
 
@@ -88,7 +108,7 @@ const ReviewersSummary = (props: {reviewers: string[]}): JSX.Element => {
     );
 }
 
-const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMark; discussions: FileDiscussion[]; reviewers: string[] }): JSX.Element => {
+const MatrixCell = (props: { revision: local.FileMatrixRevision; reviewMark: ReviewMark; discussions: FileDiscussion[]; reviewers: string[] }): JSX.Element => {
     const { revision, reviewMark, reviewers } = props;
 
     const classes = classNames({
@@ -110,7 +130,7 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
     let discussions: JSX.Element = null;
 
     if (props.discussions.length > 0) {
-        
+
         discussions = (
             <FileDiscussionSummary discussions={props.discussions} />
         );
@@ -126,11 +146,14 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
     )
 };
 
-const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewId: ReviewId, discussions: FileDiscussion[] }): JSX.Element => {
+const MatrixRow = (props: { file: remote.FileMatrixEntry; review: FileToReview, reviewId: ReviewId, discussions: FileDiscussion[] }): JSX.Element => {
     const { file } = props.file;
     const { review, reviewId } = props;
 
-    const revisions = props.file.revisions.concat([]);
+    const revisions = props.file.revisions.map(r => ({
+        ...r,
+        revision: Revision2Id.mapRemoteToLocal(r.revision)
+    }));
 
     const revisionCells = [];
 
@@ -139,10 +162,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
         isNew: false,
         isRenamed: false,
         isUnchanged: true,
-        revision: {
-            type: 'base',
-            value: 'base'
-        },
+        revision: Revision2Id.Base,
         file: PathPairs.make(props.file.file.oldPath),
         reviewers: []
     });
@@ -157,20 +177,20 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
         } else if (reviewMark == 'single') {
             reviewMark = 'outside';
         }
-        
-        if (r.revision.value == review.previous && r.revision.value == review.current) {
+
+        if(Revision2Id.equal(r.revision, review.previous2) && Revision2Id.equal(r.revision, review.current2)) {
             reviewMark = 'single';
         }
-        else if (r.revision.value == review.previous) {
+        else if (Revision2Id.equal(r.revision, review.previous2)) {
             reviewMark = 'previous';
-        } else if (r.revision.value == review.current) {
+        } else if (Revision2Id.equal(r.revision, review.current2)) {
             reviewMark = 'current';
-        }  
+        }
 
-        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value && f.fileId == props.file.fileId);
+        const revisionDiscussions = props.discussions.filter(f => Revision2Id.equal(r.revision, Revision2Id.makeSelected(f.revision as number)) && f.fileId == props.file.fileId);
 
         revisionCells.push(<MatrixCell
-            key={r.revision.value}
+            key={Revision2Id.asString(r.revision)}
             revision={r}
             reviewMark={reviewMark}
             discussions={revisionDiscussions}
@@ -213,7 +233,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        if (props.hideReviewed && review.current == review.previous) {
+        if (props.hideReviewed && Revision2Id.equal(review.previous2, review.current2)) {
             continue;
         }
 

@@ -1,5 +1,6 @@
 import * as PathPairs from "../pathPair";
 import { UserState } from "../rootState";
+import { RemoteRevisionId, LocalRevisionId, Revision2Id } from "./revisionId";
 
 export type RevisionId = 'base' | number | string | 'provisional';
 export type FileId = string;
@@ -123,13 +124,28 @@ export interface FileDiscussion extends Discussion {
 export interface ReviewDiscussion extends Discussion {
 }
 
-export interface FileToReview {
-    fileId: FileId;
-    reviewFile: PathPairs.PathPair;
-    diffFile: PathPairs.PathPair;
-    previous: RevisionId;
-    current: RevisionId;
-    changeType: 'modified' | 'renamed' | 'created' | 'deleted';
+namespace remote {
+    export interface FileToReview {
+        fileId: FileId;
+        reviewFile: PathPairs.PathPair;
+        diffFile: PathPairs.PathPair;
+        previous: RevisionId;
+        current: RevisionId;
+        previous2: RemoteRevisionId;
+        current2: RemoteRevisionId;
+        changeType: 'modified' | 'renamed' | 'created' | 'deleted';
+    }
+}
+
+type Diff<T, U> = T extends U ? never : T;
+
+type FilteredBase<T, Remove> = {
+    [K in Diff<keyof T, Remove>]: T[K];
+};
+
+export interface FileToReview extends FilteredBase<remote.FileToReview, 'previous2' | 'current2'> {
+    previous2: LocalRevisionId;
+    current2: LocalRevisionId;
 }
 
 export interface BuildStatus {
@@ -141,33 +157,39 @@ export interface BuildStatus {
 
 export type ReviewMergeStatus = 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
 
-export interface ReviewInfo {
-    reviewId: ReviewId;
-    title: string;
-    projectPath: string;
-    description: string;
-    pastRevisions: {
-        number: number;
-        head: string;
-        base: string;
-    }[];
-    hasProvisionalRevision: boolean;
-    headCommit: string;
-    baseCommit: string;
-    webUrl: string;
-    headRevision: RevisionId;
-    state: ReviewInfoState;
-    mergeStatus: ReviewMergeStatus;
-    fileDiscussions: FileDiscussion[];
-    reviewDiscussions: ReviewDiscussion[];
-    fileMatrix: any;
+namespace remote {
+    export interface ReviewInfo {
+        reviewId: ReviewId;
+        title: string;
+        projectPath: string;
+        description: string;
+        pastRevisions: {
+            number: number;
+            head: string;
+            base: string;
+        }[];
+        hasProvisionalRevision: boolean;
+        headCommit: string;
+        baseCommit: string;
+        webUrl: string;
+        headRevision: RevisionId;
+        state: ReviewInfoState;
+        mergeStatus: ReviewMergeStatus;
+        fileDiscussions: FileDiscussion[];
+        reviewDiscussions: ReviewDiscussion[];
+        fileMatrix: any;
+        filesToReview: remote.FileToReview[];
+        buildStatuses: BuildStatus[];
+        sourceBranch: string;
+        targetBranch: string;
+        reviewFinished: boolean;
+        author: UserState,
+        isAuthor: boolean;
+    }
+}
+
+export interface ReviewInfo extends FilteredBase<remote.ReviewInfo, 'filesToReview'> {
     filesToReview: FileToReview[];
-    buildStatuses: BuildStatus[];
-    sourceBranch: string;
-    targetBranch: string;
-    reviewFinished: boolean;
-    author: UserState,
-    isAuthor: boolean;
 }
 
 export interface CommentReply {
@@ -310,7 +332,15 @@ export class ReviewerApi {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(mustBeOk)
             .then(r => r.json())
-            .then(r => r as ReviewInfo);
+            .then(r => r as remote.ReviewInfo)
+            .then(r => ({
+                ...r,
+                filesToReview: r.filesToReview.map(f => ({
+                    ...f,
+                    previous2: Revision2Id.mapRemoteToLocal(f.previous2),
+                    current2: Revision2Id.mapRemoteToLocal(f.current2),
+                }))
+            }));
     }
 
     public publishReview = (review: ReviewSnapshot): Promise<void> => {

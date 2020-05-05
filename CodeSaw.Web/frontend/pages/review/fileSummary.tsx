@@ -2,6 +2,7 @@ import { FileInfo } from "./state";
 import { FileToReview } from "../../api/reviewer"
 import * as React from "react";
 import Message from '@ui/collections/Message';
+import FriendlyRevisionId from "@src/components/FriendlyRevisionId";
 
 const describeFileOperations = (treeEntry: FileToReview): JSX.Element => {
     const { changeType, diffFile:path } = treeEntry;
@@ -32,7 +33,7 @@ export default (props: {file: FileInfo}): JSX.Element => {
         const item = describeFileOperations(props.file.fileToReview)
         if(item != null)
             items.push(item);
-    } 
+    }
 
     if(items.length == 0) {
         return null;
@@ -41,9 +42,9 @@ export default (props: {file: FileInfo}): JSX.Element => {
     return (
         <Message className="file-summary">
             <Message.Content>
-                <div>Show diff 
-                    <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.previous}</pre> </strong>
-                    to <strong> <pre style={{display: 'inline'}}>{props.file.fileToReview.current}</pre> </strong>
+                <div>Show diff
+                    <strong> <FriendlyRevisionId revision={props.file.fileToReview.previous2}/> </strong>
+                    to <strong> <FriendlyRevisionId revision={props.file.fileToReview.current2}/> </strong>
                 </div>
                 {items}
             </Message.Content>
