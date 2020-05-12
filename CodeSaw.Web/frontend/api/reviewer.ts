@@ -202,7 +202,7 @@ namespace remote {
         sourceBranch: string;
         targetBranch: string;
         reviewFinished: boolean;
-        author: UserState,
+        author: UserState;
         isAuthor: boolean;
     }
 }

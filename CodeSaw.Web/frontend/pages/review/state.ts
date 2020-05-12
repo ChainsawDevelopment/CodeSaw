@@ -42,6 +42,8 @@ export interface FileReviewStatusChange {
 }
 
 export interface UnpublishedReview {
+    headCommit: string;
+    baseCommit: string;
     unpublishedFileDiscussions: (FileDiscussion)[];
     unpublishedReviewDiscussions: (ReviewDiscussion)[];
     unpublishedResolvedDiscussions: string[];
@@ -123,6 +125,8 @@ export const IsCommentUnpublished = (commentId: string): boolean => {
 
 
 export const emptyUnpublishedReview: UnpublishedReview = {
+    headCommit: '',
+    baseCommit: '',
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
     unpublishedResolvedDiscussions: [],
@@ -324,6 +328,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             currentReview: action.payload.info,
             reviewedFiles: reviewedFileFinal,
             ...unpublished,
+            headCommit: action.payload.info.headCommit,
+            baseCommit: action.payload.info.baseCommit,
             selectedFile: null,
             vsCodeWorkspace: action.payload.vsCodeWorkspace
         };

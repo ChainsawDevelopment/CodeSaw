@@ -21,7 +21,7 @@ import notify from '../../notify';
 import { ReviewerApi, ReviewInfo, ReviewId, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId, FileToReview, FileDiff, DiffDiscussions } from '../../api/reviewer';
 import { RootState } from "../../rootState";
 import { startOperation, stopOperation, setOperationMessage } from "../../loading/saga";
-import { getUnpublishedReview, getReviewVSCodeWorkspace, saveReviewVSCodeWorkspace } from "./storage";
+import { getUnpublishedReview, getReviewVSCodeWorkspace, saveReviewVSCodeWorkspace, LocallyStoredReview } from "./storage";
 import { RevisionId } from "@api/revisionId";
 
 function* markNotChangedAsViewed() {
@@ -137,14 +137,14 @@ function* loadReviewInfoSaga() {
 
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
-        const unpublishedInfo = getUnpublishedReview(action.payload.reviewId);
+        const unpublishedInfo: LocallyStoredReview = getUnpublishedReview(action.payload.reviewId);
 
 
         const vsCodeWorkspace = getReviewVSCodeWorkspace(action.payload.reviewId)
 
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
-        yield put(loadedReviewInfo({ info, unpublishedInfo, vsCodeWorkspace }));
+        yield put(loadedReviewInfo({ info, unpublishedInfo: unpublishedInfo.unpublished, vsCodeWorkspace }));
 
         if (action.payload.fileToPreload) {
             const file = info.filesToReview.find(f => f.fileId == action.payload.fileToPreload)
