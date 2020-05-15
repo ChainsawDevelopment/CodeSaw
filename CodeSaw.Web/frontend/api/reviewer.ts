@@ -163,6 +163,20 @@ export interface BuildStatus {
 export type ReviewMergeStatus = 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
 
 namespace remote {
+    export interface FileMatrixRevision {
+        revision: RemoteRevisionId;
+        file: PathPairs.PathPair;
+        isNew: boolean;
+        isRenamed: boolean;
+        isDeleted: boolean;
+        isUnchanged: boolean;
+        reviewers: string[];
+    }
+    export interface FileMatrixEntry {
+        file: PathPairs.PathPair;
+        fileId: FileId;
+        revisions: FileMatrixRevision[];
+    }
     export interface ReviewInfo {
         reviewId: ReviewId;
         title: string;
@@ -182,7 +196,7 @@ namespace remote {
         mergeStatus: ReviewMergeStatus;
         fileDiscussions: FileDiscussion[];
         reviewDiscussions: ReviewDiscussion[];
-        fileMatrix: any;
+        fileMatrix: FileMatrixEntry[];
         filesToReview: remote.FileToReview[];
         buildStatuses: BuildStatus[];
         sourceBranch: string;
@@ -193,11 +207,22 @@ namespace remote {
     }
 }
 
-export interface ReviewInfo extends FilteredBase<remote.ReviewInfo, 'filesToReview' | 'fileDiscussions' | 'reviewDiscussions' | 'headRevision'> {
+export interface FileMatrixRevision extends FilteredBase<remote.FileMatrixRevision, 'revision'>
+{
+    revision: LocalRevisionId;
+}
+
+export interface FileMatrixEntry extends FilteredBase<remote.FileMatrixEntry, 'revisions'>
+{
+    revisions: FileMatrixRevision[];
+}
+
+export interface ReviewInfo extends FilteredBase<remote.ReviewInfo, 'filesToReview' | 'fileDiscussions' | 'reviewDiscussions' | 'headRevision' | 'fileMatrix'> {
     headRevision: LocalRevisionId;
     filesToReview: FileToReview[];
     fileDiscussions: FileDiscussion[];
     reviewDiscussions: ReviewDiscussion[];
+    fileMatrix: FileMatrixEntry[];
 }
 
 export interface CommentReply {
@@ -357,6 +382,13 @@ export class ReviewerApi {
                 reviewDiscussions: r.reviewDiscussions.map(d => ({
                     ...d,
                     revision: RevisionId.mapRemoteToLocal(d.revision)
+                })),
+                fileMatrix: r.fileMatrix.map(e => ({
+                    ...e,
+                    revisions: e.revisions.map(r => ({
+                        ...r,
+                        revision: RevisionId.mapRemoteToLocal(r.revision)
+                    }))
                 }))
             }));
     }

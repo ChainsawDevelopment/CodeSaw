@@ -11,50 +11,50 @@ import * as PathPairs from "../../pathPair";
 import * as classNames from "classnames";
 
 import "./fileMatrix.less";
-import { FileToReview, ReviewId, FileDiscussion, FileId } from "../../api/reviewer";
+import { FileToReview, ReviewId, FileDiscussion, FileId, FileMatrixRevision, FileMatrixEntry } from "../../api/reviewer";
 
 import { FileLink } from './FileLink';
 import { RemoteRevisionId, RevisionId, LocalRevisionId } from "@api/revisionId";
 
-namespace remote
-{
-    export interface FileMatrixRevision {
-        revision: RemoteRevisionId;
-        file: PathPair;
-        isNew: boolean;
-        isRenamed: boolean;
-        isDeleted: boolean;
-        isUnchanged: boolean;
-        reviewers: string[];
-    }
+// namespace remote
+// {
+//     export interface FileMatrixRevision {
+//         revision: RemoteRevisionId;
+//         file: PathPair;
+//         isNew: boolean;
+//         isRenamed: boolean;
+//         isDeleted: boolean;
+//         isUnchanged: boolean;
+//         reviewers: string[];
+//     }
 
-    export interface FileMatrixEntry {
-        file: PathPair;
-        fileId: FileId;
-        revisions: FileMatrixRevision[];
-    }
-}
+//     export interface FileMatrixEntry {
+//         file: PathPair;
+//         fileId: FileId;
+//         revisions: FileMatrixRevision[];
+//     }
+// }
 
-namespace local
-{
-    export interface FileMatrixRevision {
-        revision: LocalRevisionId;
-        file: PathPair;
-        isNew: boolean;
-        isRenamed: boolean;
-        isDeleted: boolean;
-        isUnchanged: boolean;
-        reviewers: string[];
-    }
+// namespace local
+// {
+//     export interface FileMatrixRevision {
+//         revision: LocalRevisionId;
+//         file: PathPair;
+//         isNew: boolean;
+//         isRenamed: boolean;
+//         isDeleted: boolean;
+//         isUnchanged: boolean;
+//         reviewers: string[];
+//     }
 
-    export interface FileMatrixEntry {
-        file: PathPair;
-        fileId: FileId;
-        revisions: FileMatrixRevision[];
-    }
-}
+//     export interface FileMatrixEntry {
+//         file: PathPair;
+//         fileId: FileId;
+//         revisions: FileMatrixRevision[];
+//     }
+// }
 
-type FileMatrix = remote.FileMatrixEntry[];
+// type FileMatrix = local.FileMatrixEntry[];
 
 type ReviewMark = 'outside' | 'previous' | 'inside' | 'current' | 'single';
 
@@ -108,7 +108,7 @@ const ReviewersSummary = (props: {reviewers: string[]}): JSX.Element => {
     );
 }
 
-const MatrixCell = (props: { revision: local.FileMatrixRevision; reviewMark: ReviewMark; discussions: FileDiscussion[]; reviewers: string[] }): JSX.Element => {
+const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMark; discussions: FileDiscussion[]; reviewers: string[] }): JSX.Element => {
     const { revision, reviewMark, reviewers } = props;
 
     const classes = classNames({
@@ -146,26 +146,24 @@ const MatrixCell = (props: { revision: local.FileMatrixRevision; reviewMark: Rev
     )
 };
 
-const MatrixRow = (props: { file: remote.FileMatrixEntry; review: FileToReview, reviewId: ReviewId, discussions: FileDiscussion[] }): JSX.Element => {
+const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewId: ReviewId, discussions: FileDiscussion[] }): JSX.Element => {
     const { file } = props.file;
     const { review, reviewId } = props;
 
-    const revisions = props.file.revisions.map(r => ({
-        ...r,
-        revision: RevisionId.mapRemoteToLocal(r.revision)
-    }));
+    const revisions = [
+        {
+            isDeleted: false,
+            isNew: false,
+            isRenamed: false,
+            isUnchanged: true,
+            revision: RevisionId.Base,
+            file: PathPairs.make(props.file.file.oldPath),
+            reviewers: []
+        },
+        ...props.file.revisions
+    ];
 
     const revisionCells = [];
-
-    revisions.unshift({
-        isDeleted: false,
-        isNew: false,
-        isRenamed: false,
-        isUnchanged: true,
-        revision: RevisionId.Base,
-        file: PathPairs.make(props.file.file.oldPath),
-        reviewers: []
-    });
 
     let reviewMark: ReviewMark = 'outside';
 
@@ -207,7 +205,7 @@ const MatrixRow = (props: { file: remote.FileMatrixEntry; review: FileToReview, 
 };
 
 interface StateProps {
-    matrix: FileMatrix;
+    matrix: FileMatrixEntry[];
     revisions: number[];
     hasProvisional: boolean;
     filesToReview: FileToReview[];
@@ -258,7 +256,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
 };
 
 const mapStateToProps = (state: RootState): StateProps => ({
-    matrix: state.review.currentReview.fileMatrix || [],
+    matrix: state.review.currentReview.fileMatrix,
     revisions: state.review.currentReview.pastRevisions.map(r => r.number),
     hasProvisional: state.review.currentReview.hasProvisionalRevision,
     filesToReview: state.review.currentReview.filesToReview || [],
