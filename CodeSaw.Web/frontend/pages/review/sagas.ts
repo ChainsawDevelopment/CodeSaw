@@ -144,7 +144,7 @@ function* loadReviewInfoSaga() {
 
         const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
 
-        yield put(loadedReviewInfo({ info, unpublishedInfo: unpublishedInfo.unpublished, vsCodeWorkspace }));
+        yield put(loadedReviewInfo({ info, unpublishedInfo: unpublishedInfo.unpublished, fileIdMap: unpublishedInfo.fileIdMap, vsCodeWorkspace }));
 
         if (action.payload.fileToPreload) {
             const file = info.filesToReview.find(f => f.fileId == action.payload.fileToPreload)

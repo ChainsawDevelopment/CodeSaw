@@ -17,6 +17,7 @@ import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
 import * as _ from 'lodash'
 import { RevisionId, LocalRevisionId } from '@api/revisionId';
+import { upgradeReview } from './upgradeReview';
 
 export enum DiscussionType {
     Comment,
@@ -73,7 +74,7 @@ export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_RE
 export const loadedFileDiff = createAction<{ diff: FileDiff; remappedDiscussions: DiffDiscussions }>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
-export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, vsCodeWorkspace: string }>('LOADED_REVIEW_INFO');
+export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, fileIdMap: { [fileId: string]: string }; vsCodeWorkspace: string }>('LOADED_REVIEW_INFO');
 
 export const clearUnpublishedReviewInfo = createAction<{ reviewId: ReviewId }>("CLEAR_UNPUBLISHED_REVIEW");
 
@@ -185,75 +186,6 @@ export const resolveRevision2 = (state: ReviewInfo, revision: LocalRevisionId) =
     };
 }
 
-export const upgradeUnpublishedReview = (current: ReviewInfo, review: UnpublishedReview): UnpublishedReview => {
-    return {
-        ... review
-    };
-    /*const knownRevisions = current.pastRevisions.map(r => r.number.toString() as RevisionId); // TODO: revision overhaul
-
-    if (current.hasProvisionalRevision) {
-        knownRevisions.push(current.headRevision.toString() as RevisionId); // TODO: revision overhaul
-    }
-
-    const fileDiscussions = review.unpublishedFileDiscussions.map(fd => {
-        const idx = knownRevisions.indexOf(fd.revision);
-        if (idx != -1) {
-            return fd;
-        }
-
-        return {
-            ...fd,
-            revision: current.headRevision
-        };
-    });
-
-    const reviewDiscussions = review.unpublishedReviewDiscussions.map(fd => {
-        const idx = knownRevisions.indexOf(fd.revision);
-        if (idx != -1) {
-            return fd;
-        }
-
-        return {
-            ...fd,
-            revision: current.headRevision
-        };
-    });
-
-    const reviewedFiles: FileReviewStatusChange = {};
-
-    for (const revision of Object.keys(review.unpublishedReviewedFiles)) {
-        const idx = knownRevisions.indexOf(revision);
-        if (idx != -1) {
-            reviewedFiles[revision] = review.unpublishedReviewedFiles[revision];
-        } else {
-            reviewedFiles[current.headRevision] = review.unpublishedReviewedFiles[revision];
-        }
-    }
-
-    const unreviewedFiles: FileReviewStatusChange = {};
-
-    for (const revision of Object.keys(review.unpublishedUnreviewedFiles)) {
-        const idx = knownRevisions.indexOf(revision);
-        if (idx != -1) {
-            unreviewedFiles[revision] = review.unpublishedUnreviewedFiles[revision];
-        } else {
-            unreviewedFiles[current.headRevision] = review.unpublishedUnreviewedFiles[revision];
-        }
-    }
-
-    return {
-        nextDiscussionCommentId: review.nextDiscussionCommentId,
-        nextReplyId: review.nextReplyId,
-        unpublishedFileDiscussions: fileDiscussions,
-        unpublishedReplies: review.unpublishedReplies,
-        unpublishedResolvedDiscussions: review.unpublishedResolvedDiscussions,
-        unpublishedReviewDiscussions: reviewDiscussions,
-        unpublishedReviewedFiles: reviewedFiles,
-        unpublishedUnreviewedFiles: unreviewedFiles
-
-    };*/
-}
-
 export const reviewReducer = (state: ReviewState = initial, action: AnyAction): ReviewState => {
     if (selectFileForView.match(action)) {
         const file = state.currentReview.filesToReview.find(f => f.fileId == action.payload.fileId);
@@ -311,7 +243,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (loadedReviewInfo.match(action)) {
-        const unpublished = upgradeUnpublishedReview(action.payload.info, action.payload.unpublishedInfo);
+        const unpublished = upgradeReview(action.payload.info, action.payload.unpublishedInfo, action.payload.fileIdMap);
         const reviewedFiles = action.payload.info.filesToReview.filter(f => RevisionId.equal(f.previous, f.current));
 
         const getChangedFilesPaths = (changeStatus: FileReviewStatusChange[]) => changeStatus.map(c => c.fileId);

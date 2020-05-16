@@ -3,7 +3,7 @@ import { UnpublishedReview, emptyUnpublishedReview } from "@src/pages/review/sta
 import {expect} from 'chai';
 import { RevisionId, LocalRevisionId } from "@api/revisionId";
 import * as B from './review_info/builders';
-import { upgradeReview } from "./upgradeReview";
+import { upgradeReview } from "@src/pages/review/upgradeReview";
 
 const FileIds = {
     file4: '1cb24b9a-cebc-4d56-b872-ab9300e16ce9',
