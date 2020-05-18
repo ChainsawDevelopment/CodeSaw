@@ -527,4 +527,28 @@ describe('Upgrade review', () => {
             expect(upgradeReview(reviewInfo, unpublished, fileIdMap)).to.deep.equal(unpublished);
         });
     });
+
+    it('haha', () => {
+        const reviewInfo = B.buildReviewInfo(B.addRevision(1), B.addProvisional('P_HEAD_1', 'P_BASE_1'),
+            B.addFileToReview(FileIds.file4, 'file4', RevisionId.Base, RevisionId.Provisional),
+            B.defineFileMatrix(),
+            B.markFileChanged(FileIds.file4, [RevisionId.makeSelected(1), RevisionId.Provisional])
+        );
+        console.log(reviewInfo.fileMatrix[0].revisions);
+        const unpublished: UnpublishedReview = {...emptyUnpublishedReview,
+            headCommit: 'REV_1_HEAD',
+            baseCommit: 'REV_1_BASE',
+            unpublishedReviewedFiles: [
+                { revision: RevisionId.makeSelected(1), fileId: FileIds.file4, }
+            ]
+        };
+        const fileIdMap = {
+            [FileIds.file4]: 'file4/new.txt'
+        };
+        expect(upgradeReview(reviewInfo, unpublished, fileIdMap)).to.deep.equal({...emptyUnpublishedReview,
+            headCommit: 'P_HEAD_1',
+            baseCommit: 'P_BASE_1',
+            unpublishedReviewedFiles: []
+        })
+    });
 });

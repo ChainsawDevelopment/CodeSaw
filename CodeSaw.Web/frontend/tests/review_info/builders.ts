@@ -1,6 +1,6 @@
 import { ReviewInfo, ReviewInfoState, ReviewMergeStatus, FileId, FileMatrixEntry, FileMatrixRevision } from "@api/reviewer";
 import { expect } from "chai";
-import { RevisionId, LocalRevisionId } from "@api/revisionId";
+import { RevisionId, LocalRevisionId, RevisionSelected } from "@api/revisionId";
 
 export type ReviewBuilder = (input: ReviewInfo) => ReviewInfo;
 
@@ -70,6 +70,7 @@ export const addProvisional = (headCommit: string, baseCommit: string): ReviewBu
 
     return {
         ...input,
+        hasProvisionalRevision: true,
         headRevision: RevisionId.Provisional,
         headCommit: headCommit,
         baseCommit: baseCommit,
@@ -141,3 +142,22 @@ export const defineFileMatrix = (): ReviewBuilder => input => {
         fileMatrix: matrix
     };
 };
+
+export const markFileChanged = (fileId: FileId, revisions: LocalRevisionId[]): ReviewBuilder => input => {
+    return {
+        ...input,
+        fileMatrix: input.fileMatrix.map(f => {
+            if(f.fileId != fileId) {
+                return f;
+            }
+
+            return {
+                ...f,
+                revisions: f.revisions.map(r => ({
+                    ...r,
+                    isUnchanged: revisions.find(x => RevisionId.equal(r.revision, x)) == null
+                }))
+            }
+        })
+    };
+}

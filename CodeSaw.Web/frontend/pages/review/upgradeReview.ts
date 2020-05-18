@@ -1,6 +1,6 @@
 import { ReviewInfo, FileId, ReviewDiscussion, FileDiscussion } from "@api/reviewer";
-import { UnpublishedReview } from "@src/pages/review/state";
-import { RevisionId, LocalRevisionId } from "@api/revisionId";
+import { UnpublishedReview, FileReviewStatusChange } from "@src/pages/review/state";
+import { RevisionId, LocalRevisionId, RevisionSelected } from "@api/revisionId";
 
 export interface FileIdMap {
     [fileId: string]: string;
@@ -136,6 +136,35 @@ const convertLostFileDiscussions = (info: ReviewInfo, unpublished: UnpublishedRe
     };
 }
 
+const unreviewFileThatChangesInHead = (info: ReviewInfo, unpublished: UnpublishedReview): UnpublishedReview => {
+    const result: FileReviewStatusChange[] = [];
+
+    for (const file of unpublished.unpublishedReviewedFiles) {
+        if(RevisionId.isProvisional(file.revision)) {
+            result.push(file);
+            continue;
+        }
+
+        const revisionsWithChanges = info.fileMatrix.find(f=>f.fileId == file.fileId).revisions.filter(f => !f.isUnchanged).map(f=>f.revision);
+        if(revisionsWithChanges.length == 0) {
+            // TODO: fix tests
+            result.push(file);
+            continue;
+        }
+        const lastChangeIn = revisionsWithChanges[revisionsWithChanges.length - 1];
+        const reviewedChangeIn = file.revision;
+
+        if(RevisionId.equal(lastChangeIn, reviewedChangeIn)) {
+            result.push(file);
+        }
+    }
+
+    return {
+        ...unpublished,
+        unpublishedReviewedFiles: result
+    };
+}
+
 export const upgradeReview = (info: ReviewInfo, unpublished: UnpublishedReview, fileIds: FileIdMap): UnpublishedReview => {
     if (info.fileMatrix == null) {
         throw new Error("no fileMatrix");
@@ -149,6 +178,7 @@ export const upgradeReview = (info: ReviewInfo, unpublished: UnpublishedReview, 
     result = removeMissingReviewedFiles(info, result);
     result = convertLostFileDiscussions(info, result);
     result = handleHeadDiverged(info, result);
+    result = unreviewFileThatChangesInHead(info, result);
 
     return {
         ...result,

@@ -209,7 +209,7 @@ namespace remote {
 
 export interface FileMatrixRevision extends FilteredBase<remote.FileMatrixRevision, 'revision'>
 {
-    revision: LocalRevisionId;
+    revision: LocalRevisionId; // TODO: can be RevisionSelected
 }
 
 export interface FileMatrixEntry extends FilteredBase<remote.FileMatrixEntry, 'revisions'>
