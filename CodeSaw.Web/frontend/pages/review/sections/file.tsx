@@ -123,9 +123,7 @@ const File = (props: Props): JSX.Element => {
     return <div ref={setStickyContainer}>
         <HotKeys config={reviewHotKeys} />
         <Segment>
-            <Sticky context={stickyContainer.current} id="file-sticky">
-                <DiffHeader onSelectFileForView={selectNewFileForView} />
-            </Sticky>
+            <DiffHeader onSelectFileForView={selectNewFileForView} />
             <div>
                 {selectedFile ?
                     <DiffContent scrollToFile={scrollToFile} />

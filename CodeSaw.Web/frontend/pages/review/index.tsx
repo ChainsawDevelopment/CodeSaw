@@ -5,6 +5,7 @@ import { History } from "history";
 
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
+import Tab from '@ui/modules/Tab';
 
 import {
     selectFileForView,
@@ -142,6 +143,21 @@ class reviewPage extends React.Component<Props, State> {
             });
         };
 
+        const tabs = [
+            { menuItem: 'File matrix',  render: () => <Tab.Pane>
+                <FileMatrix hideReviewed={this.state.hideReviewed} />
+            </Tab.Pane>},
+            { menuItem: 'Selected file',  render: () => <Tab.Pane>
+                <File
+                    showFileHandler={this.showFileHandler}
+                    reviewId={props.reviewId}
+                    fileId={props.fileId}
+                    history={props.history}
+                    onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
+                />
+            </Tab.Pane>},
+        ]
+
         return (
             <div id="review-page">
                 <PageTitle>{title}</PageTitle>
@@ -163,23 +179,12 @@ class reviewPage extends React.Component<Props, State> {
                                 <Actions onHideReviewedChange={changeHideReviewed} />
                             </Grid.Column>
                         </Grid.Row>
-                        <Grid.Row columns={1}>
-                            <Grid.Column>
-                                <FileMatrix hideReviewed={this.state.hideReviewed} />
-                            </Grid.Column>
-                        </Grid.Row>
                         <ReviewDiscussions />
                     </Grid>
 
                     <Divider />
 
-                    <File
-                        showFileHandler={this.showFileHandler}
-                        reviewId={props.reviewId}
-                        fileId={props.fileId}
-                        history={props.history}
-                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
-                    />
+                    <Tab panes={tabs} renderActiveOnly={true}/>
                 </CurrentReviewMode.Provider>
             </div>
         );
