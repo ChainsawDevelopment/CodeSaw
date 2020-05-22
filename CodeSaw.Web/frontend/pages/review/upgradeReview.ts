@@ -147,8 +147,7 @@ const unreviewFileThatChangesInHead = (info: ReviewInfo, unpublished: Unpublishe
 
         const revisionsWithChanges = info.fileMatrix.find(f=>f.fileId == file.fileId).revisions.filter(f => !f.isUnchanged).map(f=>f.revision);
         if(revisionsWithChanges.length == 0) {
-            // TODO: fix tests
-            result.push(file);
+            throw new Error("not implemented");
             continue;
         }
         const lastChangeIn = revisionsWithChanges[revisionsWithChanges.length - 1];

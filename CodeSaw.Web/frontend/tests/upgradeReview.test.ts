@@ -48,7 +48,8 @@ const expectUnreviewedFileMarkedAsReviewed = (baseReviewInfo: ReviewInfo, review
     return () => {
         const reviewInfo = B.applyBuilders(baseReviewInfo,
             B.addFileToReview(FileIds.file4, 'file4', RevisionId.Base, RevisionId.makeSelected(2)),
-            B.defineFileMatrix()
+            B.defineFileMatrix(),
+            B.markFileChanged(FileIds.file4, [ RevisionId.makeSelected(reviewedAt) ])
         );
         const unpublished: UnpublishedReview = {
             ...emptyUnpublishedReview,
@@ -240,7 +241,8 @@ describe('Upgrade review', () => {
         it('known file marked as reviewed at P', () => {
             const reviewInfo = B.applyBuilders(base,
                 B.addFileToReview(FileIds.file4, 'file4', RevisionId.makeSelected(1), RevisionId.Provisional),
-                B.defineFileMatrix()
+                B.defineFileMatrix(),
+                B.markFileChanged(FileIds.file4, [RevisionId.makeSelected(1), RevisionId.Provisional])
             );
             const unpublished = { ...emptyUnpublishedReview,
                 ...forHead(reviewInfo),
@@ -342,7 +344,8 @@ describe('Upgrade review', () => {
         it('known file marked as reviewed at P (now R3)', () => {
             const reviewInfo = B.applyBuilders(base,
                 B.addFileToReview(FileIds.file4, 'file4', RevisionId.makeSelected(1), RevisionId.makeSelected(3)),
-                B.defineFileMatrix()
+                B.defineFileMatrix(),
+                B.markFileChanged(FileIds.file4, [RevisionId.makeSelected(1), RevisionId.makeSelected(3)])
             );
             const unpublished = { ...emptyUnpublishedReview,
                 headCommit: 'REV_3_HEAD',
@@ -365,8 +368,9 @@ describe('Upgrade review', () => {
 
         it('known file marked as reviewed at P (now R2)', () => {
             const reviewInfo = B.applyBuilders(base,
-                B.addFileToReview(FileIds.file4, 'file4', RevisionId.makeSelected(1), RevisionId.makeSelected(3)),
-                B.defineFileMatrix()
+                B.addFileToReview(FileIds.file4, 'file4', RevisionId.makeSelected(1), RevisionId.makeSelected(2)),
+                B.defineFileMatrix(),
+                B.markFileChanged(FileIds.file4, [RevisionId.makeSelected(1), RevisionId.makeSelected(2)])
             );
             const unpublished = { ...emptyUnpublishedReview,
                 headCommit: 'REV_2_HEAD',
@@ -390,7 +394,8 @@ describe('Upgrade review', () => {
         it('provisional file (now known) marked as reviewed at P (now R3)', () => {
             const reviewInfo = B.applyBuilders(base,
                 B.addFileToReview(FileIds.file4, 'file4', RevisionId.makeSelected(1), RevisionId.makeSelected(3)),
-                B.defineFileMatrix()
+                B.defineFileMatrix(),
+                B.markFileChanged(FileIds.file4, [RevisionId.makeSelected(1), RevisionId.makeSelected(3)])
             );
             const unpublished = { ...emptyUnpublishedReview,
                 headCommit: 'REV_3_HEAD',

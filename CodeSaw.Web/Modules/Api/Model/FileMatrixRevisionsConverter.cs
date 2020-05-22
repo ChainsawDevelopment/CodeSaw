@@ -19,32 +19,8 @@ namespace CodeSaw.Web.Modules.Api.Model
                 writer.WriteStartObject();
 
                 writer.WritePropertyName("revision");
-                //writer.WriteStartObject();
 
                 new RevisionIdObjectConverter().WriteJson(writer, revision, serializer);
-
-                //revision.Do(@base: () =>
-                //    {
-                //        writer.WritePropertyName("type");
-                //        writer.WriteValue("base");
-                //    },
-                //    selected: s =>
-                //    {
-                //        writer.WritePropertyName("type");
-                //        writer.WriteValue("selected");
-
-                //        writer.WritePropertyName("revision");
-                //        writer.WriteValue(s.Revision);
-                //    }, hash: h =>
-                //    {
-                //        writer.WritePropertyName("type");
-                //        writer.WriteValue("hash");
-
-                //        writer.WritePropertyName("head");
-                //        writer.WriteValue(h.CommitHash);
-                //    });
-                
-                //writer.WriteEndObject();
 
                 var statusJson = JObject.FromObject(status, serializer);
 

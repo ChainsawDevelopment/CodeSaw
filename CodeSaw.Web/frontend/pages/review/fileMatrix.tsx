@@ -6,55 +6,14 @@ import Popup from '@ui/modules/Popup';
 import Icon from '@ui/elements/Icon';
 
 import Table from '@ui/collections/Table';
-import { PathPair } from "../../pathPair";
 import * as PathPairs from "../../pathPair";
 import * as classNames from "classnames";
 
 import "./fileMatrix.less";
-import { FileToReview, ReviewId, FileDiscussion, FileId, FileMatrixRevision, FileMatrixEntry } from "../../api/reviewer";
+import { FileToReview, ReviewId, FileDiscussion, FileMatrixRevision, FileMatrixEntry } from "../../api/reviewer";
 
 import { FileLink } from './FileLink';
-import { RemoteRevisionId, RevisionId, LocalRevisionId } from "@api/revisionId";
-
-// namespace remote
-// {
-//     export interface FileMatrixRevision {
-//         revision: RemoteRevisionId;
-//         file: PathPair;
-//         isNew: boolean;
-//         isRenamed: boolean;
-//         isDeleted: boolean;
-//         isUnchanged: boolean;
-//         reviewers: string[];
-//     }
-
-//     export interface FileMatrixEntry {
-//         file: PathPair;
-//         fileId: FileId;
-//         revisions: FileMatrixRevision[];
-//     }
-// }
-
-// namespace local
-// {
-//     export interface FileMatrixRevision {
-//         revision: LocalRevisionId;
-//         file: PathPair;
-//         isNew: boolean;
-//         isRenamed: boolean;
-//         isDeleted: boolean;
-//         isUnchanged: boolean;
-//         reviewers: string[];
-//     }
-
-//     export interface FileMatrixEntry {
-//         file: PathPair;
-//         fileId: FileId;
-//         revisions: FileMatrixRevision[];
-//     }
-// }
-
-// type FileMatrix = local.FileMatrixEntry[];
+import { RevisionId } from "@api/revisionId";
 
 type ReviewMark = 'outside' | 'previous' | 'inside' | 'current' | 'single';
 

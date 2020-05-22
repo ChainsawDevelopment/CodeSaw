@@ -22,8 +22,6 @@ export namespace RevisionId
                 return true;
             case 'selected':
                 return a.revision == (b as RevisionSelected).revision;
-            // case 'hash':
-            //     return (a.base == (b as RevisionHash).base) && (a.head == (b as RevisionHash).head);
             case 'hash':
                 return (a.head == (b as RevisionHash).head);
         }
