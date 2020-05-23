@@ -48,7 +48,13 @@ const File = (props: Props): JSX.Element => {
         if(props.selectedFile == null || props.fileId != props.selectedFile.fileId) {
             props.selectFileForView(props.fileId);
         }
-    });
+    }, [props.fileId, props.selectedFile != null ? props.selectedFile.fileId : null]);
+
+    React.useEffect(() => {
+        if(stickyContainer.current) {
+            scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' });
+        }
+      }, []);
 
     const scrollToFile = () => {
         scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' })
