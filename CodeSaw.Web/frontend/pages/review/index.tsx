@@ -30,17 +30,23 @@ import Header from './sections/header';
 import Actions from './sections/actions';
 import ReviewDiscussions from './sections/reviewDiscussions';
 import File from './sections/file';
-import { useRouteMatch, Redirect, Switch, Route, useHistory } from "react-router";
+import { useRouteMatch, Redirect, Switch, Route, useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
 
 const LinkMenuItem = (props: {match: string; params?: any; children?: React.ReactNode}) => {
     const match = useRouteMatch(props.match);
+    const parentParams = useParams();
     let to = props.match;
     if(props.params) {
         for (const key of Object.keys(props.params)) {
             to = to.replace(':' + key, props.params[key]);
         }
     }
+
+    for (const key of Object.keys(parentParams)) {
+        to = to.replace(':' + key, parentParams[key]);
+    }
+
     return <Menu.Item as={Link} to={to} active={match != null}>
         {props.children}
     </Menu.Item>
@@ -74,19 +80,21 @@ interface StateProps {
 type Props = OwnProps & StateProps & DispatchProps;
 
 const reviewPage = (props: Props) => {
+    let { path, url } = useRouteMatch();
+
     const routing = {
-        root: useRouteMatch('/project/:projectId/review/:reviewId/'),
-        file: useRouteMatch<{fileId: string}>('/project/:projectId/review/:reviewId/file/:fileId')
+        root: useRouteMatch(`${path}`),
+        file: useRouteMatch<{fileId: string}>(`${path}file/:fileId`)
     };
 
     if(routing.root.isExact) {
-        return <Redirect to={`/project/${props.reviewId.projectId}/review/${props.reviewId.reviewId}/matrix`}/>;
+        return <Redirect to={`${url}/matrix`}/>;
     }
 
     if(routing.file && props.currentReview.reviewId) {
         const fileExists = props.currentReview.filesToReview.findIndex(f => f.fileId == routing.file.params.fileId);
         if(fileExists == -1) {
-            return <Redirect to={`/project/${props.reviewId.projectId}/review/${props.reviewId.reviewId}/matrix`}/>;
+            return <Redirect to={`${url}/matrix`}/>;
         }
     }
 
@@ -128,15 +136,15 @@ const reviewPage = (props: Props) => {
 
                 <div>
                     <Menu attached='top' tabular>
-                        <LinkMenuItem match={`/project/${props.reviewId.projectId}/review/${props.reviewId.reviewId}/matrix`}>File matrix</LinkMenuItem>
-                        <LinkMenuItem match={`/project/${props.reviewId.projectId}/review/${props.reviewId.reviewId}/file/:fileId`} params={{fileId: 'abc'}}>Diff</LinkMenuItem>
+                        <LinkMenuItem match={`${path}matrix`}>File matrix</LinkMenuItem>
+                        <LinkMenuItem match={`${path}file/:fileId`} params={{fileId: 'abc'}}>Diff</LinkMenuItem>
                     </Menu>
                     <Segment attached='bottom'>
                         {props.currentReview.reviewId && <Switch>
-                            <Route path="/project/:projectId/review/:reviewId/matrix">
+                            <Route path={`${path}matrix`}>
                                 <FileMatrix />
                             </Route>
-                            <Route path="/project/:projectId/review/:reviewId/file/:fileId">
+                            <Route path={`${path}file/:fileId`}>
                                 <RoutedFile reviewId={props.reviewId}/>
                             </Route>
                         </Switch>}
