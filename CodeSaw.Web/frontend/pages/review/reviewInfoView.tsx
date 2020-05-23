@@ -8,6 +8,7 @@ import MergeApprover from './mergeApprover';
 import { Dispatch } from "../../../../node_modules/redux";
 import { mergePullRequest } from "./state";
 import * as showdown from 'showdown';
+import Actions from './sections/actions';
 
 interface StateProps {
     reviewId: ReviewId;
@@ -35,7 +36,7 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
     return (
         <Grid>
             <Grid.Row>
-                <Grid.Column>
+                <Grid.Column width={12}>
                     <MergeApprover
                         reviewId={props.reviewId}
                         mergeStatus={props.mergeStatus}
@@ -45,6 +46,9 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
                         targetBranch={props.branches.target}
                         reviewFinished={props.reviewFinished}
                     />
+                </Grid.Column>
+                <Grid.Column width={4} textAlign='left'>
+                    <Actions />
                 </Grid.Column>
             </Grid.Row>
             <Grid.Row>

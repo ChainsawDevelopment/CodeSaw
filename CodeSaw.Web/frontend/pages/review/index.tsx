@@ -118,22 +118,14 @@ const reviewPage = (props: Props) => {
 
                 <Grid>
                     <Header />
-
                     <Grid.Row>
                         <Grid.Column>
                             <ReviewInfoView />
                             <Divider />
                         </Grid.Column>
                     </Grid.Row>
-                    <Grid.Row columns={1}>
-                        <Grid.Column>
-                            <Actions />
-                        </Grid.Column>
-                    </Grid.Row>
                     <ReviewDiscussions />
                 </Grid>
-
-                <Divider />
 
                 <div>
                     <Menu attached='top' tabular>
