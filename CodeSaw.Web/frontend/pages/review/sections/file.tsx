@@ -1,6 +1,6 @@
 import { connect } from "react-redux";
 import * as React from "react";
-import { SelectFileForViewHandler, OnShowFileHandlerAvailable } from "../selectFile";
+import { SelectFileForViewHandler } from "../selectFile";
 import { Dispatch } from "redux";
 import { RootState } from "@src/rootState";
 import { ReviewInfo, FileId, ReviewId } from "@api/reviewer";
@@ -9,7 +9,6 @@ import { createLinkToFile } from "../FileLink";
 import { History } from "history";
 import { HotKeys } from "@src/components/HotKeys";
 import Segment from "semantic-ui-react/dist/commonjs/elements/Segment";
-import Sticky from "semantic-ui-react/dist/commonjs/modules/Sticky";
 import DiffHeader from "./diffHeader";
 import { NoFileView } from "./fileView";
 import DiffContent from './diffContent';
@@ -26,8 +25,6 @@ interface OwnProps {
     reviewId: ReviewId;
     fileId?: FileId;
     history: History;
-    showFileHandler?(): void;
-    onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
 }
 
 interface StateProps {
@@ -47,6 +44,11 @@ type Props = StateProps & DispatchProps & OwnProps;
 
 const File = (props: Props): JSX.Element => {
     const stickyContainer = React.useRef<HTMLDivElement>();
+    React.useEffect(() => {
+        if(props.selectedFile == null || props.fileId != props.selectedFile.fileId) {
+            props.selectFileForView(props.fileId);
+        }
+    });
 
     const scrollToFile = () => {
         scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' })
@@ -54,7 +56,6 @@ const File = (props: Props): JSX.Element => {
 
     const setStickyContainer = React.useCallback((node: HTMLDivElement) => {
         stickyContainer.current = node;
-        props.onShowFileHandlerAvailable(scrollToFile);
     }, []);
 
 
@@ -67,10 +68,6 @@ const File = (props: Props): JSX.Element => {
             const fileLink = createLinkToFile(props.reviewId, fileId);
             if (fileLink != window.location.pathname) {
                 props.history.push(fileLink);
-            }
-
-            if (props.showFileHandler) {
-                props.showFileHandler();
             }
         }
     };

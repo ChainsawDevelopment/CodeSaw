@@ -39,7 +39,6 @@ const Review = withRouter((props: RouteComponentProps<{ projectId: string; id: s
 
     return (<ReviewPage
         reviewId={reviewId}
-        fileId={fileId || ''}
         history={props.history}
     />)
 });
@@ -78,7 +77,7 @@ const Layout = (props: StateProps) => (
         <Container fluid id="main-content">
             <ConnectedSwitch>
                 <Route exact path="/" component={Home} />
-                <Route path="/project/:projectId/review/:id/:fileId?" component={Review} />
+                <Route path="/project/:projectId/review/:id/" component={Review} />
                 <Route exact path="/admin" component={AdminPage} />
             </ConnectedSwitch>
         </Container>

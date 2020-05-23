@@ -4,7 +4,7 @@ import { ReviewId, FileId } from "../../api/reviewer";
 import FileName from './FileName';
 
 export const createLinkToFile = (reviewId: ReviewId, fileId: FileId): string => (
-    `/project/${reviewId.projectId}/review/${reviewId.reviewId}/${fileId}`);
+    `/project/${reviewId.projectId}/review/${reviewId.reviewId}/file/${fileId}`);
 
 export const FileLink = (props: { reviewId: ReviewId, fileId: FileId, children?: any, onClick?: () => void }) => {
     return <Link
