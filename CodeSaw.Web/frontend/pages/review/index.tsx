@@ -74,6 +74,7 @@ interface DispatchProps {
 
 interface StateProps {
     currentReview: ReviewInfo;
+    selectedFileId: FileId;
     reviewMode: 'reviewer' | 'author';
 }
 
@@ -137,7 +138,7 @@ const reviewPage = (props: Props) => {
                 <div>
                     <Menu attached='top' tabular>
                         <LinkMenuItem match={`${path}matrix`}>File matrix</LinkMenuItem>
-                        <LinkMenuItem match={`${path}file/:fileId`} params={{fileId: 'abc'}}>Diff</LinkMenuItem>
+                        <LinkMenuItem match={`${path}file/:fileId`} params={{fileId: props.selectedFileId}}>Diff</LinkMenuItem>
                     </Menu>
                     <Segment attached='bottom'>
                         {props.currentReview.reviewId && <Switch>
@@ -158,6 +159,7 @@ const reviewPage = (props: Props) => {
 const mapStateToProps = (state: RootState): StateProps => ({
     currentReview: state.review.currentReview,
     reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer',
+    selectedFileId: state.review.selectedFile ? state.review.selectedFile.fileId : null
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
