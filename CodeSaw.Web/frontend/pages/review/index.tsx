@@ -5,15 +5,11 @@ import { History } from "history";
 
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
-import Tab from '@ui/modules/Tab';
 import Menu from '@ui/collections/Menu';
 import Segment from '@ui/elements/Segment';
 
 import {
-    selectFileForView,
     loadReviewInfo,
-    FileInfo,
-    mergePullRequest,
 } from "./state";
 import {
     ReviewInfo,
@@ -22,13 +18,11 @@ import {
 } from '../../api/reviewer';
 
 import { OnMount } from "../../components/OnMount";
-import { UserState, RootState } from "../../rootState";
-import { SelectFileForViewHandler } from './selectFile';
+import { RootState } from "../../rootState";
 import "./review.less";
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 
-import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
 
@@ -36,7 +30,7 @@ import Header from './sections/header';
 import Actions from './sections/actions';
 import ReviewDiscussions from './sections/reviewDiscussions';
 import File from './sections/file';
-import { useRouteMatch, Redirect, Switch, Route, withRouter, useHistory } from "react-router";
+import { useRouteMatch, Redirect, Switch, Route, useHistory } from "react-router";
 import { Link } from "react-router-dom";
 
 const LinkMenuItem = (props: {match: string; params?: any; children?: React.ReactNode}) => {
@@ -70,16 +64,10 @@ interface OwnProps {
 
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId, fileToPreload?: FileId): void;
-    selectFileForView: SelectFileForViewHandler;
-    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): void;
 }
 
 interface StateProps {
-    currentUser: UserState;
     currentReview: ReviewInfo;
-    selectedFile: FileInfo;
-    reviewedFiles: FileId[];
-    author: UserState;
     reviewMode: 'reviewer' | 'author';
 }
 
@@ -130,7 +118,7 @@ const reviewPage = (props: Props) => {
                     </Grid.Row>
                     <Grid.Row columns={1}>
                         <Grid.Column>
-                            <Actions onHideReviewedChange={null} />
+                            <Actions />
                         </Grid.Column>
                     </Grid.Row>
                     <ReviewDiscussions />
@@ -146,9 +134,7 @@ const reviewPage = (props: Props) => {
                     <Segment attached='bottom'>
                         {props.currentReview.reviewId && <Switch>
                             <Route path="/project/:projectId/review/:reviewId/matrix">
-                                <FileMatrix
-                                    hideReviewed={false}
-                                />
+                                <FileMatrix />
                             </Route>
                             <Route path="/project/:projectId/review/:reviewId/file/:fileId">
                                 <RoutedFile reviewId={props.reviewId}/>
@@ -162,18 +148,12 @@ const reviewPage = (props: Props) => {
 };
 
 const mapStateToProps = (state: RootState): StateProps => ({
-    currentUser: state.currentUser,
     currentReview: state.review.currentReview,
-    selectedFile: state.review.selectedFile,
-    reviewedFiles: state.review.reviewedFiles,
-    author: state.review.currentReview.author,
     reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer',
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectFileForView: (fileId) => dispatch(selectFileForView({ fileId })),
-    mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
 });
 
 export default connect(
