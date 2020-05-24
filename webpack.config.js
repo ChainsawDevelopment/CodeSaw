@@ -1,9 +1,10 @@
 const path = require("path");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+const AssetsPlugin = require('assets-webpack-plugin');
 
 const PUBLIC_PATH = process.env.PUBLIC_PATH || "http://localhost:8080/";
 
-module.exports = {
+const baseConfig = {
   entry: ["./CodeSaw.Web/frontend/index.tsx"],
   output: {
     path: path.resolve(__dirname, "CodeSaw.Web/wwwroot"),
@@ -60,7 +61,13 @@ module.exports = {
     all: undefined,
     chunks: false,
     chunkModules: false
-  }
+  },
+  plugins: [
+    new AssetsPlugin({
+      path: path.resolve(__dirname, "CodeSaw.Web/wwwroot"),
+      fullPath: false
+    })
+  ]
 };
 
 if (process.env.WEBPACK_SERVE === "true") {
@@ -77,4 +84,30 @@ if (process.env.WEBPACK_SERVE === "true") {
       middleware.content();
     }
   };
+}
+
+module.exports = (env, argv) => {
+  let config = {...baseConfig};
+
+  if (process.env.WEBPACK_SERVE === "true") {
+    config.serve = {
+      dev: {
+        stats: "minimal"
+      },
+      add: (app, middleware) => {
+        app.use((ctx, next) => {
+          ctx.set("Access-Control-Allow-Origin", "*");
+          next();
+        });
+        middleware.webpack();
+        middleware.content();
+      }
+    };
+  }
+
+  if(argv.mode == 'production') {
+    config.output.filename = '[name].[contenthash].js';
+  }
+
+  return config;
 }
