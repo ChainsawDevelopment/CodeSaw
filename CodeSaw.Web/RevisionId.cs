@@ -137,6 +137,23 @@ namespace CodeSaw.Web
 
         public abstract TResult Resolve<TResult>(Func<TResult> resolveBase, Func<Selected, TResult> resolveSelected, Func<Hash, TResult> resolveHash);
 
+        public void Do(Action @base = null, Action<Selected> selected = null, Action<Hash> hash = null)
+        {
+            Resolve(() =>
+            {
+                @base?.Invoke();
+                return 0;
+            }, s =>
+            {
+                selected?.Invoke(s);
+                return 0;
+            }, h =>
+            {
+                hash?.Invoke(h);
+                return 0;
+            });
+        }
+
         public static bool TryParse(string s, out RevisionId revisionId)
         {
             if (s == "base")

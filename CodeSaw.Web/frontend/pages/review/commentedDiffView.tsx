@@ -1,12 +1,13 @@
 import * as React from 'react';
 
 import DiffView, { Props as DiffViewProps, LineWidget, DiffSide } from './diffView';
-import { FileDiscussion, RevisionId, CommentReply, Discussion } from '../../api/reviewer';
+import { FileDiscussion, CommentReply, Discussion } from '../../api/reviewer';
 import CommentsView, { DiscussionActions } from './commentsView';
 import { UserState } from '../../rootState';
 import { SelectLineNumberModal } from './SelectLineNumberModal';
 import { HotKeys } from 'CodeSaw.Web/frontend/components/HotKeys';
 import { DiscussionType } from './state';
+import { LocalRevisionId, RevisionId } from '@api/revisionId';
 const style = require('./commentedDiffView.less');
 
 export interface LineCommentsActions {
@@ -20,8 +21,8 @@ interface CommentProps {
     commentActions: DiscussionActions;
     lineCommentsActions: LineCommentsActions;
     visibleCommentLines: number[];
-    leftSideRevision: RevisionId;
-    rightSideRevision: RevisionId;
+    leftSideRevision: LocalRevisionId;
+    rightSideRevision: LocalRevisionId;
     pendingResolved: string[];
     unpublishedReplies: CommentReply[];
     currentUser: UserState;
@@ -51,11 +52,14 @@ const splitComments = (props: Props): LineComments => {
         unmatched: []
     }
 
-    const allCommentsUnmatched = props.leftSideRevision == props.rightSideRevision;
+    const allCommentsUnmatched = RevisionId.equal(props.leftSideRevision, props.rightSideRevision);
 
     for (let fileComment of props.comments) {
-        if (!allCommentsUnmatched && (fileComment.revision == props.rightSideRevision || fileComment.revision == props.leftSideRevision)) {
-            let side = fileComment.revision == props.rightSideRevision ? 'right' : 'left';
+        const isRightSide = RevisionId.equal(fileComment.revision, props.rightSideRevision);
+        const isLeftSide = RevisionId.equal(fileComment.revision, props.leftSideRevision);
+
+        if (!allCommentsUnmatched && (isRightSide || isLeftSide)) {
+            let side = isRightSide ? 'right' : 'left';
             lineComments[side].set(fileComment.lineNumber, [
                 ...(lineComments[side].get(fileComment.lineNumber) || []),
                 {
@@ -117,6 +121,18 @@ const buildLineWidgets = (props: Props, lineComments: LineComments) => {
     return lineWidgets;
 }
 
+const revisionToString = (r: LocalRevisionId) => {
+    if(RevisionId.isBase(r)) {
+        return 'base';
+    }
+
+    if(RevisionId.isProvisional(r)) {
+        return 'provisional';
+    }
+
+    return r.revision;
+}
+
 const UnmatchedComments = (props: {
     unpublishedReplies: CommentReply[];
     commentActions: DiscussionActions;
@@ -134,7 +150,7 @@ const UnmatchedComments = (props: {
         removeUnpublishedComment: props.commentActions.removeUnpublishedComment
     }
 
-    const note = (d: Discussion): JSX.Element => <div className="unmatched-comment-info">Revision {d.revision} line {(d as FileDiscussion).lineNumber}</div>;
+    const note = (d: Discussion): JSX.Element => <div className="unmatched-comment-info">Revision {revisionToString(d.revision)} line {(d as FileDiscussion).lineNumber}</div>;
 
     return (
         <CommentsView

@@ -10,6 +10,8 @@ using CodeSaw.Web.Modules.Api.Commands.PublishElements;
 using CodeSaw.Web.Modules.Api.Model;
 using NHibernate;
 using CodeSaw.Web.Modules.Api.Queries;
+using CodeSaw.Web.Serialization;
+using Newtonsoft.Json;
 using NHibernate.Criterion;
 using NHibernate.Linq;
 
@@ -194,8 +196,15 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public List<string> ResolvedDiscussions { get; set; } = new List<string>(); 
         public List<RepliesPublisher.Item> Replies { get; set; } = new List<RepliesPublisher.Item>();
 
-        public Dictionary<RevisionId, List<ClientFileId>> ReviewedFiles { get; set; } = new Dictionary<RevisionId, List<ClientFileId>>();
-        public Dictionary<RevisionId, List<ClientFileId>> UnreviewedFiles { get; set; } = new Dictionary<RevisionId, List<ClientFileId>>();
+        public class FileRef
+        {
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
+            public RevisionId Revision { get; set; }
+            public ClientFileId FileId { get; set; }
+        }
+
+        public List<FileRef> ReviewedFiles { get; set; } = new List<FileRef>();
+        public List<FileRef> UnreviewedFiles { get; set; } = new List<FileRef>();
 
         public class RevisionCommits
         {
@@ -265,14 +274,23 @@ namespace CodeSaw.Web.Modules.Api.Commands
                 var newCommentsMap = new Dictionary<string, Guid>();
                 var newDiscussionsMap = new Dictionary<string, Guid>();
 
-                await new ReviewDiscussionsPublisher(_sessionAdapter, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap, newDiscussionsMap);
-                await new FileDiscussionsPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).Publish(command.StartedFileDiscussions.ToArray(), newCommentsMap, newDiscussionsMap);
+                await new ReviewDiscussionsPublisher(_sessionAdapter, reviewForRevision).Publish(command.StartedReviewDiscussions, newCommentsMap,
+                    newDiscussionsMap);
+                await new FileDiscussionsPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).Publish(
+                    command.StartedFileDiscussions.ToArray(), newCommentsMap, newDiscussionsMap);
 
-                var resolvedDiscussions = command.ResolvedDiscussions.Select(d => newDiscussionsMap.GetValueOrDefault(d, () => Guid.Parse(d))).ToList();
+                var resolvedDiscussions = command.ResolvedDiscussions.Select(d => newDiscussionsMap.GetValueOrDefault(d, () => Guid.Parse(d)))
+                    .ToList();
 
                 await new ResolveDiscussions(_sessionAdapter, reviewForRevision).Publish(resolvedDiscussions);
                 await new RepliesPublisher(_sessionAdapter).Publish(command.Replies, headReview, newCommentsMap);
-                await new MarkFilesPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).MarkFiles(command.ReviewedFiles, command.UnreviewedFiles);
+
+                var commandReviewedFiles = command.ReviewedFiles.GroupBy(x => x.Revision)
+                    .ToDictionary(x => x.Key, x => x.Select(y => y.FileId).ToList());
+                var commandUnreviewedFiles = command.UnreviewedFiles.GroupBy(x => x.Revision)
+                    .ToDictionary(x => x.Key, x => x.Select(y => y.FileId).ToList());
+                await new MarkFilesPublisher(_sessionAdapter, reviewForRevision, ResolveFileId).MarkFiles(commandReviewedFiles,
+                    commandUnreviewedFiles);
 
                 _eventBus.Publish(new ReviewPublishedEvent(reviewId));
             }

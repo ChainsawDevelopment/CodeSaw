@@ -7,6 +7,8 @@ using CodeSaw.Web.Auth;
 using CodeSaw.Web.Cqrs;
 using CodeSaw.Web.Modules.Api.Model;
 using CodeSaw.Web.Modules.Api.Model.FileMatrixOperations;
+using CodeSaw.Web.Serialization;
+using Newtonsoft.Json;
 using NHibernate;
 
 namespace CodeSaw.Web.Modules.Api.Queries
@@ -23,6 +25,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public Revision[] PastRevisions { get; set; }
             public bool HasProvisionalRevision { get; set; }
             public string HeadCommit { get; set; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
             public RevisionId HeadRevision { get; set; }
             public string BaseCommit { get; set; }
             public string WebUrl { get; set; }
@@ -60,7 +63,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
         public class ReviewDiscussionInfo
         {
             public Guid Id { get; set; }
-            public int Revision { get; set; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
+            public RevisionId Revision { get; set; }
             public CommentItem Comment { get; set; }
             public CommentState State { get; set; }
             public bool CanResolve { get; set; }
@@ -69,7 +73,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
         public class FileDiscussionInfo
         {
             public Guid Id { get; set; }
-            public int Revision { get; set; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
+            public RevisionId Revision { get; set; }
             public Guid FileId { get; set; }
             public int LineNumber { get; set; }
             public CommentItem Comment { get; set; }
@@ -191,7 +196,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     select new ReviewDiscussionInfo
                     {
                         Id = discussion.Id,
-                        Revision = revision.RevisionNumber,
+                        Revision = new RevisionId.Selected(revision.RevisionNumber),
                         Comment = comments[discussion.RootComment.Id],
                         State = discussion.State,
                     };
@@ -214,7 +219,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     select new FileDiscussionInfo
                     {
                         Id = discussion.Id,
-                        Revision = revision.RevisionNumber,
+                        Revision = new RevisionId.Selected(revision.RevisionNumber),
                         FileId = discussion.FileId,
                         LineNumber = discussion.LineNumber,
                         Comment = comments[discussion.RootComment.Id],

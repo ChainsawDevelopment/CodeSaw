@@ -23,26 +23,23 @@ export namespace PublishButton {
 }
 
 const PublishButtonView = (props: PublishButton.Props) : JSX.Element => {
-    const countChanges = (changeStatus: FileReviewStatusChange) => Object.keys(changeStatus)
-            .map(key => changeStatus[key])
-            .reduce((a,b) => a.concat(b), [])
-            .length;
+    const countChanges = (changeStatus: FileReviewStatusChange[]) => changeStatus.length;
 
-    const unpublishedItemsCount = 
+    const unpublishedItemsCount =
         props.review.unpublishedFileDiscussions.length +
         props.review.unpublishedReplies.length +
         props.review.unpublishedResolvedDiscussions.length +
-        props.review.unpublishedReviewDiscussions.length + 
+        props.review.unpublishedReviewDiscussions.length +
         countChanges(props.review.unpublishedReviewedFiles) +
         countChanges(props.review.unpublishedUnreviewedFiles);
 
     const publishAndLoad = props.review.selectedFile ?
         () => props.publishReview(props.review.selectedFile.fileId)
         : () => props.publishReview(undefined);
-    
-    return <Button 
-        disabled={unpublishedItemsCount === 0} 
-        positive 
+
+    return <Button
+        disabled={unpublishedItemsCount === 0}
+        positive
         onClick={publishAndLoad}>
             Publish Changes {unpublishedItemsCount > 0 && <span className={"count"}>({unpublishedItemsCount})</span>}
         </Button>

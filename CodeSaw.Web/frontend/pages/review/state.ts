@@ -9,7 +9,6 @@ import {
     ReviewDiscussion,
     CommentReply,
     FileToReview,
-    RevisionId,
     FileId,
     DiffDiscussions,
     CommentState,
@@ -17,6 +16,8 @@ import {
 import { UserState } from "../../rootState";
 import * as PathPairs from '../../pathPair';
 import * as _ from 'lodash'
+import { RevisionId, LocalRevisionId } from '@api/revisionId';
+import { upgradeReview } from './upgradeReview';
 
 export enum DiscussionType {
     Comment,
@@ -30,23 +31,26 @@ export interface FileInfo {
     fileId: FileId;
     fileToReview: FileToReview;
     range: {
-        previous: RevisionId;
-        current: RevisionId;
+        previous: LocalRevisionId;
+        current: LocalRevisionId;
     };
     discussions: FileDiscussion[];
 }
 
 export interface FileReviewStatusChange {
-    [revision: string]: FileId[];
+    revision: LocalRevisionId;
+    fileId: FileId;
 }
 
 export interface UnpublishedReview {
+    headCommit: string;
+    baseCommit: string;
     unpublishedFileDiscussions: (FileDiscussion)[];
     unpublishedReviewDiscussions: (ReviewDiscussion)[];
     unpublishedResolvedDiscussions: string[];
     unpublishedReplies: CommentReply[];
-    unpublishedReviewedFiles: FileReviewStatusChange;
-    unpublishedUnreviewedFiles: FileReviewStatusChange;
+    unpublishedReviewedFiles: FileReviewStatusChange[];
+    unpublishedUnreviewedFiles: FileReviewStatusChange[];
     nextReplyId: number;
     nextDiscussionCommentId: number;
 }
@@ -61,13 +65,16 @@ export interface ReviewState extends UnpublishedReview {
 const createAction = actionCreatorFactory('REVIEW');
 
 export const selectFileForView = createAction<{ fileId: FileId }>('SELECT_FILE_FOR_VIEW');
-export const changeFileRange = createAction<{ previous: RevisionId; current: RevisionId; }>('CHANGE_FILE_RANGE');
+export const changeFileRange = createAction<{
+    previous: LocalRevisionId;
+    current: LocalRevisionId;
+}>('CHANGE_FILE_RANGE');
 export const markEmptyFilesAsReviewed = createAction<{}>('MARK_EMPTY_FILES_AS_REVIEWED');
 
 export const loadedFileDiff = createAction<{ diff: FileDiff; remappedDiscussions: DiffDiscussions }>('LOADED_FILE_DIFF');
 
 export const loadReviewInfo = createAction<{ reviewId: ReviewId, fileToPreload?: string }>('LOAD_REVIEW_INFO');
-export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, vsCodeWorkspace: string }>('LOADED_REVIEW_INFO');
+export const loadedReviewInfo = createAction<{ info: ReviewInfo, unpublishedInfo: UnpublishedReview, fileIdMap: { [fileId: string]: string }; vsCodeWorkspace: string }>('LOADED_REVIEW_INFO');
 
 export const clearUnpublishedReviewInfo = createAction<{ reviewId: ReviewId }>("CLEAR_UNPUBLISHED_REVIEW");
 
@@ -119,12 +126,14 @@ export const IsCommentUnpublished = (commentId: string): boolean => {
 
 
 export const emptyUnpublishedReview: UnpublishedReview = {
+    headCommit: '',
+    baseCommit: '',
     unpublishedFileDiscussions: [],
     unpublishedReviewDiscussions: [],
     unpublishedResolvedDiscussions: [],
     unpublishedReplies: [],
-    unpublishedReviewedFiles: {},
-    unpublishedUnreviewedFiles: {},
+    unpublishedReviewedFiles: [],
+    unpublishedUnreviewedFiles: [],
     nextDiscussionCommentId: 0,
     nextReplyId: 0,
 }
@@ -141,7 +150,7 @@ const initial: ReviewState = {
         headCommit: '',
         baseCommit: '',
         webUrl: '',
-        headRevision: '',
+        headRevision: RevisionId.Provisional,
         state: 'opened',
         mergeStatus: 'unchecked',
         fileDiscussions: [],
@@ -160,93 +169,20 @@ const initial: ReviewState = {
     vsCodeWorkspace: ''
 };
 
-export const resolveRevision = (state: ReviewInfo, revision: RevisionId) => {
-    if (revision == 'base') {
+export const resolveRevision2 = (state: ReviewInfo, revision: LocalRevisionId) => {
+    if (RevisionId.isBase(revision)) {
         return { base: state.baseCommit, head: state.baseCommit };
     };
 
-    if (revision == state.headCommit) {
+    if (RevisionId.isProvisional(revision)) {
         return { base: state.baseCommit, head: state.headCommit };
     }
 
-    if (revision == 'provisional') {
-        return { base: state.baseCommit, head: state.headCommit };
-    }
-
-    const r = parseInt(revision.toString());
-
-    const pastRevision = state.pastRevisions.find(x => x.number == r);
+    const pastRevision = state.pastRevisions.find(x => x.number == revision.revision);
 
     return {
         base: pastRevision.base,
         head: pastRevision.head
-    };
-}
-
-
-export const upgradeUnpublishedReview = (current: ReviewInfo, review: UnpublishedReview): UnpublishedReview => {
-    const knownRevisions = current.pastRevisions.map(r => r.number.toString() as RevisionId);
-
-    if (current.hasProvisionalRevision) {
-        knownRevisions.push(current.headRevision.toString() as RevisionId);
-    }
-
-    const fileDiscussions = review.unpublishedFileDiscussions.map(fd => {
-        const idx = knownRevisions.indexOf(fd.revision);
-        if (idx != -1) {
-            return fd;
-        }
-
-        return {
-            ...fd,
-            revision: current.headRevision
-        };
-    });
-
-    const reviewDiscussions = review.unpublishedReviewDiscussions.map(fd => {
-        const idx = knownRevisions.indexOf(fd.revision);
-        if (idx != -1) {
-            return fd;
-        }
-
-        return {
-            ...fd,
-            revision: current.headRevision
-        };
-    });
-
-    const reviewedFiles: FileReviewStatusChange = {};
-
-    for (const revision of Object.keys(review.unpublishedReviewedFiles)) {
-        const idx = knownRevisions.indexOf(revision);
-        if (idx != -1) {
-            reviewedFiles[revision] = review.unpublishedReviewedFiles[revision];
-        } else {
-            reviewedFiles[current.headRevision] = review.unpublishedReviewedFiles[revision];
-        }
-    }
-
-    const unreviewedFiles: FileReviewStatusChange = {};
-
-    for (const revision of Object.keys(review.unpublishedUnreviewedFiles)) {
-        const idx = knownRevisions.indexOf(revision);
-        if (idx != -1) {
-            unreviewedFiles[revision] = review.unpublishedUnreviewedFiles[revision];
-        } else {
-            unreviewedFiles[current.headRevision] = review.unpublishedUnreviewedFiles[revision];
-        }
-    }
-
-    return {
-        nextDiscussionCommentId: review.nextDiscussionCommentId,
-        nextReplyId: review.nextReplyId,
-        unpublishedFileDiscussions: fileDiscussions,
-        unpublishedReplies: review.unpublishedReplies,
-        unpublishedResolvedDiscussions: review.unpublishedResolvedDiscussions,
-        unpublishedReviewDiscussions: reviewDiscussions,
-        unpublishedReviewedFiles: reviewedFiles,
-        unpublishedUnreviewedFiles: unreviewedFiles
-
     };
 }
 
@@ -278,7 +214,7 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 diff: null,
                 range: {
                     previous: action.payload.previous,
-                    current: action.payload.current
+                    current: action.payload.current,
                 }
             }
         };
@@ -307,25 +243,25 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     if (loadedReviewInfo.match(action)) {
-        const unpublished = upgradeUnpublishedReview(action.payload.info, action.payload.unpublishedInfo);
-        const reviewedFiles = action.payload.info.filesToReview.filter(f => f.current == f.previous);
+        const unpublished = upgradeReview(action.payload.info, action.payload.unpublishedInfo, action.payload.fileIdMap);
+        const reviewedFiles = action.payload.info.filesToReview.filter(f => RevisionId.equal(f.previous, f.current));
 
-        const getChangedFilesPaths = (changeStatus: FileReviewStatusChange) => Object.keys(changeStatus)
-            .map(key => changeStatus[key])
-            .reduce((a, b) => a.concat(b), []);
+        const getChangedFilesPaths = (changeStatus: FileReviewStatusChange[]) => changeStatus.map(c => c.fileId);
 
-        const unpublishedReviewedFiles = getChangedFilesPaths(unpublished.unpublishedReviewedFiles);
-        const unpublishedUnreviewedFiles = getChangedFilesPaths(unpublished.unpublishedUnreviewedFiles);
+        const unpublishedReviewedFiles2 = getChangedFilesPaths(unpublished.unpublishedReviewedFiles);
+        const unpublishedUnreviewedFiles2 = getChangedFilesPaths(unpublished.unpublishedUnreviewedFiles);
 
         const reviewedFileFinal =
-            _.difference(reviewedFiles.map(f => f.fileId), unpublishedUnreviewedFiles)
-                .concat(unpublishedReviewedFiles);
+            _.difference(reviewedFiles.map(f => f.fileId), unpublishedUnreviewedFiles2)
+                .concat(unpublishedReviewedFiles2);
 
         return {
             ...state,
             currentReview: action.payload.info,
             reviewedFiles: reviewedFileFinal,
             ...unpublished,
+            headCommit: action.payload.info.headCommit,
+            baseCommit: action.payload.info.baseCommit,
             selectedFile: null,
             vsCodeWorkspace: action.payload.vsCodeWorkspace
         };
@@ -342,18 +278,18 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             return state;
         }
 
-        let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
-        let unreviewList = (state.unpublishedUnreviewedFiles[file.current] || []).concat([]);
+        let reviewList = state.unpublishedReviewedFiles;
+        let unreviewList = state.unpublishedUnreviewedFiles;
 
         const fileId = file.fileId;
 
-        const idxInReviewed = reviewList.findIndex(f => f == fileId);
-        const idxInUnreviewed = unreviewList.findIndex(f => f == fileId);
+        const idxInReviewed2 = reviewList.findIndex(f => f.fileId == fileId && RevisionId.equal(f.revision, file.current));
+        const idxInUnreviewed2 = unreviewList.findIndex(f => f.fileId == fileId && RevisionId.equal(f.revision, file.current));
 
-        if (idxInUnreviewed >= 0 && idxInReviewed == -1) {
-            unreviewList.splice(idxInUnreviewed, 1);
-        } else if (idxInUnreviewed == -1 && idxInReviewed == -1) {
-            reviewList = [...reviewList, fileId];
+        if (idxInUnreviewed2 >= 0 && idxInReviewed2 == -1) {
+            unreviewList.splice(idxInUnreviewed2, 1);
+        } else if (idxInUnreviewed2 == -1 && idxInReviewed2 == -1) {
+            reviewList = [...reviewList, {fileId, revision: file.current}];
         } else {
             throw new Error('Holy crap...');
         }
@@ -364,14 +300,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
                 ...state.reviewedFiles,
                 file.fileId
             ],
-            unpublishedReviewedFiles: {
-                ...state.unpublishedReviewedFiles,
-                [file.current]: reviewList
-            },
-            unpublishedUnreviewedFiles: {
-                ...state.unpublishedUnreviewedFiles,
-                [file.current]: unreviewList
-            },
+            unpublishedReviewedFiles: reviewList,
+            unpublishedUnreviewedFiles: unreviewList,
         };
     }
 
@@ -382,18 +312,18 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
             return state;
         }
 
-        let reviewList = (state.unpublishedReviewedFiles[file.current] || []).concat([]);
-        let unreviewList = (state.unpublishedUnreviewedFiles[file.current] || []).concat([]);
+        let reviewList = state.unpublishedReviewedFiles;
+        let unreviewList = state.unpublishedUnreviewedFiles;
 
         const fileId = file.fileId;
 
-        const idxInReviewed = reviewList.findIndex(f => f == fileId);
-        const idxInUnreviewed = unreviewList.findIndex(f => f == fileId);
+        const idxInReviewed2 = reviewList.findIndex(f => f.fileId == fileId && RevisionId.equal(f.revision, file.current));
+        const idxInUnreviewed2 = unreviewList.findIndex(f => f.fileId == fileId && RevisionId.equal(f.revision, file.current));
 
-        if (idxInUnreviewed == -1 && idxInReviewed >= 0) {
-            reviewList.splice(idxInReviewed, 1);
-        } else if (idxInUnreviewed == -1 && idxInReviewed == -1) {
-            unreviewList = [...unreviewList, fileId];
+        if (idxInUnreviewed2 == -1 && idxInReviewed2 >= 0) {
+            reviewList.splice(idxInReviewed2, 1);
+        } else if (idxInUnreviewed2 == -1 && idxInReviewed2 == -1) {
+            unreviewList = [...unreviewList, {fileId, revision: file.current}];
         } else {
             throw new Error('Holy crap...');
         }
@@ -401,14 +331,8 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
         return {
             ...state,
             reviewedFiles: state.reviewedFiles.filter(v => v != fileId),
-            unpublishedReviewedFiles: {
-                ...state.unpublishedReviewedFiles,
-                [file.current]: reviewList
-            },
-            unpublishedUnreviewedFiles: {
-                ...state.unpublishedUnreviewedFiles,
-                [file.current]: unreviewList
-            },
+            unpublishedReviewedFiles: reviewList,
+            unpublishedUnreviewedFiles: unreviewList
         };
     }
 

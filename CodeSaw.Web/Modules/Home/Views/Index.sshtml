@@ -17,6 +17,8 @@
         debug: @Model.IsDebug
     };
 </script>
-<script src="@Model.AssetBase/dist.js"></script>
+@Each.Assets
+<script src="@Model.AssetBase/@Current"></script>
+@EndEach
 </body>
 </html>

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using CodeSaw.RepositoryApi;
+using CodeSaw.Web.Serialization;
+using Newtonsoft.Json;
 
 namespace CodeSaw.Web.Modules.Api.Model.FileMatrixOperations
 {
@@ -77,7 +79,9 @@ namespace CodeSaw.Web.Modules.Api.Model.FileMatrixOperations
             public string FileId { get; set; }
             public PathPair ReviewFile { get; }
             public PathPair DiffFile { get; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
             public RevisionId Previous { get; }
+            [JsonConverter(typeof(RevisionIdObjectConverter))]
             public RevisionId Current { get; }
             public string ChangeType { get; set; }
 

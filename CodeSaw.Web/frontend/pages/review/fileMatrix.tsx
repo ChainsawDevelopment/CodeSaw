@@ -6,35 +6,14 @@ import Popup from '@ui/modules/Popup';
 import Icon from '@ui/elements/Icon';
 
 import Table from '@ui/collections/Table';
-import { PathPair } from "../../pathPair";
 import * as PathPairs from "../../pathPair";
 import * as classNames from "classnames";
 
 import "./fileMatrix.less";
-import { FileToReview, ReviewId, FileDiscussion, FileId } from "../../api/reviewer";
+import { FileToReview, ReviewId, FileDiscussion, FileMatrixRevision, FileMatrixEntry } from "../../api/reviewer";
 
 import { FileLink } from './FileLink';
-
-interface FileMatrixRevision {
-    revision: {
-        type: string;
-        value: number | string;
-    };
-    file: PathPair;
-    isNew: boolean;
-    isRenamed: boolean;
-    isDeleted: boolean;
-    isUnchanged: boolean;
-    reviewers: string[];
-}
-
-interface FileMatrixEntry {
-    file: PathPair;
-    fileId: FileId;
-    revisions: FileMatrixRevision[];
-}
-
-type FileMatrix = FileMatrixEntry[];
+import { RevisionId } from "@api/revisionId";
 
 type ReviewMark = 'outside' | 'previous' | 'inside' | 'current' | 'single';
 
@@ -49,12 +28,12 @@ const FileDiscussionSummary = (props: {discussions:  FileDiscussion[]}): JSX.Ele
 
     if (unresolved.length > 0) {
         content = [
-            ...content, 
+            ...content,
             <span key='unresolved-title'>Discussions that needs resolution:</span>,
             <ul key='unresolved-list'>
-                {unresolved.map(d => <li key={d.lineNumber}>line {d.lineNumber} from {d.comment.author.name}</li>)}
+                {unresolved.map(d => <li key={d.id}>line {d.lineNumber} from {d.comment.author.name}</li>)}
             </ul>
-            
+
         ];
     }
 
@@ -110,7 +89,7 @@ const MatrixCell = (props: { revision: FileMatrixRevision; reviewMark: ReviewMar
     let discussions: JSX.Element = null;
 
     if (props.discussions.length > 0) {
-        
+
         discussions = (
             <FileDiscussionSummary discussions={props.discussions} />
         );
@@ -130,22 +109,20 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
     const { file } = props.file;
     const { review, reviewId } = props;
 
-    const revisions = props.file.revisions.concat([]);
+    const revisions = [
+        {
+            isDeleted: false,
+            isNew: false,
+            isRenamed: false,
+            isUnchanged: true,
+            revision: RevisionId.Base,
+            file: PathPairs.make(props.file.file.oldPath),
+            reviewers: []
+        },
+        ...props.file.revisions
+    ];
 
     const revisionCells = [];
-
-    revisions.unshift({
-        isDeleted: false,
-        isNew: false,
-        isRenamed: false,
-        isUnchanged: true,
-        revision: {
-            type: 'base',
-            value: 'base'
-        },
-        file: PathPairs.make(props.file.file.oldPath),
-        reviewers: []
-    });
 
     let reviewMark: ReviewMark = 'outside';
 
@@ -157,20 +134,20 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
         } else if (reviewMark == 'single') {
             reviewMark = 'outside';
         }
-        
-        if (r.revision.value == review.previous && r.revision.value == review.current) {
+
+        if(RevisionId.equal(r.revision, review.previous) && RevisionId.equal(r.revision, review.current)) {
             reviewMark = 'single';
         }
-        else if (r.revision.value == review.previous) {
+        else if (RevisionId.equal(r.revision, review.previous)) {
             reviewMark = 'previous';
-        } else if (r.revision.value == review.current) {
+        } else if (RevisionId.equal(r.revision, review.current)) {
             reviewMark = 'current';
-        }  
+        }
 
-        const revisionDiscussions = props.discussions.filter(f => f.revision == r.revision.value && f.fileId == props.file.fileId);
+        const revisionDiscussions = props.discussions.filter(f => RevisionId.equal(r.revision, f.revision) && f.fileId == props.file.fileId);
 
         revisionCells.push(<MatrixCell
-            key={r.revision.value}
+            key={RevisionId.asString(r.revision)}
             revision={r}
             reviewMark={reviewMark}
             discussions={revisionDiscussions}
@@ -187,7 +164,7 @@ const MatrixRow = (props: { file: FileMatrixEntry; review: FileToReview, reviewI
 };
 
 interface StateProps {
-    matrix: FileMatrix;
+    matrix: FileMatrixEntry[];
     revisions: number[];
     hasProvisional: boolean;
     filesToReview: FileToReview[];
@@ -213,7 +190,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        if (props.hideReviewed && review.current == review.previous) {
+        if (props.hideReviewed && RevisionId.equal(review.previous, review.current)) {
             continue;
         }
 
@@ -238,7 +215,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
 };
 
 const mapStateToProps = (state: RootState): StateProps => ({
-    matrix: state.review.currentReview.fileMatrix || [],
+    matrix: state.review.currentReview.fileMatrix,
     revisions: state.review.currentReview.pastRevisions.map(r => r.number),
     hasProvisional: state.review.currentReview.hasProvisionalRevision,
     filesToReview: state.review.currentReview.filesToReview || [],

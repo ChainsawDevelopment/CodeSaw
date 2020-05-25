@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CodeSaw.Web.Modules.Api.Model;
+using CodeSaw.Web.Serialization;
+using Newtonsoft.Json;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
@@ -35,6 +37,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
         public string TemporaryId { get; set; }
         public string Content { get; set; }
         public DiscussionState State { get; set; }
+        [JsonConverter(typeof(RevisionIdObjectConverter))]
         public RevisionId TargetRevisionId { get; set; }
     }
 

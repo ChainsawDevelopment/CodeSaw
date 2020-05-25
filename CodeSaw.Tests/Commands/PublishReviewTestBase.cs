@@ -62,8 +62,21 @@ namespace CodeSaw.Tests.Commands
                 Revision = commits,
                 StartedReviewDiscussions = content.OfType<NewReviewDiscussion>().ToList(),
                 StartedFileDiscussions = content.OfType<NewFileDiscussion>().ToList(),
-                ReviewedFiles = content.OfType<ReviewedFilesContainer>().ToDictionary(x => x.RevisionId, x => x.FileIds),
-                UnreviewedFiles = content.OfType<UnreviewedFilesContainer>().ToDictionary(x => x.RevisionId, x => x.FileIds)
+
+                ReviewedFiles = (from c in content.OfType<ReviewedFilesContainer>()
+                    from f in c.FileIds
+                    select new PublishReview.FileRef
+                    {
+                        FileId = f,
+                        Revision = c.RevisionId
+                    }).ToList(),
+                UnreviewedFiles = (from c in content.OfType<UnreviewedFilesContainer>()
+                    from f in c.FileIds
+                    select new PublishReview.FileRef
+                    {
+                        FileId = f,
+                        Revision = c.RevisionId
+                    }).ToList()
             };
 
             _commands.Add((user, command));

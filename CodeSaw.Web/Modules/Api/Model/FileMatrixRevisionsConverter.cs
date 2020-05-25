@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeSaw.Web.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,15 +19,8 @@ namespace CodeSaw.Web.Modules.Api.Model
                 writer.WriteStartObject();
 
                 writer.WritePropertyName("revision");
-                writer.WriteStartObject();
-                
-                writer.WritePropertyName("type");
-                writer.WriteValue(revision.Resolve(() => "base", s => "selected", h => "hash"));
 
-                writer.WritePropertyName("value");
-                writer.WriteValue(revision.Resolve(() => (object)"base", s => s.Revision, h => h.CommitHash));
-                
-                writer.WriteEndObject();
+                new RevisionIdObjectConverter().WriteJson(writer, revision, serializer);
 
                 var statusJson = JObject.FromObject(status, serializer);
 

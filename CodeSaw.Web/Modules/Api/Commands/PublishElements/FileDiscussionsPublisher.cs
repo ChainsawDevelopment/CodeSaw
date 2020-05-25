@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
+using CodeSaw.Web.Serialization;
+using Newtonsoft.Json;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
@@ -14,6 +16,8 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
         public DiscussionState State { get; set; }
         public string Content { get; set; }
         public string TemporaryId { get; set; }
+
+        [JsonConverter(typeof(RevisionIdObjectConverter))]
         public RevisionId TargetRevisionId { get; set; }
     }
 
