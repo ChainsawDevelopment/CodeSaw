@@ -84,7 +84,7 @@ const Layout = (props: StateProps) => (
 
 
 
-        <div className="footer">This is the bottom <i aria-hidden="true" className="pointing down icon"></i></div>
+        {/* <div className="footer">This is the bottom <i aria-hidden="true" className="pointing down icon"></i></div> */}
     </Dimmer.Dimmable>
 );
 

@@ -15,6 +15,18 @@ import DiffContent from './diffContent';
 import FileList from '@src/fileList';
 import scrollToComponent from 'react-scroll-to-component';
 import * as PathPairs from "@src/pathPair";
+import Sidebar from '@ui/modules/Sidebar';
+import Menu from '@ui/collections/Menu';
+import Container from '@ui/elements/Container';
+import Grid from '@ui/collections/Grid';
+import Sticky from '@ui/modules/Sticky';
+import Rail from '@ui/elements/Rail';
+import { Ref } from "semantic-ui-react";
+import Visibility from '@ui/behaviors/Visibility';
+import DummyTree from "./DummyTree";
+
+const style = require('./file.less');
+
 
 interface ReviewFileActions {
     review(file: PathPairs.PathPair): void;
@@ -124,16 +136,27 @@ const File = (props: Props): JSX.Element => {
     }
 
     return <div ref={setStickyContainer}>
-        <HotKeys config={reviewHotKeys} />
-        <Segment>
-            <DiffHeader onSelectFileForView={selectNewFileForView} />
-            <div>
+        <DiffHeader onSelectFileForView={selectNewFileForView} />
+        <Grid columns={16}>
+            <Grid.Column width={4}>
+                <div
+                    style={{
+                    position: "sticky",
+                    top: "0px",
+                    maxHeight: "calc(100vh - 20px)",
+                    overflow: "auto"
+                    }}
+                >
+                    <DummyTree />
+                </div>
+            </Grid.Column>
+            <Grid.Column width={12}>
                 {selectedFile ?
                     <DiffContent scrollToFile={scrollToFile} />
                     : <NoFileView />
                 }
-            </div>
-        </Segment>
+            </Grid.Column>
+        </Grid>
     </div>;
 };
 
