@@ -105,7 +105,7 @@ module.exports = (env, argv) => {
     };
   }
 
-  if(argv.mode == 'production') {
+  if(argv && argv.mode == 'production') {
     config.output.filename = '[name].[contenthash].js';
   }
 
