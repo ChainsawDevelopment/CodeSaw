@@ -24,6 +24,7 @@ import Rail from '@ui/elements/Rail';
 import { Ref } from "semantic-ui-react";
 import Visibility from '@ui/behaviors/Visibility';
 import DummyTree from "./DummyTree";
+import ReviewFilesTree from "./ReviewFilesTree";
 
 const style = require('./file.less');
 
@@ -136,6 +137,7 @@ const File = (props: Props): JSX.Element => {
     }
 
     return <div ref={setStickyContainer}>
+        <HotKeys config={reviewHotKeys} />
         <DiffHeader onSelectFileForView={selectNewFileForView} />
         <Grid columns={16}>
             <Grid.Column width={4}>
@@ -143,11 +145,12 @@ const File = (props: Props): JSX.Element => {
                     style={{
                     position: "sticky",
                     top: "0px",
+                    minHeight: "calc(100vh - 20px)",
                     maxHeight: "calc(100vh - 20px)",
                     overflow: "auto"
                     }}
                 >
-                    <DummyTree />
+                    <ReviewFilesTree />
                 </div>
             </Grid.Column>
             <Grid.Column width={12}>

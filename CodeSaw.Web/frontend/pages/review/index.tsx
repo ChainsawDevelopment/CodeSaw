@@ -17,7 +17,6 @@ import {
     FileId,
 } from '../../api/reviewer';
 
-import { OnMount } from "../../components/OnMount";
 import { RootState } from "../../rootState";
 import "./review.less";
 import FileMatrix from './fileMatrix';
@@ -27,7 +26,6 @@ import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
 
 import Header from './sections/header';
-import Actions from './sections/actions';
 import ReviewDiscussions from './sections/reviewDiscussions';
 import File from './sections/file';
 import { useRouteMatch, Redirect, Switch, Route, useHistory, useParams } from "react-router";
@@ -81,8 +79,11 @@ interface StateProps {
 type Props = OwnProps & StateProps & DispatchProps;
 
 const reviewPage = (props: Props) => {
-    let { path, url } = useRouteMatch();
+    React.useEffect(() => {
+        props.loadReviewInfo(props.reviewId)
+    }, [props.reviewId.projectId, props.reviewId.reviewId]);
 
+    let { path, url } = useRouteMatch();
     const routing = {
         root: useRouteMatch(`${path}`),
         file: useRouteMatch<{fileId: string}>(`${path}file/:fileId`)
@@ -99,8 +100,6 @@ const reviewPage = (props: Props) => {
         }
     }
 
-    const load = () => props.loadReviewInfo(props.reviewId);
-
     const title = (() => {
         if (!props.currentReview.reviewId) {
             return 'Loading review...';
@@ -114,8 +113,6 @@ const reviewPage = (props: Props) => {
         <div id="review-page">
             <PageTitle>{title}</PageTitle>
             <CurrentReviewMode.Provider value={props.reviewMode}>
-                <OnMount onMount={load} />
-
                 <Grid>
                     <Header />
                     <Grid.Row>
