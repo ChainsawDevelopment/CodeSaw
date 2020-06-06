@@ -37,12 +37,12 @@ const LinkMenuItem = (props: {match: string; params?: any; children?: React.Reac
     let to = props.match;
     if(props.params) {
         for (const key of Object.keys(props.params)) {
-            to = to.replace(':' + key, props.params[key]);
+            to = to.replace(':' + key, props.params[key] || '');
         }
     }
 
     for (const key of Object.keys(parentParams)) {
-        to = to.replace(':' + key, parentParams[key]);
+        to = to.replace(':' + key, parentParams[key] || '');
     }
 
     return <Menu.Item as={Link} to={to} active={match != null}>
@@ -51,7 +51,7 @@ const LinkMenuItem = (props: {match: string; params?: any; children?: React.Reac
 }
 
 const RoutedFile = (props: {reviewId: ReviewId}): JSX.Element => {
-    const match = useRouteMatch<{fileId: FileId}>('/project/:projectId/review/:reviewId/file/:fileId');
+    const match = useRouteMatch<{fileId: FileId}>('/project/:projectId/review/:reviewId/file/:fileId?');
     const history = useHistory();
 
     return <File
@@ -93,7 +93,7 @@ const reviewPage = (props: Props) => {
         return <Redirect to={`${url}/matrix`}/>;
     }
 
-    if(routing.file && props.currentReview.reviewId) {
+    if(routing.file && routing.file.params.fileId && props.currentReview.reviewId) {
         const fileExists = props.currentReview.filesToReview.findIndex(f => f.fileId == routing.file.params.fileId);
         if(fileExists == -1) {
             return <Redirect to={`${url}/matrix`}/>;
@@ -127,14 +127,14 @@ const reviewPage = (props: Props) => {
                 <div>
                     <Menu attached='top' tabular>
                         <LinkMenuItem match={`${path}matrix`}>File matrix</LinkMenuItem>
-                        <LinkMenuItem match={`${path}file/:fileId`} params={{fileId: props.selectedFileId}}>Diff</LinkMenuItem>
+                        <LinkMenuItem match={`${path}file/:fileId?`} params={{fileId: props.selectedFileId}}>Diff</LinkMenuItem>
                     </Menu>
                     <Segment attached='bottom'>
                         {props.currentReview.reviewId && <Switch>
                             <Route path={`${path}matrix`}>
                                 <FileMatrix />
                             </Route>
-                            <Route path={`${path}file/:fileId`}>
+                            <Route path={`${path}file/:fileId?`}>
                                 <RoutedFile reviewId={props.reviewId}/>
                             </Route>
                         </Switch>}

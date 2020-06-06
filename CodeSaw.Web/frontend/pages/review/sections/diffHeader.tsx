@@ -13,9 +13,14 @@ import * as PathPairs from "@src/pathPair";
 import { Dispatch } from "redux";
 import RangeSelector from "@src/components/RangeSelector";
 import { LocalRevisionId, RevisionId } from "@api/revisionId";
+import Popup from "@ui/modules/Popup";
+import Icon from '@ui/elements/Icon';
 
 interface OwnProps {
     onSelectFileForView: SelectFileForViewHandler;
+
+    sidebarVisible: boolean;
+    setSidebarVisible(visible: boolean): void;
 }
 
 interface StateProps {
@@ -55,10 +60,30 @@ const getSelector = (revision: LocalRevisionId) => {
     return <span key={revision.revision}>{revision.revision}</span>;
 }
 
+const ToggleSidebar = (props: {visible: boolean; set(visible: boolean): void}) => {
+    if(props.visible) {
+        return <Menu.Item key="toggle-sidebar" fitted>
+            <Popup
+                trigger={<Icon onClick={() => props.set(false)} name="angle double left" circular link color="blue"></Icon>}
+                content="Hide sidebar"
+            />
+        </Menu.Item>;
+    } else {
+        return <Menu.Item key="toggle-sidebar" fitted>
+            <Popup
+                trigger={<Icon onClick={() => props.set(true)} name="angle double right" circular link color="blue"></Icon>}
+                content="Show sidebar"
+            />
+        </Menu.Item>;
+    }
+}
+
 const DiffHeader = (props: Props): JSX.Element => {
     const menuItems = [];
 
     const { selectedFile } = props;
+
+    menuItems.push(<ToggleSidebar key="toggle-sidebar" visible={props.sidebarVisible} set={props.setSidebarVisible} />);
 
     if (selectedFile) {
         const fileList = new FileList(
