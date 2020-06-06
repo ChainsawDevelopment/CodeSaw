@@ -132,3 +132,5 @@ export const shortTree = <TValue>(root: FolderTreeNode<TValue>): FolderTreeNode<
         folders: root.folders.map(f => shortFolder(f))
     };
 }
+
+export const nestedName = <TValue>(item: FolderTreeNode<TValue>): string => [...item.nestElements, item.name].join('/');

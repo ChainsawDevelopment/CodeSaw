@@ -28,6 +28,7 @@ export class KeyboardHelp extends React.Component<Props> {
                             <li><code>y</code> - mark file as reviewed/unreviewed</li>
                             <li><code>ctrl+enter</code> - publish current review</li>
                             <li><code>ctrl+y</code> - mark all unchanged file as reviewed</li>
+                            <li><code>ctrl+/</code> - toggle sidebar</li>
                         </ul>
                     </Modal.Description>
                 </Modal.Content>

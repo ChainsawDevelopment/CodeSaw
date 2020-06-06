@@ -1,6 +1,6 @@
 import * as React from "react";
 import List from '@ui/elements/List';
-import { buildTree, FolderTreeNode, FileTreeNode, sortTree, shortTree } from "@src/treeNode";
+import { buildTree, FolderTreeNode, FileTreeNode, sortTree, shortTree, nestedName } from "@src/treeNode";
 import { FileToReview, ReviewId, FileId } from "@api/reviewer";
 import { connect } from "react-redux";
 import { RootState } from "@src/rootState";
@@ -8,7 +8,9 @@ import { FileLink } from "../FileLink";
 import { ReviewState } from "../state";
 import Label from '@ui/elements/Label';
 import Icon from '@ui/elements/Icon';
+import * as classNames from "classnames";
 
+const style = require('./ReviewFilesTree.less');
 
 interface FileStats {
     newDiscussions: number;
@@ -20,7 +22,7 @@ const emptyFileStats: FileStats = {
 
 interface NodeProps {
     reviewId: ReviewId;
-    selectedFile?: FileId;
+    selectedFile: FileId;
     reviewedFiles: FileId[];
     fileStats: { [fileId: string]: FileStats };
 }
@@ -29,37 +31,45 @@ interface FileNodeProps extends NodeProps {
     file: FileTreeNode<FileToReview>;
 }
 
-const FileNode = (props: FileNodeProps): JSX.Element => {
-    const selected = props.selectedFile == props.file.value.fileId;
+const NodeFileLink = (props: FileNodeProps) => {
+    if(props.selectedFile !=  props.file.value.fileId) {
+        return <FileLink reviewId={props.reviewId} fileId={props.file.value.fileId}>{props.file.name}</FileLink>;
+    } else {
+        return <>{props.file.name}</>;
+    }
+}
 
-    const link = (() => {
-        if(!selected) {
-            return <FileLink reviewId={props.reviewId} fileId={props.file.value.fileId}>{props.file.name}</FileLink>;
-        } else {
-            return props.file.name;
-        }
-    })();
-
-    const iconColor = (() => {
-        if(props.reviewedFiles.indexOf(props.file.value.fileId) >= 0) {
-            return 'green';
-        } else {
-            return 'red';
-        }
-    })();
-
+const NodeFileStats = (props: {stats: FileStats}) => {
+    const {stats} = props;
     const description = [];
-    const stats = props.fileStats[props.file.value.fileId] || emptyFileStats;
 
     if (stats.newDiscussions > 0) {
         description.push(<Label key="new-discussion" size="mini"><Icon name="comment" />{stats.newDiscussions}</Label>);
     }
 
-    return <List.Item>
-        <List.Icon name='file alternate' color={iconColor} />
+    if(description.length > 0) {
+        return <List.Description>{description}</List.Description>
+    } else {
+        return <></>
+    }
+}
+
+const ReviewedIcon = (props: { reviewed: boolean }) => {
+    const color = props.reviewed ? 'green' : 'red';
+
+    return <List.Icon name='file alternate' color={color} />;
+}
+
+const FileNode = (props: FileNodeProps): JSX.Element => {
+    const selected = props.selectedFile == props.file.value.fileId;
+    const reviewed = props.reviewedFiles.indexOf(props.file.value.fileId) >= 0;
+    const stats = props.fileStats[props.file.value.fileId] || emptyFileStats;
+
+    return <List.Item className={classNames({ file: true, selected })}>
+        <ReviewedIcon reviewed={reviewed} />
         <List.Content>
-            <List.Header>{link}</List.Header>
-            {description.length > 0 && <List.Description>{description}</List.Description>}
+            <List.Header><NodeFileLink {...props} /></List.Header>
+            <NodeFileStats stats={stats} />
         </List.Content>
     </List.Item>;
 }
@@ -71,16 +81,17 @@ interface FolderNodeProps extends NodeProps {
 const FolderNode = (props: FolderNodeProps): JSX.Element => {
     const baseProps: NodeProps = {
         reviewId: props.reviewId,
+        selectedFile: props.selectedFile,
         reviewedFiles: props.reviewedFiles,
         fileStats: props.fileStats
     };
 
-    const folders = props.folder.folders.map(n => <FolderNode key={n.name} folder={n} {...baseProps}/>);
+    const folders = props.folder.folders.map(n => <FolderNode key={nestedName(n)} folder={n} {...baseProps}/>);
     const files = props.folder.files.map(n => <FileNode key={n.name} file={n} {...baseProps} />);
 
     const folderName = [...props.folder.nestElements, props.folder.name].join('/');
 
-    return <List.Item>
+    return <List.Item className="folder">
         <List.Icon name='folder' />
         <List.Content>
             <List.Header>{folderName}</List.Header>
@@ -101,10 +112,10 @@ const ReviewFilesTree = (props: StateProps): JSX.Element => {
     let root = buildTree(props.fileList, f => f.reviewFile.newPath);
     root = sortTree(root);
     root = shortTree(root);
-    const folders = root.folders.map(n => <FolderNode key={n.name} folder={n} {...props.nodeBase} />);
+    const folders = root.folders.map(n => <FolderNode key={nestedName(n)} folder={n} {...props.nodeBase} />);
     const files = root.files.map(n => <FileNode key={n.name} file={n} {...props.nodeBase} />);
 
-    return <List>
+    return <List className="review-files-tree">
         {folders}
         {files}
     </List>
@@ -129,7 +140,7 @@ export default connect(
         fileList: state.review.currentReview.filesToReview,
         nodeBase: {
             reviewId: state.review.currentReview.reviewId,
-            selectedFile: state.review.selectedFile ? state.review.selectedFile.fileId : null,
+            selectedFile: state.review.selectedFile != null ? state.review.selectedFile.fileId : null,
             reviewedFiles: state.review.reviewedFiles,
             fileStats: buildFileStats(state.review)
         }
