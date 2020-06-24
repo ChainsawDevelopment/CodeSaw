@@ -5,12 +5,11 @@ import { History } from "history";
 
 import Divider from '@ui/elements/Divider';
 import Grid from '@ui/collections/Grid';
+import Menu from '@ui/collections/Menu';
+import Segment from '@ui/elements/Segment';
 
 import {
-    selectFileForView,
     loadReviewInfo,
-    FileInfo,
-    mergePullRequest,
 } from "./state";
 import {
     ReviewInfo,
@@ -18,187 +17,142 @@ import {
     FileId,
 } from '../../api/reviewer';
 
-import { OnMount } from "../../components/OnMount";
-import { OnPropChanged } from "../../components/OnPropChanged";
-import { UserState, RootState } from "../../rootState";
-import { SelectFileForViewHandler } from './selectFile';
+import { RootState } from "../../rootState";
 import "./review.less";
 import FileMatrix from './fileMatrix';
 import ReviewInfoView from './reviewInfoView';
 
-import { createLinkToFile } from "./FileLink";
 import CurrentReviewMode from './currentReviewMode';
 import PageTitle from '../../components/PageTitle';
 
 import Header from './sections/header';
-import Actions from './sections/actions';
 import ReviewDiscussions from './sections/reviewDiscussions';
 import File from './sections/file';
+import { useRouteMatch, Redirect, Switch, Route, useHistory, useParams } from "react-router";
+import { Link } from "react-router-dom";
+
+const LinkMenuItem = (props: {match: string; params?: any; children?: React.ReactNode}) => {
+    const match = useRouteMatch(props.match);
+    const parentParams = useParams();
+    let to = props.match;
+    if(props.params) {
+        for (const key of Object.keys(props.params)) {
+            to = to.replace(':' + key, props.params[key] || '');
+        }
+    }
+
+    for (const key of Object.keys(parentParams)) {
+        to = to.replace(':' + key, parentParams[key] || '');
+    }
+
+    return <Menu.Item as={Link} to={to} active={match != null}>
+        {props.children}
+    </Menu.Item>
+}
+
+const RoutedFile = (props: {reviewId: ReviewId}): JSX.Element => {
+    const match = useRouteMatch<{fileId: FileId}>('/project/:projectId/review/:reviewId/file/:fileId?');
+    const history = useHistory();
+
+    return <File
+        reviewId={props.reviewId}
+        fileId={match.params.fileId}
+        history={history}
+    />;
+}
 
 interface OwnProps {
     reviewId: ReviewId;
-    fileId?: FileId;
     history: History;
 }
 
 interface DispatchProps {
     loadReviewInfo(reviewId: ReviewId, fileToPreload?: FileId): void;
-    selectFileForView: SelectFileForViewHandler;
-    mergePullRequest(reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): void;
 }
 
 interface StateProps {
-    currentUser: UserState;
     currentReview: ReviewInfo;
-    selectedFile: FileInfo;
-    reviewedFiles: FileId[];
-    author: UserState;
+    selectedFileId: FileId;
     reviewMode: 'reviewer' | 'author';
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-interface State {
-    hideReviewed: boolean;
-}
+const reviewPage = (props: Props) => {
+    React.useEffect(() => {
+        props.loadReviewInfo(props.reviewId)
+    }, [props.reviewId.projectId, props.reviewId.reviewId]);
 
+    let { path, url } = useRouteMatch();
+    const routing = {
+        root: useRouteMatch(`${path}`),
+        file: useRouteMatch<{fileId: string}>(`${path}file/:fileId`)
+    };
 
-class reviewPage extends React.Component<Props, State> {
-    private showFileHandler: () => void;
-
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            hideReviewed: false,
-        };
+    if(routing.root.isExact) {
+        return <Redirect to={`${url}/matrix`}/>;
     }
 
-    onShowFile() {
-        if (this.showFileHandler) {
-            this.showFileHandler()
+    if(routing.file && routing.file.params.fileId && props.currentReview.reviewId) {
+        const fileExists = props.currentReview.filesToReview.findIndex(f => f.fileId == routing.file.params.fileId);
+        if(fileExists == -1) {
+            return <Redirect to={`${url}/matrix`}/>;
         }
     }
 
-    saveShowFileHandler = (showFileHandler: () => void) => {
-        this.showFileHandler = showFileHandler;
-    }
+    const title = (() => {
+        if (!props.currentReview.reviewId) {
+            return 'Loading review...';
+        }
 
-    scrollToFileWhenHandlerIsAvailable = (showFileHandler: () => void) => {
-        this.saveShowFileHandler(showFileHandler);
-        showFileHandler();
-    }
+        const { currentReview } = props;
+        return `[${currentReview.projectPath}] #${currentReview.reviewId.reviewId} - ${currentReview.title}`;
+    })();
 
-    onShowFileHandlerAvailable = this.saveShowFileHandler;
+    return (
+        <div id="review-page">
+            <PageTitle>{title}</PageTitle>
+            <CurrentReviewMode.Provider value={props.reviewMode}>
+                <Grid>
+                    <Header />
+                    <Grid.Row>
+                        <Grid.Column>
+                            <ReviewInfoView />
+                            <Divider />
+                        </Grid.Column>
+                    </Grid.Row>
+                    <ReviewDiscussions />
+                </Grid>
 
-    render() {
-        const props = this.props;
-
-        const selectedFile = props.selectedFile ?
-            { ...props.selectedFile, isReviewed: props.reviewedFiles.indexOf(props.selectedFile.fileId) >= 0 }
-            : null;
-
-        const load = () => {
-            if (!selectedFile && props.fileId) {
-                this.onShowFileHandlerAvailable = this.scrollToFileWhenHandlerIsAvailable;
-                props.loadReviewInfo(props.reviewId, props.fileId);
-            } else {
-                this.onShowFileHandlerAvailable = this.saveShowFileHandler;
-                props.loadReviewInfo(props.reviewId);
-            }
-        };
-
-        const selectNewFileForView = (fileId: FileId) => {
-            if (fileId != null) {
-                props.selectFileForView(fileId);
-
-                const fileLink = createLinkToFile(props.reviewId, fileId);
-                if (fileLink != window.location.pathname) {
-                    props.history.push(fileLink);
-                }
-
-                this.onShowFile();
-            }
-        };
-
-        const selectFileForView = () => {
-            const file = props.currentReview.filesToReview.find(f => f.fileId == props.fileId);
-            if (file != null) {
-                selectNewFileForView(file.fileId);
-            }
-        };
-
-        const title = (() => {
-            if (!props.currentReview.reviewId) {
-                return 'Loading review...';
-            }
-
-            const { currentReview } = props;
-            return `[${currentReview.projectPath}] #${currentReview.reviewId.reviewId} - ${currentReview.title}`;
-        })();
-
-        const changeHideReviewed = (hide: boolean) => {
-            this.setState({
-                hideReviewed: hide
-            });
-        };
-
-        return (
-            <div id="review-page">
-                <PageTitle>{title}</PageTitle>
-                <CurrentReviewMode.Provider value={props.reviewMode}>
-                    <OnMount onMount={load} />
-                    <OnPropChanged fileName={props.fileId} onPropChanged={selectFileForView} />
-
-                    <Grid>
-                        <Header />
-
-                        <Grid.Row>
-                            <Grid.Column>
-                                <ReviewInfoView />
-                                <Divider />
-                            </Grid.Column>
-                        </Grid.Row>
-                        <Grid.Row columns={1}>
-                            <Grid.Column>
-                                <Actions onHideReviewedChange={changeHideReviewed} />
-                            </Grid.Column>
-                        </Grid.Row>
-                        <Grid.Row columns={1}>
-                            <Grid.Column>
-                                <FileMatrix hideReviewed={this.state.hideReviewed} />
-                            </Grid.Column>
-                        </Grid.Row>
-                        <ReviewDiscussions />
-                    </Grid>
-
-                    <Divider />
-
-                    <File
-                        showFileHandler={this.showFileHandler}
-                        reviewId={props.reviewId}
-                        fileId={props.fileId}
-                        history={props.history}
-                        onShowFileHandlerAvailable={this.onShowFileHandlerAvailable}
-                    />
-                </CurrentReviewMode.Provider>
-            </div>
-        );
-    }
+                <div>
+                    <Menu attached='top' tabular>
+                        <LinkMenuItem match={`${path}matrix`}>File matrix</LinkMenuItem>
+                        <LinkMenuItem match={`${path}file/:fileId?`} params={{fileId: props.selectedFileId}}>Diff</LinkMenuItem>
+                    </Menu>
+                    <Segment attached='bottom'>
+                        {props.currentReview.reviewId && <Switch>
+                            <Route path={`${path}matrix`}>
+                                <FileMatrix />
+                            </Route>
+                            <Route path={`${path}file/:fileId?`}>
+                                <RoutedFile reviewId={props.reviewId}/>
+                            </Route>
+                        </Switch>}
+                    </Segment>
+                </div>
+            </CurrentReviewMode.Provider>
+        </div>
+    );
 };
 
 const mapStateToProps = (state: RootState): StateProps => ({
-    currentUser: state.currentUser,
     currentReview: state.review.currentReview,
-    selectedFile: state.review.selectedFile,
-    reviewedFiles: state.review.reviewedFiles,
-    author: state.review.currentReview.author,
     reviewMode: state.review.currentReview.isAuthor ? 'author' : 'reviewer',
+    selectedFileId: state.review.selectedFile ? state.review.selectedFile.fileId : null
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
     loadReviewInfo: (reviewId: ReviewId, fileToPreload?: string) => dispatch(loadReviewInfo({ reviewId, fileToPreload })),
-    selectFileForView: (fileId) => dispatch(selectFileForView({ fileId })),
-    mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
 });
 
 export default connect(

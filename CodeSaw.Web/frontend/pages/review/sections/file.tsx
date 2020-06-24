@@ -1,6 +1,6 @@
 import { connect } from "react-redux";
 import * as React from "react";
-import { SelectFileForViewHandler, OnShowFileHandlerAvailable } from "../selectFile";
+import { SelectFileForViewHandler } from "../selectFile";
 import { Dispatch } from "redux";
 import { RootState } from "@src/rootState";
 import { ReviewInfo, FileId, ReviewId } from "@api/reviewer";
@@ -8,14 +8,18 @@ import { markEmptyFilesAsReviewed, reviewFile, unreviewFile, publishReview, File
 import { createLinkToFile } from "../FileLink";
 import { History } from "history";
 import { HotKeys } from "@src/components/HotKeys";
-import Segment from "semantic-ui-react/dist/commonjs/elements/Segment";
-import Sticky from "semantic-ui-react/dist/commonjs/modules/Sticky";
 import DiffHeader from "./diffHeader";
 import { NoFileView } from "./fileView";
 import DiffContent from './diffContent';
 import FileList from '@src/fileList';
 import scrollToComponent from 'react-scroll-to-component';
 import * as PathPairs from "@src/pathPair";
+import Grid from '@ui/collections/Grid';
+import { Ref } from "semantic-ui-react";
+import ReviewFilesTree from "./ReviewFilesTree";
+
+const style = require('./file.less');
+
 
 interface ReviewFileActions {
     review(file: PathPairs.PathPair): void;
@@ -26,8 +30,6 @@ interface OwnProps {
     reviewId: ReviewId;
     fileId?: FileId;
     history: History;
-    showFileHandler?(): void;
-    onShowFileHandlerAvailable: OnShowFileHandlerAvailable;
 }
 
 interface StateProps {
@@ -47,6 +49,19 @@ type Props = StateProps & DispatchProps & OwnProps;
 
 const File = (props: Props): JSX.Element => {
     const stickyContainer = React.useRef<HTMLDivElement>();
+    React.useEffect(() => {
+        if(props.selectedFile == null || props.fileId != props.selectedFile.fileId) {
+            if(props.fileId != null) {
+                props.selectFileForView(props.fileId);
+            }
+        }
+    }, [props.fileId, props.selectedFile != null ? props.selectedFile.fileId : null]);
+
+    React.useEffect(() => {
+        if(stickyContainer.current && props.selectedFile && props.selectedFile.diff) {
+            scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' });
+        }
+      });
 
     const scrollToFile = () => {
         scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' })
@@ -54,9 +69,9 @@ const File = (props: Props): JSX.Element => {
 
     const setStickyContainer = React.useCallback((node: HTMLDivElement) => {
         stickyContainer.current = node;
-        props.onShowFileHandlerAvailable(scrollToFile);
     }, []);
 
+    const [sidebarVisible, setSidebarVisible] = React.useState(true);
 
     const { selectedFile } = props;
 
@@ -67,10 +82,6 @@ const File = (props: Props): JSX.Element => {
             const fileLink = createLinkToFile(props.reviewId, fileId);
             if (fileLink != window.location.pathname) {
                 props.history.push(fileLink);
-            }
-
-            if (props.showFileHandler) {
-                props.showFileHandler();
             }
         }
     };
@@ -107,7 +118,8 @@ const File = (props: Props): JSX.Element => {
             '}': () => nextFileWithUnresolvedComment && selectNewFileForView(nextFileWithUnresolvedComment.fileId),
             'y': () => changeFileReviewState(!isReviewed),
             'ctrl+Enter': props.publishReview,
-            'ctrl+y': () => props.markNonEmptyAsViewed()
+            'ctrl+y': () => props.markNonEmptyAsViewed(),
+            'ctrl+/': () => setSidebarVisible(!sidebarVisible),
         };
     } else if (props.currentReview.filesToReview.length > 0) {
         const firstFile = props.currentReview.filesToReview[0].fileId;
@@ -116,23 +128,33 @@ const File = (props: Props): JSX.Element => {
         reviewHotKeys = {
             '[': () => lastFile && selectNewFileForView(lastFile),
             ']': () => firstFile && selectNewFileForView(firstFile),
-            'ctrl+y': () => props.markNonEmptyAsViewed()
+            'ctrl+y': () => props.markNonEmptyAsViewed(),
+            'ctrl+/': () => setSidebarVisible(!sidebarVisible),
         };
     }
 
-    return <div ref={setStickyContainer}>
+    return <div>
         <HotKeys config={reviewHotKeys} />
-        <Segment>
-            <Sticky context={stickyContainer.current} id="file-sticky">
-                <DiffHeader onSelectFileForView={selectNewFileForView} />
-            </Sticky>
-            <div>
-                {selectedFile ?
-                    <DiffContent scrollToFile={scrollToFile} />
-                    : <NoFileView />
-                }
-            </div>
-        </Segment>
+        <Ref innerRef={setStickyContainer}>
+            <Grid columns={16} className="diff-container">
+                {sidebarVisible && <Grid.Column width={4} className="sidebar-column">
+                    <div className="sidebar">
+                        <ReviewFilesTree />
+                    </div>
+                </Grid.Column>}
+                <Grid.Column width={sidebarVisible ? 12 : 16} className="diff-column">
+                    <DiffHeader
+                        onSelectFileForView={selectNewFileForView}
+                        setSidebarVisible={setSidebarVisible}
+                        sidebarVisible={sidebarVisible}
+                    />
+                    {selectedFile ?
+                        <DiffContent scrollToFile={scrollToFile} />
+                        : <NoFileView />
+                    }
+                </Grid.Column>
+            </Grid>
+        </Ref>
     </div>;
 };
 

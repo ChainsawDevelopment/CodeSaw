@@ -4,6 +4,7 @@ import * as React from "react";
 import Label from '@ui/elements/Label';
 import Popup from '@ui/modules/Popup';
 import Icon from '@ui/elements/Icon';
+import Checkbox from '@ui/modules/Checkbox';
 
 import Table from '@ui/collections/Table';
 import * as PathPairs from "../../pathPair";
@@ -172,13 +173,11 @@ interface StateProps {
     fileDiscussions: FileDiscussion[];
 }
 
-interface OwnProps {
-    hideReviewed: boolean;
-}
-
-type Props = StateProps & OwnProps;
+type Props = StateProps;
 
 const fileMatrixComponent = (props: Props): JSX.Element => {
+    const [hideReviewed, setHideReviewed] = React.useState(false);
+
     const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>);
 
     headers.unshift(<Table.HeaderCell key={'base'} className='revision'>&perp;</Table.HeaderCell>);
@@ -190,7 +189,7 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        if (props.hideReviewed && RevisionId.equal(review.previous, review.current)) {
+        if (hideReviewed && RevisionId.equal(review.previous, review.current)) {
             continue;
         }
 
@@ -202,7 +201,9 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
             <Table definition celled compact striped collapsing textAlign='center'>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell />
+                        <Table.Cell textAlign='left'>
+                            <Checkbox toggle label="Hide reviewed" onChange={(_, e) => setHideReviewed(e.checked)}/>
+                        </Table.Cell>
                         {headers}
                     </Table.Row>
                 </Table.Header>

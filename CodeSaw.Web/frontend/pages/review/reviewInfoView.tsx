@@ -7,6 +7,8 @@ import BuildStatusesList from "../../components/BuildStatusList";
 import MergeApprover from './mergeApprover';
 import { Dispatch } from "../../../../node_modules/redux";
 import { mergePullRequest } from "./state";
+import * as showdown from 'showdown';
+import Actions from './sections/actions';
 
 interface StateProps {
     reviewId: ReviewId;
@@ -27,11 +29,15 @@ interface DispatchProps {
 }
 
 const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
+    const markdown = new showdown.Converter({
+        simplifiedAutoLink: true
+    });
+
     return (
         <Grid>
             <Grid.Row>
-                <Grid.Column>
-                    <MergeApprover 
+                <Grid.Column width={12}>
+                    <MergeApprover
                         reviewId={props.reviewId}
                         mergeStatus={props.mergeStatus}
                         reviewState={props.reviewState}
@@ -41,10 +47,13 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
                         reviewFinished={props.reviewFinished}
                     />
                 </Grid.Column>
+                <Grid.Column width={4} textAlign='left'>
+                    <Actions />
+                </Grid.Column>
             </Grid.Row>
             <Grid.Row>
-                <Grid.Column width={8}>
-                    <pre>{props.description}</pre>
+                <Grid.Column width={12}>
+                    <div dangerouslySetInnerHTML={{ __html: markdown.makeHtml(props.description) }}></div>
                 </Grid.Column>
                 <Grid.Column width={4}>
                     <BuildStatusesList statuses={props.buildStatuses}/>
