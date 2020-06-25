@@ -1,11 +1,11 @@
-@sidebarHeight: calc(100vh - 30px);
+@sidebarHeight: calc(100vh - 15px);
 
 .ui.grid.diff-container {
   min-height: @sidebarHeight;
 
   .sidebar {
     position: sticky;
-    top: 10px;
+    top: 0;
     max-height: @sidebarHeight;
     overflow: auto;
   }
@@ -18,11 +18,13 @@
 
   & > .column.sidebar-column {
     padding-right: 0;
+    padding-top: 0;
   }
 
   & > .column.diff-column {
     padding-left: 0;
     padding-right: 0;
+    padding-top: 0;
   }
 }
 

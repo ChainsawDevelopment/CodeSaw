@@ -77,8 +77,6 @@ const File = (props: Props): JSX.Element => {
 
     const selectNewFileForView = (fileId: FileId) => {
         if (fileId != null) {
-            props.selectFileForView(fileId);
-
             const fileLink = createLinkToFile(props.reviewId, fileId);
             if (fileLink != window.location.pathname) {
                 props.history.push(fileLink);
