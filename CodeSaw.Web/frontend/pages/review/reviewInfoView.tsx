@@ -7,7 +7,7 @@ import BuildStatusesList from "../../components/BuildStatusList";
 import MergeApprover from './mergeApprover';
 import { Dispatch } from "../../../../node_modules/redux";
 import { mergePullRequest } from "./state";
-import * as showdown from 'showdown';
+import MarkdownGenerator from "./markdownGenerator"
 import Actions from './sections/actions';
 
 interface StateProps {
@@ -29,10 +29,7 @@ interface DispatchProps {
 }
 
 const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
-    const markdown = new showdown.Converter({
-        simplifiedAutoLink: true
-    });
-
+    const markdown = new MarkdownGenerator();
     return (
         <Grid>
             <Grid.Row>
