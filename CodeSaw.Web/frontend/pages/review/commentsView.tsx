@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as showdown from "showdown"
 import Button from '@ui/elements/Button';
 import UIComment from '@ui/views/Comment';
 import Form from '@ui/collections/Form';
@@ -7,6 +6,7 @@ import Header from '@ui/elements/Header';
 import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment, Discussion } from "../../api/reviewer";
 import { IsCommentUnpublished, DiscussionType } from './state';
+import MarkdownGenerator from './markdownGenerator'
 
 import "./commentsView.less";
 import { UserState } from "../../rootState";
@@ -156,7 +156,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
             </Form>
         )
 
-        const markdown = new showdown.Converter();
+        const markdown = new MarkdownGenerator();
 
         const isUnpublished = IsCommentUnpublished(this.props.comment.id);
 
