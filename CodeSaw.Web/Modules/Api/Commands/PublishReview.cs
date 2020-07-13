@@ -122,6 +122,10 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public void Save(Review review)
         {
             _session.Save(review);
+            // Several other steps in publish pipeline relies on review being already saved (foreign key), in particular 
+            // looking for discussion to resolve (even if resolve list is empty) causes comments to be flushed, if newly created
+            // review has not been saved yet in will result in foreign key violation.
+            _session.Flush();
         }
 
         public void Save(ReviewDiscussion discussion)
