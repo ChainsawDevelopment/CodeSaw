@@ -177,6 +177,7 @@ type Props = StateProps;
 
 const fileMatrixComponent = (props: Props): JSX.Element => {
     const [hideReviewed, setHideReviewed] = React.useState(false);
+    const [hideWithoutComments, setHideWithoutComments] = React.useState(false);
 
     const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>);
 
@@ -193,6 +194,13 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
             continue;
         }
 
+        if (hideWithoutComments) {
+            const discussionsForFile = props.fileDiscussions.filter(f => f.fileId == entry.fileId);
+            if (discussionsForFile.length === 0) {
+                continue;
+            }
+        }
+
         rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={props.fileDiscussions}/>);
     }
 
@@ -203,6 +211,8 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
                     <Table.Row>
                         <Table.Cell textAlign='left'>
                             <Checkbox toggle label="Hide reviewed" onChange={(_, e) => setHideReviewed(e.checked)}/>
+                            &nbsp;
+                            <Checkbox toggle label="Hide without comments" onChange={(_, e) => setHideWithoutComments(e.checked)}/>
                         </Table.Cell>
                         {headers}
                     </Table.Row>
