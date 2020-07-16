@@ -173,10 +173,17 @@ interface StateProps {
     fileDiscussions: FileDiscussion[];
 }
 
+interface FileMatrixShowOptions {
+    hideReviewed: boolean;
+    hideWithoutComments: boolean;
+}
+
+const DefaultFileMatrixShowOptions: FileMatrixShowOptions = {hideReviewed: false, hideWithoutComments: false};
+
 type Props = StateProps;
 
 const fileMatrixComponent = (props: Props): JSX.Element => {
-    const [hideReviewed, setHideReviewed] = React.useState(false);
+    const [showOptions, setShowOptions] = React.useState(DefaultFileMatrixShowOptions);
 
     const headers = props.revisions.map(i => <Table.HeaderCell key={i} className='revision'>{i}</Table.HeaderCell>);
 
@@ -189,8 +196,15 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
     const rows = [];
     for (let entry of props.matrix) {
         const review = props.filesToReview.find(f => PathPairs.equal(f.reviewFile, entry.file));
-        if (hideReviewed && RevisionId.equal(review.previous, review.current)) {
+        if (showOptions.hideReviewed && RevisionId.equal(review.previous, review.current)) {
             continue;
+        }
+
+        if (showOptions.hideWithoutComments) {
+            const hasDiscussionsForFile = props.fileDiscussions.some(f => f.fileId == entry.fileId);
+            if (!hasDiscussionsForFile) {
+                continue;
+            }
         }
 
         rows.push(<MatrixRow key={entry.file.newPath} file={entry} review={review} reviewId={props.reviewId} discussions={props.fileDiscussions}/>);
@@ -202,7 +216,13 @@ const fileMatrixComponent = (props: Props): JSX.Element => {
                 <Table.Header>
                     <Table.Row>
                         <Table.Cell textAlign='left'>
-                            <Checkbox toggle label="Hide reviewed" onChange={(_, e) => setHideReviewed(e.checked)}/>
+                            <Checkbox toggle label="Hide reviewed" 
+                                onChange={(_, e) => setShowOptions(showOptions => ({...showOptions, hideReviewed: e.checked}))}
+                            />
+                            <br/>
+                            <Checkbox toggle label="Hide without comments" 
+                                onChange={(_, e) => setShowOptions(showOptions => ({...showOptions, hideWithoutComments: e.checked}))}
+                            />
                         </Table.Cell>
                         {headers}
                     </Table.Row>
