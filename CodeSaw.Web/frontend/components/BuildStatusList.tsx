@@ -11,7 +11,7 @@ const statusToIcon = {
     },
     'success': {
         icon: 'check circle' as SemanticICONS,
-        color: 'green'
+        color: 'teal'
     },
     'failed': {
         icon: 'times circle' as SemanticICONS,
@@ -19,7 +19,7 @@ const statusToIcon = {
     },
     'running': {
         icon: 'play circle' as SemanticICONS,
-        color: 'blue'
+        color: 'yellow'
     },
     'canceled': {
         icon: 'ban' as SemanticICONS,

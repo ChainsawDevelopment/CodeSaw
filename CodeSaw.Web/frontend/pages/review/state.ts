@@ -25,6 +25,14 @@ export enum DiscussionType {
     GoodWork
 }
 
+export const DiscussionState = {
+    GoodWork: 'GoodWork',
+    NoActionNeeded: 'NoActionNeeded',
+    NeedsResolution: 'NeedsResolution',
+    Resolved: 'Resolved',
+    ResolvePending: 'ResolvePending'
+}
+
 export interface FileInfo {
     path: PathPairs.PathPair;
     diff: FileDiff;
@@ -359,9 +367,9 @@ export const reviewReducer = (state: ReviewState = initial, action: AnyAction): 
     }
 
     const DISCUSSION_TYPE_TO_STATUS = {
-        [DiscussionType.Comment]: 'NoActionNeeded' as CommentState,
-        [DiscussionType.NeedsResolution]: 'NeedsResolution' as CommentState,
-        [DiscussionType.GoodWork]: 'GoodWork' as CommentState
+        [DiscussionType.Comment]: DiscussionState.NoActionNeeded as CommentState,
+        [DiscussionType.NeedsResolution]: DiscussionState.NeedsResolution as CommentState,
+        [DiscussionType.GoodWork]: DiscussionState.GoodWork as CommentState
     }
 
     if (startFileDiscussion.match(action)) {

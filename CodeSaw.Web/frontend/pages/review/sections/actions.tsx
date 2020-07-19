@@ -17,7 +17,7 @@ const Actions = (props: Props): JSX.Element => {
         <Menu.Menu position='right'>
             <Menu.Item>
                 <PublishButton />&nbsp;
-                <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
+                <Button onClick={props.markNonEmptyAsViewed}>Mark unchanged files</Button>&nbsp;
             </Menu.Item>
         </Menu.Menu>
     </Menu>;

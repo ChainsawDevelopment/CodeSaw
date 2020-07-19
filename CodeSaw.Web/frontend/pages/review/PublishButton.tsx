@@ -39,9 +39,9 @@ const PublishButtonView = (props: PublishButton.Props) : JSX.Element => {
 
     return <Button
         disabled={unpublishedItemsCount === 0}
-        positive
+        color="teal"
         onClick={publishAndLoad}>
-            Publish Changes {unpublishedItemsCount > 0 && <span className={"count"}>({unpublishedItemsCount})</span>}
+            Publish changes {unpublishedItemsCount > 0 && <span className={"count"}>({unpublishedItemsCount})</span>}
         </Button>
 }
 

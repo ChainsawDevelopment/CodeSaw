@@ -48,7 +48,7 @@ const Header = (props: Props): JSX.Element => {
         <Grid.Column className={"header"}>
             <Grid.Row>
                 <h1>Review {props.currentReview.title} <ExternalLink url={props.currentReview.webUrl} /></h1>
-                <h3>{props.currentReview.projectPath}
+                <h3 className="branch-header">{props.currentReview.projectPath}
                     {props.currentReview.projectPath ?
                         <Dropdown floating inline icon='setting'>
                             <Dropdown.Menu>

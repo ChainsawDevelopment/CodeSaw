@@ -5,7 +5,7 @@ import Form from '@ui/collections/Form';
 import Header from '@ui/elements/Header';
 import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment, Discussion } from "../../api/reviewer";
-import { IsCommentUnpublished, DiscussionType } from './state';
+import { IsCommentUnpublished, DiscussionType, DiscussionState } from './state';
 import MarkdownGenerator from './markdownGenerator'
 
 import "./commentsView.less";
@@ -145,7 +145,7 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
         const form = (
             <Form reply onSubmit={onSubmit}>
                 <Form.TextArea id={this.getReplyTextAreaId()} onChange={onChangeReply} value={this.state.replyText} placeholder='Reply...' />
-                <Button onClick={() => this.props.actions.addReply(this.props.comment.id, this.state.replyText)} primary>Add Comment</Button>
+                <Button onClick={() => this.props.actions.addReply(this.props.comment.id, this.state.replyText)} primary>Add comment</Button>
             </Form>
         );
 
@@ -202,31 +202,31 @@ interface DiscussionComponentProps {
 const DiscussionComponent = (props: DiscussionComponentProps) => {
     let status: JSX.Element = null;
     switch (props.discussion.state) {
-        case 'NoActionNeeded':
+        case DiscussionState.NoActionNeeded:
             status = null;
             break;
-        case 'NeedsResolution':
+        case DiscussionState.NeedsResolution:
             if (props.discussion.canResolve) {
                 const resolve = () => props.actions.resolve(props.discussion.id);
                 status = <UIComment.Action onClick={resolve}>Resolve</UIComment.Action>;
             }
             break;
-        case 'ResolvePending':
+        case DiscussionState.ResolvePending:
             const unresolve = () => props.actions.unresolve(props.discussion.id);
             status = <UIComment.Action className="resolved-pending" onClick={unresolve}>Resolved (pending)</UIComment.Action>;
             break;
-        case 'Resolved':
+        case DiscussionState.Resolved:
             status = <span>Resolved</span>;
             break;
     }
 
-    return (<div className={classNames({ 'read-only': props.discussion.state === 'Resolved', 'good-work': props.discussion.state === 'GoodWork' })}>
+    return (<div className={classNames({ 'read-only': props.discussion.state === DiscussionState.Resolved, 'good-work': props.discussion.state === DiscussionState.GoodWork })}>
         <CommentComponent
             comment={props.discussion.comment}
             statusComponent={status}
             actions={props.actions}
             note={props.note ? props.note(props.discussion) : null}
-            readOnly={props.discussion.state === 'Resolved' || props.discussion.state === 'GoodWork'}
+            readOnly={props.discussion.state === DiscussionState.Resolved || props.discussion.state === DiscussionState.GoodWork}
         />
     </div>);
 };
@@ -309,10 +309,10 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
             this.setState({ newDiscussionVisible: false });
         }
 
-        const newDiscussion = <Form reply onSubmit={onSubmit}>
-            <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' />
+        const newDiscussion = <Form onSubmit={onSubmit}>
+            <Form.TextArea id={getNewDiscussionTextAreaId(this.props.discussionId)} onChange={onChangeReply} value={this.state.commentText} placeholder='Start new discussion...' rows={2}/>
             <Form.Group inline>
-                <Button onClick={addComment} secondary>Add Comment</Button>
+                <Button onClick={addComment} secondary>Add comment</Button>
                 {discussions.length > 0 ? <Button onClick={() => this.setState({ newDiscussionVisible: false })} secondary>Cancel</Button> : null}
                 <DiscussionTypeSelector type={this.state.discussionType} onChange={onChangeType} />
             </Form.Group>
@@ -334,7 +334,7 @@ export default class CommentsComponent extends React.Component<DiscussionsProps,
 
         return (
             <UIComment.Group>
-                <Header as='h3' dividing>
+                <Header as='h3'>
                     {this.props.title || 'Comments'}
                 </Header>
                 {discussions}
