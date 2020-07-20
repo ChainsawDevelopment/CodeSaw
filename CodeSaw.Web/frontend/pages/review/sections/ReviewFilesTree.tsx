@@ -10,6 +10,7 @@ import Label from '@ui/elements/Label';
 import Icon from '@ui/elements/Icon';
 import * as classNames from "classnames";
 import { SemanticCOLORS } from "@ui/generic";
+import Popup from "@ui/modules/Popup";
 
 const style = require('./ReviewFilesTree.less');
 
@@ -61,27 +62,60 @@ const NodeFileStats = (props: {stats: FileStats}) => {
     };
 
     if (stats.noActionNeeded > 0 || stats.newNoActionNeeded > 0) {
-        description.push(
+        const label =
             <Label color={getColor(stats.newNoActionNeeded)} key="new-discussion-action" size="mini">
                 <Icon name="comment"/>{stats.noActionNeeded + stats.newNoActionNeeded}
-            </Label>);
+            </Label>;
+
+        description.push(
+            <Popup
+                trigger={label}
+                content="Comment"
+                position="bottom center"
+                size="tiny"
+            />);
     }
     if (stats.needsResolution > 0 || stats.newNeedsResolution > 0) {
-        description.push(
+        const label =
             <Label color={getColor(stats.newNeedsResolution)} key="new-discussion-resolution" size="mini">
                 <Icon name="exclamation triangle"/>{stats.needsResolution + stats.newNeedsResolution}
-            </Label>);
+            </Label>;
+
+        description.push(
+            <Popup
+                trigger={label}
+                content="To fix"
+                position="bottom center"
+                size="tiny"
+            />);
     }
     if (stats.goodWork > 0 || stats.newGoodWork > 0) {
-        description.push(
+        const label =
             <Label color={getColor(stats.newGoodWork)} key="new-discussion-goodwork" size="mini">
                 <Icon name="winner"/>{stats.goodWork + stats.newGoodWork}
-            </Label>);
+            </Label>;
+
+        description.push(
+            <Popup
+                trigger={label}
+                content="Good work!"
+                position="bottom center"
+                size="tiny"
+            />);
     }
     if (stats.resolved > 0) {
-        description.push(<Label key="new-discussion-resolved" size="mini" basic>
-            <Icon name="check"/>{stats.resolved}
-        </Label>);
+        const label =
+            <Label key="new-discussion-resolved" size="mini" basic>
+                <Icon name="check"/>{stats.resolved}
+            </Label>;
+
+        description.push(
+            <Popup
+                trigger={label}
+                content="Resolved"
+                position="bottom center"
+                size="tiny"
+            />);
     }
 
     if(description.length > 0) {
