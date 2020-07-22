@@ -1,7 +1,7 @@
 import * as React from "react";
 import List from '@ui/elements/List';
 import { buildTree, FolderTreeNode, FileTreeNode, sortTree, shortTree, nestedName } from "@src/treeNode";
-import { FileToReview, ReviewId, FileId } from "@api/reviewer";
+import { FileToReview, ReviewId, FileId, FileDiscussion } from "@api/reviewer";
 import { connect } from "react-redux";
 import { RootState } from "@src/rootState";
 import { FileLink } from "../FileLink";
@@ -77,13 +77,13 @@ const NodeFileStats = (props: {stats: FileStats}) => {
     const {stats} = props;
     const description = [];
 
-    if (stats.noActionNeeded > 0 || stats.newNoActionNeeded > 0) {
+    if (stats.noActionNeeded + stats.newNoActionNeeded > 0) {
         description.push(commentIcon(stats.newNoActionNeeded, stats.noActionNeeded, "Comment", "discussion-action", "comment"));
     }
-    if (stats.needsResolution > 0 || stats.newNeedsResolution > 0) {
+    if (stats.needsResolution + stats.newNeedsResolution > 0) {
         description.push(commentIcon(stats.newNeedsResolution, stats.needsResolution, "To fix", "discussion-resolution", "exclamation triangle"));
     }
-    if (stats.goodWork > 0 || stats.newGoodWork > 0) {
+    if (stats.goodWork + stats.newGoodWork > 0) {
         description.push(commentIcon(stats.newGoodWork, stats.goodWork, "Good work!", "discussion-good-work", "winner"));
     }
     if (stats.resolved > 0) {
@@ -164,6 +164,37 @@ const ReviewFilesTree = (props: StateProps): JSX.Element => {
     </List>
 };
 
+const setStatsForUnpublished = (result: { [fileId: string]: FileStats }, item: FileDiscussion) => {
+    switch (item.state) {
+        case DiscussionState.NeedsResolution:
+            result[item.fileId].newNeedsResolution++;
+            break;
+        case DiscussionState.GoodWork:
+            result[item.fileId].newGoodWork++;
+            break;
+        case DiscussionState.NoActionNeeded:
+            result[item.fileId].newNoActionNeeded++;
+            break;
+    }
+};
+
+const setStatsForPublished = (result: { [fileId: string]: FileStats }, item: FileDiscussion) => {
+    switch (item.state) {
+        case DiscussionState.NeedsResolution:
+            result[item.fileId].needsResolution++;
+            break;
+        case DiscussionState.GoodWork:
+            result[item.fileId].goodWork++;
+            break;
+        case DiscussionState.NoActionNeeded:
+            result[item.fileId].noActionNeeded++;
+            break;
+        case DiscussionState.Resolved:
+            result[item.fileId].resolved++;
+            break;
+    }
+};
+
 const buildFileStats = (review: ReviewState) => {
     const result: { [fileId: string]: FileStats } = {};
 
@@ -172,17 +203,7 @@ const buildFileStats = (review: ReviewState) => {
             result[item.fileId] = {...emptyFileStats};
         }
 
-        switch (item.state) {
-            case DiscussionState.NeedsResolution:
-                result[item.fileId].newNeedsResolution++;
-                break;
-            case DiscussionState.GoodWork:
-                result[item.fileId].newGoodWork++;
-                break;
-            case DiscussionState.NoActionNeeded:
-                result[item.fileId].newNoActionNeeded++;
-                break;
-        }
+        setStatsForUnpublished(result, item);
     }
 
     for (let item of review.currentReview.fileDiscussions) {
@@ -190,24 +211,11 @@ const buildFileStats = (review: ReviewState) => {
             result[item.fileId] = {...emptyFileStats};
         }
 
-        switch (item.state) {
-            case DiscussionState.NeedsResolution:
-                result[item.fileId].needsResolution++;
-                break;
-            case DiscussionState.GoodWork:
-                result[item.fileId].goodWork++;
-                break;
-            case DiscussionState.NoActionNeeded:
-                result[item.fileId].noActionNeeded++;
-                break;
-            case DiscussionState.Resolved:
-                result[item.fileId].resolved++;
-                break;
-        }
+        setStatsForPublished(result, item);
     }
 
     return result;
-}
+};
 
 export default connect(
     (state: RootState): StateProps => ({
