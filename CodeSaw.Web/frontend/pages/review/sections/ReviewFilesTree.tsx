@@ -9,7 +9,7 @@ import { DiscussionState, ReviewState } from "../state";
 import Label from '@ui/elements/Label';
 import Icon from '@ui/elements/Icon';
 import * as classNames from "classnames";
-import { SemanticCOLORS } from "@ui/generic";
+import { SemanticCOLORS, SemanticICONS } from "@ui/generic";
 import Popup from "@ui/modules/Popup";
 
 const style = require('./ReviewFilesTree.less');
@@ -53,69 +53,41 @@ const NodeFileLink = (props: FileNodeProps) => {
     }
 }
 
+const getColor = (newElementCount): SemanticCOLORS => {
+    return newElementCount > 0 ? 'teal' : null;
+};
+
+const commentIcon = (newCommentsCounter: number, oldCommentsCounter: number, popupLabel: string, key: string, icon: SemanticICONS) => {
+    const label =
+        <Label color={getColor(newCommentsCounter)} size="mini">
+            <Icon name={icon}/>{oldCommentsCounter + newCommentsCounter}
+        </Label>;
+
+    return (
+        <Popup
+            key={key}
+            trigger={label}
+            content={popupLabel}
+            position="bottom center"
+            size="tiny"
+        />);
+}
+
 const NodeFileStats = (props: {stats: FileStats}) => {
     const {stats} = props;
     const description = [];
 
-    const getColor = (newElementCount): SemanticCOLORS => {
-        return newElementCount > 0 ? 'teal' : null;
-    };
-
     if (stats.noActionNeeded > 0 || stats.newNoActionNeeded > 0) {
-        const label =
-            <Label color={getColor(stats.newNoActionNeeded)} key="new-discussion-action" size="mini">
-                <Icon name="comment"/>{stats.noActionNeeded + stats.newNoActionNeeded}
-            </Label>;
-
-        description.push(
-            <Popup
-                trigger={label}
-                content="Comment"
-                position="bottom center"
-                size="tiny"
-            />);
+        description.push(commentIcon(stats.newNoActionNeeded, stats.noActionNeeded, "Comment", "discussion-action", "comment"));
     }
     if (stats.needsResolution > 0 || stats.newNeedsResolution > 0) {
-        const label =
-            <Label color={getColor(stats.newNeedsResolution)} key="new-discussion-resolution" size="mini">
-                <Icon name="exclamation triangle"/>{stats.needsResolution + stats.newNeedsResolution}
-            </Label>;
-
-        description.push(
-            <Popup
-                trigger={label}
-                content="To fix"
-                position="bottom center"
-                size="tiny"
-            />);
+        description.push(commentIcon(stats.newNeedsResolution, stats.needsResolution, "To fix", "discussion-resolution", "exclamation triangle"));
     }
     if (stats.goodWork > 0 || stats.newGoodWork > 0) {
-        const label =
-            <Label color={getColor(stats.newGoodWork)} key="new-discussion-goodwork" size="mini">
-                <Icon name="winner"/>{stats.goodWork + stats.newGoodWork}
-            </Label>;
-
-        description.push(
-            <Popup
-                trigger={label}
-                content="Good work!"
-                position="bottom center"
-                size="tiny"
-            />);
+        description.push(commentIcon(stats.newGoodWork, stats.goodWork, "Good work!", "discussion-good-work", "winner"));
     }
     if (stats.resolved > 0) {
-        const label =
-            <Label key="new-discussion-resolved" size="mini" basic>
-                <Icon name="check"/>{stats.resolved}
-            </Label>;
-
-        description.push(
-            <Popup
-                trigger={label}
-                content="Resolved"
-                position="bottom center"
-                size="tiny"
-            />);
+        description.push(commentIcon(0, stats.resolved, "Resolved", "discussion-resolved", "check"));
     }
 
     if(description.length > 0) {
@@ -194,8 +166,6 @@ const ReviewFilesTree = (props: StateProps): JSX.Element => {
 
 const buildFileStats = (review: ReviewState) => {
     const result: { [fileId: string]: FileStats } = {};
-
-    console.warn(review)
 
     for (let item of review.unpublishedFileDiscussions) {
         if(!result[item.fileId]) {
