@@ -1,25 +1,31 @@
-import { connect } from "react-redux";
-import * as React from "react";
-import { SelectFileForViewHandler } from "../selectFile";
-import { Dispatch } from "redux";
-import { RootState } from "@src/rootState";
-import { ReviewInfo, FileId, ReviewId } from "@api/reviewer";
-import { markEmptyFilesAsReviewed, reviewFile, unreviewFile, publishReview, FileInfo, selectFileForView } from "../state";
-import { createLinkToFile } from "../FileLink";
-import { History } from "history";
-import { HotKeys } from "@src/components/HotKeys";
-import DiffHeader from "./diffHeader";
-import { NoFileView } from "./fileView";
+import { connect } from 'react-redux';
+import * as React from 'react';
+import { SelectFileForViewHandler } from '../selectFile';
+import { Dispatch } from 'redux';
+import { RootState } from '@src/rootState';
+import { ReviewInfo, FileId, ReviewId } from '@api/reviewer';
+import {
+    markEmptyFilesAsReviewed,
+    reviewFile,
+    unreviewFile,
+    publishReview,
+    FileInfo,
+    selectFileForView,
+} from '../state';
+import { createLinkToFile } from '../FileLink';
+import { History } from 'history';
+import { HotKeys } from '@src/components/HotKeys';
+import DiffHeader from './diffHeader';
+import { NoFileView } from './fileView';
 import DiffContent from './diffContent';
 import FileList from '@src/fileList';
 import scrollToComponent from 'react-scroll-to-component';
-import * as PathPairs from "@src/pathPair";
+import * as PathPairs from '@src/pathPair';
 import Grid from '@ui/collections/Grid';
-import { Ref } from "semantic-ui-react";
-import ReviewFilesTree from "./ReviewFilesTree";
+import { Ref } from 'semantic-ui-react';
+import ReviewFilesTree from './ReviewFilesTree';
 
 const style = require('./file.less');
-
 
 interface ReviewFileActions {
     review(file: PathPairs.PathPair): void;
@@ -47,24 +53,24 @@ interface DispatchProps {
 
 type Props = StateProps & DispatchProps & OwnProps;
 
-const File = (props: Props): JSX.Element => {
+const File = (props: Props): any => {
     const stickyContainer = React.useRef<HTMLDivElement>();
     React.useEffect(() => {
-        if(props.selectedFile == null || props.fileId != props.selectedFile.fileId) {
-            if(props.fileId != null) {
+        if (props.selectedFile == null || props.fileId != props.selectedFile.fileId) {
+            if (props.fileId != null) {
                 props.selectFileForView(props.fileId);
             }
         }
     }, [props.fileId, props.selectedFile != null ? props.selectedFile.fileId : null]);
 
     React.useEffect(() => {
-        if(stickyContainer.current && props.selectedFile && props.selectedFile.diff) {
+        if (stickyContainer.current && props.selectedFile && props.selectedFile.diff) {
             scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' });
         }
-      });
+    });
 
     const scrollToFile = () => {
-        scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' })
+        scrollToComponent(stickyContainer.current, { offset: 0, align: 'top', duration: 100, ease: 'linear' });
     };
 
     const setStickyContainer = React.useCallback((node: HTMLDivElement) => {
@@ -90,16 +96,16 @@ const File = (props: Props): JSX.Element => {
         } else {
             props.reviewFile.unreview(props.selectedFile.path);
         }
-    }
+    };
 
-    let reviewHotKeys = {}
+    let reviewHotKeys = {};
 
     if (selectedFile) {
         const fileList = new FileList(
             props.currentReview.filesToReview,
             selectedFile.fileId,
             props.reviewedFiles,
-            props.currentReview.fileDiscussions
+            props.currentReview.fileDiscussions,
         );
         const nextFile = fileList.nextUnreviewedFile(+1);
         const prevFile = fileList.nextUnreviewedFile(-1);
@@ -114,7 +120,7 @@ const File = (props: Props): JSX.Element => {
             ']': () => nextFile && selectNewFileForView(nextFile.fileId),
             '{': () => prevFileWithUnresolvedComment && selectNewFileForView(prevFileWithUnresolvedComment.fileId),
             '}': () => nextFileWithUnresolvedComment && selectNewFileForView(nextFileWithUnresolvedComment.fileId),
-            'y': () => changeFileReviewState(!isReviewed),
+            y: () => changeFileReviewState(!isReviewed),
             'ctrl+Enter': props.publishReview,
             'ctrl+y': () => props.markNonEmptyAsViewed(),
             'ctrl+/': () => setSidebarVisible(!sidebarVisible),
@@ -131,29 +137,30 @@ const File = (props: Props): JSX.Element => {
         };
     }
 
-    return <div>
-        <HotKeys config={reviewHotKeys} />
-        <Ref innerRef={setStickyContainer}>
-            <Grid columns={16} className="diff-container">
-                {sidebarVisible && <Grid.Column width={4} className="sidebar-column">
-                    <div className="sidebar">
-                        <ReviewFilesTree />
-                    </div>
-                </Grid.Column>}
-                <Grid.Column width={sidebarVisible ? 12 : 16} className="diff-column">
-                    <DiffHeader
-                        onSelectFileForView={selectNewFileForView}
-                        setSidebarVisible={setSidebarVisible}
-                        sidebarVisible={sidebarVisible}
-                    />
-                    {selectedFile ?
-                        <DiffContent scrollToFile={scrollToFile} />
-                        : <NoFileView />
-                    }
-                </Grid.Column>
-            </Grid>
-        </Ref>
-    </div>;
+    return (
+        <div>
+            <HotKeys config={reviewHotKeys} />
+            <Ref innerRef={setStickyContainer}>
+                <Grid columns={16} className="diff-container">
+                    {sidebarVisible && (
+                        <Grid.Column width={4} className="sidebar-column">
+                            <div className="sidebar">
+                                <ReviewFilesTree />
+                            </div>
+                        </Grid.Column>
+                    )}
+                    <Grid.Column width={sidebarVisible ? 12 : 16} className="diff-column">
+                        <DiffHeader
+                            onSelectFileForView={selectNewFileForView}
+                            setSidebarVisible={setSidebarVisible}
+                            sidebarVisible={sidebarVisible}
+                        />
+                        {selectedFile ? <DiffContent scrollToFile={scrollToFile} /> : <NoFileView />}
+                    </Grid.Column>
+                </Grid>
+            </Ref>
+        </div>
+    );
 };
 
 export default connect(
@@ -170,5 +177,5 @@ export default connect(
             unreview: (path) => dispatch(unreviewFile({ path })),
         },
         publishReview: () => dispatch(publishReview({ fileToLoad: ownProps.fileId })),
-    })
+    }),
 )(File);

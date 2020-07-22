@@ -1,10 +1,12 @@
-import { toast } from 'react-toastify';
+import { toast, ToastId } from 'react-toastify';
 
 export default {
-    success: (message: string) => toast(message, { 
-        type: 'success'
-    }),
-    error: (message: string) => toast(message, {
-        type: 'error'
-    })
-}
+    success: (message: string): ToastId =>
+        toast(message, {
+            type: 'success',
+        }),
+    error: (message: string): ToastId =>
+        toast(message, {
+            type: 'error',
+        }),
+};

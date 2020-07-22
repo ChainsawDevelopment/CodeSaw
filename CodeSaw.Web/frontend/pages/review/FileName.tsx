@@ -13,12 +13,10 @@ interface StateProps {
 
 const FileName = (props: OwnProps & StateProps): JSX.Element => {
     return <span>{props.fileName.newPath}</span>;
-}
+};
 
 const mapStateToProps = (state: RootState, ownProps: OwnProps) => ({
-    fileName: state.review.currentReview.fileMatrix.find(f => f.fileId == ownProps.fileId).file
+    fileName: state.review.currentReview.fileMatrix.find((f) => f.fileId == ownProps.fileId).file,
 });
 
-export default connect(
-    mapStateToProps
-)(FileName);
+export default connect(mapStateToProps)(FileName);

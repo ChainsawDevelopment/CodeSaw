@@ -1,5 +1,5 @@
-import actionCreatorFactory, { AnyAction } from "typescript-fsa";
-import { ProjectInfo } from "../../api/reviewer";
+import actionCreatorFactory, { AnyAction } from 'typescript-fsa';
+import { ProjectInfo } from '../../api/reviewer';
 
 const createAction = actionCreatorFactory('ADMIN');
 
@@ -13,16 +13,16 @@ export const projectsLoaded = createAction<ProjectInfo[]>('PROJECTS_LOADED');
 export const setupProjectHooks = createAction<{ projectId: number }>('SETUP_PROJECT_HOOKS');
 
 const initialState: AdminState = {
-    projects: []
-}
+    projects: [],
+};
 
-export const adminReducer = (state: AdminState = initialState, action: AnyAction) => {
+export const adminReducer = (state: AdminState = initialState, action: AnyAction): AdminState => {
     if (projectsLoaded.match(action)) {
         return {
             ...state,
-            projects: action.payload
+            projects: action.payload,
         };
-    }    
+    }
 
     return state;
-}
+};

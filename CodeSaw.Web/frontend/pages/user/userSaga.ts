@@ -1,12 +1,12 @@
-import { take, put } from "redux-saga/effects";
+import { take, put } from 'redux-saga/effects';
 import { ReviewerApi } from '../../api/reviewer';
-import { UserState } from "../../rootState";
-import { loadCurrentUser, currentUserLoaded } from "./state";
+import { UserState } from '../../rootState';
+import { loadCurrentUser, currentUserLoaded } from './state';
 
-function* loadCurrentUserSaga() {
+function* loadCurrentUserSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         yield take(loadCurrentUser);
         const currentUser: UserState = yield api.getCurrentUser();
 
@@ -14,6 +14,4 @@ function* loadCurrentUserSaga() {
     }
 }
 
-export default [
-    loadCurrentUserSaga
-];
+export default [loadCurrentUserSaga];

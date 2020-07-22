@@ -1,15 +1,25 @@
-import * as React from "react";
-import { Hunk, FileDiff } from "../../api/reviewer";
+import * as React from 'react';
+import { Hunk, FileDiff } from '../../api/reviewer';
 
-import { Diff, Hunk as DiffHunk, tokenize, markEdits, getChangeKey, expandCollapsedBlockBy, expandFromRawCode, getCorrespondingOldLineNumber, Decoration } from 'react-diff-view';
+import {
+    Diff,
+    Hunk as DiffHunk,
+    tokenize,
+    markEdits,
+    getChangeKey,
+    expandCollapsedBlockBy,
+    expandFromRawCode,
+    getCorrespondingOldLineNumber,
+    Decoration,
+} from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
 const style = require('react-diff-view/style/index.css');
 import './diffView.less';
-import * as classNames from "classnames";
+import * as classNames from 'classnames';
 import { flatMap } from 'lodash';
-import HunkHeader from "./diff/HunkHeader";
-import { Segment, Divider, Input, Button } from "semantic-ui-react";
-import refractor from "refractor"
+import HunkHeader from './diff/HunkHeader';
+import { Segment, Divider, Input, Button } from 'semantic-ui-react';
+import refractor from 'refractor';
 
 import 'prismjs/themes/prism.css';
 import 'prism-color-variables/variables.css';
@@ -26,7 +36,7 @@ interface Change {
 }
 
 const mapHunkToView = (hunk: Hunk) => {
-    var changes: Change[] = [];
+    const changes: Change[] = [];
 
     let oldLineCounter = hunk.oldPosition.start;
     let newLineCounter = hunk.newPosition.start;
@@ -59,7 +69,7 @@ const mapHunkToView = (hunk: Hunk) => {
             classNames: classNames({
                 'base-change': line.classification == 'BaseChange' && line.operation != 'Equal',
                 'review-change': line.classification == 'ReviewChange' && line.operation != 'Equal',
-            })
+            }),
         });
 
         if (type != 'insert') {
@@ -77,7 +87,7 @@ const mapHunkToView = (hunk: Hunk) => {
         newStart: hunk.newPosition.start,
         newLines: hunk.newPosition.length,
         content: '',
-        changes: zipChanges(changes)
+        changes: zipChanges(changes),
     };
 
     return viewHunk;
@@ -118,7 +128,7 @@ const zipChanges = (changes: Change[]): Change[] => {
     }
 
     return result;
-}
+};
 
 const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     const result: T[] = [];
@@ -127,7 +137,7 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
 
     for (let i = 0; i < minLength; i++) {
         result.push(lines1[i]);
-        result.push(lines2[i])
+        result.push(lines2[i]);
     }
 
     for (let i = minLength; i < lines1.length; i++) {
@@ -139,7 +149,7 @@ const zipLines = <T extends {}>(lines1: T[], lines2: T[]): T[] => {
     }
 
     return result;
-}
+};
 
 export type DiffSide = 'left' | 'right';
 
@@ -175,7 +185,7 @@ const leftSideMatch = (change: Change, lineNumber: number) => {
     }
 
     return true;
-}
+};
 
 const rightSideMatch = (change: Change, lineNumber: number) => {
     if (change.isDelete) {
@@ -187,9 +197,9 @@ const rightSideMatch = (change: Change, lineNumber: number) => {
     }
 
     return true;
-}
+};
 
-const getFullChangeKey = change => {
+const getFullChangeKey = (change) => {
     if (!change) {
         throw new Error('change is not provided');
     }
@@ -209,15 +219,17 @@ const getFullChangeKey = change => {
     return prefix + oldLineNumber + '_' + newLineNumber;
 };
 
-const diffView = (props: Props) => {
+const diffView = (props: Props): JSX.Element => {
     if (props.diffInfo.isBinaryFile) {
-        return (<BinaryDiffView diffInfo={props.diffInfo} />)
+        return <BinaryDiffView diffInfo={props.diffInfo} />;
     }
 
     if (props.diffInfo.hunks.length == 0 && props.lineWidgets.length == 0) {
-        return (<div className='no-changes'>
-            No real changes in this file. Probably result of including changes from base branch.
-        </div>);
+        return (
+            <div className="no-changes">
+                No real changes in this file. Probably result of including changes from base branch.
+            </div>
+        );
     }
 
     let viewHunks = props.diffInfo.hunks.map(mapHunkToView);
@@ -229,7 +241,7 @@ const diffView = (props: Props) => {
             newStart: 1,
             newLines: 0,
             content: '',
-            changes: []
+            changes: [],
         });
     }
 
@@ -238,12 +250,12 @@ const diffView = (props: Props) => {
     // once we start working on expanding/collapsing hunks this will be useful
     viewHunks = expandCollapsedBlockBy(viewHunks, props.contents.current, () => false);
 
-    for (let hunk of props.diffInfo.hunks) {
+    for (const hunk of props.diffInfo.hunks) {
         const position = hunk.oldPosition;
         const totalLines = props.contents.previousTotalLines;
 
-        var a = Math.max(1, position.start - 5);
-        var b = Math.min(totalLines, position.end + 5);
+        const a = Math.max(1, position.start - 5);
+        const b = Math.min(totalLines, position.end + 5);
 
         if (a == 1 && b == totalLines) {
             continue;
@@ -252,10 +264,15 @@ const diffView = (props: Props) => {
         viewHunks = expandFromRawCode(viewHunks, props.contents.current, a, b);
     }
 
-    for (let widget of props.lineWidgets) {
-        const matchingHunk = viewHunks.findIndex(i =>
-            (widget.side == 'left' && i.oldStart <= widget.lineNumber && widget.lineNumber <= i.oldStart + i.oldLines)
-            || (widget.side == 'right' && i.newStart <= widget.lineNumber && widget.lineNumber <= i.newStart + i.newLines)
+    for (const widget of props.lineWidgets) {
+        const matchingHunk = viewHunks.findIndex(
+            (i) =>
+                (widget.side == 'left' &&
+                    i.oldStart <= widget.lineNumber &&
+                    widget.lineNumber <= i.oldStart + i.oldLines) ||
+                (widget.side == 'right' &&
+                    i.newStart <= widget.lineNumber &&
+                    widget.lineNumber <= i.newStart + i.newLines),
         );
 
         if (matchingHunk >= 0) {
@@ -269,10 +286,8 @@ const diffView = (props: Props) => {
         }
 
         try {
-
             viewHunks = expandFromRawCode(viewHunks, props.contents.current, lineNumber - 2, lineNumber + 2);
-        }
-        catch (e) {
+        } catch (e) {
             // Failed to expand the code, try to display the widgets
             // TODO: Investigate this
             console.error(e);
@@ -281,24 +296,24 @@ const diffView = (props: Props) => {
 
     const events = {
         gutterEvents: {
-            onClick: e => {
+            onClick: (e) => {
                 if (props.onLineClick) {
                     const lineNumber = e.change.newLineNumber;
                     props.onLineClick('right', lineNumber);
                 }
-            }
-        }
+            },
+        },
     };
 
-    let widgets = {};
-    let failedLineWidgets = []
+    const widgets = {};
+    const failedLineWidgets = [];
 
-    for (let item of props.lineWidgets) {
+    for (const item of props.lineWidgets) {
         const match = item.side == 'left' ? leftSideMatch : rightSideMatch;
         let found = false;
 
-        for (let hunk of viewHunks) {
-            for (let change of hunk.changes) {
+        for (const hunk of viewHunks) {
+            for (const change of hunk.changes) {
                 if (!match(change, item.lineNumber)) {
                     continue;
                 }
@@ -311,7 +326,7 @@ const diffView = (props: Props) => {
         }
 
         if (!found) {
-            console.warn("Failed to display widget", { lineNumber: item.lineNumber, side: item.side });
+            console.warn('Failed to display widget', { lineNumber: item.lineNumber, side: item.side });
             failedLineWidgets.push(item);
         }
     }
@@ -321,44 +336,38 @@ const diffView = (props: Props) => {
         refractor: refractor,
         language: refractor.registered(props.language) ? props.language : 'cpp',
         oldSource: props.contents.previous,
-        enhancers: [
-            markEdits(viewHunks)
-        ]
+        enhancers: [markEdits(viewHunks)],
     });
 
     let cnt = 0;
 
     return (
         <>
-            <Diff
-                viewType="split"
-                diffType={props.type}
-                widgets={widgets}
-                tokens={tokens}
-                hunks={viewHunks}
-            >
-                {hunks => flatMap(hunks, (h, i) => [
-                    <Decoration key={'dec' + cnt++}>
-                        <HunkHeader hunk={{
-                            oldPosition: {
-                                start: h.oldStart,
-                                end: h.oldStart + h.oldLines,
-                                length: h.oldLines
-                            },
-                            newPosition: {
-                                start: h.newStart,
-                                end: h.newStart + h.newLines,
-                                length: h.newLines
-                            },
-                            lines: [],
-
-                        }} />
-                    </Decoration>,
-                    <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />
-                ])}
+            <Diff viewType="split" diffType={props.type} widgets={widgets} tokens={tokens} hunks={viewHunks}>
+                {(hunks) =>
+                    flatMap(hunks, (h, i) => [
+                        <Decoration key={'dec' + cnt++}>
+                            <HunkHeader
+                                hunk={{
+                                    oldPosition: {
+                                        start: h.oldStart,
+                                        end: h.oldStart + h.oldLines,
+                                        length: h.oldLines,
+                                    },
+                                    newPosition: {
+                                        start: h.newStart,
+                                        end: h.newStart + h.newLines,
+                                        length: h.newLines,
+                                    },
+                                    lines: [],
+                                }}
+                            />
+                        </Decoration>,
+                        <DiffHunk key={i} hunk={h} gutterEvents={events.gutterEvents} />,
+                    ])
+                }
             </Diff>
-            {failedLineWidgets.length > 0 &&
-                failedLineWidgets.map(w => <div key={w.lineNumber}>{w.widget}</div>)}
+            {failedLineWidgets.length > 0 && failedLineWidgets.map((w) => <div key={w.lineNumber}>{w.widget}</div>)}
         </>
     );
 };

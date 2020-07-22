@@ -1,9 +1,9 @@
-import * as React from 'react'
-import Modal from 'semantic-ui-react/dist/commonjs/modules/Modal'
+import * as React from 'react';
+import Modal from 'semantic-ui-react/dist/commonjs/modules/Modal';
 import Input from '@ui/elements/Input';
 
 interface Props {
-    isOpen: boolean
+    isOpen: boolean;
     handleClose(line: string): void;
 }
 
@@ -12,46 +12,44 @@ interface State {
 }
 
 export class SelectLineNumberModal extends React.Component<Props, State> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
 
         this.state = {
-            line: ''
+            line: '',
         };
     }
 
     private handleInput = (e, data) => {
-        this.setState({line: data.value});
-    }
+        this.setState({ line: data.value });
+    };
 
     private handleClose = () => {
         this.props.handleClose(this.state.line);
-    }
+    };
 
     private handleRef = (inputRef: Input) => {
         if (inputRef) {
             inputRef.focus();
         }
-    }
+    };
 
     render(): JSX.Element {
-        return <Modal
-                open={this.props.isOpen}
-                onClose={this.handleClose}
-                className={"select-line"}
-                size={"mini"}
-            >
+        return (
+            <Modal open={this.props.isOpen} onClose={this.handleClose} className={'select-line'} size={'mini'}>
                 <Modal.Header>Select Line</Modal.Header>
                 <Modal.Content>
                     <Modal.Description>
-                        <Input 
-                            ref={this.handleRef} 
+                        <Input
+                            ref={this.handleRef}
                             placeholder="Line number..."
-                            icon='search'
+                            icon="search"
                             onChange={this.handleInput}
-                            onKeyPress={e => (e.key == "Enter") && this.handleClose()} />
+                            onKeyPress={(e) => e.key == 'Enter' && this.handleClose()}
+                        />
                     </Modal.Description>
                 </Modal.Content>
             </Modal>
+        );
     }
 }

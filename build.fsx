@@ -80,19 +80,36 @@ Target.create "_FrontendBuild" (fun _ ->
 
 Target.create "Build" ignore
 
+Target.create "Lint" (fun _ ->
+    let args =
+        [
+            yield "eslint"
+            yield "CodeSaw.Web/frontend"
+            yield "--ext"
+            yield ".js,.jsx,.ts,.tsx"
+            yield "--config"
+            yield ".eslintrc.json"
+        ] |> Args.toWindowsCommandLine
+
+    Yarn.exec args (fun o ->
+       { o with
+           YarnFilePath = yarnExe
+       })
+)
+
 Target.create "Watch" (fun _ ->
-    Process.fireAndForget 
+    Process.fireAndForget
         (fun proc ->
             {proc with
                 FileName = "dotnet"
                 Arguments = "watch run -new_console:sH:t:web"
                 WorkingDirectory = root </> "CodeSaw.Web"
-            } 
+            }
             |> Process.setEnvironmentVariable "ASPNETCORE_ENVIRONMENT" "development"
             |> Process.setEnvironmentVariable "REVIEWER_ASSET_SERVER" "http://localhost:8080/"
         )
 
-    Process.fireAndForget 
+    Process.fireAndForget
         (fun proc ->
             {proc with
                 FileName = yarnExe
@@ -246,7 +263,7 @@ Target.create "DeployArtifacts" (ignore)
 open Fake.Core.TargetOperators
 
 "_DotNetRestore" ==> "_BackendBuild" ==> "Build"
-"_YarnInstall" ==> "_FrontendBuild" ==> "Build" ==> "Package"
+"_YarnInstall" ==> "_FrontendBuild" ==> "Build" ==> "Lint" ==> "Package"
 
 "_CleanupNetworkShares" 
     ==> "_SetupNetworkShare" 

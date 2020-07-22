@@ -1,8 +1,8 @@
-import * as React from 'react'
+import * as React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router';
 import Button from '@ui/elements/Button';
 
-interface Props extends RouteComponentProps<{}>{
+interface Props extends RouteComponentProps<{}> {
     to: string;
     children?: any;
     onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -18,16 +18,16 @@ const LinkButton = (props: Props) => {
         onClick,
         // ⬆ filtering out props that `button` doesn’t know what to do with.
         ...rest
-    } = props
+    } = props;
     return (
         <Button
             {...rest} // `children` is just another prop!
             onClick={(event) => {
-                onClick && onClick(event)
-                history.push(to)
+                onClick && onClick(event);
+                history.push(to);
             }}
         />
-    )
-}
+    );
+};
 
-export default withRouter(LinkButton)
+export default withRouter(LinkButton);

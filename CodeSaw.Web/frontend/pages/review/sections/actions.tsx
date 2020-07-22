@@ -1,10 +1,10 @@
-import { connect } from "react-redux";
-import * as React from "react";
+import { connect } from 'react-redux';
+import * as React from 'react';
 import Menu from '@ui/collections/Menu';
-import { PublishButton } from "../PublishButton";
+import { PublishButton } from '../PublishButton';
 import Button from '@ui/elements/Button';
-import { Dispatch } from "redux";
-import { markEmptyFilesAsReviewed } from "../state";
+import { Dispatch } from 'redux';
+import { markEmptyFilesAsReviewed } from '../state';
 
 interface DispatchProps {
     markNonEmptyAsViewed(): void;
@@ -13,19 +13,22 @@ interface DispatchProps {
 type Props = DispatchProps;
 
 const Actions = (props: Props): JSX.Element => {
-    return <Menu secondary id="summary-menu">
-        <Menu.Menu position='right'>
-            <Menu.Item>
-                <PublishButton />&nbsp;
-                <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
-            </Menu.Item>
-        </Menu.Menu>
-    </Menu>;
-}
+    return (
+        <Menu secondary id="summary-menu">
+            <Menu.Menu position="right">
+                <Menu.Item>
+                    <PublishButton />
+                    &nbsp;
+                    <Button onClick={props.markNonEmptyAsViewed}>Mark Unchanged Files</Button>&nbsp;
+                </Menu.Item>
+            </Menu.Menu>
+        </Menu>
+    );
+};
 
 export default connect(
     () => ({}),
     (dispatch: Dispatch): DispatchProps => ({
-        markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({}))
-    })
+        markNonEmptyAsViewed: () => dispatch(markEmptyFilesAsReviewed({})),
+    }),
 )(Actions);

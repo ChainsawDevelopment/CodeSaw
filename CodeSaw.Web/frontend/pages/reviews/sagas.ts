@@ -1,24 +1,22 @@
-import { take, put } from "redux-saga/effects";
-import { Action } from "typescript-fsa";
+import { take, put } from 'redux-saga/effects';
+import { Action } from 'typescript-fsa';
 import { ReviewerApi, Review, Paged, ReviewSearchArgs } from '../../api/reviewer';
-import { loadReviews, reviewsLoaded } from "./state";
-import { startOperation, stopOperation } from "../../loading/saga";
+import { loadReviews, reviewsLoaded } from './state';
+import { startOperation, stopOperation } from '../../loading/saga';
 
-function* loadReviewsSaga() {
+function* loadReviewsSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         const action: Action<ReviewSearchArgs> = yield take(loadReviews);
 
         yield startOperation();
 
         const reviews: Paged<Review> = yield api.getReviews(action.payload);
         yield put(reviewsLoaded({ reviews }));
-        
+
         yield stopOperation();
     }
 }
 
-export default [
-    loadReviewsSaga
-];
+export default [loadReviewsSaga];

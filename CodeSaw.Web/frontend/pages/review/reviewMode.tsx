@@ -1,30 +1,29 @@
-import * as React from "react";
+import * as React from 'react';
 import CurrentReviewMode from './currentReviewMode';
 
 class ReviewModeCore extends React.PureComponent<{ mode: 'reviewer' | 'author' }> {
     render() {
         const componentType = this.props.mode == 'reviewer' ? ReviewModeCore.Reviewer : ReviewModeCore.Author;
 
-        const b = React.Children.toArray(this.props.children)
-            .filter(s => (s as any).type == componentType);
+        const b = React.Children.toArray(this.props.children).filter((s) => (s as any).type == componentType);
 
         return <>{b}</>;
     }
 
-    static readonly Author = (props: { children?: React.ReactNode }): JSX.Element => {
+    static readonly Author = (props: { children?: any }): JSX.Element => {
         return <>{props.children}</>;
-    }
+    };
 
-    static readonly Reviewer = (props: { children?: React.ReactNode }): JSX.Element => {
+    static readonly Reviewer = (props: { children?: any }): JSX.Element => {
         return <>{props.children}</>;
-    }
+    };
 }
 
 class ReviewMode extends React.Component {
-    render() {
+    render(): any {
         return (
             <CurrentReviewMode.Consumer>
-            {mode => <ReviewModeCore mode={mode} children={this.props.children} />}
+                {(mode) => <ReviewModeCore mode={mode} children={this.props.children} />}
             </CurrentReviewMode.Consumer>
         );
     }

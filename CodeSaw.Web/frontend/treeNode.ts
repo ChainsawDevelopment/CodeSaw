@@ -14,7 +14,6 @@ export interface FolderTreeNode<TValue> {
 
 export type PathExtractor<TValue> = (item: TValue) => string;
 
-
 const splitPath = <TValue>(item: TValue, extractPath: PathExtractor<TValue>) => {
     let itemPath = extractPath(item);
 
@@ -34,12 +33,12 @@ const splitPath = <TValue>(item: TValue, extractPath: PathExtractor<TValue>) => 
         fullPath: itemPath,
         basename: path.basename(itemPath),
         directory: itemDirectory,
-        directoryElements: directoryElements
-    }
-}
+        directoryElements: directoryElements,
+    };
+};
 
 export const buildTree = <TValue>(files: TValue[], extractPath: PathExtractor<TValue>): FolderTreeNode<TValue> => {
-    const splitted = files.map(f => splitPath(f, extractPath));
+    const splitted = files.map((f) => splitPath(f, extractPath));
 
     const root: FolderTreeNode<TValue> = {
         folders: [],
@@ -52,20 +51,20 @@ export const buildTree = <TValue>(files: TValue[], extractPath: PathExtractor<TV
         if (item.directoryElements.length == 0) {
             root.files.push({
                 name: item.basename,
-                value: item.value
+                value: item.value,
             });
             continue;
         }
 
         let parent = root;
         for (const segment of item.directoryElements) {
-            let inner = parent.folders.find(f => f.name == segment) as FolderTreeNode<TValue>;
+            let inner = parent.folders.find((f) => f.name == segment) as FolderTreeNode<TValue>;
             if (inner == null) {
                 inner = {
                     folders: [],
                     files: [],
                     nestElements: [],
-                    name: segment
+                    name: segment,
                 };
                 parent.folders.push(inner);
             }
@@ -73,7 +72,7 @@ export const buildTree = <TValue>(files: TValue[], extractPath: PathExtractor<TV
         }
         parent.files.push({
             name: item.basename,
-            value: item.value
+            value: item.value,
         });
     }
 
@@ -82,7 +81,7 @@ export const buildTree = <TValue>(files: TValue[], extractPath: PathExtractor<TV
 
 export const treeDepth = <TValue>(root: FolderTreeNode<TValue>): number => {
     if (root.folders.length > 0) {
-        return 1 + Math.max(...root.folders.map(n => treeDepth(n)));
+        return 1 + Math.max(...root.folders.map((n) => treeDepth(n)));
     } else {
         return 1;
     }
@@ -101,21 +100,21 @@ export const listFiles = <TValue>(prefix: string, root: FolderTreeNode<TValue>):
     }
 
     return result;
-}
+};
 
 export const sortTree = <TValue>(root: FolderTreeNode<TValue>): FolderTreeNode<TValue> => {
     return {
         ...root,
         files: root.files.sort((a, b) => a.name.localeCompare(b.name)),
-        folders: root.folders.sort((a, b) => a.name.localeCompare(b.name)).map(f => sortTree(f)),
+        folders: root.folders.sort((a, b) => a.name.localeCompare(b.name)).map((f) => sortTree(f)),
     };
-}
+};
 
 export const shortTree = <TValue>(root: FolderTreeNode<TValue>): FolderTreeNode<TValue> => {
     const shortFolder = (top: FolderTreeNode<TValue>): FolderTreeNode<TValue> => {
         const nesting = [];
 
-        while(top.folders.length == 1 && top.files.length == 0) {
+        while (top.folders.length == 1 && top.files.length == 0) {
             nesting.push(top.name);
             top = top.folders[0];
         }
@@ -123,14 +122,14 @@ export const shortTree = <TValue>(root: FolderTreeNode<TValue>): FolderTreeNode<
         return {
             ...top,
             nestElements: nesting,
-            folders: top.folders.map(f => shortFolder(f)),
+            folders: top.folders.map((f) => shortFolder(f)),
         };
     };
 
     return {
         ...root,
-        folders: root.folders.map(f => shortFolder(f))
+        folders: root.folders.map((f) => shortFolder(f)),
     };
-}
+};
 
 export const nestedName = <TValue>(item: FolderTreeNode<TValue>): string => [...item.nestElements, item.name].join('/');

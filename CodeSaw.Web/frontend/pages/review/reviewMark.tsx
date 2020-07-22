@@ -9,16 +9,16 @@ interface Props {
     onClick?: (newState: boolean) => void;
 }
 
-export default (props: Props) => {
+export default (props: Props): any => {
     const { reviewed, onClick, ...rest } = props;
 
     const common = {
         ...rest,
         circular: true,
-        inverted: true
+        inverted: true,
     };
 
-    if(onClick) {
+    if (onClick) {
         common['link'] = true;
         common['onClick'] = () => onClick(!reviewed);
     }
@@ -26,22 +26,10 @@ export default (props: Props) => {
     let icon: JSX.Element;
 
     if (!reviewed) {
-        icon = (
-            <Icon
-                {...common}
-                name='eye slash outline'
-                color='red'
-            />
-        );
+        icon = <Icon {...common} name="eye slash outline" color="red" />;
     } else {
-        icon = (
-            <Icon
-                {...common}
-                name='eye'
-                color='green'
-            />
-        );
+        icon = <Icon {...common} name="eye" color="green" />;
     }
 
     return icon;
-}
+};
