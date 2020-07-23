@@ -33,7 +33,7 @@ export const ToggleReviewed = (props: { isReviewed: boolean; onChange: (newState
 export const RefreshDiff = (props: { onRefresh: () => void; }): JSX.Element => {
     return <Menu.Item fitted>
         <Popup
-            trigger={<Icon onClick={props.onRefresh} name="redo" circular link color="blue"></Icon>}
+            trigger={<Icon onClick={props.onRefresh} name="redo" circular link color="teal"></Icon>}
             content="Refresh file diff"
         />
     </Menu.Item>;
@@ -46,14 +46,14 @@ export const FileNavigation = (props: { reviewId: ReviewId; prevFile: FileToRevi
         {prevFile &&
             <Popup
                 trigger={<FileLink reviewId={props.reviewId} fileId={prevFile.fileId} >
-                    <Icon name="step backward" circular link /></FileLink>}
+                    <Icon name="step backward" circular link color="teal" /></FileLink>}
                 content="Previous unreviewed file"
             />}
         {nextFile &&
             <Popup
 
                 trigger={<FileLink reviewId={props.reviewId} fileId={nextFile.fileId} >
-                    <Icon name="step forward" circular link /></FileLink>}
+                    <Icon name="step forward" circular link color="teal" /></FileLink>}
                 content="Next unreviewed file"
             />}
     </Menu.Item>;
@@ -80,7 +80,7 @@ export const DownloadDiff = (props: { diff: FileDiff }): JSX.Element => {
 
     return <Menu.Item fitted key="download-diff">
         <Popup
-            trigger={<Icon onClick={downloadFile} name="download" circular link color="blue"></Icon>}
+            trigger={<Icon onClick={downloadFile} name="download" circular link color="teal"></Icon>}
             content="Download"
         />
     </Menu.Item>;

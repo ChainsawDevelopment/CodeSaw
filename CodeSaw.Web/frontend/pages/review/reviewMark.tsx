@@ -1,7 +1,5 @@
 import Icon from '@ui/elements/Icon';
-import Button from '@ui/elements/Button';
 import * as React from 'react';
-import { IconSizeProp, IconProps } from '@ui/elements/Icon/Icon';
 
 interface Props {
     [key: string]: any;
@@ -38,7 +36,7 @@ export default (props: Props) => {
             <Icon
                 {...common}
                 name='eye'
-                color='green'
+                color='teal'
             />
         );
     }

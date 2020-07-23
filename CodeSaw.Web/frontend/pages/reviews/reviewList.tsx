@@ -14,11 +14,11 @@ const ReviewBadges = (props: {review:Review}) => {
     const { isCreatedByMe, amIReviewer } = props.review;
 
     if (isCreatedByMe) {
-        badges.push(<Label key='creator' color='orange' content='Creator' size='mini' />);
+        badges.push(<Label className='person-badge' key='creator' color='teal' content='Creator' size='mini' />);
     }
 
     if (!isCreatedByMe && amIReviewer) {
-        badges.push(<Label key='reviewer' color='red' content='Reviewer' size='mini' />);
+        badges.push(<Label className='person-badge' key='reviewer' color='pink' content='Reviewer' size='mini' />);
     }
 
     return (<>{badges}</>);

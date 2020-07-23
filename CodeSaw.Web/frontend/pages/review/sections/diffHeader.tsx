@@ -64,14 +64,14 @@ const ToggleSidebar = (props: {visible: boolean; set(visible: boolean): void}) =
     if(props.visible) {
         return <Menu.Item key="toggle-sidebar" fitted>
             <Popup
-                trigger={<Icon onClick={() => props.set(false)} name="angle double left" circular link color="blue"></Icon>}
+                trigger={<Icon onClick={() => props.set(false)} name="angle double left" circular link color="teal"></Icon>}
                 content="Hide sidebar"
             />
         </Menu.Item>;
     } else {
         return <Menu.Item key="toggle-sidebar" fitted>
             <Popup
-                trigger={<Icon onClick={() => props.set(true)} name="angle double right" circular link color="blue"></Icon>}
+                trigger={<Icon onClick={() => props.set(true)} name="angle double right" circular link color="teal"></Icon>}
                 content="Show sidebar"
             />
         </Menu.Item>;
