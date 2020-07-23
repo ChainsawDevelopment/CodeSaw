@@ -77,17 +77,17 @@ const NodeFileStats = (props: {stats: FileStats}) => {
     const {stats} = props;
     const description = [];
 
-    if (stats.noActionNeeded + stats.newNoActionNeeded > 0) {
-        description.push(commentIcon(stats.newNoActionNeeded, stats.noActionNeeded, "Comment", "discussion-action", "comment"));
-    }
     if (stats.needsResolution + stats.newNeedsResolution > 0) {
         description.push(commentIcon(stats.newNeedsResolution, stats.needsResolution, "To fix", "discussion-resolution", "exclamation triangle"));
     }
-    if (stats.goodWork + stats.newGoodWork > 0) {
-        description.push(commentIcon(stats.newGoodWork, stats.goodWork, "Good work!", "discussion-good-work", "winner"));
-    }
     if (stats.resolved > 0) {
         description.push(commentIcon(0, stats.resolved, "Resolved", "discussion-resolved", "check"));
+    }
+    if (stats.noActionNeeded + stats.newNoActionNeeded > 0) {
+        description.push(commentIcon(stats.newNoActionNeeded, stats.noActionNeeded, "Comment", "discussion-action", "comment"));
+    }
+    if (stats.goodWork + stats.newGoodWork > 0) {
+        description.push(commentIcon(stats.newGoodWork, stats.goodWork, "Good work!", "discussion-good-work", "winner"));
     }
 
     if(description.length > 0) {
