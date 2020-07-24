@@ -1,15 +1,15 @@
 import * as React from 'react';
 import List from '@ui/elements/List';
 import { buildTree, FolderTreeNode, FileTreeNode, sortTree, shortTree, nestedName } from '@src/treeNode';
-import { FileToReview, ReviewId, FileId, FileDiscussion } from '@api/reviewer';
+import { FileToReview, ReviewId, FileId, FileDiscussion, CommentState } from '@api/reviewer';
 import { connect } from 'react-redux';
 import { RootState } from '@src/rootState';
 import { FileLink } from '../FileLink';
 import { DiscussionState, ReviewState } from '../state';
 import Label from '@ui/elements/Label';
-import Icon from '@ui/elements/Icon';
 import * as classNames from 'classnames';
-import { SemanticCOLORS, SemanticICONS } from '@ui/generic';
+import { SemanticCOLORS } from '@ui/generic';
+import { CommentIcon } from '../CommentIcon';
 import Popup from '@ui/modules/Popup';
 
 const style = require('./ReviewFilesTree.less');
@@ -66,12 +66,12 @@ const commentIcon = (
     oldCommentsCounter: number,
     popupLabel: string,
     key: string,
-    icon: SemanticICONS,
+    commentType: CommentState,
     basic = false,
 ) => {
     const label = (
         <Label color={getColor(newCommentsCounter)} size="mini" basic={basic}>
-            <Icon name={icon} />
+            <CommentIcon commentType={commentType} />
             {oldCommentsCounter + newCommentsCounter}
         </Label>
     );
@@ -90,22 +90,36 @@ const NodeFileStats = (props: { stats: FileStats }) => {
                 stats.needsResolution,
                 'To fix',
                 'discussion-resolution',
-                'exclamation triangle',
+                DiscussionState.NeedsResolution,
             ),
         );
     }
     if (stats.noActionNeeded + stats.newNoActionNeeded > 0) {
         description.push(
-            commentIcon(stats.newNoActionNeeded, stats.noActionNeeded, 'Comment', 'discussion-action', 'comment'),
+            commentIcon(
+                stats.newNoActionNeeded,
+                stats.noActionNeeded,
+                'Comment',
+                'discussion-action',
+                DiscussionState.NoActionNeeded,
+            ),
         );
     }
     if (stats.goodWork + stats.newGoodWork > 0) {
         description.push(
-            commentIcon(stats.newGoodWork, stats.goodWork, 'Good work!', 'discussion-good-work', 'winner'),
+            commentIcon(
+                stats.newGoodWork,
+                stats.goodWork,
+                'Good work!',
+                'discussion-good-work',
+                DiscussionState.GoodWork,
+            ),
         );
     }
     if (stats.resolved > 0) {
-        description.push(commentIcon(0, stats.resolved, 'Resolved', 'discussion-resolved', 'check', true));
+        description.push(
+            commentIcon(0, stats.resolved, 'Resolved', 'discussion-resolved', DiscussionState.Resolved, true),
+        );
     }
 
     if (description.length > 0) {

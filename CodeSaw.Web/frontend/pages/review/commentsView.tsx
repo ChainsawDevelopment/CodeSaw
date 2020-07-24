@@ -6,6 +6,7 @@ import Header from '@ui/elements/Header';
 import { TextAreaProps } from '@ui/addons/TextArea';
 import { Comment, Discussion } from '../../api/reviewer';
 import { IsCommentUnpublished, DiscussionType, DiscussionState } from './state';
+import { CommentIcon } from './CommentIcon';
 import MarkdownGenerator from './markdownGenerator';
 
 import './commentsView.less';
@@ -66,6 +67,7 @@ interface CommentProps {
     statusComponent?: JSX.Element;
     note?: JSX.Element;
     readOnly?: boolean;
+    icon?: JSX.Element;
 }
 
 interface CommentState {
@@ -186,6 +188,9 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                 {ack}
             </UIComment.Action>
         );
+        const commentDate = !this.props.comment.createdAt ? null : (
+            <div>{this.props.comment.createdAt && new Date(this.props.comment.createdAt).toLocaleString()}</div>
+        );
 
         return (
             <UIComment>
@@ -193,11 +198,10 @@ class CommentComponent extends React.Component<CommentProps, CommentState> {
                 <UIComment.Content>
                     <UIComment.Author>{this.props.comment.author.name}</UIComment.Author>
                     <UIComment.Metadata>
-                        <div>
-                            {this.props.comment.createdAt && new Date(this.props.comment.createdAt).toLocaleString()}
-                        </div>
+                        <div>{this.props.icon}</div>
+                        {commentDate}
                         {this.props.note}
-                        {isUnpublished && 'Unpublished'}
+                        <div>{isUnpublished && 'Unpublished'}</div>
                     </UIComment.Metadata>
                     <UIComment.Text>
                         {!this.state.editVisible && (
@@ -240,6 +244,7 @@ interface DiscussionComponentProps {
 }
 const DiscussionComponent = (props: DiscussionComponentProps) => {
     let status: JSX.Element = null;
+    const icon: JSX.Element = <CommentIcon commentType={props.discussion.state} />;
     switch (props.discussion.state) {
         case DiscussionState.NoActionNeeded:
             status = null;
@@ -279,6 +284,7 @@ const DiscussionComponent = (props: DiscussionComponentProps) => {
                     props.discussion.state === DiscussionState.Resolved ||
                     props.discussion.state === DiscussionState.GoodWork
                 }
+                icon={icon}
             />
         </div>
     );
