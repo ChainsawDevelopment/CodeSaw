@@ -57,9 +57,9 @@ const getColor = (newElementCount): SemanticCOLORS => {
     return newElementCount > 0 ? 'teal' : null;
 };
 
-const commentIcon = (newCommentsCounter: number, oldCommentsCounter: number, popupLabel: string, key: string, icon: SemanticICONS) => {
+const commentIcon = (newCommentsCounter: number, oldCommentsCounter: number, popupLabel: string, key: string, icon: SemanticICONS, basic: boolean = false) => {
     const label =
-        <Label color={getColor(newCommentsCounter)} size="mini">
+        <Label color={getColor(newCommentsCounter)} size="mini" basic={basic}>
             <Icon name={icon}/>{oldCommentsCounter + newCommentsCounter}
         </Label>;
 
@@ -80,14 +80,14 @@ const NodeFileStats = (props: {stats: FileStats}) => {
     if (stats.needsResolution + stats.newNeedsResolution > 0) {
         description.push(commentIcon(stats.newNeedsResolution, stats.needsResolution, "To fix", "discussion-resolution", "exclamation triangle"));
     }
-    if (stats.resolved > 0) {
-        description.push(commentIcon(0, stats.resolved, "Resolved", "discussion-resolved", "check"));
-    }
     if (stats.noActionNeeded + stats.newNoActionNeeded > 0) {
         description.push(commentIcon(stats.newNoActionNeeded, stats.noActionNeeded, "Comment", "discussion-action", "comment"));
     }
     if (stats.goodWork + stats.newGoodWork > 0) {
         description.push(commentIcon(stats.newGoodWork, stats.goodWork, "Good work!", "discussion-good-work", "winner"));
+    }
+    if (stats.resolved > 0) {
+        description.push(commentIcon(0, stats.resolved, "Resolved", "discussion-resolved", "check", true));
     }
 
     if(description.length > 0) {
