@@ -1,7 +1,7 @@
 export type RevisionBase = { type: 'base' };
 export type RevisionSelected = { type: 'selected'; revision: number };
 export type RevisionProvisional = { type: 'provisional' };
-export type RevisionHash = { type: 'hash'; head: string }; //, base: string }
+export type RevisionHash = { type: 'hash'; head: string };
 
 export type RevisionId = RevisionBase | RevisionSelected | RevisionProvisional | RevisionHash;
 
