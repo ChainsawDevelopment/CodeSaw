@@ -34,7 +34,7 @@
     "js-joda": "^1.10.1",
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "mochapack": "^2.0.0",
     "prism-color-variables": "^1.0.0",
     "react": "^16.8.6",
