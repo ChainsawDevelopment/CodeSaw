@@ -35,7 +35,9 @@ export default (props: { file: FileInfo }): JSX.Element => {
 
     {
         const item = describeFileOperations(props.file.fileToReview);
-        if (item != null) items.push(item);
+        if (item != null) {
+            items.push(item);
+        }
     }
 
     if (items.length == 0) {
