@@ -1,6 +1,6 @@
-import * as PathPairs from "../pathPair";
-import { UserState } from "../rootState";
-import { RemoteRevisionId, LocalRevisionId, RevisionId } from "./revisionId";
+import * as PathPairs from '../pathPair';
+import { UserState } from '../rootState';
+import { RemoteRevisionId, LocalRevisionId, RevisionId } from './revisionId';
 
 export type FileId = string;
 
@@ -16,14 +16,14 @@ export interface RevisionRangeInfo {
     commits: {
         current: {
             head: string;
-            base: string
+            base: string;
         };
         previous: {
             head: string;
-            base: string
-        }
+            base: string;
+        };
     };
-    filesReviewedByUser: PathPairs.List
+    filesReviewedByUser: PathPairs.List;
 }
 
 export interface FileDiffRange {
@@ -34,7 +34,7 @@ export interface FileDiffRange {
     current: {
         base: string;
         head: string;
-    }
+    };
 }
 
 export interface HunkLine {
@@ -99,7 +99,7 @@ export interface Review {
     amIReviewer: boolean;
 }
 
-export type ReviewInfoState = 'opened' | "reopened" | "merged" | "closed";
+export type ReviewInfoState = 'opened' | 'reopened' | 'merged' | 'closed';
 
 namespace remote {
     export interface Discussion {
@@ -115,8 +115,7 @@ namespace remote {
         lineNumber: number;
     }
 
-    export interface ReviewDiscussion extends Discussion {
-    }
+    export type ReviewDiscussion = Discussion;
 }
 
 export interface Discussion extends FilteredBase<remote.Discussion, 'revision'> {
@@ -128,8 +127,7 @@ export interface FileDiscussion extends Discussion, FilteredBase<remote.FileDisc
     lineNumber: number;
 }
 
-export interface ReviewDiscussion extends Discussion, FilteredBase<remote.ReviewDiscussion, 'revision'> {
-}
+export interface ReviewDiscussion extends Discussion, FilteredBase<remote.ReviewDiscussion, 'revision'> {}
 
 namespace remote {
     export interface FileToReview {
@@ -207,17 +205,19 @@ namespace remote {
     }
 }
 
-export interface FileMatrixRevision extends FilteredBase<remote.FileMatrixRevision, 'revision'>
-{
+export interface FileMatrixRevision extends FilteredBase<remote.FileMatrixRevision, 'revision'> {
     revision: LocalRevisionId; // TODO: can be RevisionSelected
 }
 
-export interface FileMatrixEntry extends FilteredBase<remote.FileMatrixEntry, 'revisions'>
-{
+export interface FileMatrixEntry extends FilteredBase<remote.FileMatrixEntry, 'revisions'> {
     revisions: FileMatrixRevision[];
 }
 
-export interface ReviewInfo extends FilteredBase<remote.ReviewInfo, 'filesToReview' | 'fileDiscussions' | 'reviewDiscussions' | 'headRevision' | 'fileMatrix'> {
+export interface ReviewInfo
+    extends FilteredBase<
+        remote.ReviewInfo,
+        'filesToReview' | 'fileDiscussions' | 'reviewDiscussions' | 'headRevision' | 'fileMatrix'
+    > {
     headRevision: LocalRevisionId;
     filesToReview: FileToReview[];
     fileDiscussions: FileDiscussion[];
@@ -239,8 +239,8 @@ export interface ReviewSnapshotFileRef {
 export interface ReviewSnapshot {
     reviewId: ReviewId;
     revision: {
-        head: string,
-        base: string
+        head: string;
+        base: string;
     };
     startedFileDiscussions: {
         targetRevisionId: RemoteRevisionId;
@@ -292,9 +292,9 @@ export interface Paged<T> extends PageInfo {
 
 const acceptJson = {
     headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json',
     },
-    credentials: 'include' as RequestCredentials
+    credentials: 'include' as RequestCredentials,
 };
 
 export class ReviewerApiError extends Error {
@@ -308,7 +308,7 @@ const mustBeOk = (value: Response): Response => {
         throw new ReviewerApiError(value.status, value.url);
     }
     return value;
-}
+};
 
 export class ReviewConcurrencyError extends Error {
     constructor() {
@@ -344,92 +344,105 @@ export class ReviewerApi {
     public getDiff = (reviewId: ReviewId, range: FileDiffRange, path: PathPairs.PathPair): Promise<FileDiff> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/diff/${range.previous.base}/${range.previous.head}/${range.current.base}/${range.current.head}?oldPath=${path.oldPath}&newPath=${path.newPath}`,
-            acceptJson
-        ).then(mustBeOk).then(r => r.json());
+            acceptJson,
+        )
+            .then(mustBeOk)
+            .then((r) => r.json());
     };
 
-    public getDiffDiscussions = (reviewId: ReviewId, range: FileDiffRange, fileId: FileId, rightFileName: string): Promise<DiffDiscussions> => {
+    public getDiffDiscussions = (
+        reviewId: ReviewId,
+        range: FileDiffRange,
+        fileId: FileId,
+        rightFileName: string,
+    ): Promise<DiffDiscussions> => {
         return fetch(
             `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/discussions/${range.previous.base}/${range.previous.head}/${range.current.base}/${range.current.head}/${fileId}?fileName=${rightFileName}`,
-            acceptJson
-        ).then(mustBeOk).then(r => r.json());
+            acceptJson,
+        )
+            .then(mustBeOk)
+            .then((r) => r.json());
     };
 
     public getReviews = (args: ReviewSearchArgs): Promise<Paged<Review>> => {
-        return fetch(`/api/reviews?orderBy=${args.orderBy}&sort=${args.sort}&search=${args.nameFilter}&page=${args.page}&state=${args.state}`, acceptJson)
+        return fetch(
+            `/api/reviews?orderBy=${args.orderBy}&sort=${args.sort}&search=${args.nameFilter}&page=${args.page}&state=${args.state}`,
+            acceptJson,
+        )
             .then(mustBeOk)
-            .then(r => r.json())
-            .then(r => r as Paged<Review>);
+            .then((r) => r.json())
+            .then((r) => r as Paged<Review>);
     };
 
     public getReviewInfo = (reviewId: ReviewId): Promise<ReviewInfo> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/info`, acceptJson)
             .then(mustBeOk)
-            .then(r => r.json())
-            .then(r => r as remote.ReviewInfo)
-            .then(r => ({
+            .then((r) => r.json())
+            .then((r) => r as remote.ReviewInfo)
+            .then((r) => ({
                 ...r,
                 headRevision: RevisionId.mapRemoteToLocal(r.headRevision),
-                filesToReview: r.filesToReview.map(f => ({
+                filesToReview: r.filesToReview.map((f) => ({
                     ...f,
                     previous: RevisionId.mapRemoteToLocal(f.previous),
                     current: RevisionId.mapRemoteToLocal(f.current),
                 })),
-                fileDiscussions: r.fileDiscussions.map(d => ({
+                fileDiscussions: r.fileDiscussions.map((d) => ({
                     ...d,
-                    revision: RevisionId.mapRemoteToLocal(d.revision)
+                    revision: RevisionId.mapRemoteToLocal(d.revision),
                 })),
-                reviewDiscussions: r.reviewDiscussions.map(d => ({
+                reviewDiscussions: r.reviewDiscussions.map((d) => ({
                     ...d,
-                    revision: RevisionId.mapRemoteToLocal(d.revision)
+                    revision: RevisionId.mapRemoteToLocal(d.revision),
                 })),
-                fileMatrix: r.fileMatrix.map(e => ({
+                fileMatrix: r.fileMatrix.map((e) => ({
                     ...e,
-                    revisions: e.revisions.map(r => ({
+                    revisions: e.revisions.map((r) => ({
                         ...r,
-                        revision: RevisionId.mapRemoteToLocal(r.revision)
-                    }))
-                }))
+                        revision: RevisionId.mapRemoteToLocal(r.revision),
+                    })),
+                })),
             }));
-    }
+    };
 
     public publishReview = (review: ReviewSnapshot): Promise<void> => {
         const { reviewId, ...snapshot } = review;
 
-        return fetch(
-            `/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/publish`,
-            {
-                ...acceptJson,
-                headers: {
-                    ...acceptJson.headers,
-                    'Content-Type': 'application/json'
-                },
-                method: 'POST',
-                body: JSON.stringify(snapshot)
-            }
-        ).then(r => {
+        return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/publish`, {
+            ...acceptJson,
+            headers: {
+                ...acceptJson.headers,
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify(snapshot),
+        }).then((r) => {
             if (r.status == 409) {
-                throw new ReviewConcurrencyError()
+                throw new ReviewConcurrencyError();
             } else {
                 mustBeOk(r);
             }
         });
-    }
+    };
 
-    public mergePullRequest = (reviewId: ReviewId, shouldRemoveBranch: boolean, commitMessage: string): Promise<any> => {
+    public mergePullRequest = (
+        reviewId: ReviewId,
+        shouldRemoveBranch: boolean,
+        commitMessage: string,
+    ): Promise<any> => {
         return fetch(`/api/project/${reviewId.projectId}/review/${reviewId.reviewId}/merge_request/merge`, {
             ...acceptJson,
             headers: {
                 ...acceptJson.headers,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             method: 'POST',
             body: JSON.stringify({
                 shouldRemoveBranch,
-                commitMessage
-            })
+                commitMessage,
+            }),
         })
-            .then(r => {
+            .then((r) => {
                 if (r.status == 418) {
                     throw new MergeFailedError();
                 }
@@ -437,26 +450,26 @@ export class ReviewerApi {
                 return r;
             })
             .then(mustBeOk);
-    }
+    };
 
     public getProjects = (): Promise<ProjectInfo[]> => {
         return fetch('/api/admin/projects', acceptJson)
             .then(mustBeOk)
-            .then(r => r.json())
-            .then(r => r as ProjectInfo[]);
-    }
+            .then((r) => r.json())
+            .then((r) => r as ProjectInfo[]);
+    };
 
     public setupProjectHooks = (projectId: number): Promise<any> => {
         return fetch(`/api/admin/project/${projectId}/setup_hooks`, {
             ...acceptJson,
-            method: 'POST'
+            method: 'POST',
         }).then(mustBeOk);
-    }
+    };
 
     public getCurrentUser = (): Promise<UserState> => {
         return fetch(`/api/user/current`, acceptJson)
             .then(mustBeOk)
-            .then(r => r.json())
-            .then(r => r as UserState);
-    }
+            .then((r) => r.json())
+            .then((r) => r as UserState);
+    };
 }

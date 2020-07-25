@@ -1,14 +1,14 @@
-import * as React from "react";
-import { ReviewSearchArgs, PageInfo, Review } from "../../api/reviewer";
-import Pagination from "../../components/pagination";
-import Form from "@ui/collections/Form";
+import * as React from 'react';
+import { ReviewSearchArgs, PageInfo, Review } from '../../api/reviewer';
+import Pagination from '../../components/pagination';
+import Form from '@ui/collections/Form';
 import Select, { SelectProps } from '@ui/addons/Select';
 import Grid from '@ui/collections/Grid';
 import Input, { InputOnChangeData } from '@ui/elements/Input';
 
 interface StateSelectorProps {
     state: string;
-    onChange(newState: string):void;
+    onChange(newState: string): void;
 }
 const StateSelector = (props: StateSelectorProps): JSX.Element => {
     const states = [
@@ -17,70 +17,58 @@ const StateSelector = (props: StateSelectorProps): JSX.Element => {
         { text: 'Merged', value: 'merged' },
     ];
 
-    const onStateChange =  (e: any, d: SelectProps) => props.onChange(d.value as string);
+    const onStateChange = (e: any, d: SelectProps) => props.onChange(d.value as string);
 
     return (
         <Form.Field inline>
             <label>State</label>
-            <Select
-                value={props.state}
-                options={states}
-                onChange={onStateChange}
-            />
+            <Select value={props.state} options={states} onChange={onStateChange} />
         </Form.Field>
     );
 };
 
 interface OrderBySelectorProps {
     orderBy: string;
-    onChange(newOrderBy: string):void;
+    onChange(newOrderBy: string): void;
 }
 const OrderBySelector = (props: OrderBySelectorProps): JSX.Element => {
     const states = [
         { text: 'Updated At', value: 'updated_at' },
-        { text: 'Created At', value: 'created_at' }
+        { text: 'Created At', value: 'created_at' },
     ];
 
-    const onStateChange =  (e: any, d: SelectProps) => props.onChange(d.value as 'created_at' | 'updated_at');
+    const onStateChange = (e: any, d: SelectProps) => props.onChange(d.value as 'created_at' | 'updated_at');
 
     return (
         <Form.Field inline>
             <label>OrderBy</label>
-            <Select
-                value={props.orderBy}
-                options={states}
-                onChange={onStateChange}
-            />
+            <Select value={props.orderBy} options={states} onChange={onStateChange} />
         </Form.Field>
     );
 };
 
 interface SortSelectorProps {
     sort: string;
-    onChange(sort: string):void;
+    onChange(sort: string): void;
 }
 const SortSelector = (props: SortSelectorProps): JSX.Element => {
     const states = [
         { text: 'Ascending', value: 'asc' },
-        { text: 'Descending', value: 'desc' }
+        { text: 'Descending', value: 'desc' },
     ];
 
-    const onStateChange =  (e: any, d: SelectProps) => props.onChange(d.value as 'asc' | 'desc');
+    const onStateChange = (e: any, d: SelectProps) => props.onChange(d.value as 'asc' | 'desc');
 
     return (
         <Form.Field inline>
             <label>Sort</label>
-            <Select
-                value={props.sort}
-                options={states}
-                onChange={onStateChange}
-            />
+            <Select value={props.sort} options={states} onChange={onStateChange} />
         </Form.Field>
     );
 };
 
 interface NameFilterProps {
-    onChange(newName: string):void;
+    onChange(newName: string): void;
     initialName: string;
 }
 interface NameFilterState {
@@ -90,12 +78,12 @@ class NameFilter extends React.Component<NameFilterProps, NameFilterState> {
     constructor(props: NameFilterProps) {
         super(props);
         this.state = {
-            name: props.initialName
+            name: props.initialName,
         };
     }
 
     public render(): JSX.Element {
-        const onNameChange =  (e: any, d: InputOnChangeData) => {
+        const onNameChange = (e: any, d: InputOnChangeData) => {
             this.setState({ name: d.value });
         };
 
@@ -108,15 +96,11 @@ class NameFilter extends React.Component<NameFilterProps, NameFilterState> {
         return (
             <Form.Field inline>
                 <label>Name filter</label>
-                <Input
-                    value={this.state.name}
-                    onChange={onNameChange}
-                    onKeyPress={onKeyPress}
-                />
+                <Input value={this.state.name} onChange={onNameChange} onKeyPress={onKeyPress} />
             </Form.Field>
         );
     }
-};
+}
 
 interface Props {
     currentPage: PageInfo;
@@ -132,52 +116,57 @@ class SearchOptions extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            current: props.initialArgs
+            current: props.initialArgs,
         };
     }
 
-    public componentDidUpdate(prevProps: Props, prevState: State) {
+    public componentDidUpdate(prevProps: Props, prevState: State): void {
         if (prevState.current != this.state.current) {
             this.props.loadResults({
                 ...this.state.current,
-                page: 1
+                page: 1,
             });
         }
     }
 
-    private updateArg = (change: {[T in keyof ReviewSearchArgs]?: ReviewSearchArgs[T]}) => {
+    private updateArg = (change: { [T in keyof ReviewSearchArgs]?: ReviewSearchArgs[T] }) => {
         this.setState({
             ...this.state,
             current: {
                 ...this.state.current,
-                ...change
-            }
+                ...change,
+            },
         });
-    }
+    };
 
     public render(): JSX.Element {
         const { current } = this.state;
 
-        const onPageChange = (page: number) => this.props.loadResults({
-            ...current,
-            page: page
-        });
+        const onPageChange = (page: number) =>
+            this.props.loadResults({
+                ...current,
+                page: page,
+            });
 
-        const onStateChange = (newState: string) => this.updateArg({
-            state: newState
-        });
+        const onStateChange = (newState: string) =>
+            this.updateArg({
+                state: newState,
+            });
 
-        const onOrderByChange = (newOrderBy: 'created_at' | 'updated_at') => this.updateArg({
-            orderBy: newOrderBy
-        });
+        const onOrderByChange = (newOrderBy: 'created_at' | 'updated_at') =>
+            this.updateArg({
+                orderBy: newOrderBy,
+            });
 
-        const onSortChange = (newSort: 'asc' | 'desc') => this.updateArg({
-            sort: newSort
-        });
+        const onSortChange = (newSort: 'asc' | 'desc') =>
+            this.updateArg({
+                sort: newSort,
+            });
 
-        const onNameFilterChange = (newNameFilter: string) => this.updateArg({
-            nameFilter: newNameFilter
-        });
+        const onNameFilterChange = (newNameFilter: string) =>
+            this.updateArg({
+                nameFilter: newNameFilter,
+            });
 
         return (
             <Grid>

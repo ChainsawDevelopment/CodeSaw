@@ -1,13 +1,13 @@
-import * as React from "react";
+import * as React from 'react';
 import { connect } from 'react-redux';
 import Grid from '@ui/collections/Grid';
-import { RootState } from "../../rootState";
-import { BuildStatus, ReviewId, ReviewMergeStatus, ReviewInfoState } from "../../api/reviewer";
-import BuildStatusesList from "../../components/BuildStatusList";
+import { RootState } from '../../rootState';
+import { BuildStatus, ReviewId, ReviewMergeStatus, ReviewInfoState } from '../../api/reviewer';
+import BuildStatusesList from '../../components/BuildStatusList';
 import MergeApprover from './mergeApprover';
-import { Dispatch } from "../../../../node_modules/redux";
-import { mergePullRequest } from "./state";
-import MarkdownGenerator from "./markdownGenerator"
+import { Dispatch } from '../../../../node_modules/redux';
+import { mergePullRequest } from './state';
+import MarkdownGenerator from './markdownGenerator';
 import Actions from './sections/actions';
 
 interface StateProps {
@@ -21,7 +21,7 @@ interface StateProps {
     branches: {
         source: string;
         target: string;
-    }
+    };
 }
 
 interface DispatchProps {
@@ -44,7 +44,7 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
                         reviewFinished={props.reviewFinished}
                     />
                 </Grid.Column>
-                <Grid.Column width={4} textAlign='left'>
+                <Grid.Column width={4} textAlign="left">
                     <Actions />
                 </Grid.Column>
             </Grid.Row>
@@ -53,12 +53,12 @@ const reviewInfoView = (props: StateProps & DispatchProps): JSX.Element => {
                     <div dangerouslySetInnerHTML={{ __html: markdown.makeHtml(props.description) }}></div>
                 </Grid.Column>
                 <Grid.Column width={4}>
-                    <BuildStatusesList statuses={props.buildStatuses}/>
+                    <BuildStatusesList statuses={props.buildStatuses} />
                 </Grid.Column>
             </Grid.Row>
         </Grid>
     );
-}
+};
 
 const mapStateToProps = (state: RootState): StateProps => ({
     reviewId: state.review.currentReview.reviewId,
@@ -71,14 +71,12 @@ const mapStateToProps = (state: RootState): StateProps => ({
         source: state.review.currentReview.sourceBranch,
         target: state.review.currentReview.targetBranch,
     },
-    reviewFinished: state.review.currentReview.reviewFinished
+    reviewFinished: state.review.currentReview.reviewFinished,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
-    mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) => dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
+    mergePullRequest: (reviewId, shouldRemoveBranch, commitMessage) =>
+        dispatch(mergePullRequest({ reviewId, shouldRemoveBranch, commitMessage })),
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(reviewInfoView);
+export default connect(mapStateToProps, mapDispatchToProps)(reviewInfoView);

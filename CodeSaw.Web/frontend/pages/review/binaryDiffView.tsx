@@ -1,13 +1,14 @@
-import * as React from "react";
-import { FileDiff } from "../../api/reviewer";
+import * as React from 'react';
+import { FileDiff } from '../../api/reviewer';
 
-const binaryDiffView = (props: { diffInfo: FileDiff }) => {
+const binaryDiffView = (props: { diffInfo: FileDiff }): JSX.Element => {
     const previousSize = props.diffInfo.binarySizes.previousSize;
     const currentSize = props.diffInfo.binarySizes.currentSize;
     if (props.diffInfo.areBinaryEqual) {
         return (
             <div>
-                Binary files are the same.<br />
+                Binary files are the same.
+                <br />
                 Size: {currentSize}
             </div>
         );
@@ -15,8 +16,10 @@ const binaryDiffView = (props: { diffInfo: FileDiff }) => {
 
     return (
         <div>
-            Binary files are different.<br />
-            Previous size: {previousSize} bytes.<br />
+            Binary files are different.
+            <br />
+            Previous size: {previousSize} bytes.
+            <br />
             Current size: {currentSize} bytes.
         </div>
     );

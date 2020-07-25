@@ -1,4 +1,4 @@
-import { take, put, select, delay, race } from "redux-saga/effects";
+import { take, put, select, delay, race } from 'redux-saga/effects';
 import {
     selectFileForView,
     loadedFileDiff,
@@ -16,25 +16,41 @@ import {
     changeFileRange,
     resolveRevision2,
 } from './state';
-import { Action } from "typescript-fsa";
+import { Action } from 'typescript-fsa';
 import notify from '../../notify';
-import { ReviewerApi, ReviewInfo, ReviewId, ReviewSnapshot, ReviewConcurrencyError, MergeFailedError, FileId, FileToReview, FileDiff, DiffDiscussions } from '../../api/reviewer';
-import { RootState } from "../../rootState";
-import { startOperation, stopOperation, setOperationMessage } from "../../loading/saga";
-import { getUnpublishedReview, getReviewVSCodeWorkspace, saveReviewVSCodeWorkspace, LocallyStoredReview } from "./storage";
-import { RevisionId } from "@api/revisionId";
+import {
+    ReviewerApi,
+    ReviewInfo,
+    ReviewId,
+    ReviewSnapshot,
+    ReviewConcurrencyError,
+    MergeFailedError,
+    FileId,
+    FileToReview,
+    FileDiff,
+    DiffDiscussions,
+} from '../../api/reviewer';
+import { RootState } from '../../rootState';
+import { startOperation, stopOperation, setOperationMessage } from '../../loading/saga';
+import {
+    getUnpublishedReview,
+    getReviewVSCodeWorkspace,
+    saveReviewVSCodeWorkspace,
+    LocallyStoredReview,
+} from './storage';
+import { RevisionId } from '@api/revisionId';
 
-function* markNotChangedAsViewed() {
+function* markNotChangedAsViewed(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         const action: Action<{ fileId: FileId }> = yield take(markEmptyFilesAsReviewed);
 
         yield startOperation();
 
         const state = yield select((s: RootState) => ({
             currentReview: s.review.currentReview,
-            reviewedFiles: s.review.reviewedFiles
+            reviewedFiles: s.review.reviewedFiles,
         }));
 
         const currentReview: ReviewInfo = state.currentReview;
@@ -44,11 +60,13 @@ function* markNotChangedAsViewed() {
 
         let fileIndex = 0;
         let markAsReviewedCount = 0;
-        const progressRefreshStep = Math.ceil(currentReview.filesToReview.length * 5 / 100);
+        const progressRefreshStep = Math.ceil((currentReview.filesToReview.length * 5) / 100);
 
         for (const file of currentReview.filesToReview) {
             if (fileIndex % progressRefreshStep == 0) {
-                yield setOperationMessage(`Scanning for empty files: ${fileIndex + 1}/${currentReview.filesToReview.length}`);
+                yield setOperationMessage(
+                    `Scanning for empty files: ${fileIndex + 1}/${currentReview.filesToReview.length}`,
+                );
                 yield delay(1);
             }
 
@@ -57,7 +75,7 @@ function* markNotChangedAsViewed() {
             const fileId = file.fileId;
 
             if (reviewedFiles.indexOf(fileId) >= 0) {
-                console.log({ message: "Already marked as reviewed", file: file });
+                console.log({ message: 'Already marked as reviewed', file: file });
                 continue; // already mark as reviewed
             }
 
@@ -65,27 +83,32 @@ function* markNotChangedAsViewed() {
                 reviewId: state.currentReview.reviewId,
                 range: {
                     previous: resolveRevision2(state.currentReview, file.previous),
-                    current: resolveRevision2(state.currentReview, file.current)
+                    current: resolveRevision2(state.currentReview, file.current),
                 },
                 path: file.diffFile,
-                fileId: file.fileId
-            }
+                fileId: file.fileId,
+            };
 
             const diff: FileDiff = yield api.getDiff(currentRange.reviewId, currentRange.range, currentRange.path);
-            const remappedDiscussions: DiffDiscussions = yield api.getDiffDiscussions(currentRange.reviewId, currentRange.range, currentRange.fileId, currentRange.path.newPath);
+            const remappedDiscussions: DiffDiscussions = yield api.getDiffDiscussions(
+                currentRange.reviewId,
+                currentRange.range,
+                currentRange.fileId,
+                currentRange.path.newPath,
+            );
 
             const isEmpty = (diff.hunks == null || diff.hunks.length == 0) && remappedDiscussions.remapped.length == 0;
 
             if (isEmpty) {
-                console.log({ message: "Marking automatically as reviewed", file: file });
+                console.log({ message: 'Marking automatically as reviewed', file: file });
                 markAsReviewedCount++;
                 yield put(reviewFile({ path: file.reviewFile }));
             } else {
-                console.log({ message: "File Not empty", file: file });
+                console.log({ message: 'File Not empty', file: file });
             }
         }
 
-        console.log("Marking empty files as reviewed... Finished");
+        console.log('Marking empty files as reviewed... Finished');
 
         yield stopOperation();
 
@@ -93,13 +116,13 @@ function* markNotChangedAsViewed() {
     }
 }
 
-function* loadFileDiffSaga() {
+function* loadFileDiffSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         const action = yield race({
             selectFileForView: take(selectFileForView),
-            changeFielRange: take(changeFileRange)
+            changeFielRange: take(changeFileRange),
         });
 
         const currentRange = yield select((state: RootState) => ({
@@ -109,45 +132,58 @@ function* loadFileDiffSaga() {
                 current: resolveRevision2(state.review.currentReview, state.review.selectedFile.range.current),
             },
             path: state.review.selectedFile.fileToReview.diffFile,
-            fileId: state.review.selectedFile.fileId
+            fileId: state.review.selectedFile.fileId,
         }));
-
 
         yield startOperation(`Loading file ${currentRange.path.newPath} ...`);
 
-
         const diff = yield api.getDiff(currentRange.reviewId, currentRange.range, currentRange.path);
-        const remappedDiscussions = yield api.getDiffDiscussions(currentRange.reviewId, currentRange.range, currentRange.fileId, currentRange.path.newPath);
+        const remappedDiscussions = yield api.getDiffDiscussions(
+            currentRange.reviewId,
+            currentRange.range,
+            currentRange.fileId,
+            currentRange.path.newPath,
+        );
 
-        yield put(loadedFileDiff({
-            diff: diff,
-            remappedDiscussions: remappedDiscussions
-        }));
+        yield put(
+            loadedFileDiff({
+                diff: diff,
+                remappedDiscussions: remappedDiscussions,
+            }),
+        );
 
         yield stopOperation();
     }
 }
 
-function* loadReviewInfoSaga() {
+function* loadReviewInfoSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
-        const action: Action<{ reviewId: ReviewId, fileToPreload?: FileId }> = yield take(loadReviewInfo);
+    for (;;) {
+        const action: Action<{ reviewId: ReviewId; fileToPreload?: FileId }> = yield take(loadReviewInfo);
         yield startOperation();
 
         const info: ReviewInfo = yield api.getReviewInfo(action.payload.reviewId);
 
         const unpublishedInfo: LocallyStoredReview = getUnpublishedReview(action.payload.reviewId);
 
+        const vsCodeWorkspace = getReviewVSCodeWorkspace(action.payload.reviewId);
 
-        const vsCodeWorkspace = getReviewVSCodeWorkspace(action.payload.reviewId)
+        const currentReview: ReviewId = yield select((s: RootState) =>
+            s.review.currentReview ? s.review.currentReview.reviewId : null,
+        );
 
-        const currentReview: ReviewId = yield select((s: RootState) => s.review.currentReview ? s.review.currentReview.reviewId : null);
-
-        yield put(loadedReviewInfo({ info, unpublishedInfo: unpublishedInfo.unpublished, fileIdMap: unpublishedInfo.fileIdMap, vsCodeWorkspace }));
+        yield put(
+            loadedReviewInfo({
+                info,
+                unpublishedInfo: unpublishedInfo.unpublished,
+                fileIdMap: unpublishedInfo.fileIdMap,
+                vsCodeWorkspace,
+            }),
+        );
 
         if (action.payload.fileToPreload) {
-            const file = info.filesToReview.find(f => f.fileId == action.payload.fileToPreload)
+            const file = info.filesToReview.find((f) => f.fileId == action.payload.fileToPreload);
             if (file != null) {
                 yield put(selectFileForView({ fileId: file.fileId }));
             }
@@ -157,44 +193,46 @@ function* loadReviewInfoSaga() {
     }
 }
 
-function* publishReviewSaga() {
+function* publishReviewSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
-    for (; ;) {
+    for (;;) {
         const action: Action<PublishReviewArgs> = yield take(publishReview);
 
-        yield startOperation("Publishing...");
+        yield startOperation('Publishing...');
 
-        const reviewSnapshot: ReviewSnapshot = yield select((s: RootState): ReviewSnapshot => ({
-            reviewId: s.review.currentReview.reviewId,
-            revision: {
-                base: s.review.currentReview.baseCommit,
-                head: s.review.currentReview.headCommit
-            },
-            startedFileDiscussions: s.review.unpublishedFileDiscussions.map(d => ({
-                targetRevisionId: RevisionId.mapLocalToRemote(d.revision, s.review.currentReview.headCommit),
-                temporaryId: d.comment.id,
-                fileId: d.fileId,
-                lineNumber: d.lineNumber,
-                state: d.state,
-                content: d.comment.content
-            })),
-            startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map(d => ({
-                targetRevisionId: RevisionId.mapLocalToRemote(d.revision, s.review.currentReview.headCommit),
-                temporaryId: d.comment.id,
-                content: d.comment.content,
-                state: d.state,
-            })),
-            resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
-            replies: s.review.unpublishedReplies,
-            reviewedFiles: s.review.unpublishedReviewedFiles.map(f => ({
-                ...f,
-                revision: RevisionId.mapLocalToRemote(f.revision, s.review.currentReview.headCommit)
-            })),
-            unreviewedFiles: s.review.unpublishedUnreviewedFiles.map(f => ({
-                ...f,
-                revision: RevisionId.mapLocalToRemote(f.revision, s.review.currentReview.headCommit)
-            })),
-        }));
+        const reviewSnapshot: ReviewSnapshot = yield select(
+            (s: RootState): ReviewSnapshot => ({
+                reviewId: s.review.currentReview.reviewId,
+                revision: {
+                    base: s.review.currentReview.baseCommit,
+                    head: s.review.currentReview.headCommit,
+                },
+                startedFileDiscussions: s.review.unpublishedFileDiscussions.map((d) => ({
+                    targetRevisionId: RevisionId.mapLocalToRemote(d.revision, s.review.currentReview.headCommit),
+                    temporaryId: d.comment.id,
+                    fileId: d.fileId,
+                    lineNumber: d.lineNumber,
+                    state: d.state,
+                    content: d.comment.content,
+                })),
+                startedReviewDiscussions: s.review.unpublishedReviewDiscussions.map((d) => ({
+                    targetRevisionId: RevisionId.mapLocalToRemote(d.revision, s.review.currentReview.headCommit),
+                    temporaryId: d.comment.id,
+                    content: d.comment.content,
+                    state: d.state,
+                })),
+                resolvedDiscussions: s.review.unpublishedResolvedDiscussions,
+                replies: s.review.unpublishedReplies,
+                reviewedFiles: s.review.unpublishedReviewedFiles.map((f) => ({
+                    ...f,
+                    revision: RevisionId.mapLocalToRemote(f.revision, s.review.currentReview.headCommit),
+                })),
+                unreviewedFiles: s.review.unpublishedUnreviewedFiles.map((f) => ({
+                    ...f,
+                    revision: RevisionId.mapLocalToRemote(f.revision, s.review.currentReview.headCommit),
+                })),
+            }),
+        );
 
         let successfulPublish = false;
         for (let i = 0; i < 100; i++) {
@@ -223,22 +261,26 @@ function* publishReviewSaga() {
     }
 }
 
-function* mergePullRequestSaga() {
+function* mergePullRequestSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         const action: Action<MergePullRequestArgs> = yield take(mergePullRequest);
 
-        yield startOperation("Merging...");
+        yield startOperation('Merging...');
 
         try {
-            yield api.mergePullRequest(action.payload.reviewId, action.payload.shouldRemoveBranch, action.payload.commitMessage);
+            yield api.mergePullRequest(
+                action.payload.reviewId,
+                action.payload.shouldRemoveBranch,
+                action.payload.commitMessage,
+            );
         } catch (e) {
             if (!(e instanceof MergeFailedError)) {
                 throw e;
             }
 
-            notify.error('Merge failed. Check merge request page to see what\'s wrong');
+            notify.error("Merge failed. Check merge request page to see what's wrong");
         }
 
         yield put(loadReviewInfo({ reviewId: action.payload.reviewId }));
@@ -247,8 +289,8 @@ function* mergePullRequestSaga() {
     }
 }
 
-function* saveVSCodeWorkspaceSaga() {
-    for (; ;) {
+function* saveVSCodeWorkspaceSaga(): Generator<any, any, any> {
+    for (;;) {
         const action: Action<{ vsCodeWorkspace: string }> = yield take(saveVSCodeWorkspace);
         const currentReviewId = yield select((s: RootState): ReviewId => s.review.currentReview.reviewId);
 
@@ -264,5 +306,5 @@ export default [
     publishReviewSaga,
     mergePullRequestSaga,
     markNotChangedAsViewed,
-    saveVSCodeWorkspaceSaga
+    saveVSCodeWorkspaceSaga,
 ];

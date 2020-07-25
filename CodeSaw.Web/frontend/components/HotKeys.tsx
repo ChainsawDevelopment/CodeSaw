@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 interface Props {
     config: any;
@@ -9,7 +9,7 @@ export class HotKeys extends React.Component<Props> {
 
     public componentDidMount(): void {
         this.keyDownListener = (event: any): void => {
-            var inputTags = ['input', 'textarea'];
+            const inputTags = ['input', 'textarea'];
 
             const activeElement = document.activeElement;
             if (activeElement && inputTags.indexOf(activeElement.tagName.toLowerCase()) !== -1) {
@@ -22,7 +22,7 @@ export class HotKeys extends React.Component<Props> {
                 this.props.config[hotKeyName](event);
                 event.preventDefault();
             }
-        }
+        };
 
         document.addEventListener('keydown', this.keyDownListener);
     }
@@ -33,13 +33,13 @@ export class HotKeys extends React.Component<Props> {
 
     private getHotKeyName(event) {
         if (event.ctrlKey) {
-            return "ctrl+"+event.key;
+            return 'ctrl+' + event.key;
         }
 
         return event.key;
     }
 
-    render() {
+    render(): JSX.Element {
         return null;
     }
 }

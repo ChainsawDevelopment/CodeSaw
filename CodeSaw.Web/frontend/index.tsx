@@ -1,4 +1,4 @@
-import { createBrowserHistory } from 'history'
+import { createBrowserHistory } from 'history';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -25,7 +25,7 @@ import notify from './notify';
 import { saveUnpublishedReview } from './pages/review/storage';
 
 interface State {
-    router: RouterState
+    router: RouterState;
 }
 
 const history = createBrowserHistory();
@@ -33,10 +33,10 @@ const history = createBrowserHistory();
 const historyMiddleware = routerMiddleware(history);
 
 const sagaMiddleware = sagaMiddlewareFactory({
-    onError: e => {
+    onError: (e) => {
         console.error(e);
         notify.error('Error occured. CodeSaw might be no longer working properly!');
-    }
+    },
 });
 
 const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
@@ -48,11 +48,9 @@ const store = createStore(
         reviews: reviewsReducer,
         admin: adminReducer,
         currentUser: usersReducer,
-        loading: loadingReducer
+        loading: loadingReducer,
     }),
-    composeEnhancers(
-        applyMiddleware(historyMiddleware, sagaMiddleware)
-    )
+    composeEnhancers(applyMiddleware(historyMiddleware, sagaMiddleware)),
 );
 
 store.subscribe(() => {
@@ -62,7 +60,7 @@ store.subscribe(() => {
     }
 
     saveUnpublishedReview(state.review);
-})
+});
 
 for (const saga of reviewSagas) {
     sagaMiddleware.run(saga);
@@ -88,4 +86,4 @@ const Root = () => (
     </Provider>
 );
 
-ReactDOM.render((<Root />), document.getElementById('content'));
+ReactDOM.render(<Root />, document.getElementById('content'));

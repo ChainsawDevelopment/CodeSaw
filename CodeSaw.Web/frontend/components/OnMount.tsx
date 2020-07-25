@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 type Handler = () => void;
 
@@ -20,7 +20,7 @@ export class OnMount extends React.Component<Props> {
         }
     }
 
-    render() {
+    render(): JSX.Element {
         return null;
     }
 }

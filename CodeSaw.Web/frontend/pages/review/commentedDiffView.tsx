@@ -49,38 +49,38 @@ const splitComments = (props: Props): LineComments => {
     const lineComments: LineComments = {
         left: new Map<number, FileDiscussion[]>(),
         right: new Map<number, FileDiscussion[]>(),
-        unmatched: []
-    }
+        unmatched: [],
+    };
 
     const allCommentsUnmatched = RevisionId.equal(props.leftSideRevision, props.rightSideRevision);
 
-    for (let fileComment of props.comments) {
+    for (const fileComment of props.comments) {
         const isRightSide = RevisionId.equal(fileComment.revision, props.rightSideRevision);
         const isLeftSide = RevisionId.equal(fileComment.revision, props.leftSideRevision);
 
         if (!allCommentsUnmatched && (isRightSide || isLeftSide)) {
-            let side = isRightSide ? 'right' : 'left';
+            const side = isRightSide ? 'right' : 'left';
             lineComments[side].set(fileComment.lineNumber, [
                 ...(lineComments[side].get(fileComment.lineNumber) || []),
                 {
                     ...fileComment,
-                    state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state
-                }
+                    state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state,
+                },
             ]);
         } else {
             lineComments.unmatched.push({
                 ...fileComment,
-                state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state
+                state: props.pendingResolved.indexOf(fileComment.id) >= 0 ? 'ResolvePending' : fileComment.state,
             });
         }
     }
 
-    for (let lineNumber of props.visibleCommentLines) {
+    for (const lineNumber of props.visibleCommentLines) {
         lineComments.right.set(lineNumber, lineComments.right.get(lineNumber) || []);
     }
 
     return lineComments;
-}
+};
 
 const buildCommentView = (props: Props, lineNumber: number, discussions: Discussion[]) => {
     const commentActions: DiscussionActions = {
@@ -91,8 +91,8 @@ const buildCommentView = (props: Props, lineNumber: number, discussions: Discuss
         editReply: props.commentActions.editReply,
         resolve: props.commentActions.resolve,
         unresolve: props.commentActions.unresolve,
-        removeUnpublishedComment: props.commentActions.removeUnpublishedComment
-    }
+        removeUnpublishedComment: props.commentActions.removeUnpublishedComment,
+    };
 
     return (
         <CommentsView
@@ -103,35 +103,35 @@ const buildCommentView = (props: Props, lineNumber: number, discussions: Discuss
             currentUser={props.currentUser}
             replyOnly={props.replyOnly}
         />
-    )
+    );
 };
 
 const buildLineWidgets = (props: Props, lineComments: LineComments) => {
     const lineWidgets: LineWidget[] = [];
-    for (let side of ['left', 'right']) {
-        for (let [lineNumber, discussions] of lineComments[side]) {
+    for (const side of ['left', 'right']) {
+        for (const [lineNumber, discussions] of lineComments[side]) {
             lineWidgets.push({
                 lineNumber,
                 side: side as DiffSide,
-                widget: buildCommentView(props, lineNumber, discussions)
+                widget: buildCommentView(props, lineNumber, discussions),
             });
         }
     }
 
     return lineWidgets;
-}
+};
 
 const revisionToString = (r: LocalRevisionId) => {
-    if(RevisionId.isBase(r)) {
+    if (RevisionId.isBase(r)) {
         return 'base';
     }
 
-    if(RevisionId.isProvisional(r)) {
+    if (RevisionId.isProvisional(r)) {
         return 'provisional';
     }
 
     return r.revision;
-}
+};
 
 const UnmatchedComments = (props: {
     unpublishedReplies: CommentReply[];
@@ -147,10 +147,14 @@ const UnmatchedComments = (props: {
         editReply: props.commentActions.editReply,
         resolve: props.commentActions.resolve,
         unresolve: props.commentActions.unresolve,
-        removeUnpublishedComment: props.commentActions.removeUnpublishedComment
-    }
+        removeUnpublishedComment: props.commentActions.removeUnpublishedComment,
+    };
 
-    const note = (d: Discussion): JSX.Element => <div className="unmatched-comment-info">Revision {revisionToString(d.revision)} line {(d as FileDiscussion).lineNumber}</div>;
+    const note = (d: Discussion): JSX.Element => (
+        <div className="unmatched-comment-info">
+            Revision {revisionToString(d.revision)} line {(d as FileDiscussion).lineNumber}
+        </div>
+    );
 
     return (
         <CommentsView
@@ -164,14 +168,14 @@ const UnmatchedComments = (props: {
             currentUser={props.currentUser}
         />
     );
-}
+};
 
 export default class CommentedDiffView extends React.Component<Props, { goToLineModalVisible: boolean }> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
 
         this.state = {
-            goToLineModalVisible: false
+            goToLineModalVisible: false,
         };
     }
 
@@ -206,27 +210,25 @@ export default class CommentedDiffView extends React.Component<Props, { goToLine
             if (selectedLineNumber) {
                 toggleChangeComment(null, selectedLineNumber);
             }
-        }
+        };
 
         const hotKeys = {
-            'ctrl+g': () => this.setState({ goToLineModalVisible: !this.state.goToLineModalVisible })
-        }
+            'ctrl+g': () => this.setState({ goToLineModalVisible: !this.state.goToLineModalVisible }),
+        };
 
         return (
             <div>
                 <HotKeys config={hotKeys} />
-                <SelectLineNumberModal
-                    isOpen={this.state.goToLineModalVisible}
-                    handleClose={closeGoToLineModal}
-                />
-                <DiffView
-                    {...diffViewProps}
-                    lineWidgets={lineWidgets}
-                    onLineClick={toggleChangeComment}
-                />
-                {lineComments.unmatched.length > 0 ?
-                    <UnmatchedComments unpublishedReplies={this.props.unpublishedReplies} currentUser={this.props.currentUser} discussions={lineComments.unmatched} commentActions={this.props.commentActions} />
-                    : null}
+                <SelectLineNumberModal isOpen={this.state.goToLineModalVisible} handleClose={closeGoToLineModal} />
+                <DiffView {...diffViewProps} lineWidgets={lineWidgets} onLineClick={toggleChangeComment} />
+                {lineComments.unmatched.length > 0 ? (
+                    <UnmatchedComments
+                        unpublishedReplies={this.props.unpublishedReplies}
+                        currentUser={this.props.currentUser}
+                        discussions={lineComments.unmatched}
+                        commentActions={this.props.commentActions}
+                    />
+                ) : null}
             </div>
         );
     }

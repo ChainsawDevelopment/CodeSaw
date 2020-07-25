@@ -1,22 +1,32 @@
-import * as React from "react";
+import * as React from 'react';
 import List from '@ui/elements/List';
 import Input from '@ui/elements/Input';
 import Icon from '@ui/elements/Icon';
 
 import ReviewMark from './reviewMark';
-import * as PathPairs from "../../pathPair";
-import { FileLink } from "./FileLink";
-import { ReviewId, FileId } from "../../api/reviewer";
-import ReviewMode from "./reviewMode";
+import * as PathPairs from '../../pathPair';
+import { FileLink } from './FileLink';
+import { ReviewId, FileId } from '../../api/reviewer';
+import ReviewMode from './reviewMode';
 import FileName from './FileName';
 
-const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boolean, isReviewed: boolean, onclick?: () => void }) => {
+const FileItem = (props: {
+    fileId: FileId;
+    reviewId: ReviewId;
+    isSelected: boolean;
+    isReviewed: boolean;
+    onclick?: () => void;
+}) => {
     let header: JSX.Element;
 
     if (props.isSelected) {
-        header = (<span className='selected-file'><FileName fileId={props.fileId} /></span>)
+        header = (
+            <span className="selected-file">
+                <FileName fileId={props.fileId} />
+            </span>
+        );
     } else {
-        header = (<FileLink reviewId={props.reviewId} fileId={props.fileId} onClick={props.onclick} />);
+        header = <FileLink reviewId={props.reviewId} fileId={props.fileId} onClick={props.onclick} />;
     }
 
     return (
@@ -24,17 +34,17 @@ const FileItem = (props: { fileId: FileId, reviewId: ReviewId, isSelected: boole
             <List.Content>
                 <ReviewMode>
                     <ReviewMode.Reviewer>
-                        <ReviewMark reviewed={props.isReviewed} size='small' />
+                        <ReviewMark reviewed={props.isReviewed} size="small" />
                     </ReviewMode.Reviewer>
                     <ReviewMode.Author>
-                        <Icon circular inverted name='eye' color='grey' />
+                        <Icon circular inverted name="eye" color="grey" />
                     </ReviewMode.Author>
                 </ReviewMode>
                 <span>{header}</span>
             </List.Content>
         </List.Item>
     );
-}
+};
 
 namespace ChangedFileTree {
     export interface Props {
@@ -53,37 +63,37 @@ namespace ChangedFileTree {
 export default class ChangeFileTree extends React.Component<ChangedFileTree.Props, ChangedFileTree.State> {
     searchFieldRef: React.RefObject<Input>;
 
-    constructor(props) {
+    constructor(props: ChangedFileTree.Props) {
         super(props);
 
         this.searchFieldRef = React.createRef();
 
         this.state = {
-            searchValue: ""
-        }
+            searchValue: '',
+        };
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         setTimeout(() => this.searchFieldRef.current.focus(), 0);
     }
 
-    render() {
+    render(): JSX.Element {
         const props = this.props;
 
-        const filteredFiles = props.files
-            .filter(p => this.state.searchValue == "" || p.name.newPath.indexOf(this.state.searchValue) != -1);
+        const filteredFiles = props.files.filter(
+            (p) => this.state.searchValue == '' || p.name.newPath.indexOf(this.state.searchValue) != -1,
+        );
 
-        const items = filteredFiles
-            .map(f => (
-                <FileItem
-                    key={f.id}
-                    fileId={f.id}
-                    isSelected={f.id == props.selected}
-                    isReviewed={props.reviewedFiles.indexOf(f.id) >= 0}
-                    onclick={() => props.onSelect(f.id)}
-                    reviewId={props.reviewId}
-                />
-            ));
+        const items = filteredFiles.map((f) => (
+            <FileItem
+                key={f.id}
+                fileId={f.id}
+                isSelected={f.id == props.selected}
+                isReviewed={props.reviewedFiles.indexOf(f.id) >= 0}
+                onclick={() => props.onSelect(f.id)}
+                reviewId={props.reviewId}
+            />
+        ));
 
         const openFirst = () => props.onSelect(filteredFiles[0].id);
 
@@ -91,13 +101,12 @@ export default class ChangeFileTree extends React.Component<ChangedFileTree.Prop
             <div>
                 <Input
                     placeholder="Search..."
-                    icon='search'
+                    icon="search"
                     ref={this.searchFieldRef}
                     onChange={(e, data) => this.setState({ searchValue: data.value })}
-                    onKeyPress={e => (e.key == "Enter") && openFirst()} />
-                <List className="file-tree">
-                    {items}
-                </List>
+                    onKeyPress={(e) => e.key == 'Enter' && openFirst()}
+                />
+                <List className="file-tree">{items}</List>
             </div>
         );
     }

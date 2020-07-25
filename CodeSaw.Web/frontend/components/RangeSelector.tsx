@@ -28,24 +28,28 @@ const Block = (props: {
         } else {
             return null;
         }
-    };
+    }
 
     const onOver = whenSelecting(() => {
         props.selectOver();
     });
 
-    return <div
-        onMouseDown={onDown}
-        onMouseOver={onOver}
-        onMouseUp={onUp}
-        className={classNames({
-            'selector-item': true,
-            'start': props.index === props.ends[0],
-            'end': props.index === props.ends[1],
-            'middle': props.ends[0] < props.index && props.index < props.ends[1]
-        })}
-    ><div className="wrapper">{props.children}</div></div>;
-}
+    return (
+        <div
+            onMouseDown={onDown}
+            onMouseOver={onOver}
+            onMouseUp={onUp}
+            className={classNames({
+                'selector-item': true,
+                start: props.index === props.ends[0],
+                end: props.index === props.ends[1],
+                middle: props.ends[0] < props.index && props.index < props.ends[1],
+            })}
+        >
+            <div className="wrapper">{props.children}</div>
+        </div>
+    );
+};
 
 interface Selection {
     inProgress: boolean;
@@ -54,22 +58,24 @@ interface Selection {
 }
 
 const sortEnds = (e1: number, e2: number): [number, number] => {
-    return [
-        Math.min(e1, e2),
-        Math.max(e1, e2),
-    ];
-}
+    return [Math.min(e1, e2), Math.max(e1, e2)];
+};
 
-const RangeSelector = (props: { children: any; start: number; end: number; onChange: (start: number, end: number) => void; }): JSX.Element => {
+const RangeSelector = (props: {
+    children: any;
+    start: number;
+    end: number;
+    onChange: (start: number, end: number) => void;
+}): JSX.Element => {
     const [selection, setSelection] = React.useState<Selection>({
         inProgress: false,
         end1: null,
-        end2: null
+        end2: null,
     });
 
     const ends = sortEnds(
         selection.end1 === null ? props.start : selection.end1,
-        selection.end2 === null ? props.end : selection.end2
+        selection.end2 === null ? props.end : selection.end2,
     );
 
     const startSelecting = (index: number) => {
@@ -77,7 +83,7 @@ const RangeSelector = (props: { children: any; start: number; end: number; onCha
         setSelection({
             inProgress: true,
             end1: index,
-            end2: index
+            end2: index,
         });
     };
 
@@ -86,7 +92,7 @@ const RangeSelector = (props: { children: any; start: number; end: number; onCha
         setSelection({
             ...selection,
             inProgress: true,
-            end2: index
+            end2: index,
         });
     };
 
@@ -95,27 +101,31 @@ const RangeSelector = (props: { children: any; start: number; end: number; onCha
         setSelection({
             inProgress: false,
             end1: null,
-            end2: null
+            end2: null,
         });
         const ends = sortEnds(selection.end1, index);
         props.onChange(ends[0], ends[1]);
     };
 
-    const blocks = React.Children.map(props.children, (c, i) => <Block
-        key={i}
-        index={i}
-        isSelecting={selection.inProgress}
-        ends={ends}
-        startSelecting={startSelecting.bind(null, i)}
-        selectOver={previewSelection.bind(this, i)}
-        stopSelecting={stopSelecting.bind(this, i)}
-    >{c}</Block>);
+    const blocks = React.Children.map(props.children, (c, i) => (
+        <Block
+            key={i}
+            index={i}
+            isSelecting={selection.inProgress}
+            ends={ends}
+            startSelecting={startSelecting.bind(null, i)}
+            selectOver={previewSelection.bind(this, i)}
+            stopSelecting={stopSelecting.bind(this, i)}
+        >
+            {c}
+        </Block>
+    ));
 
-    return <div>
-        <div className="selector">
-            {blocks}
+    return (
+        <div>
+            <div className="selector">{blocks}</div>
         </div>
-    </div>
-}
+    );
+};
 
 export default RangeSelector;

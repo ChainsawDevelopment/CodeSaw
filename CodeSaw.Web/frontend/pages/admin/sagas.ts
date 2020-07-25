@@ -1,13 +1,13 @@
-import { loadProjects, projectsLoaded, setupProjectHooks } from "./state";
-import { ReviewerApi, ProjectInfo } from "../../api/reviewer";
-import { take, put } from "redux-saga/effects";
-import { Action } from "typescript-fsa";
-import { startOperation, stopOperation } from "../../loading/saga";
+import { loadProjects, projectsLoaded, setupProjectHooks } from './state';
+import { ReviewerApi, ProjectInfo } from '../../api/reviewer';
+import { take, put } from 'redux-saga/effects';
+import { Action } from 'typescript-fsa';
+import { startOperation, stopOperation } from '../../loading/saga';
 
-function* loadProjectsSaga() {
+function* loadProjectsSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         const action = yield take(loadProjects);
 
         yield startOperation();
@@ -20,10 +20,10 @@ function* loadProjectsSaga() {
     }
 }
 
-function* setupProjectHooksSaga() {
+function* setupProjectHooksSaga(): Generator<any, any, any> {
     const api = new ReviewerApi();
 
-    for (; ;) {
+    for (;;) {
         const action: Action<{ projectId: number }> = yield take(setupProjectHooks);
 
         yield startOperation();
@@ -36,7 +36,4 @@ function* setupProjectHooksSaga() {
     }
 }
 
-export default [
-    loadProjectsSaga,
-    setupProjectHooksSaga
-];
+export default [loadProjectsSaga, setupProjectHooksSaga];
