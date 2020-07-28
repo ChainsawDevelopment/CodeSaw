@@ -26,11 +26,11 @@ export enum DiscussionType {
 }
 
 export const DiscussionState = {
-    GoodWork: 'GoodWork',
-    NoActionNeeded: 'NoActionNeeded',
-    NeedsResolution: 'NeedsResolution',
-    Resolved: 'Resolved',
-    ResolvePending: 'ResolvePending',
+    GoodWork: 'GoodWork' as CommentState,
+    NoActionNeeded: 'NoActionNeeded' as CommentState,
+    NeedsResolution: 'NeedsResolution' as CommentState,
+    Resolved: 'Resolved' as CommentState,
+    ResolvePending: 'ResolvePending' as CommentState,
 };
 
 export interface FileInfo {
