@@ -3,8 +3,8 @@ U
 U framework: netcoreapp21
 U 
 U nuget Microsoft.AspNetCore
-B nuget Microsoft.AspNetCore.StaticFiles
-B nuget Microsoft.AspNetCore.SpaServices
+R nuget Microsoft.AspNetCore.StaticFiles
+R nuget Microsoft.AspNetCore.SpaServices
 U nuget Microsoft.Extensions.Configuration.Json
 U nuget Microsoft.Extensions.Configuration.EnvironmentVariables
 U nuget Microsoft.Extensions.Configuration.CommandLine
