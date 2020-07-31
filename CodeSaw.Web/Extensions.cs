@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DiffMatchPatch;
 
 namespace CodeSaw.Web
 {
@@ -70,6 +71,82 @@ namespace CodeSaw.Web
             }
 
             return defaultValue();
+        }
+
+        public static IEnumerable<string> SplitLinesNoRemove(this string text)
+        {
+            int cutFrom = 0;
+
+            while (cutFrom < text.Length)
+            {
+                int next = text.IndexOf('\n', cutFrom);
+                if (next == -1)
+                {
+                    yield return text.Substring(cutFrom);
+                    break;
+                }
+
+                yield return text.Substring(cutFrom, next - cutFrom + 1);
+                cutFrom = next + 1;
+            }
+
+            if (text.EndsWith("\n"))
+            {
+                yield return "";
+            }
+        }
+
+        public static List<T> Slice<T>(this List<T> items, int start, int length)
+        {
+            return new List<T>(items.Skip(start).Take(length));
+        }
+
+        public static int IndexOf(this List<string> text, List<string> pattern, StringComparison comparisonType)
+        {
+            if (text.Count < pattern.Count)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < text.Count - pattern.Count + 1; i++)
+            {
+                if (text.Skip(i).Take(pattern.Count).SequenceEqual(pattern, StringComparer.FromComparison(comparisonType)))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        public static string OperationMarker(this Operation op)
+        {
+            if (op == null)
+            {
+                return "=";
+            }
+
+            if (op.IsEqual)
+            {
+                return "=";
+            }
+
+            if (op.IsDelete)
+            {
+                return "-";
+            }
+
+            if (op.IsInsert)
+            {
+                return "+";
+            }
+
+            return "?";
+        }
+
+        public static string ConcatText(this IEnumerable<string> items)
+        {
+            return string.Join("", items);
         }
     }
 }
