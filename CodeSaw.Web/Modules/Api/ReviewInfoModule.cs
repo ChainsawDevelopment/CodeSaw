@@ -16,7 +16,7 @@ namespace CodeSaw.Web.Modules.Api
     {
         protected ReviewIdentifier ReviewId => new ReviewIdentifier(Context.Parameters.projectId, Context.Parameters.reviewId);
 
-        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command) : base("/api/project/{projectId}/review/{reviewId}")
+        public ReviewInfoModule(IQueryRunner query, ICommandDispatcher command, FeatureToggle features) : base("/api/project/{projectId}/review/{reviewId}")
         {
             this.AddToLogContext(new Dictionary<string,Func<object>>
             {
@@ -27,18 +27,36 @@ namespace CodeSaw.Web.Modules.Api
             Get("/info", async _ => await query.Query(new GetReviewInfo(_.projectId, _.reviewId)));
             Get("/matrix", async _ => await query.Query(new GetFileMatrix(ReviewId)));
 
-            Get("/diff/{previous_base}/{previous_head}/{current_base}/{current_head}",
-                async _ => await query.Query(new GetFileDiff(
-                    ReviewId, 
-                    new GetFileDiff.HashSet
-                    {
-                        PreviousBase = (string)_.previous_base,
-                        PreviousHead = (string)_.previous_head,
-                        CurrentBase = (string)_.current_base,
-                        CurrentHead = (string)_.current_head,
-                    },
-                    Request.Query.oldPath, Request.Query.newPath
-                )));
+            if (features.For("DiffV3").IsActive)
+            {
+                Get("/diff/{previous_base}/{previous_head}/{current_base}/{current_head}",
+                    async _ => await query.Query(new GetFileDiff_Line(
+                        ReviewId,
+                        new GetFileDiff_Line.HashSet
+                        {
+                            PreviousBase = (string)_.previous_base,
+                            PreviousHead = (string)_.previous_head,
+                            CurrentBase = (string)_.current_base,
+                            CurrentHead = (string)_.current_head,
+                        },
+                        Request.Query.oldPath, Request.Query.newPath
+                    )));
+            }
+            else
+            {
+                Get("/diff/{previous_base}/{previous_head}/{current_base}/{current_head}",
+                    async _ => await query.Query(new GetFileDiff(
+                        ReviewId,
+                        new GetFileDiff.HashSet
+                        {
+                            PreviousBase = (string) _.previous_base,
+                            PreviousHead = (string) _.previous_head,
+                            CurrentBase = (string) _.current_base,
+                            CurrentHead = (string) _.current_head,
+                        },
+                        Request.Query.oldPath, Request.Query.newPath
+                    )));
+            }
 
             Get("/discussions/{previous_base}/{previous_head}/{current_base}/{current_head}/{fileId}",
                 async _ => await query.Query(new GetDiffDiscussions(

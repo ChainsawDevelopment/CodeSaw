@@ -73,5 +73,12 @@ When created, the application will have `Application Id` and `Secret` assigned. 
         "Node": {
             "node":  "C:/Program Files/nodejs/node.exe",
             "npm":  "C:/Program Files/nodejs/npm.cmd"
-        } 
+        },
+        "EnabledFeatures": [
+            "Feature1",
+            "Feature2"
+        ]
     }
+
+Available feature toggles:
+* `DiffV3` - enable version 3 of FourWayDiff
