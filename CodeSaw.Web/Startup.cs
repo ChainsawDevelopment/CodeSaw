@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -81,7 +82,12 @@ namespace CodeSaw.Web
 
             services.AddMemoryCache();
 
+            var features = new FeatureToggle();
+            features.EnableFeatures(Configuration.GetSection("EnabledFeatures").Get<string[]>() ?? Enumerable.Empty<string>());
+
             var builder = new ContainerBuilder();
+
+            builder.RegisterInstance(features);
 
             builder.Populate(services);
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CodeSaw.Web
 {
@@ -11,6 +12,8 @@ namespace CodeSaw.Web
         {
             _enabledFeatures = new HashSet<string>();
         }
+
+        public IEnumerable<string> EnabledFeatures => _enabledFeatures.ToList();
 
         public Actions For(string featureName)
         {
