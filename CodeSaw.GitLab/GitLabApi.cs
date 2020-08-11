@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using CodeSaw.RepositoryApi;
@@ -136,6 +138,58 @@ namespace CodeSaw.GitLab
         }
     }
 
+    class LoggingRestClient : RestClient
+    {
+        public LoggingRestClient(string baseUrl):base(baseUrl)
+        {
+        }
+
+        public override IRestResponse Execute(IRestRequest request)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            try
+            {
+                return base.Execute(request);
+            }
+            finally
+            {
+                sw.Stop();
+                Console.WriteLine($"Gitlab[{request.Method} {request.Resource}] {sw.ElapsedMilliseconds}ms");
+            }
+        }
+
+        public override async Task<IRestResponse<T>> ExecuteTaskAsync<T>(IRestRequest request, CancellationToken ct)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            try
+            {
+                return await base.ExecuteTaskAsync<T>(request, ct);
+            }
+            finally
+            {
+                sw.Stop();
+                Console.WriteLine($"Gitlab[{request.Method} {request.Resource}] {sw.ElapsedMilliseconds}ms");
+            }
+        }
+
+        public override async Task<IRestResponse> ExecuteTaskAsync(IRestRequest request, CancellationToken ct)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            try
+            {
+                return await base.ExecuteTaskAsync(request, ct);
+            }
+            finally
+            {
+                sw.Stop();
+                Console.WriteLine($"Gitlab[{request.Method} {request.Resource}] {sw.ElapsedMilliseconds}ms");
+            }
+        }
+    }
+
     public class GitLabApi : IRepository
     {
         private readonly IMemoryCache _cache;
@@ -144,7 +198,7 @@ namespace CodeSaw.GitLab
         public GitLabApi(string serverUrl, IGitAccessTokenSource accessTokenSource, string proxyUrl, IMemoryCache cache)
         {
             _cache = cache;
-            _client = new RestClient(serverUrl.TrimEnd('/') + "/api/v4");
+            _client = new LoggingRestClient(serverUrl.TrimEnd('/') + "/api/v4");
 
             if (accessTokenSource.Type == TokenType.OAuth)
             {
@@ -165,6 +219,7 @@ namespace CodeSaw.GitLab
                     };
                 });
             }
+
 
             var serializer = new JsonSerializer();
             serializer.ContractResolver = new GitLabContractResolver();

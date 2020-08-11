@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using CodeSaw.GitLab;
 using CodeSaw.Web.Auth;
 using Microsoft.AspNetCore.Identity;
@@ -21,7 +22,17 @@ namespace CodeSaw.Web
             {
                 Console.WriteLine($"Retrieving Access Token for user {currentUser.UserName}");
 
-                return currentUser?.Token;
+                var sw = new Stopwatch();
+                sw.Start();
+                try
+                {
+                    return currentUser?.Token;
+                }
+                finally
+                {
+                    sw.Stop();
+                    Console.WriteLine($"Getting token for {currentUser.UserName}: {sw.ElapsedMilliseconds}ms");
+                }
             });
         }
     }
