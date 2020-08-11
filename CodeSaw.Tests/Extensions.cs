@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using CodeSaw.Web;
 using CodeSaw.Web.Diff;
 using DiffMatchPatch;
 
@@ -22,6 +23,23 @@ namespace CodeSaw.Tests
                 yield return next;
 
                 offset = next + pattern.Length;
+            }
+        }
+
+        public static IEnumerable<int> FindAllOccurences(this List<string> text, List<string> searchFor)
+        {
+            if (text.Count < searchFor.Count)
+            {
+                yield break;
+            }
+
+            for (int i = 0; i < text.Count - searchFor.Count; i++)
+            {
+                var slice = text.Slice(i, searchFor.Count);
+                if (slice.SequenceEqual(searchFor))
+                {
+                    yield return i;
+                }
             }
         }
 
