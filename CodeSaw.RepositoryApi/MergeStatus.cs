@@ -4,6 +4,8 @@
     {
         can_be_merged,
         cannot_be_merged,
-        @unchecked
+        @unchecked,
+        checking,
+        cannot_be_merged_recheck
     }
 }
