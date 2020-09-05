@@ -103,7 +103,7 @@ namespace CodeSaw.Web.Diff
                 }
                 else
                 {
-                    var newC = mapping[line] = (char) mapping.Count;
+                    var newC = mapping[line] = (char) (mapping.Count + 1);
                     result.Append(newC);
                 }
             }
