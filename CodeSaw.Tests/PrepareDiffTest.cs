@@ -19,7 +19,8 @@ namespace CodeSaw.Tests
                 .Where(x => x.StartsWith("CodeSaw.Tests.DiffViewData"))
                 .Select(x => x.Substring("CodeSaw.Tests.DiffViewData.".Length))
                 .Select(x => x.Substring(0, x.IndexOf(".")))
-                .Distinct();
+                .Distinct()
+                .Except(new[] {"Case22"});
 
             foreach (var @case in cases)
             {
