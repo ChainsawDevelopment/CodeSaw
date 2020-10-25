@@ -28,6 +28,9 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             var diff = await _api.GetDiff(_currentRevision.ReviewId.ProjectId, previousHead, _currentRevision.HeadCommit);
 
+            var relevantFileDiffs = await _api.GetDiff(_currentRevision.ReviewId.ProjectId, _currentRevision.BaseCommit, _currentRevision.HeadCommit);
+            diff = diff.Where(pd => relevantFileDiffs.Any(rd => rd.Path.NewPath == pd.Path.NewPath)).ToList(); // TODO: Is comparing only NewPath part ok?
+
             TMP_FIllOldRevisionFiles(diff);
 
             var fileIds = _sessionAdapter.FetchFileIds(previousRevId);

@@ -80,10 +80,17 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     revisionIds = revisionIds.Union(new RevisionId.Hash(mergeRequest.HeadCommit));
                 }
 
-                var provisionalDiff = new List<FileDiff>();
+                var provisionalDiff = new List<FileDiff>(); 
                 if (hasProvisional)
                 {
-                    provisionalDiff = await _api.GetDiff(query.ReviewId.ProjectId, revisions.LastOrDefault()?.HeadCommit ?? mergeRequest.BaseCommit, mergeRequest.HeadCommit);
+                    provisionalDiff = await _api.GetDiff(query.ReviewId.ProjectId, revisions.LastOrDefault()?.HeadCommit ?? mergeRequest.BaseCommit, mergeRequest.HeadCommit); 
+
+                    if (revisions.Any() && revisions.Last().HeadCommit != mergeRequest.HeadCommit)
+                    {
+                        // Limit diffs only to files that has been somehow changed between current head and base, rest is garbage from rebasing.
+                        var relevantFileDiffs = await _api.GetDiff(query.ReviewId.ProjectId, mergeRequest.BaseCommit, mergeRequest.HeadCommit);
+                        provisionalDiff = provisionalDiff.Where(pd => relevantFileDiffs.Any(rd => rd.Path.NewPath == pd.Path.NewPath)).ToList(); // TODO: Is comparing only NewPath part ok?
+                    }
                 }
 
                 var remainingDiffs = new HashSet<FileDiff>(provisionalDiff);
