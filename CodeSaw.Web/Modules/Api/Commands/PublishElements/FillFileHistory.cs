@@ -1,5 +1,8 @@
 ﻿using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
+using CodeSaw.Web.Modules.Api.Queries;
+using NHibernate;
+using NHibernate.Linq;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -14,12 +17,16 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
         private readonly ISessionAdapter _sessionAdapter;
         private readonly IRepository _api;
         private readonly ReviewRevision _currentRevision;
+        private readonly FeatureToggle _features;
+        private readonly ISession _session;
 
-        public FillFileHistory(ISessionAdapter sessionAdapter, IRepository api, ReviewRevision currentRevision)
+        public FillFileHistory(ISessionAdapter sessionAdapter, IRepository api, ReviewRevision currentRevision, FeatureToggle features, ISession session)
         {
             _sessionAdapter = sessionAdapter;
             _api = api;
             _currentRevision = currentRevision;
+            _features = features;
+            _session = session;
         }
 
         public async Task<Dictionary<ClientFileId, (string, Guid)>> Fill()
@@ -28,8 +35,15 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             var diff = await _api.GetDiff(_currentRevision.ReviewId.ProjectId, previousHead, _currentRevision.HeadCommit);
 
-            var relevantFileDiffs = await _api.GetDiff(_currentRevision.ReviewId.ProjectId, _currentRevision.BaseCommit, _currentRevision.HeadCommit);
-            diff = diff.Where(pd => relevantFileDiffs.Any(rd => rd.Path.NewPath == pd.Path.NewPath)).ToList(); // TODO: Is comparing only NewPath part ok?
+            if (_features.For("dont-show-excesive-files-from-rebases").IsActive)
+            {
+                var fileHistoryEntries = await _session.Query<FileHistoryEntry>()
+                    .Where(x => x.ReviewId == _currentRevision.ReviewId)
+                    .GroupBy(x => x.FileId)
+                    .ToListAsync();
+
+                diff = (await RelevantFilesFilter.Filter(diff, fileHistoryEntries, _currentRevision.ReviewId, _currentRevision.BaseCommit, _currentRevision.HeadCommit, _api)).ToList();
+            }
 
             TMP_FIllOldRevisionFiles(diff);
 

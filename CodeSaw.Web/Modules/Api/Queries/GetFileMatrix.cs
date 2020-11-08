@@ -24,11 +24,13 @@ namespace CodeSaw.Web.Modules.Api.Queries
         {
             private readonly ISession _session;
             private readonly IRepository _api;
+            private readonly FeatureToggle _features;
 
-            public Handler(ISession session, IRepository api)
+            public Handler(ISession session, IRepository api, FeatureToggle features)
             {
                 _session = session;
                 _api = api;
+                _features = features;
             }
 
             public async Task<FileMatrix> Execute(GetFileMatrix query)
@@ -80,27 +82,28 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     revisionIds = revisionIds.Union(new RevisionId.Hash(mergeRequest.HeadCommit));
                 }
 
+                var fileHistoryEntries = await _session.Query<FileHistoryEntry>()
+                    .Where(x => x.ReviewId == query.ReviewId)
+                    .GroupBy(x => x.FileId)
+                    .ToListAsync();
+
                 var provisionalDiff = new List<FileDiff>(); 
                 if (hasProvisional)
                 {
-                    provisionalDiff = await _api.GetDiff(query.ReviewId.ProjectId, revisions.LastOrDefault()?.HeadCommit ?? mergeRequest.BaseCommit, mergeRequest.HeadCommit); 
+                    provisionalDiff = await _api.GetDiff(query.ReviewId.ProjectId, revisions.LastOrDefault()?.HeadCommit ?? mergeRequest.BaseCommit, mergeRequest.HeadCommit);
 
-                    if (revisions.Any() && revisions.Last().HeadCommit != mergeRequest.HeadCommit)
+                    if (_features.For("dont-show-excesive-files-from-rebases").IsActive) 
                     {
-                        // Limit diffs only to files that has been somehow changed between current head and base, rest is garbage from rebasing.
-                        var relevantFileDiffs = await _api.GetDiff(query.ReviewId.ProjectId, mergeRequest.BaseCommit, mergeRequest.HeadCommit);
-                        provisionalDiff = provisionalDiff.Where(pd => relevantFileDiffs.Any(rd => rd.Path.NewPath == pd.Path.NewPath)).ToList(); // TODO: Is comparing only NewPath part ok?
+                        if (revisions.Any() && revisions.Last().HeadCommit != mergeRequest.HeadCommit)
+                        {
+                            provisionalDiff = (await RelevantFilesFilter.Filter(provisionalDiff, fileHistoryEntries, query.ReviewId, mergeRequest.BaseCommit, mergeRequest.HeadCommit, _api)).ToList();
+                        }
                     }
                 }
 
                 var remainingDiffs = new HashSet<FileDiff>(provisionalDiff);
 
                 var matrix = new FileMatrix(revisionIds);
-
-                var fileHistoryEntries = await _session.Query<FileHistoryEntry>()
-                    .Where(x => x.ReviewId == query.ReviewId)
-                    .GroupBy(x => x.FileId)
-                    .ToListAsync();
 
                 var revisionsMap = revisions.ToDictionary(x => (Guid?) x.Id);
 

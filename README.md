@@ -82,3 +82,4 @@ When created, the application will have `Application Id` and `Secret` assigned. 
 
 Available feature toggles:
 * `DiffV3` - enable version 3 of FourWayDiff
+* `dont-show-excesive-files-from-rebases` - limit number of files that show up in provisional revision
