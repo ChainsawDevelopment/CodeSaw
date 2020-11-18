@@ -1,8 +1,6 @@
 ﻿using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Modules.Api.Model;
 using CodeSaw.Web.Modules.Api.Queries;
-using NHibernate;
-using NHibernate.Linq;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -18,15 +16,13 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
         private readonly IRepository _api;
         private readonly ReviewRevision _currentRevision;
         private readonly FeatureToggle _features;
-        private readonly ISession _session;
 
-        public FillFileHistory(ISessionAdapter sessionAdapter, IRepository api, ReviewRevision currentRevision, FeatureToggle features, ISession session)
+        public FillFileHistory(ISessionAdapter sessionAdapter, IRepository api, ReviewRevision currentRevision, FeatureToggle features)
         {
             _sessionAdapter = sessionAdapter;
             _api = api;
             _currentRevision = currentRevision;
             _features = features;
-            _session = session;
         }
 
         public async Task<Dictionary<ClientFileId, (string, Guid)>> Fill()
@@ -37,10 +33,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             if (_features.For("dont-show-excesive-files-from-rebases").IsActive)
             {
-                var fileHistoryEntries = await _session.Query<FileHistoryEntry>()
-                    .Where(x => x.ReviewId == _currentRevision.ReviewId)
-                    .GroupBy(x => x.FileId)
-                    .ToListAsync();
+                var fileHistoryEntries = await _sessionAdapter.GetReviewFileHistory(_currentRevision.ReviewId);
 
                 diff = (await RelevantFilesFilter.Filter(diff, fileHistoryEntries, _currentRevision.ReviewId, _currentRevision.BaseCommit, _currentRevision.HeadCommit, _api)).ToList();
             }

@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Auth;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate.Criterion;
-using NHibernate.Linq;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {

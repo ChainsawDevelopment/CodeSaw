@@ -45,6 +45,8 @@ namespace CodeSaw.Web.Modules.Api.Commands
         FileHistoryEntry GetFileHistoryEntry(Guid fileId, ReviewRevision revision);
         
         List<Discussion> GetDiscussions(List<Guid> ids);
+
+        Task<List<IGrouping<Guid, FileHistoryEntry>>> GetReviewFileHistory(ReviewIdentifier id);
     }
 
     public class NHSessionAdapter : ISessionAdapter
@@ -187,6 +189,14 @@ namespace CodeSaw.Web.Modules.Api.Commands
         public List<Discussion> GetDiscussions(List<Guid> ids)
         {
             return _session.Query<Discussion>().Where(x => ids.Contains(x.Id)).ToList();
+        }
+
+        public async Task<List<IGrouping<Guid, FileHistoryEntry>>> GetReviewFileHistory(ReviewIdentifier id)
+        {
+            return await _session.Query<FileHistoryEntry>()
+                    .Where(x => x.ReviewId == id)
+                    .GroupBy(x => x.FileId)
+                    .ToListAsync();
         }
     }
 
