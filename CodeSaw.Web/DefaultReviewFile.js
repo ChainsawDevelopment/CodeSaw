@@ -40,15 +40,15 @@ function thumb(review, user) {
         .countBy(file => _(file.revisions).filter(r => !r.isUnchanged).last().reviewers.indexOf(user) >= 0)
         .value();
 
+    const myUnresolvedDiscussions = review.discussions.filter(d => d.author === user && d.state === 'NeedsResolution');
+
     const nothingReviewed = (byStatus[true] || 0) === 0;
 
-    if (nothingReviewed) {
+    if (nothingReviewed && myUnresolvedDiscussions.length == 0) {
         return 0;
     }
 
     const allReviewed = (byStatus[false] || 0) === 0;
-
-    const myUnresolvedDiscussions = review.discussions.filter(d => d.author === user && d.state === 'NeedsResolution');
 
     const allMyDiscussionsResolved = myUnresolvedDiscussions.length === 0;
 
