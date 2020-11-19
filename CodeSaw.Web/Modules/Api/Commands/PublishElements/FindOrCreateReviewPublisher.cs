@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using CodeSaw.RepositoryApi;
 using CodeSaw.Web.Auth;
 using CodeSaw.Web.Modules.Api.Model;
-using NHibernate.Criterion;
-using NHibernate.Linq;
 
 namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 {
@@ -55,7 +53,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
             _api = api;
         }
 
-        public async Task<(Guid RevisionId, Dictionary<ClientFileId, Guid> ClientFileIdMap, Dictionary<string, Guid> ByName)> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits)
+        public async Task<(Guid RevisionId, Dictionary<ClientFileId, Guid> ClientFileIdMap, Dictionary<string, Guid> ByName)> FindOrCreateRevision(ReviewIdentifier reviewId, PublishReview.RevisionCommits commits, FeatureToggle features)
         {
             var existingRevision = await _sessionAdapter.GetRevision(reviewId, commits);
 
@@ -90,7 +88,7 @@ namespace CodeSaw.Web.Modules.Api.Commands.PublishElements
 
             await _sessionAdapter.Save(revision);
 
-            var clientFileIdMap = await new FillFileHistory(_sessionAdapter, _api, revision).Fill();
+            var clientFileIdMap = await new FillFileHistory(_sessionAdapter, _api, revision, features).Fill();
 
             var byClientId = clientFileIdMap.ToDictionary(x => x.Key, x => x.Value.Item2);
             

@@ -53,7 +53,7 @@ namespace CodeSaw.Tests.Commands
 
         protected async Task Handle(PublishReview.RevisionCommits commits, ReviewUser user, params object[] content)
         {
-            var handler = new PublishReview.Handler(_sessionAdapter, _repository.Object, user, _eventBus.Object, _factory, _cache);
+            var handler = new PublishReview.Handler(_sessionAdapter, _repository.Object, user, _eventBus.Object, _factory, _cache, new FeatureToggle());
 
             var command = new PublishReview
             {

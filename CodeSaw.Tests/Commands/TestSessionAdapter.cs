@@ -267,5 +267,11 @@ namespace CodeSaw.Tests.Commands
         {
             return Discussions.Where(x => ids.Contains(x.Id)).ToList();
         }
+
+        
+        async Task<List<IGrouping<Guid, FileHistoryEntry>>> ISessionAdapter.GetReviewFileHistory(ReviewIdentifier id)
+        {
+            return new List<IGrouping<Guid, FileHistoryEntry>>();
+        }
     }
 }

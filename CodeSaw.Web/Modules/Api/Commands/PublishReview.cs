@@ -45,6 +45,8 @@ namespace CodeSaw.Web.Modules.Api.Commands
         FileHistoryEntry GetFileHistoryEntry(Guid fileId, ReviewRevision revision);
         
         List<Discussion> GetDiscussions(List<Guid> ids);
+
+        Task<List<IGrouping<Guid, FileHistoryEntry>>> GetReviewFileHistory(ReviewIdentifier id);
     }
 
     public class NHSessionAdapter : ISessionAdapter
@@ -188,6 +190,14 @@ namespace CodeSaw.Web.Modules.Api.Commands
         {
             return _session.Query<Discussion>().Where(x => ids.Contains(x.Id)).ToList();
         }
+
+        public async Task<List<IGrouping<Guid, FileHistoryEntry>>> GetReviewFileHistory(ReviewIdentifier id)
+        {
+            return await _session.Query<FileHistoryEntry>()
+                    .Where(x => x.ReviewId == id)
+                    .GroupBy(x => x.FileId)
+                    .ToListAsync();
+        }
     }
 
     public class PublishReview : ICommand
@@ -224,8 +234,9 @@ namespace CodeSaw.Web.Modules.Api.Commands
             private readonly IEventBus _eventBus;
             private readonly RevisionFactory _revisionFactory;
             private readonly IMemoryCache _cache;
+            private readonly FeatureToggle _features;
 
-            public Handler(ISessionAdapter sessionAdapter, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory, IMemoryCache cache)
+            public Handler(ISessionAdapter sessionAdapter, IRepository api, [CurrentUser]ReviewUser user, IEventBus eventBus, RevisionFactory revisionFactory, IMemoryCache cache, FeatureToggle features)
             {
                 _sessionAdapter = sessionAdapter;
                 _api = api;
@@ -233,6 +244,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
                 _eventBus = eventBus;
                 _revisionFactory = revisionFactory;
                 _cache = cache;
+                _features = features;
             }
 
             public override async Task Handle(PublishReview command)
@@ -242,7 +254,7 @@ namespace CodeSaw.Web.Modules.Api.Commands
 
                 var revisionFactory = new FindOrCreateRevisionPublisher(_sessionAdapter, _revisionFactory, _api);
 
-                var (headRevision, clientFileIdMap, nameIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision);
+                var (headRevision, clientFileIdMap, nameIdMap) = await revisionFactory.FindOrCreateRevision(reviewId, command.Revision, _features);
 
                 var headReview = await new FindOrCreateReviewPublisher(_sessionAdapter, _user).FindOrCreateReview(command, reviewId, headRevision);
 
