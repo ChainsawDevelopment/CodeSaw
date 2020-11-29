@@ -1,0 +1,4 @@
+NHibernate
+Microsoft.Extensions.Configuration
+Microsoft.Extensions.DependencyInjection
+Microsoft.Extensions.Logging
