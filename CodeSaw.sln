@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.Tests", "CodeSaw.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeSaw.Web", "CodeSaw.Web\CodeSaw.Web.csproj", "{A10999A6-4718-423C-B93D-BCF54C908E7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeSaw.Archiver", "CodeSaw.Archiver\CodeSaw.Archiver.csproj", "{729B2829-14D4-4BCB-80F4-0A50112A3231}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A10999A6-4718-423C-B93D-BCF54C908E7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{729B2829-14D4-4BCB-80F4-0A50112A3231}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{729B2829-14D4-4BCB-80F4-0A50112A3231}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{729B2829-14D4-4BCB-80F4-0A50112A3231}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{729B2829-14D4-4BCB-80F4-0A50112A3231}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
