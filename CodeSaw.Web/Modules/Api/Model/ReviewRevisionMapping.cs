@@ -20,6 +20,7 @@ namespace CodeSaw.Web.Modules.Api.Model
             Property(x => x.RevisionNumber);
             Property(x => x.HeadCommit, p => p.Length(40));
             Property(x => x.BaseCommit, p => p.Length(40));
+            Property(x => x.ArchiveState);
 
             Bag(x => x.Files, coll =>
             {

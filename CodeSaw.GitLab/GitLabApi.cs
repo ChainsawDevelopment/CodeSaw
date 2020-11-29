@@ -134,6 +134,11 @@ namespace CodeSaw.GitLab
         {
             await NotAllowed();
         }
+
+        public override async Task DeleteRef(int projectId, string name)
+        {
+            await NotAllowed();
+        }
     }
 
     public class GitLabApi : IRepository
@@ -335,6 +340,21 @@ namespace CodeSaw.GitLab
             else if (createTagResponse.StatusCode != HttpStatusCode.Created)
             {
                 throw new GitLabApiFailedException(createTagRequest, createTagResponse);
+            }
+        }
+
+        public virtual async Task DeleteRef(int projectId, string name)
+        {
+            var deleteTagRequest = new RestRequest($"/projects/{projectId}/repository/tags/{Uri.EscapeDataString(name)}", Method.DELETE);
+
+            var deleteTagResponse = await _client.ExecuteTaskAsync(deleteTagRequest);
+
+            if (!deleteTagResponse.IsSuccessful)
+            {
+                if (deleteTagResponse.StatusCode != HttpStatusCode.NotFound)
+                {
+                    throw new GitLabApiFailedException(deleteTagRequest, deleteTagResponse);
+                }
             }
         }
 

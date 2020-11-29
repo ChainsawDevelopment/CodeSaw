@@ -7,7 +7,7 @@ using NHibernate.Type;
 
 namespace CodeSaw.Web.Modules.Api.Model
 {
-    public class ReviewRevision 
+    public class ReviewRevision
     {
         public virtual Guid Id { get; set; }
         public virtual ReviewIdentifier ReviewId { get; set; }
@@ -18,6 +18,8 @@ namespace CodeSaw.Web.Modules.Api.Model
         public virtual IList<RevisionFile> Files { get; set; } = new List<RevisionFile>();
 
         public virtual DateTimeOffset LastUpdatedAt { get; set; }
+
+        public virtual int ArchiveState { get; set; }
     }
 
     public class RevisionFile

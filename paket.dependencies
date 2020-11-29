@@ -2,6 +2,7 @@ source https://www.nuget.org/api/v2
 
 framework: netcoreapp21
 
+nuget CommandLineParser
 nuget Diff.Match.Patch
 nuget FluentMigrator
 nuget LibGit2Sharp
