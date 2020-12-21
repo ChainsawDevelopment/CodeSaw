@@ -1,4 +1,5 @@
 
+using System;
 using CommandLine;
 
 namespace CodeSaw.Archiver
@@ -20,5 +21,7 @@ namespace CodeSaw.Archiver
 
         [Option("deleteTags", Required = false, Default = false, HelpText = "Delete tags, by default the archiver only mark the revisions as pending, this will actually clean the tags.")]
         public bool DeleteTags { get; set; }
+
+        public DateTime ThresholdDate => DateTime.UtcNow.Date.AddDays(DaysThreshold);
     };
 }

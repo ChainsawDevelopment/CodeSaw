@@ -42,17 +42,27 @@ namespace CodeSaw.Archiver
         /// </summary>
         private static void MarkAsArchivePending(RunArchiverVerb options, ISessionFactory sessionFactory, GitLabApi gitLab)
         {
+            Console.WriteLine("Marking As ArchivePending");
             using (var session = sessionFactory.OpenSession())
             {
                 var mergeRequests = FindPotentialMergeRequests(options, session);
 
-                var toArchive = WhereEligibleToArchiving(mergeRequests, options, gitLab);
+                int counter = 0;
+
+                var toArchive = WhereEligibleToArchiving(mergeRequests, options, gitLab, id => Console.WriteLine($"[{counter++}/{mergeRequests.Length}] Ignoring {id.ProjectId}/{id.ReviewId}"));
 
                 foreach (var mrId in toArchive)
                 {
-                    var sqlUpdate = $"UPDATE [Revisions] SET [ArchiveState] = {(int)ArchiveState.ArchivePending} WHERE ProjectId = {mrId.ProjectId} and ReviewId = {mrId.Id}";
-                    Console.WriteLine(sqlUpdate);
-                    session.CreateSQLQuery(sqlUpdate).ExecuteUpdate();
+                    counter++;
+                    var sqlUpdate = "UPDATE [Revisions] SET [ArchiveState] = :archivePending WHERE ProjectId = :projectId and ReviewId = :reviewId";
+
+                    Console.WriteLine($"[{counter}/{mergeRequests.Length}] Setting ArchivePending for {mrId.ProjectId}/{mrId.Id}");
+
+                    session.CreateSQLQuery(sqlUpdate)
+                        .SetParameter("archivePending", (int)ArchiveState.ArchivePending)
+                        .SetParameter("projectId", mrId.ProjectId)
+                        .SetParameter("reviewId", mrId.Id)
+                    .ExecuteUpdate();
                 }
             }
         }
@@ -63,14 +73,19 @@ namespace CodeSaw.Archiver
         /// </summary>
         private static void ArchivePendingRevisions(RunArchiverVerb options, ISessionFactory sessionFactory, GitLabApi gitLab)
         {
+            Console.WriteLine("Archiving Pending Revisions");
             var tagNameFormat = "reviewer/{0}/r{1}/{2}";
 
             using (var session = sessionFactory.OpenSession())
             {
                 var pendingRevisions = session.Query<ReviewRevision>().Where(x => x.ArchiveState == (int)ArchiveState.ArchivePending).ToArray();
+                int counter = 0;
 
                 foreach (var revision in pendingRevisions)
                 {
+                    counter++;
+                    Console.WriteLine($"[{counter}/{pendingRevisions.Length}] Clearing Tags for {revision.ReviewId.ProjectId}/{revision.ReviewId.ReviewId}");
+
                     var baseTag = string.Format(tagNameFormat, revision.ReviewId.ReviewId, revision.RevisionNumber, "base");
                     var headTag = string.Format(tagNameFormat, revision.ReviewId.ReviewId, revision.RevisionNumber, "head");
 
@@ -93,9 +108,9 @@ namespace CodeSaw.Archiver
         private static IEnumerable<MergeRequest> WhereEligibleToArchiving(
             IEnumerable<ReviewIdentifier> mergeRequests,
             RunArchiverVerb options,
-            GitLabApi gitLab)
+            GitLabApi gitLab,
+            Action<ReviewIdentifier> notEligibleCallback)
         {
-            var thresholdDate = DateTime.UtcNow.Date.AddDays(-options.DaysThreshold);
             foreach (var mergeRequest in mergeRequests)
             {
                 var mrInfo = gitLab.GetMergeRequestInfo(mergeRequest.ProjectId, mergeRequest.ReviewId).Result;
@@ -105,21 +120,29 @@ namespace CodeSaw.Archiver
                     var finalDate = mrInfo.MergedAt ?? mrInfo.ClosedAt;
                     if (!finalDate.HasValue)
                     {
+                        notEligibleCallback(mergeRequest);
                         continue;
                     }
 
-                    if (finalDate.Value < thresholdDate)
+                    if (finalDate.Value < options.ThresholdDate)
                     {
-                        Console.WriteLine($"PID: {mergeRequest.ProjectId}, RID: {mergeRequest.ReviewId}, MR: {mrInfo.Title}, State: {mrInfo.State}, Merged At: {mrInfo.MergedAt}");
                         yield return mrInfo;
                     }
+                    else
+                    {
+                        notEligibleCallback(mergeRequest);
+                    }
+                }
+                else
+                {
+                    notEligibleCallback(mergeRequest);
                 }
             }
         }
 
-        private static IEnumerable<ReviewIdentifier> FindPotentialMergeRequests(RunArchiverVerb options, ISession session)
+        private static ReviewIdentifier[] FindPotentialMergeRequests(RunArchiverVerb options, ISession session)
         {
-            var thresholdDate = DateTime.UtcNow.Date.AddDays(-options.DaysThreshold);
+            var thresholdDate = options.ThresholdDate;
 
             ReviewRevision revision = null;
             Review review = null;

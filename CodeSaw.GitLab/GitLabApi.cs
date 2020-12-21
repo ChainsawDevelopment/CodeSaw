@@ -355,6 +355,10 @@ namespace CodeSaw.GitLab
                 {
                     throw new GitLabApiFailedException(deleteTagRequest, deleteTagResponse);
                 }
+                else
+                {
+                    Console.WriteLine($"Ref {projectId}/{name} already gone.");
+                }
             }
         }
 
