@@ -1,4 +1,6 @@
-﻿namespace CodeSaw.RepositoryApi
+﻿using System;
+
+namespace CodeSaw.RepositoryApi
 {
     public class MergeRequest
     {
@@ -16,5 +18,8 @@
 
         public string SourceBranch { get; set; }
         public string TargetBranch { get; set; }
+
+        public DateTime? MergedAt {get; set; }
+        public DateTime? ClosedAt {get; set; }
     }
 }

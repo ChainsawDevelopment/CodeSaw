@@ -66,7 +66,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     .Where(() => review.UserId == _currentUser.Id)
                     .Select(Projections.Distinct(Projections.Property(() => revision.ReviewId)))
                     .List<ReviewIdentifier>();
-                    
+
 
                 // todo: extend with reviewer-specific information
 

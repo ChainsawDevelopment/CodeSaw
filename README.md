@@ -83,3 +83,26 @@ When created, the application will have `Application Id` and `Secret` assigned. 
 Available feature toggles:
 * `DiffV3` - enable version 3 of FourWayDiff
 * `dont-show-excesive-files-from-rebases` - limit number of files that show up in provisional revision
+
+
+## Archiving
+
+`CodeSaw.Archiver` is console application that can archive old reviews. The archive process is important, because CodeSaw creates tags for each revisions thus forcing Git to keep all ref including those that would normally be removed by GC. 
+
+
+Archiver accepts following parameters: 
+```
+  -c, --configFile    Required. Path to configuration file used to connect to DB and GitLab
+
+  --projectId         Project ID for which to perform archiving. All if omitted.
+
+  -d, --days          (Default: 180) Number of days to keep the merge requests. Older than that will be archived.
+
+  --batch             Size of batch to process. Process all found merge requests when omitted.
+
+  --deleteTags        (Default: false) Delete tags, by default the archiver only mark the revisions as pending, this will actually clean the tags.
+
+  --help              Display this help screen.
+
+  --version           Display version information.
+  ```

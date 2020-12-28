@@ -1,0 +1,6 @@
+NHibernate
+Microsoft.Extensions.Configuration
+Microsoft.Extensions.DependencyInjection
+Microsoft.Extensions.Logging
+Microsoft.Extensions.Caching.Memory
+CommandLineParser
