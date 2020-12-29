@@ -32,6 +32,8 @@ namespace CodeSaw.Archiver
             var sessionFactory = BuildSessionFactory(config);
             var gitLab = BuildGitLabApi(config);
 
+            Console.WriteLine(options.ToString());
+
             MarkAsArchivePending(options, sessionFactory, gitLab);
             ArchivePendingRevisions(options, sessionFactory, gitLab);
         }
@@ -56,7 +58,7 @@ namespace CodeSaw.Archiver
                     counter++;
                     var sqlUpdate = "UPDATE [Revisions] SET [ArchiveState] = :archivePending WHERE ProjectId = :projectId and ReviewId = :reviewId";
 
-                    Console.WriteLine($"[{counter}/{mergeRequests.Length}] Setting ArchivePending for {mrId.ProjectId}/{mrId.Id}");
+                    Console.WriteLine($"[{counter}/{mergeRequests.Length}] Setting ArchivePending for {mrId.ProjectId}/{mrId.Id} merged/closed at: {mrId.MergedAt ?? mrId.ClosedAt}");
 
                     session.CreateSQLQuery(sqlUpdate)
                         .SetParameter("archivePending", (int)ArchiveState.ArchivePending)
@@ -98,6 +100,8 @@ namespace CodeSaw.Archiver
                     {
                         revision.ArchiveState = (int)ArchiveState.Archived;
                         session.Save(revision);
+                        
+                        session.Flush();
                     }
                 }
 
@@ -113,9 +117,17 @@ namespace CodeSaw.Archiver
         {
             foreach (var mergeRequest in mergeRequests)
             {
-                var mrInfo = gitLab.GetMergeRequestInfo(mergeRequest.ProjectId, mergeRequest.ReviewId).Result;
+                MergeRequest mrInfo = null;
+                try
+                {
+                    mrInfo = gitLab.GetMergeRequestInfo(mergeRequest.ProjectId, mergeRequest.ReviewId).Result;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
 
-                if (mrInfo.State == MergeRequestState.closed || mrInfo.State == MergeRequestState.merged)
+                if (mrInfo != null && (mrInfo.State == MergeRequestState.closed || mrInfo.State == MergeRequestState.merged))
                 {
                     var finalDate = mrInfo.MergedAt ?? mrInfo.ClosedAt;
                     if (!finalDate.HasValue)
