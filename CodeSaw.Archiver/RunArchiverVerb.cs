@@ -22,6 +22,11 @@ namespace CodeSaw.Archiver
         [Option("deleteTags", Required = false, Default = false, HelpText = "Delete tags, by default the archiver only mark the revisions as pending, this will actually clean the tags.")]
         public bool DeleteTags { get; set; }
 
-        public DateTime ThresholdDate => DateTime.UtcNow.Date.AddDays(DaysThreshold);
+        public DateTime ThresholdDate => DateTime.UtcNow.Date.AddDays(-DaysThreshold);
+
+        public override string ToString()
+        {
+            return $"ConfigFile={ConfigFile}, ProjectId={ProjectId}, DaysThreshold={DaysThreshold}, BatchSize={BatchSize}, DeleteTags={DeleteTags}, ThresholdDate={ThresholdDate}";
+        }
     };
 }
