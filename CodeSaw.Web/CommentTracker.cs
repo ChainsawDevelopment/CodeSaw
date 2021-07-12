@@ -16,7 +16,7 @@ namespace CodeSaw.Web
         {
             var patches = MakeDiff(commentVersion, newVersion);
 
-            if (!patches.Any())
+            if (!patches.Any() || string.IsNullOrEmpty(commentVersion))
             {
                 return line;
             }
