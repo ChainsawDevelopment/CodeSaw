@@ -1,0 +1,9 @@
+{
+    "left": 1,
+    "right": 3,
+    "comment": {
+        "version": 2,
+        "line": 1,
+        "expected": 1
+    }
+}
