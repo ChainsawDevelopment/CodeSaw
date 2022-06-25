@@ -6,5 +6,6 @@
         public string Name { get; set; }
         public string Namespace { get; set; }
         public object CanConfigureHooks { get; set; }
+        public object WebUrl { get; set; }
     }
 }

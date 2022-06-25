@@ -63,9 +63,12 @@ export interface BinaryFileSizes {
 
 export interface FileDiff {
     hunks: Hunk[];
+    isImageFile: boolean;
     isBinaryFile: boolean;
     areBinaryEqual: boolean;
     binarySizes: BinaryFileSizes;
+    previousFileUrl: string;
+    currentFileUrl: string;
     contents: {
         base: {
             previous: string;

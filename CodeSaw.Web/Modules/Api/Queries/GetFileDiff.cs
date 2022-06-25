@@ -39,6 +39,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public ReviewDebugInfo Contents { get; set; }
             public ReviewDebugInfo Commits { get; set; }
             public IEnumerable<HunkInfo> Hunks { get; set; }
+            public bool IsImageFile { get; set; }
             public bool IsBinaryFile { get; set; }
             public bool AreBinaryEqual { get; set; }
             public BinaryFileSizesInfo BinarySizes { get; set; }
@@ -129,8 +130,14 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 foreach (var content in contents)
                 {
+                    if (IsImageFile(query.OldPath, query.NewPath))
+                    {
+                        return HandleImageFile(contents[previousCommit], contents[currentCommit], previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
+                    }
                     if (IsBinaryFile(content.Value))
+                    {
                         return HandleBinaryFile(contents[previousCommit], contents[currentCommit], previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
+                    }
                 }
 
                 var basePatch = FourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
@@ -283,6 +290,56 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         }
                     },
 
+                    IsBinaryFile = true,
+                    AreBinaryEqual = previous == current,
+                    BinarySizes = new BinaryFileSizesInfo
+                    {
+                        PreviousSize = previous.Length,
+                        CurrentSize = current.Length
+                    }
+                };
+            }
+
+            private bool IsImageFile(string oldPath, string newPath)
+            {
+                string[] supportedExtensions = {".png", ".jpg", ".svg"};
+                return supportedExtensions.Any(x => oldPath.EndsWith(x)) || supportedExtensions.Any(x => newPath.EndsWith(x));
+            }
+
+            private Result HandleImageFile(string previous, string current, string previousBaseCommit, string currentBaseCommit, string previousCommit,
+                string currentCommit)
+            {
+                return new Result
+                {
+                    Commits = new ReviewDebugInfo
+                    {
+                        Review = new RevisionDebugInfo
+                        {
+                            Previous = previousCommit,
+                            Current = currentCommit
+                        },
+                        Base = new RevisionDebugInfo
+                        {
+                            Previous = previousBaseCommit,
+                            Current = currentBaseCommit
+                        }
+                    },
+
+                    Contents = new ReviewDebugInfo
+                    {
+                        Review = new RevisionDebugInfo
+                        {
+                            Previous = "",
+                            Current = ""
+                        },
+                        Base = new RevisionDebugInfo
+                        {
+                            Previous = "",
+                            Current = ""
+                        }
+                    },
+
+                    IsImageFile = true,
                     IsBinaryFile = true,
                     AreBinaryEqual = previous == current,
                     BinarySizes = new BinaryFileSizesInfo

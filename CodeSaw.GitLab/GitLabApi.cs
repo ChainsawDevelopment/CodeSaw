@@ -95,6 +95,11 @@ namespace CodeSaw.GitLab
             return await base.GetFileContent(projectId, commitHash, file);
         }
 
+        public override async Task<string> GetFileUrl(int projectId, string commitHash, string file)
+        {
+            return await base.GetFileUrl(projectId, commitHash, file);
+        }
+
         public override async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
         {
             return await base.GetMergeRequestInfo(projectId, mergeRequestId);
@@ -221,8 +226,17 @@ namespace CodeSaw.GitLab
 
         public virtual async Task<ProjectInfo> Project(int projectId)
         {
-            return await new RestRequest($"/projects/{projectId}", Method.GET)
+            var cacheKey = $"GITLAB_PROJECT_{projectId}";
+
+            ProjectInfo project;
+            if (!_cache.TryGetValue(cacheKey, out project))
+            {
+                project = await new RestRequest($"/projects/{projectId}", Method.GET)
                 .Execute<ProjectInfo>(_client);
+                _cache.Set(cacheKey, project);
+            }
+
+            return project;
         }
 
         public virtual async Task<MergeRequest> GetMergeRequestInfo(int projectId, int mergeRequestId)
@@ -277,6 +291,12 @@ namespace CodeSaw.GitLab
                 default:
                     throw new GitLabApiFailedException(request, response);
             }
+        }
+
+        public virtual async Task<string> GetFileUrl(int projectId, string commitHash, string file)
+        {
+            var project = await Project(projectId);
+            return $"{project.WebUrl}/-/raw/{commitHash}/{Uri.EscapeDataString(file)}";
         }
 
         public virtual async Task AcceptMergeRequest(int projectId, int mergeRequestId, bool shouldRemoveBranch, string commitMessage)

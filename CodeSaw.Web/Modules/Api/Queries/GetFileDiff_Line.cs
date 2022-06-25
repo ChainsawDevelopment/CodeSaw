@@ -39,9 +39,12 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public ReviewDebugInfo Contents { get; set; }
             public ReviewDebugInfo Commits { get; set; }
             public IEnumerable<HunkInfo> Hunks { get; set; }
+            public bool IsImageFile { get; set; }
             public bool IsBinaryFile { get; set; }
             public bool AreBinaryEqual { get; set; }
             public BinaryFileSizesInfo BinarySizes { get; set; }
+            public string PreviousFileUrl { get; set; }
+            public string CurrentFileUrl { get; set; }
         }
 
         [DebuggerDisplay("{Start}-{End}")]
@@ -129,8 +132,17 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 foreach (var content in contents)
                 {
+                    if (IsImageFile(query.OldPath, query.NewPath))
+                    {
+                        var newUrl = await _api.GetFileUrl(query.ReviewId.ProjectId, currentCommit, query.NewPath);
+                        var previousUrl = await _api.GetFileUrl(query.ReviewId.ProjectId, previousCommit, query.OldPath);
+                        return HandleImageFile(contents[previousCommit], contents[currentCommit], previousBaseCommit, currentBaseCommit,
+                            previousCommit, currentCommit, newUrl, previousUrl);
+                    }
                     if (IsBinaryFile(content.Value))
+                    {
                         return HandleBinaryFile(contents[previousCommit], contents[currentCommit], previousBaseCommit, currentBaseCommit, previousCommit, currentCommit);
+                    }
                 }
 
                 var basePatch = LineFourWayDiff.MakePatch(contents[previousBaseCommit], contents[currentBaseCommit]);
@@ -292,6 +304,59 @@ namespace CodeSaw.Web.Modules.Api.Queries
                         PreviousSize = previous.Length,
                         CurrentSize = current.Length
                     }
+                };
+            }
+
+            private bool IsImageFile(string oldPath, string newPath)
+            {
+                string[] supportedExtensions = {".png", ".jpg", ".svg"};
+                return supportedExtensions.Any(x => oldPath.EndsWith(x)) || supportedExtensions.Any(x => newPath.EndsWith(x));
+            }
+
+            private Result HandleImageFile(string previous, string current, string previousBaseCommit, string currentBaseCommit, string previousCommit,
+                string currentCommit, string newUrl, string previousUrl)
+            {
+                return new Result
+                {
+                    Commits = new ReviewDebugInfo
+                    {
+                        Review = new RevisionDebugInfo
+                        {
+                            Previous = previousCommit,
+                            Current = currentCommit
+                        },
+                        Base = new RevisionDebugInfo
+                        {
+                            Previous = previousBaseCommit,
+                            Current = currentBaseCommit
+                        }
+                    },
+
+                    Contents = new ReviewDebugInfo
+                    {
+                        Review = new RevisionDebugInfo
+                        {
+                            Previous = "",
+                            Current = ""
+                        },
+                        Base = new RevisionDebugInfo
+                        {
+                            Previous = "",
+                            Current = ""
+                        }
+                    },
+
+                    IsImageFile = true,
+                    IsBinaryFile = true,
+                    AreBinaryEqual = previous == current,
+                    BinarySizes = new BinaryFileSizesInfo
+                    {
+                        PreviousSize = previous.Length,
+                        CurrentSize = current.Length
+                    },
+
+                    PreviousFileUrl = previousUrl,
+                    CurrentFileUrl = newUrl,
                 };
             }
         }

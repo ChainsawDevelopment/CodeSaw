@@ -1,6 +1,7 @@
 packages
 .idea
 .vs
+.vscode
 bin
 obj
 .paket/paket.exe

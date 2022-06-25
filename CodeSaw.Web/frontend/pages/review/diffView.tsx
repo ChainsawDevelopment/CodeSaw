@@ -13,6 +13,7 @@ import {
     Decoration,
 } from 'react-diff-view';
 import BinaryDiffView from './binaryDiffView';
+import ImageDiffView from './imageDiffView';
 const style = require('react-diff-view/style/index.css');
 import './diffView.less';
 import * as classNames from 'classnames';
@@ -220,9 +221,13 @@ const getFullChangeKey = (change) => {
 };
 
 const diffView = (props: Props): JSX.Element => {
+    if (props.diffInfo.isImageFile) {
+        return <ImageDiffView diffInfo={props.diffInfo} />;
+    }
     if (props.diffInfo.isBinaryFile) {
         return <BinaryDiffView diffInfo={props.diffInfo} />;
     }
+
 
     if (props.diffInfo.hunks.length == 0 && props.lineWidgets.length == 0) {
         return (
