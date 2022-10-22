@@ -520,6 +520,11 @@ namespace CodeSaw.GitLab
             // If ref already exists GitLab returns BadRequest code together with message
             return createTagResponse.StatusCode == HttpStatusCode.BadRequest;
         }
+
+        public async Task<List<Commit>> GetCommits(int projectId, int reviewId)
+        {
+            return await new RestRequest($"/projects/{projectId}/merge_requests/{reviewId}/commits", Method.GET).Execute<List<Commit>>(_client);
+        }
     }
 
     public class GitLabTreeDiff

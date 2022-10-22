@@ -22,6 +22,7 @@ import PageTitle from '../../components/PageTitle';
 import Header from './sections/header';
 import ReviewDiscussions from './sections/reviewDiscussions';
 import File from './sections/file';
+import Commits from './sections/commits';
 import { useRouteMatch, Redirect, Switch, Route, useHistory, useParams } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -122,6 +123,7 @@ const reviewPage = (props: Props) => {
                         <LinkMenuItem match={`${path}file/:fileId?`} params={{ fileId: props.selectedFileId }}>
                             Diff
                         </LinkMenuItem>
+                        <LinkMenuItem match={`${path}commits`}>Commits</LinkMenuItem>
                     </Menu>
                     <Segment attached="bottom">
                         {props.currentReview.reviewId && (
@@ -131,6 +133,9 @@ const reviewPage = (props: Props) => {
                                 </Route>
                                 <Route path={`${path}file/:fileId?`}>
                                     <RoutedFile reviewId={props.reviewId} />
+                                </Route>
+                                <Route path={`${path}commits`}>
+                                    <Commits />
                                 </Route>
                             </Switch>
                         )}

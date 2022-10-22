@@ -160,6 +160,15 @@ export interface BuildStatus {
 
 export type ReviewMergeStatus = 'can_be_merged' | 'cannot_be_merged' | 'unchecked';
 
+export interface Commit {
+    id: string;
+    title: string;
+    message: string;
+    createdAt: Date;
+    authorName: string;
+    authorEmail: string;
+}
+
 namespace remote {
     export interface FileMatrixRevision {
         revision: RemoteRevisionId;
@@ -175,6 +184,7 @@ namespace remote {
         fileId: FileId;
         revisions: FileMatrixRevision[];
     }
+
     export interface ReviewInfo {
         reviewId: ReviewId;
         title: string;
@@ -202,6 +212,7 @@ namespace remote {
         reviewFinished: boolean;
         author: UserState;
         isAuthor: boolean;
+        commits: Commit[];
     }
 }
 

@@ -42,6 +42,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public UserInfo Author { get; set; } 
             public bool IsAuthor { get; set; }
             public string ProjectPath { get; set; }
+
+            public List<Commit> Commits { get; set; }
         }
 
         public class Revision
@@ -124,6 +126,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
 
                 var commitStatus = await _query.Query(new GetCommitStatus(query._reviewId));
 
+                var commits = await _api.GetCommits(query._reviewId.ProjectId, query._reviewId.ReviewId);
+
                 var author = reviewStatus.Author;
 
                 return new Result
@@ -151,7 +155,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     Author = author,
                     FileMatrix = fileMatrix,
                     BuildStatuses = buildStatuses,
-                    IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
+                    IsAuthor = reviewStatus.Author.Username == _currentUser.UserName,
+                    Commits = commits
                 };
             }
 

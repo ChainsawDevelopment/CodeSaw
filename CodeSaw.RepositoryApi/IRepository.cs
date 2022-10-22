@@ -24,6 +24,8 @@ namespace CodeSaw.RepositoryApi
         Task AddAwardEmoji(int projectId, int mergeRequestIid, EmojiType emojiType);
         Task RemoveAwardEmoji(int projectId, int mergeRequestIid, int awardEmojiId);
         Task<List<BuildStatus>> GetBuildStatuses(int projectId, string commitSha);
+
+        Task<List<Commit>> GetCommits(int projectId, int reviewId);
     }
 
     public class MergeRequestSearchArgs
