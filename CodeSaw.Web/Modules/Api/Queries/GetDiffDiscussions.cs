@@ -67,11 +67,11 @@ namespace CodeSaw.Web.Modules.Api.Queries
                 _session = session;
             }
 
-            private string FindFileNameForCommit(Guid fileId, string commit)
+            private string FindFileNameForCommit(Guid fileId, string commit, string baseCommit)
             {
                 var q = from entry in _session.Query<FileHistoryEntry>()
                     join revision in _session.Query<ReviewRevision>() on entry.RevisionId equals revision.Id
-                    where entry.FileId == fileId && revision.HeadCommit == commit
+                    where entry.FileId == fileId && revision.HeadCommit == commit && revision.BaseCommit == baseCommit
                     select entry.FileName;
 
                 return q.Single();
@@ -143,7 +143,7 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     string rightFileName;
                     if (headRevision != null)
                     {
-                        rightFileName = FindFileNameForCommit(query.FileId.PersistentId, query.Commits.CurrentHead);
+                        rightFileName = FindFileNameForCommit(query.FileId.PersistentId, query.Commits.CurrentHead, query.Commits.CurrentBase);
                     }
                     else
                     {
