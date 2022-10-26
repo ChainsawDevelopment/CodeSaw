@@ -26,6 +26,7 @@ const bolierplate = {
     fileMatrix: null,
     fileDiscussions: [],
     reviewDiscussions: [],
+    commits: [],
 };
 
 export const info: ReviewInfo = {

@@ -51,6 +51,7 @@ export const emptyReviewInfo: ReviewInfo = {
     pastRevisions: [],
     filesToReview: [],
     hasProvisionalRevision: false,
+    commits: [],
 };
 
 export const addRevision = (revision: number): ReviewBuilder => (input) => {

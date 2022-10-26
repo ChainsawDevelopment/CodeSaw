@@ -42,6 +42,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
             public UserInfo Author { get; set; } 
             public bool IsAuthor { get; set; }
             public string ProjectPath { get; set; }
+
+            public List<Commit> Commits { get; set; }
         }
 
         public class Revision
@@ -112,17 +114,23 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     select new Revision {Number = r.RevisionNumber, Head = r.HeadCommit, Base = r.BaseCommit}
                 ).ToArray();
 
-                var project = await _api.Project(query._reviewId.ProjectId);
+                var projectTask = _api.Project(query._reviewId.ProjectId);
+                var reviewStatusTask = _query.Query(new GetReviewStatus(query._reviewId));
+                var fileMatrixTask = _query.Query(new GetFileMatrix(query._reviewId));
+                var commitStatusTask = _query.Query(new GetCommitStatus(query._reviewId));
+                var commitsTask = _api.GetCommits(query._reviewId.ProjectId, query._reviewId.ReviewId);
 
                 var commentsTree = GetCommentsTree(query);
 
-                var reviewStatus = await _query.Query(new GetReviewStatus(query._reviewId));
+                var reviewStatus = await reviewStatusTask;
+                var buildStatusesTask = _api.GetBuildStatuses(query._reviewId.ProjectId, reviewStatus.CurrentHead);
 
-                var fileMatrix = await _query.Query(new GetFileMatrix(query._reviewId));
-
-                var buildStatuses = await _api.GetBuildStatuses(query._reviewId.ProjectId, reviewStatus.CurrentHead);
-
-                var commitStatus = await _query.Query(new GetCommitStatus(query._reviewId));
+                var project = await projectTask;
+                
+                var fileMatrix = await fileMatrixTask;
+                var commitStatus = await commitStatusTask;
+                var commits = await commitsTask;
+                var buildStatuses = await buildStatusesTask;
 
                 var author = reviewStatus.Author;
 
@@ -151,7 +159,8 @@ namespace CodeSaw.Web.Modules.Api.Queries
                     Author = author,
                     FileMatrix = fileMatrix,
                     BuildStatuses = buildStatuses,
-                    IsAuthor = reviewStatus.Author.Username == _currentUser.UserName
+                    IsAuthor = reviewStatus.Author.Username == _currentUser.UserName,
+                    Commits = commits
                 };
             }
 
