@@ -188,7 +188,7 @@ const initial: ReviewState = {
         author: { username: '', name: '', avatarUrl: '' },
         reviewFinished: false,
         isAuthor: false,
-        commits: []
+        commits: [],
     },
     reviewedFiles: [],
     ...emptyUnpublishedReview,
