@@ -65,7 +65,9 @@ namespace CodeSaw.Web
                     options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = "GitLab";
                 })
-                .AddCookie()
+                .AddCookie(options => {
+                    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+                })
                 .AddOAuth("GitLab", options =>
                 {
                     ConfigureGitLabOAuth(options);
@@ -142,6 +144,8 @@ namespace CodeSaw.Web
 
         private static async Task HandleCreatingTicket(OAuthCreatingTicketContext context)
         {
+            Console.WriteLine($"HandleCreatingTicket: Requesting {context.Options.UserInformationEndpoint}");
+
             var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
