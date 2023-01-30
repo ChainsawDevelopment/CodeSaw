@@ -109,6 +109,7 @@ namespace CodeSaw.Web
             builder.RegisterType<Modules.Api.Commands.NHSessionAdapter>().AsImplementedInterfaces();
 
             builder.Register(ctx => Configuration.GetValue<string>("HookSiteBase", null) ?? ctx.ResolveKeyed<string>("SiteBase")).Keyed<string>("HookSiteBase");
+            builder.Register(ctx => Configuration.GetSection("AutoRegisterHooksFor").Get<string[]>() ?? new string[0]).Keyed<string[]>("AutoRegisterHooksFor");
 
             ConfigureNodeIntegration(builder);
 
