@@ -23,5 +23,10 @@ namespace CodeSaw.Web.Modules.Hooks
         {
             await _commands.Execute(new HandleNewReview(new ReviewIdentifier(projectId, reviewId)));
         }
+
+        public async Task NewProject(int projectId, string projectPath)
+        {
+            await _commands.Execute(new HandleNewProject(projectId, projectPath));
+        }
     }
 }

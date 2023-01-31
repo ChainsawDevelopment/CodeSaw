@@ -24,6 +24,24 @@ namespace CodeSaw.GitLab.Hooks
             {
                 await HandleMergeRequest(ReadData(@event), action);
             }
+
+            if(gitlabEvent == "System Hook")
+            {
+                await HandleSystemEvent(ReadData(@event), action);
+            }
+        }
+
+        private async Task HandleSystemEvent(JObject @event, ITriggerAction trigger)
+        {
+            var eventName = @event.Property("event_name").Value.Value<string>();
+
+            if(eventName == "project_create")
+            {
+                var projectPath = @event.Property("path_with_namespace").Value.Value<string>();
+                var projectId = @event.Property("project_id").Value.Value<int>();
+
+                await trigger.NewProject(projectId, projectPath);
+            }
         }
 
         private async Task HandleMergeRequest(JObject @event, ITriggerAction trigger)

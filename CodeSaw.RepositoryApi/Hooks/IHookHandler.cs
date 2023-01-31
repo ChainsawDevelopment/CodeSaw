@@ -25,5 +25,6 @@ namespace CodeSaw.RepositoryApi.Hooks
     {
         Task MergeRequestChanged(int projectId, int reviewId);
         Task NewMergeRequest(int projectId, int reviewId);
+        Task NewProject(int projectId, string projectPath);
     }
 }
